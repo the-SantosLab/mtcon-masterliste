@@ -48,9 +48,7 @@ export default function AdminUsers() {
 
   const saveEdit = async () => {
     if (!editing) return;
-    // Update active status
     await supabase.from('users_profile').update({ active: newActive }).eq('id', editing.id);
-    // Update role
     if (editing.roleId) {
       await supabase.from('user_roles').update({ role: newRole as Enums<'app_role'> }).eq('id', editing.roleId);
     } else {
@@ -64,40 +62,55 @@ export default function AdminUsers() {
   return (
     <AppLayout>
       <div className="space-y-4 max-w-3xl">
-        <div><h1 className="text-2xl font-bold text-foreground">Mitarbeiter</h1><p className="text-sm text-muted-foreground">Benutzer und Rollen verwalten</p></div>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Mitarbeiter</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Benutzer und Rollen verwalten</p>
+        </div>
 
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead><tr className="border-b border-border text-muted-foreground text-xs">
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Kürzel</th>
-              <th className="px-4 py-3 text-left font-medium">Rolle</th>
-              <th className="px-4 py-3 text-left font-medium">Aktiv</th>
-              <th className="px-4 py-3 text-left font-medium"></th>
-            </tr></thead>
+        <div className="rounded-md border border-border bg-card overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Rolle</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
+              </tr>
+            </thead>
             <tbody className="divide-y divide-border">
-              {loading ? <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">Laden…</td></tr>
-                : users.map(u => (
-                  <tr key={u.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-3 text-foreground">{u.display_name}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.short_code}</td>
-                    <td className="px-4 py-3 capitalize text-muted-foreground">{u.role || '–'}</td>
-                    <td className="px-4 py-3">{u.active ? <span className="text-status-done text-xs">●</span> : <span className="text-destructive text-xs">●</span>}</td>
-                    <td className="px-4 py-3"><Button variant="ghost" size="sm" onClick={() => openEdit(u)}><Pencil className="h-3 w-3" /></Button></td>
-                  </tr>
-                ))}
+              {loading ? (
+                <tr><td colSpan={5} className="p-4 text-center text-muted-foreground text-xs">Laden</td></tr>
+              ) : users.map(u => (
+                <tr key={u.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="px-4 py-2.5 text-foreground text-sm">{u.display_name}</td>
+                  <td className="px-4 py-2.5 font-mono text-muted-foreground">{u.short_code}</td>
+                  <td className="px-4 py-2.5 capitalize text-muted-foreground">{u.role || '–'}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`inline-flex items-center gap-1.5 text-xs ${u.active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${u.active ? 'bg-[hsl(var(--status-done))]' : 'bg-[hsl(var(--status-rejected))]'}`} />
+                      {u.active ? 'Aktiv' : 'Inaktiv'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <button onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground transition-colors">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
         <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
           <DialogContent>
-            <DialogHeader><DialogTitle>{editing?.display_name} bearbeiten</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-sm font-semibold">{editing?.display_name} bearbeiten</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Rolle</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Rolle</Label>
                 <Select value={newRole} onValueChange={setNewRole}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="staff">Mitarbeiter</SelectItem>
@@ -107,9 +120,9 @@ export default function AdminUsers() {
               </div>
               <div className="flex items-center gap-3">
                 <Switch checked={newActive} onCheckedChange={setNewActive} />
-                <Label>Aktiv</Label>
+                <Label className="text-xs">Aktiv</Label>
               </div>
-              <Button onClick={saveEdit} className="w-full">Speichern</Button>
+              <Button onClick={saveEdit} className="w-full h-8 text-xs">Speichern</Button>
             </div>
           </DialogContent>
         </Dialog>
