@@ -22,9 +22,7 @@ export default function AdminUsers() {
   const [newRole, setNewRole] = useState<string>('staff');
   const [newActive, setNewActive] = useState(true);
 
-  if (!authLoading && !isAdmin) return <Navigate to="/" replace />;
-
-  const fetch = async () => {
+  const fetchUsers = async () => {
     const [profilesRes, rolesRes] = await Promise.all([
       supabase.from('users_profile').select('*').order('display_name'),
       supabase.from('user_roles').select('*'),
@@ -38,7 +36,9 @@ export default function AdminUsers() {
     setLoading(false);
   };
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchUsers(); }, []);
+
+  if (!authLoading && !isAdmin) return <Navigate to="/" replace />;
 
   const openEdit = (u: ProfileWithRole) => {
     setEditing(u);
@@ -58,7 +58,7 @@ export default function AdminUsers() {
     }
     toast.success('Benutzer aktualisiert');
     setEditing(null);
-    fetch();
+    fetchUsers();
   };
 
   return (
