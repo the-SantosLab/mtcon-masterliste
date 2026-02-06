@@ -46,16 +46,16 @@ export default function Dashboard() {
 
   const CaseList = ({ items, empty }: { items: CaseRow[]; empty: string }) => (
     <div className="divide-y divide-border">
-      {loading ? <p className="p-4 text-sm text-muted-foreground">Laden…</p>
-        : items.length === 0 ? <p className="p-4 text-sm text-muted-foreground">{empty}</p>
+      {loading ? <p className="p-4 text-xs text-muted-foreground">Laden</p>
+        : items.length === 0 ? <p className="p-4 text-xs text-muted-foreground">{empty}</p>
         : items.map(c => (
-          <Link key={c.id} to={`/cases/${c.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
+          <Link key={c.id} to={`/cases/${c.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors">
             <StatusBadge status={c.status} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{c.project_name}</p>
-              <p className="text-xs text-muted-foreground font-mono">{c.case_no}</p>
+              <p className="text-sm text-foreground truncate">{c.project_name}</p>
+              <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
             </div>
-            <span className="text-xs text-muted-foreground shrink-0">{formatDate(c.due_at)}</span>
+            <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{formatDate(c.due_at)}</span>
           </Link>
         ))}
     </div>
@@ -63,27 +63,38 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-foreground">Dashboard</h1><p className="text-sm text-muted-foreground">Übersicht aller Vorgänge</p></div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <KPICard title="Offen" value={openCount} icon={ClipboardList} iconClassName="text-status-open" />
-          <KPICard title="In Arbeit" value={inProgress} icon={Clock} iconClassName="text-status-working" />
-          <KPICard title="In Verzug" value={overdue} icon={AlertTriangle} iconClassName="text-status-overdue" />
-          <KPICard title="Heute fällig" value={dueToday} icon={CalendarCheck} iconClassName="text-status-planning" />
-          <KPICard title="Diese Woche" value={dueWeek} icon={Calendar} iconClassName="text-primary" />
+      <div className="space-y-6 max-w-6xl">
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Übersicht aller Vorgänge</p>
         </div>
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="rounded-lg border border-border bg-card">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <KPICard title="Offen" value={openCount} icon={ClipboardList} />
+          <KPICard title="In Arbeit" value={inProgress} icon={Clock} />
+          <KPICard title="In Verzug" value={overdue} icon={AlertTriangle} />
+          <KPICard title="Heute fällig" value={dueToday} icon={CalendarCheck} />
+          <KPICard title="Diese Woche" value={dueWeek} icon={Calendar} />
+        </div>
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="rounded-md border border-border bg-card">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h2 className="text-sm font-semibold text-foreground">Meine Vorgänge</h2>
-              <Link to="/cases?filter=mine"><Button variant="ghost" size="sm" className="text-xs">Alle <ArrowRight className="h-3 w-3 ml-1" /></Button></Link>
+              <h2 className="text-sm font-medium text-foreground">Meine Vorgänge</h2>
+              <Link to="/cases?filter=mine">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">
+                  Alle anzeigen <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              </Link>
             </div>
             <CaseList items={myCases} empty="Keine zugewiesenen Vorgänge" />
           </div>
-          <div className="rounded-lg border border-border bg-card">
+          <div className="rounded-md border border-border bg-card">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h2 className="text-sm font-semibold text-foreground">Frei zum Abholen</h2>
-              <Link to="/cases?filter=available"><Button variant="ghost" size="sm" className="text-xs">Alle <ArrowRight className="h-3 w-3 ml-1" /></Button></Link>
+              <h2 className="text-sm font-medium text-foreground">Frei zum Abholen</h2>
+              <Link to="/cases?filter=available">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">
+                  Alle anzeigen <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              </Link>
             </div>
             <CaseList items={available} empty="Keine freien Vorgänge" />
           </div>

@@ -25,7 +25,7 @@ export default function Auth() {
   const [shortCode, setShortCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
+  if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   if (session) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,7 +40,7 @@ export default function Auth() {
         signupSchema.parse({ email, password, displayName, shortCode });
         const { error } = await signUp(email, password, displayName, shortCode);
         if (error) toast.error(error.message.includes('already registered') ? 'E-Mail bereits registriert' : error.message);
-        else toast.success('Registrierung erfolgreich!');
+        else toast.success('Registrierung erfolgreich');
       }
     } catch (err) {
       if (err instanceof z.ZodError) toast.error(err.errors[0].message);
@@ -50,45 +50,44 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
-            <span className="text-xl font-bold text-primary-foreground">KS</span>
+          <div className="mx-auto mb-3 h-10 w-10 rounded bg-primary flex items-center justify-center">
+            <span className="text-sm font-semibold text-primary-foreground tracking-tight">KS</span>
           </div>
-          <h1 className="text-xl font-bold text-foreground">KS Command Light</h1>
-          <p className="text-sm text-muted-foreground mt-1">Vorgangsverwaltung</p>
+          <h1 className="text-base font-semibold text-foreground">KS Command Light</h1>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{isLogin ? 'Anmelden' : 'Registrieren'}</h2>
+        <div className="rounded-md border border-border bg-card p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-5">{isLogin ? 'Anmeldung' : 'Registrierung'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">E-Mail</Label>
               <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@firma.de" required />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">Passwort</Label>
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Passwort eingeben" required />
             </div>
             {!isLogin && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Anzeigename</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="displayName" className="text-xs font-medium text-muted-foreground">Anzeigename</Label>
                   <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Max Mustermann" required />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="shortCode">Kürzel</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="shortCode" className="text-xs font-medium text-muted-foreground">Kürzel</Label>
                   <Input id="shortCode" value={shortCode} onChange={e => setShortCode(e.target.value)} placeholder="M.Mustermann" required />
                 </div>
               </>
             )}
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? 'Bitte warten…' : isLogin ? 'Anmelden' : 'Registrieren'}
+              {submitting ? 'Bitte warten' : isLogin ? 'Anmelden' : 'Registrieren'}
             </Button>
           </form>
           <div className="mt-4 text-center">
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-sm text-primary hover:underline">
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               {isLogin ? 'Noch kein Konto? Registrieren' : 'Bereits registriert? Anmelden'}
             </button>
           </div>

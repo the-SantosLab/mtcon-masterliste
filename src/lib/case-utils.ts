@@ -12,6 +12,17 @@ export const STATUS_LABELS: Record<CaseStatus, string> = {
   archiv: 'Archiv',
 };
 
+export const STATUS_DOT_COLORS: Record<CaseStatus, string> = {
+  nicht_begonnen: 'bg-[hsl(var(--status-open))]',
+  in_planung: 'bg-[hsl(var(--status-planning))]',
+  in_arbeit: 'bg-[hsl(var(--status-working))]',
+  in_verzug: 'bg-[hsl(var(--status-overdue))]',
+  abgeschlossen: 'bg-[hsl(var(--status-done))]',
+  verworfen: 'bg-[hsl(var(--status-rejected))]',
+  archiv: 'bg-[hsl(var(--status-archive))]',
+};
+
+// Keep for backward compat but unused in new design
 export const STATUS_VARIANTS: Record<CaseStatus, string> = {
   nicht_begonnen: 'bg-status-open',
   in_planung: 'bg-status-planning',
