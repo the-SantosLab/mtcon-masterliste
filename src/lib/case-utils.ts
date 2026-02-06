@@ -1,0 +1,66 @@
+import type { Enums } from '@/integrations/supabase/types';
+
+type CaseStatus = Enums<'case_status'>;
+
+export const STATUS_LABELS: Record<CaseStatus, string> = {
+  nicht_begonnen: 'Nicht begonnen',
+  in_planung: 'In Planung',
+  in_arbeit: 'In Arbeit',
+  in_verzug: 'In Verzug',
+  abgeschlossen: 'Abgeschlossen',
+  verworfen: 'Verworfen',
+  archiv: 'Archiv',
+};
+
+export const STATUS_VARIANTS: Record<CaseStatus, string> = {
+  nicht_begonnen: 'bg-status-open',
+  in_planung: 'bg-status-planning',
+  in_arbeit: 'bg-status-working',
+  in_verzug: 'bg-status-overdue',
+  abgeschlossen: 'bg-status-done',
+  verworfen: 'bg-status-rejected',
+  archiv: 'bg-status-archive',
+};
+
+export const ACTION_LABELS: Record<string, string> = {
+  CLAIM: 'Vorgang abgeholt',
+  UNCLAIM: 'Vorgang freigegeben',
+  STATUS_CHANGE: 'Status geändert',
+  EDIT: 'Bearbeitet',
+  COMMENT: 'Kommentar',
+  CLOSE: 'Abgeschlossen',
+  CREATE: 'Erstellt',
+};
+
+export const isTerminalStatus = (status: CaseStatus) =>
+  ['abgeschlossen', 'verworfen', 'archiv'].includes(status);
+
+export const canClaim = (status: CaseStatus, assigneeId: string | null) =>
+  !assigneeId && !isTerminalStatus(status);
+
+export const formatDate = (date: string | null) => {
+  if (!date) return '–';
+  return new Date(date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+export const formatDateTime = (date: string | null) => {
+  if (!date) return '–';
+  return new Date(date).toLocaleString('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+};
+
+export const formatRelativeTime = (date: string) => {
+  const now = new Date();
+  const d = new Date(date);
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'gerade eben';
+  if (diffMins < 60) return `vor ${diffMins} Min.`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `vor ${diffHours} Std.`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `vor ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`;
+  return formatDate(date);
+};
