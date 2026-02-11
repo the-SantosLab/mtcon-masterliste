@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Upload, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -9,6 +9,48 @@ const EXPECTED_HEADERS = [
   'case_no', 'project_name', 'customer_no', 'client_name',
   'internal_area_code', 'product_code', 'project_article_no',
   'received_at', 'due_at', 'estimated_hours', 'note',
+];
+
+const SAMPLE_DATA = [
+  {
+    case_no: 'VG-001',
+    project_name: 'Website Redesign',
+    customer_no: '10001',
+    client_name: 'Max Müller',
+    internal_area_code: '01',
+    product_code: 'WEB',
+    project_article_no: 'ART-2024-001',
+    received_at: '2024-01-10',
+    due_at: '2024-02-15',
+    estimated_hours: '40',
+    note: 'Responsive Design erforderlich',
+  },
+  {
+    case_no: 'VG-002',
+    project_name: 'Mobile App Entwicklung',
+    customer_no: '10002',
+    client_name: 'Anna Schmidt',
+    internal_area_code: '02',
+    product_code: 'APP',
+    project_article_no: 'ART-2024-002',
+    received_at: '2024-01-15',
+    due_at: '2024-03-30',
+    estimated_hours: '120',
+    note: 'iOS und Android Versionen',
+  },
+  {
+    case_no: 'VG-003',
+    project_name: 'Datenbankoptimierung',
+    customer_no: '10003',
+    client_name: 'Peter Weber',
+    internal_area_code: '03',
+    product_code: 'DB',
+    project_article_no: 'ART-2024-003',
+    received_at: '2024-01-20',
+    due_at: '2024-02-28',
+    estimated_hours: '60',
+    note: 'Performance-Tuning erforderlich',
+  },
 ];
 
 interface ParsedRow {
@@ -23,6 +65,29 @@ interface ParsedRow {
   due_at: string | null;
   estimated_hours: number | null;
   note: string | null;
+}
+
+function downloadSampleCSV() {
+  const csv = [
+    EXPECTED_HEADERS.join(','),
+    ...SAMPLE_DATA.map(row => 
+      EXPECTED_HEADERS.map(header => {
+        const value = row[header as keyof typeof row];
+        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value || '';
+      }).join(',')
+    ),
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'vorgaenge-beispiel.csv');
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast.success('Beispiel-CSV heruntergeladen');
 }
 
 function parseCSV(text: string): { headers: string[]; rows: string[][] } {
@@ -161,7 +226,7 @@ export function CsvImport() {
             Pflichtfelder: case_no, project_name. Trennzeichen: Komma oder Semikolon.
           </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <input
               ref={fileRef}
               type="file"
@@ -171,6 +236,9 @@ export function CsvImport() {
             />
             <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} className="h-8 text-xs">
               <Upload className="h-3.5 w-3.5 mr-1.5" />Datei auswählen
+            </Button>
+            <Button variant="outline" size="sm" onClick={downloadSampleCSV} className="h-8 text-xs">
+              <Download className="h-3.5 w-3.5 mr-1.5" />Beispiel-CSV
             </Button>
             {fileName && (
               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
