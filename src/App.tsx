@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import CasesList from "./pages/CasesList";
+import CasesKanban from "./pages/CasesKanban";
 import CaseDetail from "./pages/CaseDetail";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
+            <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
             <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />

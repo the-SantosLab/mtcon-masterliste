@@ -15,6 +15,7 @@ interface AppLayoutProps {
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
+  { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
 ];
 const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
