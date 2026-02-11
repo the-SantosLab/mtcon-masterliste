@@ -3,15 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
+import { CaseNotes } from '@/components/CaseNotes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Save, Send } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
@@ -25,9 +25,6 @@ export default function CaseDetail() {
   const { user, isAdmin, isViewer } = useAuth();
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [loading, setLoading] = useState(true);
-  const [comment, setComment] = useState('');
-  const [note, setNote] = useState('');
-  const [noteChanged, setNoteChanged] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchCase = async () => {
@@ -39,8 +36,6 @@ export default function CaseDetail() {
       .single();
     if (data) {
       setCase(data as CaseWithRels);
-      setNote(data.note || '');
-      setNoteChanged(false);
     }
     setLoading(false);
   };
@@ -52,22 +47,7 @@ export default function CaseDetail() {
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
 
-  const saveNote = async () => {
-    if (!c || !user) return;
-    const { error } = await supabase.from('cases').update({ note, last_changed_by: user.id, last_changed_at: new Date().toISOString() }).eq('id', c.id);
-    if (error) { toast.error('Fehler'); return; }
-    await supabase.from('case_activity').insert({ case_id: c.id, action: 'EDIT', field: 'note', actor_id: user.id });
-    toast.success('Bemerkung gespeichert');
-    setNoteChanged(false);
-    refresh();
-  };
 
-  const sendComment = async () => {
-    if (!c || !user || !comment.trim()) return;
-    await supabase.from('case_activity').insert({ case_id: c.id, action: 'COMMENT', message: comment.trim(), actor_id: user.id });
-    setComment('');
-    setRefreshKey(k => k + 1);
-  };
 
   const changeStatus = async (newStatus: string) => {
     if (!c || !user) return;
@@ -159,24 +139,7 @@ export default function CaseDetail() {
               </div>
             )}
 
-            <div className="rounded-md border border-border bg-card p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bemerkung</h3>
-                {noteChanged && canEdit && (
-                  <Button size="sm" variant="outline" onClick={saveNote} className="h-7 text-xs">
-                    <Save className="h-3 w-3 mr-1" />Speichern
-                  </Button>
-                )}
-              </div>
-              <Textarea
-                value={note}
-                onChange={e => { setNote(e.target.value); setNoteChanged(true); }}
-                rows={3}
-                disabled={!canEdit}
-                placeholder="Bemerkung hinzufügen"
-                className="text-xs"
-              />
-            </div>
+            <CaseNotes caseId={c.id} canEdit={canEdit && !isTerminalStatus(c.status)} userId={user?.id || ''} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
           <div className="space-y-4">
@@ -186,16 +149,6 @@ export default function CaseDetail() {
               </div>
               <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
             </div>
-
-            {!isViewer && (
-              <div className="rounded-md border border-border bg-card p-4 space-y-2">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Kommentar</h3>
-                <Textarea value={comment} onChange={e => setComment(e.target.value)} rows={2} placeholder="Kommentar schreiben" className="text-xs" />
-                <Button size="sm" onClick={sendComment} disabled={!comment.trim()} className="w-full h-8 text-xs">
-                  <Send className="h-3 w-3 mr-1" />Senden
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </div>
