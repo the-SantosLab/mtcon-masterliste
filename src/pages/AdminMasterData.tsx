@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
+import { CsvImport } from '@/components/CsvImport';
 
 export default function AdminMasterData() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -19,17 +20,19 @@ export default function AdminMasterData() {
       <div className="space-y-4 max-w-3xl">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Stammdaten</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Kunden, Produkte & Bereiche verwalten</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Kunden, Produkte, Bereiche & CSV-Import</p>
         </div>
         <Tabs defaultValue="customers">
           <TabsList className="bg-secondary">
             <TabsTrigger value="customers" className="text-xs">Kunden</TabsTrigger>
             <TabsTrigger value="products" className="text-xs">Produkte</TabsTrigger>
             <TabsTrigger value="areas" className="text-xs">Bereiche</TabsTrigger>
+            <TabsTrigger value="import" className="text-xs">CSV-Import</TabsTrigger>
           </TabsList>
           <TabsContent value="customers"><CustomersTab /></TabsContent>
           <TabsContent value="products"><ProductsTab /></TabsContent>
           <TabsContent value="areas"><AreasTab /></TabsContent>
+          <TabsContent value="import"><CsvImport /></TabsContent>
         </Tabs>
       </div>
     </AppLayout>
