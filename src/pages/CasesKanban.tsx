@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
-import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { STATUS_LABELS, isTerminalStatus } from '@/lib/case-utils';
+import { STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { GripHorizontal } from 'lucide-react';
+import { GripHorizontal, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
@@ -23,8 +24,11 @@ const KANBAN_STATUSES: CaseStatus[] = [
 export default function CasesKanban() {
   const { user, isAdmin, isViewer } = useAuth();
   const [cases, setCases] = useState<CaseRow[]>([]);
+  const [profiles, setProfiles] = useState<Tables<'users_profile'>[]>([]);
   const [loading, setLoading] = useState(true);
   const [draggedCase, setDraggedCase] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
 
   const fetchCases = async () => {
     const { data } = await supabase
@@ -37,6 +41,7 @@ export default function CasesKanban() {
 
   useEffect(() => {
     fetchCases();
+    supabase.from('users_profile').select('*').then(r => setProfiles(r.data || []));
     const ch = supabase.channel('kanban-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
@@ -99,8 +104,17 @@ export default function CasesKanban() {
     await fetchCases();
   };
 
+  const filtered = cases.filter(c => {
+    if (assigneeFilter !== 'all' && c.assignee_id !== assigneeFilter) return false;
+    if (search) {
+      const s = search.toLowerCase();
+      if (![c.case_no, c.project_name, c.client_name, c.project_article_no].some(v => v?.toLowerCase().includes(s))) return false;
+    }
+    return true;
+  });
+
   const groupedCases = KANBAN_STATUSES.reduce((acc, status) => {
-    acc[status] = cases.filter(c => c.status === status);
+    acc[status] = filtered.filter(c => c.status === status);
     return acc;
   }, {} as Record<CaseStatus, CaseRow[]>);
 
@@ -110,6 +124,20 @@ export default function CasesKanban() {
         <div>
           <h1 className="text-lg font-semibold text-foreground">Kanban</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Vorgänge nach Status</p>
+        </div>
+
+        <div className="flex flex-wrap gap-2 items-end">
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche" className="pl-9 h-8 text-xs" />
+          </div>
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle</SelectItem>
+              {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.short_code}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (
