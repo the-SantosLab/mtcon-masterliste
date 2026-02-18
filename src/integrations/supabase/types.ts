@@ -69,6 +69,7 @@ export type Database = {
         Row: {
           assignee_id: string | null
           case_no: string
+          case_number: string | null
           client_name: string | null
           closed_at: string | null
           closed_by: string | null
@@ -76,6 +77,7 @@ export type Database = {
           created_at: string
           created_by: string
           customer_no: string | null
+          department_id: string | null
           due_at: string | null
           due_date_corrected_at: string | null
           due_date_corrected_by: string | null
@@ -87,16 +89,19 @@ export type Database = {
           note: string | null
           product_code: string | null
           project_article_no: string | null
+          project_id: string | null
           project_name: string
           received_at: string | null
           secondary_check_by: string | null
           secondary_check_confirmed_at: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
+          visibility: string
         }
         Insert: {
           assignee_id?: string | null
           case_no: string
+          case_number?: string | null
           client_name?: string | null
           closed_at?: string | null
           closed_by?: string | null
@@ -104,6 +109,7 @@ export type Database = {
           created_at?: string
           created_by: string
           customer_no?: string | null
+          department_id?: string | null
           due_at?: string | null
           due_date_corrected_at?: string | null
           due_date_corrected_by?: string | null
@@ -115,16 +121,19 @@ export type Database = {
           note?: string | null
           product_code?: string | null
           project_article_no?: string | null
+          project_id?: string | null
           project_name: string
           received_at?: string | null
           secondary_check_by?: string | null
           secondary_check_confirmed_at?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
+          visibility?: string
         }
         Update: {
           assignee_id?: string | null
           case_no?: string
+          case_number?: string | null
           client_name?: string | null
           closed_at?: string | null
           closed_by?: string | null
@@ -132,6 +141,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           customer_no?: string | null
+          department_id?: string | null
           due_at?: string | null
           due_date_corrected_at?: string | null
           due_date_corrected_by?: string | null
@@ -143,12 +153,14 @@ export type Database = {
           note?: string | null
           product_code?: string | null
           project_article_no?: string | null
+          project_id?: string | null
           project_name?: string
           received_at?: string | null
           secondary_check_by?: string | null
           secondary_check_confirmed_at?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
+          visibility?: string
         }
         Relationships: [
           {
@@ -173,6 +185,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cases_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cases_due_date_corrected_by_fkey"
             columns: ["due_date_corrected_by"]
             isOneToOne: false
@@ -187,6 +206,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cases_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cases_secondary_check_by_fkey"
             columns: ["secondary_check_by"]
             isOneToOne: false
@@ -194,6 +220,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      counters: {
+        Row: {
+          id: string
+          key: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          key: string
+          value?: number
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: number
+        }
+        Relationships: []
       }
       customers: {
         Row: {
@@ -215,6 +259,38 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      departments: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          manager_user_id: string | null
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          manager_user_id?: string | null
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          manager_user_id?: string | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_manager_user_id_fkey"
+            columns: ["manager_user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       internal_areas: {
         Row: {
@@ -258,6 +334,186 @@ export type Database = {
         }
         Relationships: []
       }
+      project_folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          path: string
+          project_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          path: string
+          project_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          path?: string
+          project_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_folders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          created_by: string
+          department_id: string | null
+          description: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          project_code: string | null
+          project_number: string | null
+          status: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          project_code?: string | null
+          project_number?: string | null
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          project_code?: string | null
+          project_number?: string | null
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          compact_tables: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compact_tables?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compact_tables?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -288,34 +544,63 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          department_id: string | null
           display_name: string
           id: string
+          is_admin: boolean
+          is_manager: boolean
+          manager_id: string | null
           short_code: string
           updated_at: string
         }
         Insert: {
           active?: boolean
           created_at?: string
+          department_id?: string | null
           display_name: string
           id: string
+          is_admin?: boolean
+          is_manager?: boolean
+          manager_id?: string | null
           short_code: string
           updated_at?: string
         }
         Update: {
           active?: boolean
           created_at?: string
+          department_id?: string | null
           display_name?: string
           id?: string
+          is_admin?: boolean
+          is_manager?: boolean
+          manager_id?: string | null
           short_code?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_profile_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_profile_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_is_admin: { Args: { uid?: string }; Returns: boolean }
+      check_is_manager: { Args: { uid?: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -324,6 +609,16 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_direct_report: {
+        Args: { manager_uid: string; target_uid: string }
+        Returns: boolean
+      }
+      is_project_member: {
+        Args: { p_project_id: string; uid?: string }
+        Returns: boolean
+      }
+      next_counter: { Args: { p_key: string }; Returns: number }
+      user_department: { Args: { uid?: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "staff" | "viewer"

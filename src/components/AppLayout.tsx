@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePreferences } from '@/contexts/PreferencesContext';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
-  LogOut, Menu, X, ChevronDown,
+  LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -19,11 +27,13 @@ const navItems = [
 ];
 const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
+  { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin } = useAuth();
+  const { preferences, setTheme, setCompactTables } = usePreferences();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
@@ -36,6 +46,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       ? 'bg-sidebar-accent text-foreground font-medium'
       : 'text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60',
   );
+
+  const isDark = preferences.theme === 'dark';
+  const isCompact = preferences.compactTables;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -51,6 +64,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground leading-tight">Command Light</p>
+            <p className="text-[9px] text-muted-foreground tracking-widest uppercase">v1.5</p>
           </div>
           <button onClick={() => setOpen(false)} className="lg:hidden text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4" />
@@ -82,20 +96,43 @@ export function AppLayout({ children }: AppLayoutProps) {
         </nav>
 
         <div className="border-t border-sidebar-border px-3 py-3 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-medium text-muted-foreground">
-                {profile?.short_code?.substring(0, 2).toUpperCase() || '??'}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate leading-tight">{profile?.display_name || '–'}</p>
-              <p className="text-[10px] text-muted-foreground capitalize">{role || '–'}</p>
-            </div>
-            <Button variant="ghost" size="icon" onClick={signOut} className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0">
-              <LogOut className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2.5 w-full rounded px-1 py-1 hover:bg-sidebar-accent/60 transition-colors">
+                <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {profile?.short_code?.substring(0, 2).toUpperCase() || '??'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate leading-tight">{profile?.display_name || '–'}</p>
+                  <p className="text-[10px] text-muted-foreground capitalize">{role || '–'}</p>
+                </div>
+                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="w-52 mb-1 text-xs">
+              <div className="px-2 py-1.5 text-[11px] text-muted-foreground font-medium">Darstellung</div>
+              <DropdownMenuItem
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                {isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setCompactTables(!isCompact)}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                {isCompact ? <AlignJustify className="h-3.5 w-3.5" /> : <AlignLeft className="h-3.5 w-3.5" />}
+                {isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut} className="gap-2 text-xs text-destructive cursor-pointer">
+                <LogOut className="h-3.5 w-3.5" />Abmelden
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 

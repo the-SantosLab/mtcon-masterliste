@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
@@ -16,11 +17,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
 export default function CasesList() {
   const { user, isAdmin, isViewer } = useAuth();
+  const { preferences } = usePreferences();
+  const compact = preferences.compactTables;
+  const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [profiles, setProfiles] = useState<Tables<'users_profile'>[]>([]);
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
@@ -44,7 +49,7 @@ export default function CasesList() {
 
   useEffect(() => {
     fetchCases();
-    supabase.from('users_profile').select('*').then(r => setProfiles(r.data || []));
+    supabase.from('users_profile').select('*').then(r => setProfiles((r.data || []) as any[]));
     supabase.from('customers').select('*').then(r => setCustomers(r.data || []));
     supabase.from('products').select('*').then(r => setProducts(r.data || []));
     supabase.from('internal_areas').select('*').then(r => setAreas(r.data || []));
@@ -117,36 +122,36 @@ export default function CasesList() {
         </div>
 
         <div className="rounded-md border border-border bg-card overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Nr.</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Projektname</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Bearbeiter</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kunde</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Endtermin</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Aktionen</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Endtermin</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Aktionen</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-xs">Laden</td></tr>
+                <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-xs">Keine Vorgänge gefunden</td></tr>
+                <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
-                  <td className="px-4 py-2.5"><StatusBadge status={c.status} /></td>
-                  <td className="px-4 py-2.5 font-mono">
+                  <td className={cellCls}><StatusBadge status={c.status} /></td>
+                  <td className={cn(cellCls, 'font-mono')}>
                     <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                   </td>
-                  <td className="px-4 py-2.5 text-foreground">
+                  <td className={cn(cellCls, 'text-foreground')}>
                     <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
                   </td>
-                  <td className="px-4 py-2.5 text-muted-foreground">{c.assignee?.short_code || '–'}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground">{c.customer_no || '–'}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground tabular-nums">{formatDate(c.due_at)}</td>
-                  <td className="px-4 py-2.5">
+                  <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
+                  <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
+                  <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
+                  <td className={cellCls}>
                     <div className="flex gap-1">
                       {!isViewer && canClaim(c.status, c.assignee_id) && (
                         <button onClick={() => claimCase(c.id)} className="text-primary hover:underline text-xs font-medium">Abholen</button>
