@@ -41,7 +41,7 @@ export default function CasesKanban() {
 
   useEffect(() => {
     fetchCases();
-    supabase.from('users_profile').select('*').then(r => setProfiles(r.data || []));
+    supabase.from('users_profile').select('*').then(r => setProfiles((r.data || []) as any[]));
     const ch = supabase.channel('kanban-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
