@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { CommandPalette } from '@/components/CommandPalette';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen,
+  FolderKanban, BookOpen, Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
+  const [cmdOpen, setCmdOpen] = useState(false);
+
+  // Global Cmd+K / Ctrl+K listener
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen(o => !o);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const active = (href: string) => href === '/' ? location.pathname === '/' : location.pathname.startsWith(href);
 
@@ -55,6 +69,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside className={cn(
@@ -75,6 +90,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+          {/* Search trigger */}
+          <button
+            onClick={() => setCmdOpen(true)}
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors mb-1"
+          >
+            <Search className="h-4 w-4" />
+            <span className="flex-1 text-left">Suche</span>
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-sidebar-border px-1 py-0.5 text-[9px] font-mono text-muted-foreground">⌘K</kbd>
+          </button>
+          <div className="border-t border-sidebar-border my-1" />
           {navItems.map(item => (
             <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
               <item.icon className="h-4 w-4" />{item.label}
@@ -142,7 +167,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border bg-card shrink-0">
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
-          <span className="text-sm font-semibold text-foreground">KS Command Light</span>
+          <span className="text-sm font-semibold text-foreground flex-1">KS Command Light</span>
+          <button onClick={() => setCmdOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors">
+            <Search className="h-5 w-5" />
+          </button>
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-8">{children}</main>
       </div>

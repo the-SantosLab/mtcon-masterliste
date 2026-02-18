@@ -7,71 +7,52 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/case-utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 import {
   ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
-  CheckCircle2, Clock, AlertTriangle, XCircle, Archive,
-  TrendingUp, BarChart3,
+  CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
+  Pencil, Check, X, Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface Project {
-  id: string;
-  project_number: string;
-  project_code: string | null;
-  name: string;
-  description: string | null;
-  status: string;
-  visibility: string;
-  created_at: string;
-  department_id: string | null;
-  owner_id: string | null;
-  created_by: string;
+  id: string; project_number: string; project_code: string | null;
+  name: string; description: string | null; status: string;
+  visibility: string; created_at: string;
+  department_id: string | null; owner_id: string | null; created_by: string;
 }
 
 interface CaseRow {
-  id: string;
-  case_no: string;
-  project_name: string;
-  status: string;
-  assignee_id: string | null;
-  due_at: string | null;
+  id: string; case_no: string; project_name: string; status: string;
+  assignee_id: string | null; due_at: string | null;
   assignee: { display_name: string; short_code: string } | null;
 }
 
 interface Member {
-  id: string;
-  user_id: string;
-  role: string;
+  id: string; user_id: string; role: string;
   profile: { display_name: string; short_code: string } | null;
 }
 
-interface Department {
-  id: string;
-  name: string;
-  code: string;
-}
+interface Department { id: string; name: string; code: string; }
 
-const STATUS_LABELS: Record<string, string> = {
-  nicht_begonnen: 'Nicht begonnen',
-  in_planung: 'In Planung',
-  in_arbeit: 'In Arbeit',
-  in_verzug: 'In Verzug',
-  abgeschlossen: 'Abgeschlossen',
-  verworfen: 'Verworfen',
-  archiv: 'Archiv',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  active: 'text-[hsl(var(--status-working))]',
-  completed: 'text-[hsl(var(--status-done))]',
-  archived: 'text-muted-foreground',
+const CASE_STATUS_LABELS: Record<string, string> = {
+  nicht_begonnen: 'Nicht begonnen', in_planung: 'In Planung', in_arbeit: 'In Arbeit',
+  in_verzug: 'In Verzug', abgeschlossen: 'Abgeschlossen', verworfen: 'Verworfen', archiv: 'Archiv',
 };
 
 const PROJECT_STATUS_LABELS: Record<string, string> = {
-  active: 'Aktiv',
-  completed: 'Abgeschlossen',
-  archived: 'Archiviert',
+  active: 'Aktiv', completed: 'Abgeschlossen', archived: 'Archiviert',
+};
+
+const VISIBILITY_LABELS: Record<string, string> = {
+  project_members: 'Nur Projektmitglieder',
+  department: 'Abteilung',
+  private: 'Privat',
 };
 
 function StatCard({ icon, label, value, sub, accent }: {
@@ -91,6 +72,78 @@ function StatCard({ icon, label, value, sub, accent }: {
   );
 }
 
+// Inline-editable field
+function EditableField({
+  label, value, onSave, type = 'text', options, multiline, disabled,
+}: {
+  label: string; value: string; onSave: (v: string) => Promise<void>;
+  type?: string; options?: { value: string; label: string }[];
+  multiline?: boolean; disabled?: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (draft === value) { setEditing(false); return; }
+    setSaving(true);
+    await onSave(draft);
+    setSaving(false);
+    setEditing(false);
+  };
+
+  const handleCancel = () => { setDraft(value); setEditing(false); };
+
+  return (
+    <div className="group">
+      <div className="flex items-center gap-1.5 mb-1">
+        <p className="text-[11px] text-muted-foreground">{label}</p>
+        {!disabled && !editing && (
+          <button
+            onClick={() => { setDraft(value); setEditing(true); }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div className="space-y-1.5">
+          {options ? (
+            <Select value={draft} onValueChange={setDraft}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {options.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : multiline ? (
+            <Textarea
+              value={draft} onChange={e => setDraft(e.target.value)}
+              rows={3} className="text-xs resize-none" autoFocus
+            />
+          ) : (
+            <Input
+              value={draft} onChange={e => setDraft(e.target.value)}
+              className="h-8 text-xs" autoFocus type={type}
+              onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') handleCancel(); }}
+            />
+          )}
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" onClick={handleSave} disabled={saving} className="h-6 text-xs px-2 gap-1">
+              <Check className="h-3 w-3" />{saving ? 'Speichern…' : 'Speichern'}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleCancel} disabled={saving} className="h-6 text-xs px-2 gap-1">
+              <X className="h-3 w-3" />Abbrechen
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-foreground">{value || <span className="text-muted-foreground italic">–</span>}</p>
+      )}
+    </div>
+  );
+}
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin } = useAuth();
@@ -103,6 +156,12 @@ export default function ProjectDetail() {
   const [members, setMembers] = useState<Member[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const loadProject = async () => {
+    if (!id) return;
+    const { data } = await supabase.from('projects').select('*').eq('id', id).single();
+    if (data) setProject(data as Project);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -121,8 +180,7 @@ export default function ProjectDetail() {
       const profiles = (profilesRes.data || []) as { id: string; display_name: string; short_code: string }[];
       setMembers(
         ((membersRes.data || []) as { id: string; user_id: string; role: string }[]).map(m => ({
-          ...m,
-          profile: profiles.find(p => p.id === m.user_id) ?? null,
+          ...m, profile: profiles.find(p => p.id === m.user_id) ?? null,
         }))
       );
       setDepartments((deptRes.data || []) as Department[]);
@@ -134,24 +192,37 @@ export default function ProjectDetail() {
   if (!project) return <AppLayout><div className="text-xs text-destructive p-8">Projekt nicht gefunden</div></AppLayout>;
 
   const dept = departments.find(d => d.id === project.department_id);
+  const isOwner = project.owner_id === user?.id || project.created_by === user?.id;
+  const canEdit = isAdmin || isOwner;
 
   // Stats
   const total = cases.length;
   const done = cases.filter(c => c.status === 'abgeschlossen').length;
   const open = cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)).length;
   const overdue = cases.filter(c => c.status === 'in_verzug').length;
-  const discarded = cases.filter(c => ['verworfen', 'archiv'].includes(c.status)).length;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  // Status breakdown for bar
   const statusGroups: { status: string; count: number; color: string }[] = [
     { status: 'in_arbeit', count: cases.filter(c => c.status === 'in_arbeit').length, color: 'bg-[hsl(var(--status-working))]' },
     { status: 'in_planung', count: cases.filter(c => c.status === 'in_planung').length, color: 'bg-[hsl(var(--status-planning))]' },
     { status: 'nicht_begonnen', count: cases.filter(c => c.status === 'nicht_begonnen').length, color: 'bg-muted-foreground/30' },
     { status: 'in_verzug', count: cases.filter(c => c.status === 'in_verzug').length, color: 'bg-[hsl(var(--status-overdue))]' },
     { status: 'abgeschlossen', count: done, color: 'bg-[hsl(var(--status-done))]' },
-    { status: 'verworfen', count: discarded, color: 'bg-muted-foreground/20' },
+    { status: 'verworfen', count: cases.filter(c => ['verworfen', 'archiv'].includes(c.status)).length, color: 'bg-muted-foreground/20' },
   ].filter(g => g.count > 0);
+
+  // Save handler — updates DB + logs activity
+  const saveField = async (field: string, value: string, label: string) => {
+    if (!project || !user) return;
+    const oldValue = (project as any)[field] as string;
+    const { error } = await supabase.from('projects').update({
+      [field]: value,
+      updated_at: new Date().toISOString(),
+    }).eq('id', project.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success(`${label} aktualisiert`);
+    await loadProject();
+  };
 
   return (
     <AppLayout>
@@ -164,33 +235,35 @@ export default function ProjectDetail() {
           <ChevronRight className="h-3 w-3" />
           <span className="font-mono">{project.project_number}</span>
           <ChevronRight className="h-3 w-3" />
-          <span className="text-foreground">{project.name}</span>
+          <span className="text-foreground truncate">{project.name}</span>
         </div>
 
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-lg font-semibold text-foreground">{project.name}</h1>
+              <h1 className="text-lg font-semibold text-foreground truncate">{project.name}</h1>
               <span className={cn(
-                'inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border',
+                'inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full border shrink-0',
                 project.status === 'active' ? 'border-[hsl(var(--status-working))] text-[hsl(var(--status-working))] bg-[hsl(var(--status-working))]/10' :
                 project.status === 'completed' ? 'border-[hsl(var(--status-done))] text-[hsl(var(--status-done))] bg-[hsl(var(--status-done))]/10' :
                 'border-border text-muted-foreground'
               )}>
                 {PROJECT_STATUS_LABELS[project.status] ?? project.status}
               </span>
+              {canEdit && (
+                <span className="text-[10px] text-muted-foreground border border-dashed border-border px-1.5 py-0.5 rounded">
+                  Bearbeitbar
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
               <span className="font-mono">{project.project_number}</span>
               {project.project_code && <span className="font-mono text-muted-foreground/60">{project.project_code}</span>}
               {dept && <><ChevronRight className="h-3 w-3" /><span>{dept.name}</span></>}
               <ChevronRight className="h-3 w-3" />
               <span>Erstellt {format(new Date(project.created_at), 'dd.MM.yyyy')}</span>
             </div>
-            {project.description && (
-              <p className="mt-2 text-xs text-muted-foreground max-w-lg">{project.description}</p>
-            )}
           </div>
           <Link to={`/projects/${project.id}/files`}>
             <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
@@ -201,27 +274,10 @@ export default function ProjectDetail() {
 
         {/* KPI Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard
-            icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
-            label="Vorgänge gesamt" value={total}
-            accent="bg-muted"
-          />
-          <StatCard
-            icon={<Clock className="h-4 w-4 text-[hsl(var(--status-working))]" />}
-            label="Offen" value={open}
-            accent="bg-[hsl(var(--status-working))]/10"
-          />
-          <StatCard
-            icon={<AlertTriangle className="h-4 w-4 text-[hsl(var(--status-overdue))]" />}
-            label="In Verzug" value={overdue}
-            accent="bg-[hsl(var(--status-overdue))]/10"
-          />
-          <StatCard
-            icon={<CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-done))]" />}
-            label="Abgeschlossen" value={done}
-            sub={total > 0 ? `${progress}% Fortschritt` : undefined}
-            accent="bg-[hsl(var(--status-done))]/10"
-          />
+          <StatCard icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />} label="Vorgänge gesamt" value={total} accent="bg-muted" />
+          <StatCard icon={<Clock className="h-4 w-4 text-[hsl(var(--status-working))]" />} label="Offen" value={open} accent="bg-[hsl(var(--status-working))]/10" />
+          <StatCard icon={<AlertTriangle className="h-4 w-4 text-[hsl(var(--status-overdue))]" />} label="In Verzug" value={overdue} accent="bg-[hsl(var(--status-overdue))]/10" />
+          <StatCard icon={<CheckCircle2 className="h-4 w-4 text-[hsl(var(--status-done))]" />} label="Abgeschlossen" value={done} sub={total > 0 ? `${progress}% Fortschritt` : undefined} accent="bg-[hsl(var(--status-done))]/10" />
         </div>
 
         {/* Progress bar */}
@@ -229,28 +285,20 @@ export default function ProjectDetail() {
           <div className="rounded-md border border-border bg-card px-4 py-3 space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
-                <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
-                Fortschritt
+                <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />Fortschritt
               </p>
               <span className="text-xs font-medium text-foreground tabular-nums">{progress}%</span>
             </div>
-            {/* Segmented progress bar */}
             <div className="flex h-2 rounded-full overflow-hidden gap-px bg-muted">
               {statusGroups.map(g => (
-                <div
-                  key={g.status}
-                  className={cn('h-full transition-all', g.color)}
-                  style={{ width: `${(g.count / total) * 100}%` }}
-                  title={`${STATUS_LABELS[g.status]}: ${g.count}`}
-                />
+                <div key={g.status} className={cn('h-full transition-all', g.color)} style={{ width: `${(g.count / total) * 100}%` }} title={`${CASE_STATUS_LABELS[g.status]}: ${g.count}`} />
               ))}
             </div>
-            {/* Legend */}
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {statusGroups.map(g => (
                 <span key={g.status} className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <span className={cn('h-2 w-2 rounded-full', g.color)} />
-                  {STATUS_LABELS[g.status]} ({g.count})
+                  {CASE_STATUS_LABELS[g.status]} ({g.count})
                 </span>
               ))}
             </div>
@@ -258,67 +306,108 @@ export default function ProjectDetail() {
         )}
 
         <div className="grid lg:grid-cols-3 gap-4">
-          {/* Cases Table */}
-          <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Verknüpfte Vorgänge ({cases.length})
+          {/* Left: Cases + Inline Edit */}
+          <div className="lg:col-span-2 space-y-4">
+
+            {/* Inline Edit Panel */}
+            <div className="rounded-md border border-border bg-card p-5">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-1.5">
+                <Pencil className="h-3.5 w-3.5" />Projektdetails
+                {canEdit && <span className="text-[10px] normal-case tracking-normal text-muted-foreground/60 ml-1">— Felder anklicken zum Bearbeiten</span>}
               </h3>
-              <Link to={`/cases?project=${id}`} className="text-[11px] text-primary hover:underline">
-                Alle anzeigen →
-              </Link>
-            </div>
-            <div className="rounded-md border border-border bg-card overflow-hidden">
-              {cases.length === 0 ? (
-                <div className="py-10 text-center">
-                  <XCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-xs text-muted-foreground">Keine Vorgänge verknüpft</p>
-                  <Link to="/cases" className="text-[11px] text-primary hover:underline mt-1 inline-block">
-                    Vorgang anlegen
-                  </Link>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                <EditableField
+                  label="Projektname"
+                  value={project.name}
+                  disabled={!canEdit}
+                  onSave={v => saveField('name', v, 'Projektname')}
+                />
+                <EditableField
+                  label="Status"
+                  value={PROJECT_STATUS_LABELS[project.status] ?? project.status}
+                  disabled={!canEdit}
+                  options={[
+                    { value: 'active', label: 'Aktiv' },
+                    { value: 'completed', label: 'Abgeschlossen' },
+                    { value: 'archived', label: 'Archiviert' },
+                  ]}
+                  onSave={v => saveField('status', v, 'Status')}
+                />
+                <EditableField
+                  label="Sichtbarkeit"
+                  value={VISIBILITY_LABELS[project.visibility] ?? project.visibility}
+                  disabled={!canEdit}
+                  options={[
+                    { value: 'project_members', label: 'Nur Projektmitglieder' },
+                    { value: 'department', label: 'Abteilung' },
+                    { value: 'private', label: 'Privat' },
+                  ]}
+                  onSave={v => saveField('visibility', v, 'Sichtbarkeit')}
+                />
+                <div className="sm:col-span-2">
+                  <EditableField
+                    label="Beschreibung"
+                    value={project.description ?? ''}
+                    disabled={!canEdit}
+                    multiline
+                    onSave={v => saveField('description', v, 'Beschreibung')}
+                  />
                 </div>
-              ) : (
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
-                      <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
-                      <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</th>
-                      <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
-                      <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Termin</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {cases.map(c => (
-                      <tr key={c.id} className="hover:bg-muted/40 transition-colors">
-                        <td className={cellCls}><StatusBadge status={c.status as any} /></td>
-                        <td className={cn(cellCls, 'font-mono')}>
-                          <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
-                        </td>
-                        <td className={cn(cellCls, 'text-foreground')}>
-                          <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors truncate max-w-[200px] block">
-                            {c.project_name}
-                          </Link>
-                        </td>
-                        <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
-                        <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
+              </div>
+            </div>
+
+            {/* Cases Table */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Verknüpfte Vorgänge ({cases.length})</h3>
+                <Link to="/cases" className="text-[11px] text-primary hover:underline">Alle anzeigen →</Link>
+              </div>
+              <div className="rounded-md border border-border bg-card overflow-hidden">
+                {cases.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <XCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                    <p className="text-xs text-muted-foreground">Keine Vorgänge verknüpft</p>
+                    <Link to="/cases" className="text-[11px] text-primary hover:underline mt-1 inline-block">Vorgang anlegen</Link>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
+                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
+                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</th>
+                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
+                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Termin</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {cases.map(c => (
+                        <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                          <td className={cellCls}><StatusBadge status={c.status as any} /></td>
+                          <td className={cn(cellCls, 'font-mono')}>
+                            <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
+                          </td>
+                          <td className={cn(cellCls, 'text-foreground')}>
+                            <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
+                          </td>
+                          <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
+                          <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Team Members */}
+          {/* Right: Team + Visibility */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5" />Team ({members.length})
               </h3>
-              <Link to={`/projects/${id}/files`} className="text-[11px] text-primary hover:underline">
-                Verwalten →
-              </Link>
+              <Link to={`/projects/${id}/files`} className="text-[11px] text-primary hover:underline">Verwalten →</Link>
             </div>
             <div className="rounded-md border border-border bg-card overflow-hidden">
               {members.length === 0 ? (
@@ -333,14 +422,10 @@ export default function ProjectDetail() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">
-                          {m.profile?.display_name ?? m.user_id}
-                        </p>
+                        <p className="text-xs font-medium text-foreground truncate">{m.profile?.display_name ?? m.user_id}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           {m.role === 'manager' && <Crown className="h-3 w-3 text-amber-500" />}
-                          <span className="text-[11px] text-muted-foreground">
-                            {m.role === 'manager' ? 'Projektleiter' : 'Mitglied'}
-                          </span>
+                          <span className="text-[11px] text-muted-foreground">{m.role === 'manager' ? 'Projektleiter' : 'Mitglied'}</span>
                         </div>
                       </div>
                     </div>
@@ -349,12 +434,11 @@ export default function ProjectDetail() {
               )}
             </div>
 
-            {/* Visibility */}
             <div className="rounded-md border border-border bg-card px-4 py-3">
               <p className="text-[11px] text-muted-foreground mb-1">Sichtbarkeit</p>
               <p className="text-xs text-foreground font-medium">
-                {project.visibility === 'project_members' ? 'Nur Projektmitglieder' :
-                 project.visibility === 'department' ? `Abteilung${dept ? ` (${dept.name})` : ''}` : 'Privat'}
+                {VISIBILITY_LABELS[project.visibility] ?? project.visibility}
+                {project.visibility === 'department' && dept ? ` (${dept.name})` : ''}
               </p>
             </div>
           </div>
