@@ -12,13 +12,14 @@ import {
 import { cn } from '@/lib/utils';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
   assignee_id: string | null; due_at: string | null;
-  assignee: { short_code: string } | null;
+  assignee: { short_code: string; display_name: string } | null;
 }
 
 interface ProjectRow { id: string; name: string; project_number: string; status: string; }
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     const [casesRes, projectsRes, usersRes] = await Promise.all([
       supabase.from('cases')
-        .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(short_code)')
+        .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(short_code, display_name)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name, project_number, status'),
       supabase.from('users_profile').select('id', { count: 'exact', head: true }).eq('active', true),
@@ -117,6 +118,27 @@ export default function AdminDashboard() {
     value: count,
     color: STATUS_COLORS[status] ?? 'hsl(var(--muted-foreground))',
   })).sort((a, b) => b.value - a.value);
+
+  // Workload per assignee (active cases only)
+  const workloadData = Object.values(
+    activeCases
+      .filter(c => c.assignee_id && c.assignee)
+      .reduce<Record<string, { name: string; count: number; overdue: number }>>((acc, c) => {
+        const key = c.assignee_id!;
+        if (!acc[key]) {
+          acc[key] = {
+            name: c.assignee?.short_code ?? '?',
+            count: 0,
+            overdue: 0,
+          };
+        }
+        acc[key].count += 1;
+        if (c.status === 'in_verzug' || (c.due_at && c.due_at < today)) {
+          acc[key].overdue += 1;
+        }
+        return acc;
+      }, {})
+  ).sort((a, b) => b.count - a.count);
 
   // Recent overdue cases
   const recentOverdue = overdueCases.slice(0, 8);
@@ -253,6 +275,60 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Workload per Assignee */}
+        <div className="rounded-md border border-border bg-card p-5">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
+            Auslastung pro Bearbeiter (aktive Vorgänge)
+          </h2>
+          {workloadData.length === 0 ? (
+            <div className="flex items-center justify-center h-40 text-xs text-muted-foreground">
+              Keine zugewiesenen aktiven Vorgänge
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(180, workloadData.length * 36)}>
+              <BarChart
+                data={workloadData}
+                layout="vertical"
+                margin={{ left: 8, right: 24, top: 0, bottom: 0 }}
+                barCategoryGap="30%"
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                <XAxis
+                  type="number"
+                  allowDecimals={false}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={40}
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    color: 'hsl(var(--foreground))',
+                  }}
+                  formatter={(value: number, name: string) => [
+                    value,
+                    name === 'count' ? 'Aktive Vorgänge' : 'Davon in Verzug',
+                  ]}
+                  cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                />
+                <Bar dataKey="count" name="count" fill="hsl(var(--primary))" radius={[0, 3, 3, 0]} />
+                <Bar dataKey="overdue" name="overdue" fill="hsl(var(--status-overdue))" radius={[0, 3, 3, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Bottom: My Cases + Active Projects */}
