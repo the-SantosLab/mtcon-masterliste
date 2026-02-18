@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { CommandPalette } from '@/components/CommandPalette';
+import { NotificationBell } from '@/components/NotificationBell';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
@@ -168,9 +169,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border bg-card shrink-0">
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
           <span className="text-sm font-semibold text-foreground flex-1">KS Command Light</span>
-          <button onClick={() => setCmdOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors">
-            <Search className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button onClick={() => setCmdOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted/60">
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+        {/* Desktop header bar with notifications */}
+        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 border-b border-border bg-card/50 shrink-0">
+          <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-8">{children}</main>
       </div>
