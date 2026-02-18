@@ -15,6 +15,7 @@ import AdminMasterData from "./pages/AdminMasterData";
 import AdminDepartments from "./pages/AdminDepartments";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectFiles from "./pages/ProjectFiles";
+import ProjectDetail from "./pages/ProjectDetail";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ function AuthenticatedApp() {
         <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
         <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
+        <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
         <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />

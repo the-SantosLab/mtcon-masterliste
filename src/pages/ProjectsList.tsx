@@ -208,11 +208,11 @@ export default function ProjectsList() {
               ) : filtered.map(p => (
                 <tr key={p.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cn(cellCls, 'font-mono')}>
-                    <span className="text-primary">{p.project_number}</span>
+                    <Link to={`/projects/${p.id}`} className="text-primary hover:underline">{p.project_number}</Link>
                   </td>
                   <td className={cellCls}>
                     <div>
-                      <span className="text-foreground font-medium">{p.name}</span>
+                      <Link to={`/projects/${p.id}`} className="text-foreground font-medium hover:text-primary transition-colors">{p.name}</Link>
                       {p.description && (
                         <p className="text-muted-foreground text-[11px] mt-0.5 truncate max-w-xs">{p.description}</p>
                       )}
@@ -227,14 +227,22 @@ export default function ProjectsList() {
                     {format(new Date(p.created_at), 'dd.MM.yyyy')}
                   </td>
                   <td className={cellCls}>
-                    <Link
-                      to={`/projects/${p.id}/files`}
-                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-[11px]"
-                    >
-                      <FolderOpen className="h-3.5 w-3.5" />
-                      Dateien
-                      <ChevronRight className="h-3 w-3" />
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        to={`/projects/${p.id}`}
+                        className="text-muted-foreground hover:text-foreground transition-colors text-[11px]"
+                      >
+                        Details
+                      </Link>
+                      <Link
+                        to={`/projects/${p.id}/files`}
+                        className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-[11px]"
+                      >
+                        <FolderOpen className="h-3.5 w-3.5" />
+                        Dateien
+                        <ChevronRight className="h-3 w-3" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

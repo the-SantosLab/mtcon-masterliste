@@ -19,7 +19,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
+type CaseRow = Tables<'cases'> & {
+  assignee: { display_name: string; short_code: string } | null;
+  project: { id: string; project_number: string; name: string } | null;
+};
+
+interface ProjectOption { id: string; project_number: string; name: string; }
 
 export default function CasesList() {
   const { user, isAdmin, isViewer } = useAuth();
@@ -31,17 +36,19 @@ export default function CasesList() {
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
   const [products, setProducts] = useState<Tables<'products'>[]>([]);
   const [areas, setAreas] = useState<Tables<'internal_areas'>[]>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
+  const [projectFilter, setProjectFilter] = useState<string>('all');
   const [searchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
 
   const fetchCases = async () => {
     const { data } = await supabase
       .from('cases')
-      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name)')
       .order('created_at', { ascending: false });
     setCases((data as CaseRow[]) || []);
     setLoading(false);
@@ -53,6 +60,8 @@ export default function CasesList() {
     supabase.from('customers').select('*').then(r => setCustomers(r.data || []));
     supabase.from('products').select('*').then(r => setProducts(r.data || []));
     supabase.from('internal_areas').select('*').then(r => setAreas(r.data || []));
+    supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
+      .then(r => setProjects((r.data || []) as ProjectOption[]));
     const ch = supabase.channel('list-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
@@ -69,9 +78,13 @@ export default function CasesList() {
     if (statusFilter !== 'all' && c.status !== statusFilter) return false;
     if (assigneeFilter === 'unassigned' && c.assignee_id !== null) return false;
     if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && c.assignee_id !== assigneeFilter) return false;
+    if (projectFilter !== 'all') {
+      if (projectFilter === '_none' && c.project_id !== null) return false;
+      if (projectFilter !== '_none' && c.project_id !== projectFilter) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
-      if (![c.case_no, c.project_name, c.client_name, c.project_article_no].some(v => v?.toLowerCase().includes(s))) return false;
+      if (![c.case_no, c.project_name, c.client_name, c.project_article_no, c.project?.project_number, c.project?.name].some(v => v?.toLowerCase().includes(s))) return false;
     }
     return true;
   });
@@ -93,12 +106,13 @@ export default function CasesList() {
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle className="text-sm font-semibold">Neuen Vorgang anlegen</DialogTitle></DialogHeader>
-                <CreateCaseForm customers={customers} products={products} areas={areas} userId={user?.id || ''} onCreated={() => { setCreateOpen(false); fetchCases(); }} />
+                <CreateCaseForm customers={customers} products={products} areas={areas} projects={projects} userId={user?.id || ''} onCreated={() => { setCreateOpen(false); fetchCases(); }} />
               </DialogContent>
             </Dialog>
           )}
         </div>
 
+        {/* Filters */}
         <div className="flex flex-wrap gap-2 items-end">
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -119,8 +133,21 @@ export default function CasesList() {
               {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.short_code}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={projectFilter} onValueChange={setProjectFilter}>
+            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Projekt" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Projekte</SelectItem>
+              <SelectItem value="_none">Ohne Projekt</SelectItem>
+              {projects.map(p => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="font-mono text-[11px] text-muted-foreground mr-1">{p.project_number}</span>{p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
+        {/* Table */}
         <div className="rounded-md border border-border bg-card overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -128,6 +155,7 @@ export default function CasesList() {
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Endtermin</th>
@@ -136,9 +164,9 @@ export default function CasesList() {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
+                <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
+                <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cellCls}><StatusBadge status={c.status} /></td>
@@ -147,6 +175,19 @@ export default function CasesList() {
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
                     <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
+                  </td>
+                  <td className={cellCls}>
+                    {c.project ? (
+                      <Link
+                        to={`/projects/${c.project.id}`}
+                        className="inline-flex items-center gap-1 group"
+                        title={c.project.name}
+                      >
+                        <span className="font-mono text-[11px] text-primary group-hover:underline">{c.project.project_number}</span>
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground">–</span>
+                    )}
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
@@ -175,25 +216,21 @@ export default function CasesList() {
   );
 }
 
-interface ProjectOption { id: string; project_number: string; name: string; }
-
-function CreateCaseForm({ customers, products, areas, userId, onCreated }: {
-  customers: Tables<'customers'>[]; products: Tables<'products'>[]; areas: Tables<'internal_areas'>[];
-  userId: string; onCreated: () => void;
+function CreateCaseForm({ customers, products, areas, projects, userId, onCreated }: {
+  customers: Tables<'customers'>[];
+  products: Tables<'products'>[];
+  areas: Tables<'internal_areas'>[];
+  projects: ProjectOption[];
+  userId: string;
+  onCreated: () => void;
 }) {
   const [form, setForm] = useState({
     case_no: '', project_name: '', project_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
   });
-  const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
-
-  useEffect(() => {
-    supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
-      .then(r => setProjects((r.data || []) as ProjectOption[]));
-  }, []);
 
   const handleProjectChange = (projectId: string) => {
     const proj = projects.find(p => p.id === projectId);
@@ -228,7 +265,6 @@ function CreateCaseForm({ customers, products, areas, userId, onCreated }: {
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer *</Label><Input value={form.case_no} onChange={e => set('case_no', e.target.value)} placeholder="VG-001" required className="h-8 text-xs" /></div>
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
       </div>
-      {/* Project Link */}
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
         <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
