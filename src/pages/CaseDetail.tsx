@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 type CaseWithRels = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
   creator: { display_name: string; short_code: string } | null;
+  project: { id: string; project_number: string; name: string } | null;
 };
 
 export default function CaseDetail() {
@@ -31,7 +32,7 @@ export default function CaseDetail() {
     if (!id) return;
     const { data } = await supabase
       .from('cases')
-      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), creator:users_profile!cases_created_by_fkey(display_name, short_code)')
+      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), creator:users_profile!cases_created_by_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name)')
       .eq('id', id)
       .single();
     if (data) {
@@ -106,15 +107,27 @@ export default function CaseDetail() {
             <div className="rounded-md border border-border bg-card p-5">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Details</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
-                <Field label="Bearbeiter" value={c.assignee?.short_code} />
-                <Field label="Kunde" value={c.customer_no} />
-                <Field label="Auftraggeber" value={c.client_name} />
-                <Field label="Produkt" value={c.product_code} />
-                <Field label="Bereich intern" value={c.internal_area_code} />
-                <Field label="Projekt-/Artikelnr." value={c.project_article_no} />
-                <Field label="Geschätzte Std." value={c.estimated_hours?.toString()} />
-                <Field label="Erstellt von" value={c.creator?.short_code} />
-              </div>
+                 <Field label="Bearbeiter" value={c.assignee?.short_code} />
+                 <Field label="Kunde" value={c.customer_no} />
+                 <Field label="Auftraggeber" value={c.client_name} />
+                 <Field label="Produkt" value={c.product_code} />
+                 <Field label="Bereich intern" value={c.internal_area_code} />
+                 <Field label="Projekt-/Artikelnr." value={c.project_article_no} />
+                 <Field label="Geschätzte Std." value={c.estimated_hours?.toString()} />
+                 <Field label="Erstellt von" value={c.creator?.short_code} />
+                 {c.project && (
+                   <div>
+                     <p className="text-[11px] text-muted-foreground mb-0.5">Verknüpftes Projekt</p>
+                     <Link
+                       to={`/projects/${c.project.id}/files`}
+                       className="text-sm text-primary hover:underline flex items-center gap-1"
+                     >
+                       <span className="font-mono text-[11px] text-muted-foreground">{c.project.project_number}</span>
+                       <span className="ml-1">{c.project.name}</span>
+                     </Link>
+                   </div>
+                 )}
+               </div>
             </div>
 
             <div className="rounded-md border border-border bg-card p-5">
