@@ -334,6 +334,57 @@ export type Database = {
         }
         Relationships: []
       }
+      project_activity: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          field: string | null
+          id: string
+          message: string | null
+          new_value: string | null
+          old_value: string | null
+          project_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          field?: string | null
+          id?: string
+          message?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          project_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          field?: string | null
+          id?: string
+          message?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_activity_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_activity_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_folders: {
         Row: {
           created_at: string

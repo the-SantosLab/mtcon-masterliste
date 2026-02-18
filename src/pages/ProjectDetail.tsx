@@ -1,21 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate } from '@/lib/case-utils';
+import { formatDate, formatRelativeTime, ACTION_LABELS } from '@/lib/case-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
   ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
   CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
-  Pencil, Check, X, Clock,
+  Pencil, Check, X, Clock, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -39,6 +38,85 @@ interface Member {
 }
 
 interface Department { id: string; name: string; code: string; }
+
+interface ProjectActivity {
+  id: string;
+  project_id: string;
+  actor_id: string;
+  action: string;
+  field: string | null;
+  old_value: string | null;
+  new_value: string | null;
+  message: string | null;
+  created_at: string;
+  actor: { display_name: string; short_code: string } | null;
+}
+
+const PROJECT_ACTION_LABELS: Record<string, string> = {
+  EDIT: 'Geändert',
+  CREATE: 'Erstellt',
+  COMMENT: 'Kommentar',
+  STATUS_CHANGE: 'Status geändert',
+};
+
+function ProjectActivityTimeline({ projectId, refreshKey }: { projectId: string; refreshKey: number }) {
+  const [activities, setActivities] = useState<ProjectActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetch = useCallback(async () => {
+    const { data } = await supabase
+      .from('project_activity')
+      .select('*, actor:users_profile!project_activity_actor_id_fkey(display_name, short_code)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setActivities((data as ProjectActivity[]) || []);
+    setLoading(false);
+  }, [projectId]);
+
+  useEffect(() => {
+    fetch();
+    const channel = supabase
+      .channel(`project-activity-${projectId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'project_activity', filter: `project_id=eq.${projectId}` }, () => { fetch(); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [projectId, refreshKey, fetch]);
+
+  if (loading) return <p className="text-xs text-muted-foreground p-4">Laden…</p>;
+  if (activities.length === 0) return <p className="text-xs text-muted-foreground p-4">Keine Aktivitäten</p>;
+
+  return (
+    <div className="divide-y divide-border">
+      {activities.map((a) => (
+        <div key={a.id} className="px-4 py-3">
+          <div className="flex items-baseline justify-between gap-2 mb-0.5">
+            <span className="text-xs font-medium text-foreground">
+              {a.actor?.short_code || 'System'}
+            </span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              {formatRelativeTime(a.created_at)}
+            </span>
+          </div>
+          {a.action === 'COMMENT' ? (
+            <p className="text-xs text-foreground mt-1 whitespace-pre-wrap leading-relaxed">{a.message}</p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              {PROJECT_ACTION_LABELS[a.action] || a.action}
+              {a.field && (
+                <span>
+                  {' · '}<span className="font-medium text-foreground/70">{a.field}</span>
+                  {a.old_value && <span className="line-through opacity-60"> {a.old_value}</span>}
+                  {a.new_value && <span className="text-foreground"> → {a.new_value}</span>}
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const CASE_STATUS_LABELS: Record<string, string> = {
   nicht_begonnen: 'Nicht begonnen', in_planung: 'In Planung', in_arbeit: 'In Arbeit',
@@ -156,6 +234,7 @@ export default function ProjectDetail() {
   const [members, setMembers] = useState<Member[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activityRefreshKey, setActivityRefreshKey] = useState(0);
 
   const loadProject = async () => {
     if (!id) return;
@@ -220,7 +299,16 @@ export default function ProjectDetail() {
       updated_at: new Date().toISOString(),
     }).eq('id', project.id);
     if (error) { toast.error('Fehler: ' + error.message); return; }
+    await supabase.from('project_activity').insert({
+      project_id: project.id,
+      actor_id: user.id,
+      action: 'EDIT',
+      field: label,
+      old_value: oldValue || null,
+      new_value: value,
+    });
     toast.success(`${label} aktualisiert`);
+    setActivityRefreshKey(k => k + 1);
     await loadProject();
   };
 
@@ -424,7 +512,7 @@ export default function ProjectDetail() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-foreground truncate">{m.profile?.display_name ?? m.user_id}</p>
                         <div className="flex items-center gap-1 mt-0.5">
-                          {m.role === 'manager' && <Crown className="h-3 w-3 text-amber-500" />}
+                          {m.role === 'manager' && <Crown className="h-3 w-3 text-warning" />}
                           <span className="text-[11px] text-muted-foreground">{m.role === 'manager' ? 'Projektleiter' : 'Mitglied'}</span>
                         </div>
                       </div>
@@ -440,6 +528,15 @@ export default function ProjectDetail() {
                 {VISIBILITY_LABELS[project.visibility] ?? project.visibility}
                 {project.visibility === 'department' && dept ? ` (${dept.name})` : ''}
               </p>
+            </div>
+
+            {/* Activity Timeline */}
+            <div className="rounded-md border border-border bg-card overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Aktivitäten</h3>
+              </div>
+              <ProjectActivityTimeline projectId={project.id} refreshKey={activityRefreshKey} />
             </div>
           </div>
         </div>
