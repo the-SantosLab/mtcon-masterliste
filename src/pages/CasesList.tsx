@@ -175,29 +175,49 @@ export default function CasesList() {
   );
 }
 
+interface ProjectOption { id: string; project_number: string; name: string; }
+
 function CreateCaseForm({ customers, products, areas, userId, onCreated }: {
   customers: Tables<'customers'>[]; products: Tables<'products'>[]; areas: Tables<'internal_areas'>[];
   userId: string; onCreated: () => void;
 }) {
-  const [form, setForm] = useState({ case_no: '', project_name: '', customer_no: '', client_name: '', internal_area_code: '', product_code: '', project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '' });
+  const [form, setForm] = useState({
+    case_no: '', project_name: '', project_id: '',
+    customer_no: '', client_name: '', internal_area_code: '', product_code: '',
+    project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
+  });
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
+      .then(r => setProjects((r.data || []) as ProjectOption[]));
+  }, []);
+
+  const handleProjectChange = (projectId: string) => {
+    const proj = projects.find(p => p.id === projectId);
+    set('project_id', projectId);
+    if (proj) set('project_name', proj.name);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.case_no || !form.project_name) { toast.error('Nr. und Projektname sind Pflicht'); return; }
     setSaving(true);
-    const { error } = await supabase.from('cases').insert({
-      case_no: form.case_no, project_name: form.project_name, customer_no: form.customer_no || null,
+    const { data: newCase, error } = await supabase.from('cases').insert({
+      case_no: form.case_no, project_name: form.project_name,
+      project_id: form.project_id || null,
+      customer_no: form.customer_no || null,
       client_name: form.client_name || null, internal_area_code: form.internal_area_code || null,
       product_code: form.product_code || null, project_article_no: form.project_article_no || null,
       received_at: form.received_at || null, due_at: form.due_at || null, note: form.note || null,
       estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : null,
       created_by: userId, last_changed_by: userId, last_changed_at: new Date().toISOString(),
-    });
+    }).select('id').single();
     setSaving(false);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-    await supabase.from('case_activity').insert({ case_id: (await supabase.from('cases').select('id').eq('case_no', form.case_no).order('created_at', { ascending: false }).limit(1).single()).data?.id || '', action: 'CREATE', actor_id: userId });
+    if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
+    await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
     toast.success('Vorgang erstellt');
     onCreated();
   };
@@ -207,6 +227,21 @@ function CreateCaseForm({ customers, products, areas, userId, onCreated }: {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer *</Label><Input value={form.case_no} onChange={e => set('case_no', e.target.value)} placeholder="VG-001" required className="h-8 text-xs" /></div>
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
+      </div>
+      {/* Project Link */}
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
+        <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
+          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_none">Kein Projekt</SelectItem>
+            {projects.map(p => (
+              <SelectItem key={p.id} value={p.id}>
+                <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>{p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Kunde</Label>
@@ -235,7 +270,7 @@ function CreateCaseForm({ customers, products, areas, userId, onCreated }: {
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
       </div>
       <div className="space-y-1"><Label className="text-xs text-muted-foreground">Bemerkung</Label><Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={2} className="text-xs" /></div>
-      <Button type="submit" className="w-full h-8 text-xs" disabled={saving}>{saving ? 'Speichern' : 'Vorgang anlegen'}</Button>
+      <Button type="submit" className="w-full h-8 text-xs" disabled={saving}>{saving ? 'Speichern…' : 'Vorgang anlegen'}</Button>
     </form>
   );
 }

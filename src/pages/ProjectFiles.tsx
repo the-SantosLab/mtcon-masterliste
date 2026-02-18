@@ -5,13 +5,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
   Folder, FolderOpen, Upload, File, Trash2,
   ChevronRight, ArrowLeft, RefreshCw, Download,
+  Users, UserPlus, X, Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 interface ProjectFolder {
   id: string;
@@ -24,7 +27,6 @@ interface StorageFile {
   name: string;
   id: string | null;
   metadata?: { size?: number; mimetype?: string };
-  updated_at?: string;
 }
 
 interface Project {
@@ -33,6 +35,21 @@ interface Project {
   project_code: string;
   name: string;
   status: string;
+  owner_id: string | null;
+  created_by: string;
+}
+
+interface Member {
+  id: string;
+  user_id: string;
+  role: string;
+  profile: { display_name: string; short_code: string } | null;
+}
+
+interface Profile {
+  id: string;
+  display_name: string;
+  short_code: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -57,11 +74,23 @@ export default function ProjectFiles() {
   const [loadingFiles, setLoadingFiles] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Members state
+  const [members, setMembers] = useState<Member[]>([]);
+  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [addUserId, setAddUserId] = useState('');
+  const [addRole, setAddRole] = useState('member');
+  const [addingMember, setAddingMember] = useState(false);
+
+  const isOwner = project && (project.owner_id === user?.id || project.created_by === user?.id);
+  const canManageMembers = isAdmin || isOwner;
+
   // Load project + folders
   useEffect(() => {
     if (!id) return;
     Promise.all([
-      supabase.from('projects').select('id, project_number, project_code, name, status').eq('id', id).single(),
+      supabase.from('projects').select('id, project_number, project_code, name, status, owner_id, created_by').eq('id', id).single(),
       supabase.from('project_folders').select('*').eq('project_id', id).order('sort_order'),
     ]).then(([projRes, foldersRes]) => {
       if (projRes.data) setProject(projRes.data as Project);
@@ -69,7 +98,30 @@ export default function ProjectFiles() {
       setFolders(f);
       if (f.length > 0) setActiveFolder(f[0]);
     });
+    supabase.from('users_profile').select('id, display_name, short_code').eq('active', true).order('display_name')
+      .then(r => setAllProfiles((r.data || []) as Profile[]));
   }, [id]);
+
+  // Load members
+  const loadMembers = async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from('project_members')
+      .select('id, user_id, role')
+      .eq('project_id', id);
+    if (data) {
+      // enrich with profiles
+      const enriched = (data as { id: string; user_id: string; role: string }[]).map(m => ({
+        ...m,
+        profile: allProfiles.find(p => p.id === m.user_id) ?? null,
+      }));
+      setMembers(enriched);
+    }
+  };
+
+  useEffect(() => {
+    if (allProfiles.length > 0 && id) loadMembers();
+  }, [allProfiles, id]);
 
   // Load files whenever active folder changes
   useEffect(() => {
@@ -86,7 +138,6 @@ export default function ProjectFiles() {
       toast.error('Fehler beim Laden: ' + error.message);
       setFiles([]);
     } else {
-      // Filter out .keep placeholder
       setFiles((data || []).filter(f => f.name !== '.keep') as StorageFile[]);
     }
     setLoadingFiles(false);
@@ -100,20 +151,15 @@ export default function ProjectFiles() {
     const { error } = await supabase.storage
       .from('project-files')
       .upload(filePath, file, { upsert: true });
-    if (error) {
-      toast.error('Upload fehlgeschlagen: ' + error.message);
-    } else {
-      toast.success(`${file.name} hochgeladen`);
-      loadFiles(activeFolder.path);
-    }
+    if (error) toast.error('Upload fehlgeschlagen: ' + error.message);
+    else { toast.success(`${file.name} hochgeladen`); loadFiles(activeFolder.path); }
     setUploading(false);
     e.target.value = '';
   };
 
   const handleDelete = async (fileName: string) => {
     if (!activeFolder) return;
-    const filePath = `${activeFolder.path}${fileName}`;
-    const { error } = await supabase.storage.from('project-files').remove([filePath]);
+    const { error } = await supabase.storage.from('project-files').remove([`${activeFolder.path}${fileName}`]);
     if (error) { toast.error('Fehler: ' + error.message); return; }
     toast.success('Datei gelöscht');
     loadFiles(activeFolder.path);
@@ -121,8 +167,7 @@ export default function ProjectFiles() {
 
   const handleDownload = async (fileName: string) => {
     if (!activeFolder) return;
-    const filePath = `${activeFolder.path}${fileName}`;
-    const { data, error } = await supabase.storage.from('project-files').download(filePath);
+    const { data, error } = await supabase.storage.from('project-files').download(`${activeFolder.path}${fileName}`);
     if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
     const url = URL.createObjectURL(data);
     const a = document.createElement('a');
@@ -132,11 +177,32 @@ export default function ProjectFiles() {
     URL.revokeObjectURL(url);
   };
 
+  const handleAddMember = async () => {
+    if (!addUserId || !id) return;
+    setAddingMember(true);
+    const { error } = await supabase.from('project_members').insert({
+      project_id: id, user_id: addUserId, role: addRole,
+    });
+    if (error) toast.error('Fehler: ' + error.message);
+    else { toast.success('Mitglied hinzugefügt'); loadMembers(); }
+    setAddingMember(false);
+    setAddMemberOpen(false);
+    setAddUserId('');
+    setAddRole('member');
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    const { error } = await supabase.from('project_members').delete().eq('id', memberId);
+    if (error) toast.error('Fehler: ' + error.message);
+    else { toast.success('Mitglied entfernt'); loadMembers(); }
+  };
+
   if (!project) return (
-    <AppLayout>
-      <div className="text-xs text-muted-foreground p-8">Laden…</div>
-    </AppLayout>
+    <AppLayout><div className="text-xs text-muted-foreground p-8">Laden…</div></AppLayout>
   );
+
+  const memberIds = new Set(members.map(m => m.user_id));
+  const availableProfiles = allProfiles.filter(p => !memberIds.has(p.id));
 
   return (
     <AppLayout>
@@ -154,6 +220,15 @@ export default function ProjectFiles() {
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">Datei-Ablage</p>
           </div>
+          {/* Members Button */}
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setMembersOpen(true)}
+            className="h-8 text-xs gap-1.5"
+          >
+            <Users className="h-3.5 w-3.5" />
+            Team ({members.length})
+          </Button>
         </div>
 
         <div className="flex gap-4 h-[calc(100vh-14rem)]">
@@ -193,22 +268,13 @@ export default function ProjectFiles() {
                 <span className="text-xs font-medium text-foreground">{activeFolder?.name || '–'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost" size="sm"
-                  onClick={() => activeFolder && loadFiles(activeFolder.path)}
-                  className="h-7 text-xs text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" onClick={() => activeFolder && loadFiles(activeFolder.path)} className="h-7 text-xs text-muted-foreground">
                   <RefreshCw className="h-3 w-3" />
                 </Button>
                 {!isViewer && (
                   <>
                     <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
-                    <Button
-                      size="sm"
-                      onClick={() => fileRef.current?.click()}
-                      disabled={uploading || !activeFolder}
-                      className="h-7 text-xs gap-1.5"
-                    >
+                    <Button size="sm" onClick={() => fileRef.current?.click()} disabled={uploading || !activeFolder} className="h-7 text-xs gap-1.5">
                       <Upload className="h-3.5 w-3.5" />
                       {uploading ? 'Lädt…' : 'Hochladen'}
                     </Button>
@@ -217,7 +283,6 @@ export default function ProjectFiles() {
               </div>
             </div>
 
-            {/* File Table */}
             <div className="flex-1 overflow-y-auto">
               {loadingFiles ? (
                 <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Laden…</div>
@@ -258,19 +323,11 @@ export default function ProjectFiles() {
                         </td>
                         <td className={cellCls}>
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleDownload(f.name)}
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                              title="Herunterladen"
-                            >
+                            <button onClick={() => handleDownload(f.name)} className="text-muted-foreground hover:text-foreground transition-colors" title="Herunterladen">
                               <Download className="h-3.5 w-3.5" />
                             </button>
                             {(isAdmin || !isViewer) && (
-                              <button
-                                onClick={() => handleDelete(f.name)}
-                                className="text-muted-foreground hover:text-destructive transition-colors"
-                                title="Löschen"
-                              >
+                              <button onClick={() => handleDelete(f.name)} className="text-muted-foreground hover:text-destructive transition-colors" title="Löschen">
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
                             )}
@@ -289,6 +346,91 @@ export default function ProjectFiles() {
           </div>
         </div>
       </div>
+
+      {/* Members Panel Dialog */}
+      <Dialog open={membersOpen} onOpenChange={setMembersOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-sm font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Team-Mitglieder
+              </DialogTitle>
+              {canManageMembers && (
+                <Button size="sm" variant="outline" onClick={() => setAddMemberOpen(true)} className="h-7 text-xs gap-1.5">
+                  <UserPlus className="h-3.5 w-3.5" />Hinzufügen
+                </Button>
+              )}
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-1 max-h-80 overflow-y-auto">
+            {members.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6">Keine Mitglieder</p>
+            ) : members.map(m => (
+              <div key={m.id} className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted/50 group">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-[10px] font-medium text-primary">
+                      {m.profile?.short_code?.slice(0, 2).toUpperCase() ?? '?'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">{m.profile?.display_name ?? m.user_id}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {m.role === 'manager' && <Crown className="h-3 w-3 text-amber-500" />}
+                      <span className="text-[11px] text-muted-foreground capitalize">{m.role === 'manager' ? 'Projektleiter' : 'Mitglied'}</span>
+                    </div>
+                  </div>
+                </div>
+                {canManageMembers && m.user_id !== project?.owner_id && m.user_id !== project?.created_by && (
+                  <button
+                    onClick={() => handleRemoveMember(m.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Member Dialog */}
+      <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Mitglied hinzufügen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Benutzer</Label>
+              <Select value={addUserId} onValueChange={setAddUserId}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Benutzer wählen" /></SelectTrigger>
+                <SelectContent>
+                  {availableProfiles.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.display_name} ({p.short_code})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Rolle</Label>
+              <Select value={addRole} onValueChange={setAddRole}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Mitglied</SelectItem>
+                  <SelectItem value="manager">Projektleiter</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleAddMember} disabled={!addUserId || addingMember} className="w-full h-8 text-xs">
+              {addingMember ? 'Wird hinzugefügt…' : 'Hinzufügen'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
