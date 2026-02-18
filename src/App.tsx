@@ -16,6 +16,7 @@ import AdminDepartments from "./pages/AdminDepartments";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectFiles from "./pages/ProjectFiles";
 import ProjectDetail from "./pages/ProjectDetail";
+import AdminDashboard from "./pages/AdminDashboard";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,7 @@ function AuthenticatedApp() {
         <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
