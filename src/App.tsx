@@ -13,6 +13,9 @@ import CaseDetail from "./pages/CaseDetail";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
 import AdminDepartments from "./pages/AdminDepartments";
+import ProjectsList from "./pages/ProjectsList";
+import ProjectFiles from "./pages/ProjectFiles";
+import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +36,9 @@ function AuthenticatedApp() {
         <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
         <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
         <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
+        <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
+        <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />
+        <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />

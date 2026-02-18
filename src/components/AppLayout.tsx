@@ -5,6 +5,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
+  FolderKanban, BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,8 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
+  { href: '/projects', label: 'Projekte', icon: FolderKanban },
+  { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
