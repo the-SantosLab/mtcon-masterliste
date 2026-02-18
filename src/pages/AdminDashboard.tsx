@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +7,7 @@ import { formatDate, STATUS_LABELS } from '@/lib/case-utils';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
   ClipboardList, AlertTriangle, FolderKanban, User2,
-  TrendingUp, ArrowRight, RefreshCw,
+  TrendingUp, ArrowRight, RefreshCw, CalendarDays,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -15,14 +15,15 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
+import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
-  assignee_id: string | null; due_at: string | null;
+  assignee_id: string | null; due_at: string | null; created_at: string;
   assignee: { short_code: string; display_name: string } | null;
 }
 
-interface ProjectRow { id: string; name: string; project_number: string; status: string; }
+interface ProjectRow { id: string; name: string; project_number: string; status: string; created_at: string; }
 
 const STATUS_COLORS: Record<string, string> = {
   nicht_begonnen: 'hsl(var(--status-open))',
@@ -33,6 +34,23 @@ const STATUS_COLORS: Record<string, string> = {
   verworfen: 'hsl(var(--status-rejected))',
   archiv: 'hsl(var(--muted-foreground))',
 };
+
+type DateRange = 'all' | '7d' | '30d' | 'quarter';
+
+const DATE_RANGE_OPTIONS: { key: DateRange; label: string }[] = [
+  { key: 'all', label: 'Gesamt' },
+  { key: '7d', label: '7 Tage' },
+  { key: '30d', label: '30 Tage' },
+  { key: 'quarter', label: 'Quartal' },
+];
+
+function getStartDate(range: DateRange): Date | null {
+  const now = new Date();
+  if (range === '7d') return subDays(now, 7);
+  if (range === '30d') return subDays(now, 30);
+  if (range === 'quarter') return startOfQuarter(now);
+  return null;
+}
 
 function KPITile({
   icon: Icon, label, value, sub, accent, href,
@@ -67,6 +85,7 @@ export default function AdminDashboard() {
   const [userCount, setUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>('all');
 
   // Redirect non-admins
   useEffect(() => {
@@ -76,9 +95,9 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     const [casesRes, projectsRes, usersRes] = await Promise.all([
       supabase.from('cases')
-        .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(short_code, display_name)')
+        .select('id, case_no, project_name, status, assignee_id, due_at, created_at, assignee:users_profile!cases_assignee_id_fkey(short_code, display_name)')
         .order('created_at', { ascending: false }),
-      supabase.from('projects').select('id, name, project_number, status'),
+      supabase.from('projects').select('id, name, project_number, status, created_at'),
       supabase.from('users_profile').select('id', { count: 'exact', head: true }).eq('active', true),
     ]);
     setCases((casesRes.data || []) as CaseRow[]);
@@ -97,17 +116,32 @@ export default function AdminDashboard() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
+  const today = new Date().toISOString().split('T')[0];
+
+  // Apply date-range filter to cases & projects (computed before early return to satisfy hooks rules)
+  const startDate = getStartDate(dateRange);
+  const filteredCases = useMemo(() => {
+    if (!startDate) return cases;
+    return cases.filter(c => parseISO(c.created_at) >= startDate);
+  }, [cases, startDate]);
+
+  const filteredProjects = useMemo(() => {
+    if (!startDate) return projects;
+    return projects.filter(p => parseISO(p.created_at) >= startDate);
+  }, [projects, startDate]);
+
   if (!isAdmin) return null;
 
-  const today = new Date().toISOString().split('T')[0];
   const activeStatuses = ['nicht_begonnen', 'in_planung', 'in_arbeit', 'in_verzug'];
-  const activeCases = cases.filter(c => activeStatuses.includes(c.status));
+  const activeCases = filteredCases.filter(c => activeStatuses.includes(c.status));
   const openCases = activeCases.filter(c => c.status === 'nicht_begonnen');
-  const overdueCases = activeCases.filter(c => c.status === 'in_verzug' || (c.due_at && c.due_at < today && c.status !== 'abgeschlossen'));
-  const myCases = cases.filter(c => c.assignee_id === user?.id && activeStatuses.includes(c.status));
-  const activeProjects = projects.filter(p => p.status === 'active');
+  const overdueCases = activeCases.filter(c =>
+    c.status === 'in_verzug' || (c.due_at && c.due_at < today && c.status !== 'abgeschlossen')
+  );
+  const myCases = filteredCases.filter(c => c.assignee_id === user?.id && activeStatuses.includes(c.status));
+  const activeProjects = filteredProjects.filter(p => p.status === 'active');
 
-  // Status distribution chart data (active only)
+  // Status distribution
   const statusDist = Object.entries(
     activeCases.reduce<Record<string, number>>((acc, c) => {
       acc[c.status] = (acc[c.status] || 0) + 1;
@@ -119,18 +153,14 @@ export default function AdminDashboard() {
     color: STATUS_COLORS[status] ?? 'hsl(var(--muted-foreground))',
   })).sort((a, b) => b.value - a.value);
 
-  // Workload per assignee (active cases only)
+  // Workload per assignee
   const workloadData = Object.values(
     activeCases
       .filter(c => c.assignee_id && c.assignee)
       .reduce<Record<string, { name: string; count: number; overdue: number }>>((acc, c) => {
         const key = c.assignee_id!;
         if (!acc[key]) {
-          acc[key] = {
-            name: c.assignee?.short_code ?? '?',
-            count: 0,
-            overdue: 0,
-          };
+          acc[key] = { name: c.assignee?.short_code ?? '?', count: 0, overdue: 0 };
         }
         acc[key].count += 1;
         if (c.status === 'in_verzug' || (c.due_at && c.due_at < today)) {
@@ -140,8 +170,9 @@ export default function AdminDashboard() {
       }, {})
   ).sort((a, b) => b.count - a.count);
 
-  // Recent overdue cases
   const recentOverdue = overdueCases.slice(0, 8);
+
+  const rangeLabel = DATE_RANGE_OPTIONS.find(o => o.key === dateRange)?.label ?? '';
 
   return (
     <AppLayout>
@@ -156,11 +187,44 @@ export default function AdminDashboard() {
               Echtzeit-Übersicht · Aktualisiert {lastRefresh.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
           </div>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
-            Aktualisieren
-          </Button>
+
+          {/* Controls */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Date range pills */}
+            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground ml-2 shrink-0" />
+              {DATE_RANGE_OPTIONS.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setDateRange(opt.key)}
+                  className={cn(
+                    'px-2.5 py-1 text-[11px] font-medium rounded transition-colors',
+                    dateRange === opt.key
+                      ? 'bg-card text-foreground shadow-sm border border-border'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={fetchData} disabled={loading}>
+              <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+              Aktualisieren
+            </Button>
+          </div>
         </div>
+
+        {/* Active filter hint */}
+        {dateRange !== 'all' && (
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <CalendarDays className="h-3 w-3" />
+            Zeigt Vorgänge &amp; Projekte aus den letzten
+            {' '}<span className="font-medium text-foreground">{rangeLabel}</span>
+            {' '}· erstellt in diesem Zeitraum
+          </div>
+        )}
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -184,7 +248,7 @@ export default function AdminDashboard() {
             icon={FolderKanban}
             label="Aktive Projekte"
             value={activeProjects.length}
-            sub={`${projects.length} Projekte gesamt`}
+            sub={`${filteredProjects.length} Projekte gesamt`}
             accent="bg-[hsl(var(--status-working))]/10 text-[hsl(var(--status-working))]"
             href="/projects"
           />
