@@ -31,6 +31,7 @@ const navItems = [
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },

@@ -60,6 +60,22 @@ export default function CaseDetail() {
     }).eq('id', c.id);
     if (error) { toast.error('Fehler'); return; }
     await supabase.from('case_activity').insert({ case_id: c.id, action: 'STATUS_CHANGE', field: 'status', old_value: old, new_value: newStatus, actor_id: user.id });
+
+    // Notify creator and assignee (if different from actor)
+    const notifyTargets = new Set<string>();
+    if (c.created_by && c.created_by !== user.id) notifyTargets.add(c.created_by);
+    if (c.assignee_id && c.assignee_id !== user.id) notifyTargets.add(c.assignee_id);
+    const statusLabel = STATUS_LABELS[newStatus as Enums<'case_status'>] ?? newStatus;
+    await Promise.all([...notifyTargets].map(uid =>
+      supabase.from('notifications').insert({
+        user_id: uid,
+        type: 'status_change',
+        title: `Status geändert: ${c.case_no}`,
+        body: `${c.project_name} → ${statusLabel}`,
+        href: `/cases/${c.id}`,
+      })
+    ));
+
     toast.success('Status geändert');
     refresh();
   };

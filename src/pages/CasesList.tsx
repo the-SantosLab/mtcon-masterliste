@@ -9,7 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, UserCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -42,6 +43,9 @@ export default function CasesList() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [onlyMine, setOnlyMine] = useState<boolean>(() => {
+    try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
+  });
   const [searchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -74,7 +78,16 @@ export default function CasesList() {
 
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, fetchCases);
 
+  const toggleOnlyMine = () => {
+    setOnlyMine(v => {
+      const next = !v;
+      try { localStorage.setItem('casesFilter_onlyMine', String(next)); } catch {}
+      return next;
+    });
+  };
+
   const filtered = cases.filter(c => {
+    if (onlyMine && c.assignee_id !== user?.id) return false;
     if (statusFilter !== 'all' && c.status !== statusFilter) return false;
     if (assigneeFilter === 'unassigned' && c.assignee_id !== null) return false;
     if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && c.assignee_id !== assigneeFilter) return false;
@@ -145,6 +158,19 @@ export default function CasesList() {
               ))}
             </SelectContent>
           </Select>
+          <button
+            onClick={toggleOnlyMine}
+            className={cn(
+              'flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs font-medium transition-colors shrink-0',
+              onlyMine
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+            )}
+          >
+            <UserCheck className="h-3.5 w-3.5" />
+            Nur meine
+            {onlyMine && <span className="ml-0.5 bg-primary text-primary-foreground text-[10px] rounded-full px-1 leading-none py-0.5">{filtered.length}</span>}
+          </button>
         </div>
 
         {/* Table */}
