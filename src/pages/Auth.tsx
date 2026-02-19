@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,11 +35,15 @@ export default function Auth() {
         if (error) toast.error(error.message.includes('Invalid login') ? 'Ungültige E-Mail oder Passwort' : error.message);
       } else {
         if (!email) { toast.error('Bitte E-Mail eingeben'); setSubmitting(false); return; }
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({ email, redirectTo: `${window.location.origin}/reset-password` }),
         });
-        if (error) toast.error(error.message);
-        else {
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          toast.error(json.error || 'Fehler beim Senden');
+        } else {
           toast.success('Passwort-Reset-E-Mail wurde gesendet. Bitte prüfe dein Postfach.');
           setView('login');
         }
