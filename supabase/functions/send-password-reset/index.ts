@@ -24,10 +24,12 @@ Deno.serve(async (req) => {
   );
 
   // Generate the recovery link via admin API
+  // redirectTo must be the published app URL so Supabase redirects correctly
+  const finalRedirectTo = redirectTo || 'https://work-sync-quest.lovable.app/reset-password';
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: redirectTo || `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '')}/reset-password` },
+    options: { redirectTo: finalRedirectTo },
   });
 
   if (error || !data?.properties?.action_link) {
