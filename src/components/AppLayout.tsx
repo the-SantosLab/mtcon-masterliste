@@ -9,6 +9,7 @@ import {
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
   FolderKanban, BookOpen, Search,
 } from 'lucide-react';
+import mtconLogo from '@/assets/mtcon_logo.png';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -79,8 +80,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       )}>
         <div className="flex items-center gap-2.5 px-4 h-14 border-b border-sidebar-border shrink-0">
-          <div className="h-7 w-7 rounded bg-primary flex items-center justify-center">
-            <span className="text-[11px] font-semibold text-primary-foreground tracking-tight">KS</span>
+          <div className="h-7 w-7 flex items-center justify-center shrink-0">
+            <img src={mtconLogo} alt="MTCON Logo" className="h-7 w-7 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground leading-tight">Command Light</p>
