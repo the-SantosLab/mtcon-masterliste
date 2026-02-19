@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'KS Command <noreply@kscommand.de>',
+      from: 'KS Command <noreply@kscommand.com>',
       to: [email],
       subject: 'Passwort zurücksetzen – KS Command',
       html: `
