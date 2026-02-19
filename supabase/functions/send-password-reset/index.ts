@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
   // Generate the recovery link via admin API
   // redirectTo must be the published app URL so Supabase redirects correctly
-  const finalRedirectTo = redirectTo || 'https://work-sync-quest.lovable.app/reset-password';
+  const finalRedirectTo = redirectTo || 'https://mtcon.kscommand.com/reset-password';
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: 'recovery',
     email,
