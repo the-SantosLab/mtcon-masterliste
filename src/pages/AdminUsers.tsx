@@ -34,6 +34,8 @@ export default function AdminUsers() {
   const [newRole, setNewRole] = useState<string>('staff');
   const [newActive, setNewActive] = useState(true);
   const [newDeptId, setNewDeptId] = useState<string>('');
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [newShortCode, setNewShortCode] = useState('');
 
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
@@ -67,6 +69,8 @@ export default function AdminUsers() {
     setNewRole(u.role || 'staff');
     setNewActive(u.active);
     setNewDeptId((u as any).department_id || '');
+    setNewDisplayName(u.display_name);
+    setNewShortCode(u.short_code);
   };
 
   const saveEdit = async () => {
@@ -74,6 +78,8 @@ export default function AdminUsers() {
     await supabase.from('users_profile').update({
       active: newActive,
       department_id: newDeptId || null,
+      display_name: newDisplayName,
+      short_code: newShortCode,
     } as any).eq('id', editing.id);
     if (editing.roleId) {
       await supabase.from('user_roles').update({ role: newRole as Enums<'app_role'> }).eq('id', editing.roleId);
@@ -191,6 +197,14 @@ export default function AdminUsers() {
           <DialogContent>
             <DialogHeader><DialogTitle className="text-sm font-semibold">{editing?.display_name} bearbeiten</DialogTitle></DialogHeader>
             <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Vollständiger Name</Label>
+                <Input value={newDisplayName} onChange={e => setNewDisplayName(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Kürzel</Label>
+                <Input value={newShortCode} onChange={e => setNewShortCode(e.target.value)} className="h-8 text-xs font-mono" />
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Rolle</Label>
                 <Select value={newRole} onValueChange={setNewRole}>
