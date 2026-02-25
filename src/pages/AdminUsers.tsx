@@ -157,8 +157,9 @@ export default function AdminUsers() {
           </Button>
         </div>
 
-        <div className="rounded-md border border-border bg-card overflow-x-auto">
-          <table className="w-full text-xs min-w-[600px]">
+        {/* Desktop table */}
+        <div className="rounded-md border border-border bg-card overflow-hidden hidden md:block">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
@@ -193,6 +194,35 @@ export default function AdminUsers() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="space-y-2 md:hidden">
+          {loading ? (
+            <p className="text-center text-muted-foreground text-xs py-4">Laden…</p>
+          ) : users.map(u => (
+            <div key={u.id} className="rounded-md border border-border bg-card px-4 py-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">{u.display_name}</span>
+                <button onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <span className="text-muted-foreground">Kürzel</span>
+                <span className="font-mono text-foreground">{u.short_code}</span>
+                <span className="text-muted-foreground">Rolle</span>
+                <span className="capitalize text-foreground">{u.role || '–'}</span>
+                <span className="text-muted-foreground">Abteilung</span>
+                <span className="text-foreground">{u.department_name || '–'}</span>
+                <span className="text-muted-foreground">Status</span>
+                <span className={`inline-flex items-center gap-1.5 ${u.active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${u.active ? 'bg-[hsl(var(--status-done))]' : 'bg-[hsl(var(--status-rejected))]'}`} />
+                  {u.active ? 'Aktiv' : 'Inaktiv'}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Edit dialog */}
