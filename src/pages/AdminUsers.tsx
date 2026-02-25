@@ -6,12 +6,13 @@ import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
@@ -46,6 +47,10 @@ export default function AdminUsers() {
   const [form, setForm] = useState(emptyNew);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Delete state
+  const [deleting, setDeleting] = useState<ProfileWithRole | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const fetchUsers = async () => {
     const [profilesRes, rolesRes, deptsRes] = await Promise.all([
       supabase.from('users_profile').select('*').order('display_name'),
@@ -67,6 +72,32 @@ export default function AdminUsers() {
   useEffect(() => { fetchUsers(); }, []);
 
   if (!authLoading && !isAdmin) return <Navigate to="/" replace />;
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    setDeleteLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ user_id: deleting.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Fehler beim Löschen');
+      toast.success(`Mitarbeiter "${deleting.display_name}" wurde gelöscht`);
+      setDeleting(null);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const openEdit = (u: ProfileWithRole) => {
     setEditing(u);
@@ -217,9 +248,14 @@ export default function AdminUsers() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <button onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground transition-colors">
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => setDeleting(u)} className="text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -235,9 +271,14 @@ export default function AdminUsers() {
             <div key={u.id} className="rounded-md border border-border bg-card px-4 py-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-foreground">{u.display_name}</span>
-                <button onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => openEdit(u)} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => setDeleting(u)} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                 <span className="text-muted-foreground">Kürzel</span>
@@ -378,6 +419,30 @@ export default function AdminUsers() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete confirmation */}
+        <AlertDialog open={!!deleting} onOpenChange={o => !o && setDeleting(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-sm font-semibold">Mitarbeiter löschen</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs">
+                Möchten Sie <strong>{deleting?.display_name}</strong> wirklich unwiderruflich löschen? 
+                Alle zugehörigen Daten (Rollen, Benachrichtigungen, Projektmitgliedschaften) werden entfernt. 
+                Zugewiesene Vorgänge werden freigegeben.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="h-8 text-xs">Abbrechen</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="h-8 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-1.5"
+              >
+                {deleteLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Löschen…</> : 'Endgültig löschen'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
