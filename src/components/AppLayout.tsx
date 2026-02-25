@@ -4,14 +4,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { CommandPalette } from '@/components/CommandPalette';
 import { NotificationBell } from '@/components/NotificationBell';
+import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw,
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +50,29 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [pwDialogOpen, setPwDialogOpen] = useState(false);
+  const [oldPw, setOldPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [newPwConfirm, setNewPwConfirm] = useState('');
+  const [pwShowNew, setPwShowNew] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!newPw || newPw.length < 8) { toast.error('Neues Passwort muss mindestens 8 Zeichen lang sein'); return; }
+    if (newPw !== newPwConfirm) { toast.error('Passwörter stimmen nicht überein'); return; }
+    setPwLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) throw error;
+      toast.success('Passwort wurde geändert');
+      setPwDialogOpen(false);
+      setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Fehler beim Ändern des Passworts');
+    } finally {
+      setPwLoading(false);
+    }
+  };
 
   // Global Cmd+K / Ctrl+K listener
   useEffect(() => {
@@ -159,6 +187,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setPwDialogOpen(true)}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                <KeyRound className="h-3.5 w-3.5" />Passwort ändern
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut} className="gap-2 text-xs text-destructive cursor-pointer">
                 <LogOut className="h-3.5 w-3.5" />Abmelden
               </DropdownMenuItem>
@@ -184,6 +218,62 @@ export function AppLayout({ children }: AppLayoutProps) {
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-8">{children}</main>
       </div>
+
+      {/* Password change dialog */}
+      <Dialog open={pwDialogOpen} onOpenChange={o => { if (!o) { setPwDialogOpen(false); setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Passwort ändern</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Geben Sie ein neues Passwort ein (mindestens 8 Zeichen).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Neues Passwort</Label>
+              <div className="relative">
+                <Input
+                  type={pwShowNew ? 'text' : 'password'}
+                  placeholder="Min. 8 Zeichen"
+                  value={newPw}
+                  onChange={e => setNewPw(e.target.value)}
+                  className="h-8 text-xs font-mono pr-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPwShowNew(v => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {pwShowNew ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+              {newPw && newPw.length > 0 && newPw.length < 8 && (
+                <p className="text-[11px] text-[hsl(var(--status-rejected))]">Mindestens 8 Zeichen</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Passwort bestätigen</Label>
+              <Input
+                type={pwShowNew ? 'text' : 'password'}
+                placeholder="Passwort wiederholen"
+                value={newPwConfirm}
+                onChange={e => setNewPwConfirm(e.target.value)}
+                className="h-8 text-xs font-mono"
+              />
+              {newPwConfirm && newPw !== newPwConfirm && (
+                <p className="text-[11px] text-[hsl(var(--status-rejected))]">Passwörter stimmen nicht überein</p>
+              )}
+            </div>
+            <Button
+              onClick={handleChangePassword}
+              disabled={pwLoading || !newPw || newPw.length < 8 || newPw !== newPwConfirm}
+              className="w-full h-8 text-xs gap-1.5"
+            >
+              {pwLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Speichern…</> : 'Passwort ändern'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
