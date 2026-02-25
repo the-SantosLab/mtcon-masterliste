@@ -75,17 +75,20 @@ export default function AdminUsers() {
 
   const saveEdit = async () => {
     if (!editing) return;
-    await supabase.from('users_profile').update({
+    const { error: profileErr } = await supabase.from('users_profile').update({
       active: newActive,
       department_id: newDeptId || null,
       display_name: newDisplayName,
       short_code: newShortCode,
     } as any).eq('id', editing.id);
-    if (editing.roleId) {
-      await supabase.from('user_roles').update({ role: newRole as Enums<'app_role'> }).eq('id', editing.roleId);
-    } else {
-      await supabase.from('user_roles').insert({ user_id: editing.id, role: newRole as Enums<'app_role'> });
-    }
+    if (profileErr) { toast.error('Profil-Update fehlgeschlagen: ' + profileErr.message); return; }
+
+    // Delete all existing roles for this user, then insert the new one
+    const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', editing.id);
+    if (delErr) { toast.error('Rolle konnte nicht aktualisiert werden: ' + delErr.message); return; }
+    const { error: insErr } = await supabase.from('user_roles').insert({ user_id: editing.id, role: newRole as Enums<'app_role'> });
+    if (insErr) { toast.error('Rolle konnte nicht gesetzt werden: ' + insErr.message); return; }
+
     toast.success('Benutzer aktualisiert');
     setEditing(null);
     fetchUsers();
