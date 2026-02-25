@@ -1,11 +1,13 @@
+import { useRef, useCallback } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Badge, Rule, Card, Table, Code, Tip, Warning, SubHeading } from '@/components/docs/DocComponents';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Moon, Building2, FolderOpen, Hash, Shield, Users, Layers,
   GitBranch, Lock, LayoutDashboard, ClipboardList, Search,
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
-  KeyRound, Database, BarChart3, Columns, BookOpen,
+  KeyRound, Database, BarChart3, Columns, BookOpen, Printer,
 } from 'lucide-react';
 
 interface Section {
@@ -35,6 +37,12 @@ const SECTIONS: Section[] = [
 ];
 
 export default function Documentation() {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <AppLayout>
       <div className="flex gap-6 max-w-6xl">
@@ -56,11 +64,11 @@ export default function Documentation() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 space-y-5 min-w-0">
+        <div className="flex-1 space-y-5 min-w-0 print-content" ref={contentRef}>
 
           {/* ─── ÜBERSICHT ─── */}
           <div id="overview">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h1 className="text-lg font-semibold text-foreground">KS Command Light — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
@@ -68,6 +76,15 @@ export default function Documentation() {
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrint}
+                className="h-8 text-xs gap-1.5 print:hidden shrink-0"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                PDF / Drucken
+              </Button>
             </div>
 
             <Card title="Was ist KS Command Light?" id="overview-card">
