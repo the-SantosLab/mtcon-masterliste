@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, UserPlus, Loader2 } from 'lucide-react';
+import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff } from 'lucide-react';
 
 type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
@@ -21,7 +21,7 @@ type ProfileWithRole = Tables<'users_profile'> & {
 
 interface Department { id: string; name: string; code: string; }
 
-const emptyNew = { email: '', display_name: '', short_code: '', role: 'staff', department_id: '' };
+const emptyNew = { email: '', display_name: '', short_code: '', role: 'staff', department_id: '', password: '' };
 
 export default function AdminUsers() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -37,10 +37,14 @@ export default function AdminUsers() {
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newShortCode, setNewShortCode] = useState('');
 
+  // Search state
+  const [search, setSearch] = useState('');
+
   // Create state
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(emptyNew);
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchUsers = async () => {
     const [profilesRes, rolesRes, deptsRes] = await Promise.all([
@@ -115,11 +119,15 @@ export default function AdminUsers() {
           short_code: form.short_code,
           role: form.role,
           department_id: form.department_id || null,
+          password: form.password || undefined,
         }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Fehler beim Anlegen');
-      toast.success(`Mitarbeiter "${form.display_name}" wurde angelegt. Der Benutzer kann sich jetzt einloggen und sein Passwort per "Passwort vergessen" setzen.`);
+      const msg = form.password
+        ? `Mitarbeiter "${form.display_name}" wurde angelegt. Login: ${form.email} / vergebenes Passwort.`
+        : `Mitarbeiter "${form.display_name}" wurde angelegt. Der Benutzer muss über "Passwort vergessen" sein Passwort setzen.`;
+      toast.success(msg);
       setCreateOpen(false);
       setForm(emptyNew);
       fetchUsers();
@@ -143,6 +151,20 @@ export default function AdminUsers() {
     </div>
   );
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    let pw = '';
+    for (let i = 0; i < 14; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    setForm(f => ({ ...f, password: pw }));
+    setShowPassword(true);
+  };
+
+  const filteredUsers = users.filter(u => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return u.display_name.toLowerCase().includes(q) || u.short_code.toLowerCase().includes(q);
+  });
+
   return (
     <AppLayout>
       <div className="space-y-4 max-w-4xl">
@@ -157,7 +179,16 @@ export default function AdminUsers() {
           </Button>
         </div>
 
-        {/* Desktop table */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Name oder Kürzel suchen…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-8 text-xs pl-9 max-w-xs"
+          />
+        </div>
+
         <div className="rounded-md border border-border bg-card overflow-hidden hidden md:block">
           <table className="w-full text-xs">
             <thead>
@@ -173,7 +204,7 @@ export default function AdminUsers() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan={6} className="p-4 text-center text-muted-foreground text-xs">Laden…</td></tr>
-              ) : users.map(u => (
+              ) : filteredUsers.map(u => (
                 <tr key={u.id} className="hover:bg-muted/40 transition-colors">
                   <td className="px-4 py-2.5 text-foreground text-sm">{u.display_name}</td>
                   <td className="px-4 py-2.5 font-mono text-muted-foreground">{u.short_code}</td>
@@ -200,7 +231,7 @@ export default function AdminUsers() {
         <div className="space-y-2 md:hidden">
           {loading ? (
             <p className="text-center text-muted-foreground text-xs py-4">Laden…</p>
-          ) : users.map(u => (
+          ) : filteredUsers.map(u => (
             <div key={u.id} className="rounded-md border border-border bg-card px-4 py-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-foreground">{u.display_name}</span>
@@ -306,8 +337,39 @@ export default function AdminUsers() {
                 </Select>
               </div>
 
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Passwort</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Min. 8 Zeichen (optional)"
+                      value={form.password}
+                      onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      className="h-8 text-xs font-mono pr-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={generatePassword} className="h-8 text-xs gap-1 shrink-0">
+                    <RefreshCw className="h-3 w-3" />
+                    Generieren
+                  </Button>
+                </div>
+                {form.password && form.password.length > 0 && form.password.length < 8 && (
+                  <p className="text-[11px] text-[hsl(var(--status-rejected))]">Passwort muss mindestens 8 Zeichen lang sein</p>
+                )}
+              </div>
+
               <p className="text-[11px] text-muted-foreground bg-muted/60 rounded px-3 py-2 leading-relaxed">
-                Der Benutzer wird sofort angelegt. Zum Einloggen muss er auf der Login-Seite „Passwort vergessen" nutzen, um sein Passwort zu setzen.
+                {form.password && form.password.length >= 8
+                  ? 'Der Benutzer kann sich sofort mit dem vergebenen Passwort einloggen.'
+                  : 'Ohne Passwort muss der Benutzer über „Passwort vergessen" sein eigenes Passwort setzen.'}
               </p>
 
               <Button onClick={handleCreate} disabled={creating} className="w-full h-8 text-xs gap-1.5">

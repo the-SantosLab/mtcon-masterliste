@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Forbidden – Admins only' }), { status: 403, headers: corsHeaders });
   }
 
-  const { email, display_name, short_code, role, department_id } = await req.json();
+  const { email, display_name, short_code, role, department_id, password } = await req.json();
 
   if (!email || !display_name || !short_code) {
     return new Response(JSON.stringify({ error: 'email, display_name und short_code sind Pflichtfelder' }), {
@@ -46,11 +46,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Create the auth user with a random password (they will use password reset)
-  const tempPassword = crypto.randomUUID();
+  // Use provided password or generate a random one
+  const userPassword = password && password.length >= 8 ? password : crypto.randomUUID();
   const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({
     email,
-    password: tempPassword,
+    password: userPassword,
     email_confirm: true,
     user_metadata: { display_name, short_code },
   });
