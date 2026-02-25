@@ -139,3 +139,119 @@
     @apply px-4 py-2.5 text-sm;
   }
 }
+
+/* ============================================================
+   PRINT STYLES — Documentation PDF Export
+============================================================ */
+@media print {
+  /* Hide everything except the doc content */
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide sidebar nav, header, app sidebar */
+  aside,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Make main content full width */
+  .flex.h-screen {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Override dark mode for print */
+  .dark .print-content,
+  .dark .print-content * {
+    color: #1a1a1a !important;
+    border-color: #d1d5db !important;
+  }
+
+  .dark .print-content [class*="bg-card"],
+  .dark .print-content [class*="bg-muted"],
+  .dark .print-content [class*="bg-background"],
+  .dark .print-content [class*="bg-sidebar"] {
+    background-color: white !important;
+  }
+
+  /* Card styling for print */
+  .print-content [class*="rounded-md"][class*="border"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #d1d5db !important;
+    background: white !important;
+  }
+
+  /* Table styling for print */
+  .print-content table {
+    border-collapse: collapse;
+  }
+
+  .print-content th,
+  .print-content td {
+    border: 1px solid #e5e7eb !important;
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .print-content thead tr {
+    background-color: #f3f4f6 !important;
+  }
+
+  /* Code blocks */
+  .print-content pre {
+    background-color: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    color: #1a1a1a !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+  }
+
+  /* Badge styling */
+  .print-content span[class*="font-mono"][class*="border"] {
+    border: 1px solid #9ca3af !important;
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+  }
+
+  /* Hide the doc sidebar TOC on print — content is already self-explanatory */
+  .print-content ~ div,
+  .hidden.lg\\:block.w-48 {
+    display: none !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1.5cm 1.5cm;
+    size: A4;
+  }
+
+  /* Heading page breaks */
+  .print-content h1 {
+    font-size: 18px !important;
+    color: #111827 !important;
+  }
+
+  .print-content h2 {
+    font-size: 14px !important;
+    color: #111827 !important;
+  }
+
+  /* Ensure links show URL */
+  .print-content a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9px;
+    color: #6b7280;
+  }
+}
