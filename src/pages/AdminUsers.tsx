@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound } from 'lucide-react';
 
 type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
@@ -50,6 +50,12 @@ export default function AdminUsers() {
   // Delete state
   const [deleting, setDeleting] = useState<ProfileWithRole | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Password reset state (admin)
+  const [resetPwUser, setResetPwUser] = useState<ProfileWithRole | null>(null);
+  const [resetPw, setResetPw] = useState('');
+  const [resetPwShow, setResetPwShow] = useState(false);
+  const [resetPwLoading, setResetPwLoading] = useState(false);
 
   const fetchUsers = async () => {
     const [profilesRes, rolesRes, deptsRes] = await Promise.all([
@@ -97,6 +103,41 @@ export default function AdminUsers() {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetPwUser || !resetPw || resetPw.length < 8) return;
+    setResetPwLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ user_id: resetPwUser.id, new_password: resetPw }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Fehler');
+      toast.success(`Passwort für "${resetPwUser.display_name}" wurde geändert`);
+      setResetPwUser(null);
+      setResetPw('');
+      setResetPwShow(false);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setResetPwLoading(false);
+    }
+  };
+
+  const generateResetPw = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+    let pw = '';
+    for (let i = 0; i < 14; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    setResetPw(pw);
+    setResetPwShow(true);
   };
 
   const openEdit = (u: ProfileWithRole) => {
@@ -337,7 +378,17 @@ export default function AdminUsers() {
                 <Switch checked={newActive} onCheckedChange={setNewActive} />
                 <Label className="text-xs">Aktiv</Label>
               </div>
-              <Button onClick={saveEdit} className="w-full h-8 text-xs">Speichern</Button>
+              <div className="flex gap-2">
+                <Button onClick={saveEdit} className="flex-1 h-8 text-xs">Speichern</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setResetPwUser(editing); setResetPw(''); setResetPwShow(false); }}
+                  className="h-8 text-xs gap-1.5"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  Passwort
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -443,6 +494,55 @@ export default function AdminUsers() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Password reset dialog */}
+        <Dialog open={!!resetPwUser} onOpenChange={o => { if (!o) { setResetPwUser(null); setResetPw(''); setResetPwShow(false); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">Passwort ändern — {resetPwUser?.display_name}</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Vergeben Sie ein neues Passwort für diesen Mitarbeiter.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Neues Passwort</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type={resetPwShow ? 'text' : 'password'}
+                      placeholder="Min. 8 Zeichen"
+                      value={resetPw}
+                      onChange={e => setResetPw(e.target.value)}
+                      className="h-8 text-xs font-mono pr-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setResetPwShow(v => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {resetPwShow ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={generateResetPw} className="h-8 text-xs gap-1 shrink-0">
+                    <RefreshCw className="h-3 w-3" />
+                    Generieren
+                  </Button>
+                </div>
+                {resetPw && resetPw.length > 0 && resetPw.length < 8 && (
+                  <p className="text-[11px] text-[hsl(var(--status-rejected))]">Passwort muss mindestens 8 Zeichen lang sein</p>
+                )}
+              </div>
+              <Button
+                onClick={handleResetPassword}
+                disabled={resetPwLoading || !resetPw || resetPw.length < 8}
+                className="w-full h-8 text-xs gap-1.5"
+              >
+                {resetPwLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Speichern…</> : 'Passwort speichern'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
