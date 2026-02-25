@@ -1,9 +1,11 @@
 import { AppLayout } from '@/components/AppLayout';
+import { Badge, Rule, Card, Table, Code, Tip, Warning, SubHeading } from '@/components/docs/DocComponents';
 import { cn } from '@/lib/utils';
 import {
-  Moon, AlignJustify, Building2, FolderOpen,
-  Hash, Shield, Users, Eye, ChevronRight,
-  Layers, GitBranch, Lock,
+  Moon, Building2, FolderOpen, Hash, Shield, Users, Layers,
+  GitBranch, Lock, LayoutDashboard, ClipboardList, Search,
+  FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
+  KeyRound, Database, BarChart3, Columns, BookOpen,
 } from 'lucide-react';
 
 interface Section {
@@ -13,82 +15,24 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
-  { id: 'overview', label: 'Übersicht v1.5', icon: Layers },
+  { id: 'overview', label: 'Übersicht', icon: Layers },
+  { id: 'login', label: 'Anmeldung & Zugang', icon: KeyRound },
+  { id: 'navigation', label: 'Navigation & Layout', icon: LayoutDashboard },
+  { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+  { id: 'cases', label: 'Vorgänge', icon: ClipboardList },
+  { id: 'projects', label: 'Projekte', icon: FolderKanban },
+  { id: 'files', label: 'Dateiablage', icon: FileUp },
   { id: 'darkmode', label: 'Dark Mode & Tabellen', icon: Moon },
   { id: 'departments', label: 'Abteilungen', icon: Building2 },
-  { id: 'projects', label: 'Projekte & Ordner', icon: FolderOpen },
   { id: 'numbering', label: 'Auto-Nummerierung', icon: Hash },
-  { id: 'roles', label: 'Rollen & Zugriffsrechte', icon: Shield },
+  { id: 'roles', label: 'Rollen & Rechte', icon: Shield },
+  { id: 'admin', label: 'Admin-Verwaltung', icon: Settings },
+  { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
+  { id: 'search', label: 'Suche & Kommandos', icon: Search },
   { id: 'rls', label: 'RLS-Logik & Policies', icon: Lock },
   { id: 'schema', label: 'Datenmodell', icon: GitBranch },
+  { id: 'shortcuts', label: 'Tastenkürzel', icon: Columns },
 ];
-
-function Badge({ children, color = 'muted' }: { children: React.ReactNode; color?: 'primary' | 'muted' | 'success' | 'warn' | 'danger' }) {
-  const cls = {
-    primary: 'bg-primary/10 text-primary border-primary/20',
-    muted: 'bg-muted text-muted-foreground border-border',
-    success: 'bg-[hsl(var(--status-done)/0.15)] text-[hsl(var(--status-done))] border-[hsl(var(--status-done)/0.3)]',
-    warn: 'bg-[hsl(var(--status-overdue)/0.15)] text-[hsl(var(--status-overdue))] border-[hsl(var(--status-overdue)/0.3)]',
-    danger: 'bg-[hsl(var(--status-rejected)/0.15)] text-[hsl(var(--status-rejected))] border-[hsl(var(--status-rejected)/0.3)]',
-  }[color];
-  return <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono border', cls)}>{children}</span>;
-}
-
-function Rule({ label, value, color }: { label: string; value: string; color?: 'success' | 'danger' | 'warn' }) {
-  const icon = color === 'success' ? '✓' : color === 'danger' ? '✗' : '○';
-  const cls = color === 'success' ? 'text-[hsl(var(--status-done))]' : color === 'danger' ? 'text-[hsl(var(--status-rejected))]' : 'text-muted-foreground';
-  return (
-    <div className="flex items-start gap-2 py-1">
-      <span className={cn('text-xs font-mono shrink-0', cls)}>{icon}</span>
-      <div>
-        <span className="text-xs font-medium text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground ml-2">{value}</span>
-      </div>
-    </div>
-  );
-}
-
-function Card({ title, children, id }: { title: string; children: React.ReactNode; id: string }) {
-  return (
-    <div id={id} className="rounded-md border border-border bg-card overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-border">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      </div>
-      <div className="px-5 py-4 space-y-3 text-xs text-muted-foreground leading-relaxed">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
-  return (
-    <div className="rounded border border-border overflow-hidden mt-2">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-border bg-muted/50">
-            {headers.map(h => <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>)}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rows.map((row, i) => (
-            <tr key={i} className="hover:bg-muted/30">
-              {row.map((cell, j) => <td key={j} className="px-3 py-2 text-foreground font-mono">{cell}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function Code({ children }: { children: React.ReactNode }) {
-  return (
-    <pre className="bg-muted rounded px-3 py-2.5 text-[11px] font-mono text-foreground overflow-x-auto border border-border mt-2">
-      {children}
-    </pre>
-  );
-}
 
 export default function Documentation() {
   return (
@@ -96,7 +40,7 @@ export default function Documentation() {
       <div className="flex gap-6 max-w-6xl">
         {/* Sidebar TOC */}
         <div className="hidden lg:block w-48 shrink-0">
-          <div className="sticky top-0 space-y-0.5 pt-1">
+          <div className="sticky top-0 space-y-0.5 pt-1 max-h-[calc(100vh-6rem)] overflow-y-auto">
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-2 pb-2">Inhalt</p>
             {SECTIONS.map(s => (
               <a
@@ -113,27 +57,40 @@ export default function Documentation() {
 
         {/* Content */}
         <div className="flex-1 space-y-5 min-w-0">
+
+          {/* ─── ÜBERSICHT ─── */}
           <div id="overview">
             <div className="flex items-center gap-3 mb-4">
               <div>
-                <h1 className="text-lg font-semibold text-foreground">KS Command Light</h1>
+                <h1 className="text-lg font-semibold text-foreground">KS Command Light — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge color="primary">v1.5</Badge>
-                  <span className="text-[11px] text-muted-foreground">— Changes & Rules</span>
+                  <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
                 </div>
               </div>
             </div>
 
-            <Card title="Übersicht — Was ist neu in v1.5?" id="overview-card">
-              <p>Dieses Update führt 6 neue Kernfunktionen ein, die das System in ein vollständiges Projekt-Management-Backoffice verwandeln.</p>
-              <div className="grid grid-cols-2 gap-2 mt-3">
+            <Card title="Was ist KS Command Light?" id="overview-card">
+              <p>
+                <strong className="text-foreground">KS Command Light</strong> ist eine web-basierte Projekt- und Vorgangsmanagement-Anwendung, 
+                die speziell für die zentrale Erfassung, Zuweisung und Bearbeitung von Vorgängen (Cases) und Projekten entwickelt wurde. 
+                Die Software bietet ein Excel-ähnliches Masterlisten-Konzept, erweitert um digitale Workflows, automatische Nummerierung, 
+                Dateiverwaltung und Echtzeit-Benachrichtigungen.
+              </p>
+
+              <SubHeading>Kernfunktionen auf einen Blick</SubHeading>
+              <div className="grid grid-cols-2 gap-2 mt-2">
                 {[
-                  ['🌙', 'Dark Mode', 'Standard aktiv, toggle pro User'],
-                  ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-UI'],
-                  ['🏢', 'Abteilungen', 'Departments ersetzen/ergänzen Rollen'],
-                  ['📁', 'Projektverwaltung', 'Projekte mit Ordnerstruktur'],
-                  ['#', 'Auto-Nummerierung', 'PRJ-2026-xxxx / VOR-2026-xxxx'],
-                  ['🔐', 'RLS erweitert', 'Visibility-Regeln für Items'],
+                  ['📋', 'Vorgangsverwaltung', 'Erstellen, zuweisen, bearbeiten, abschließen — mit vollständigem Audit-Trail'],
+                  ['📁', 'Projektverwaltung', 'Projekte mit automatischer Ordnerstruktur und Team-Management'],
+                  ['📊', 'Dashboard & KPIs', 'Echtzeit-Übersicht mit Status-Verteilung und Auslastungs-Charts'],
+                  ['🔐', 'Rollen & RLS', '3-stufiges Rollensystem mit Row-Level-Security auf Datenbankebene'],
+                  ['🌙', 'Dark Mode', 'Standard-Theme ist Dark, umschaltbar pro User'],
+                  ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-Ansicht'],
+                  ['#️⃣', 'Auto-Nummerierung', 'Atomare Projekt- und Vorgangsnummern (PRJ-/VOR-)'],
+                  ['🏢', 'Abteilungen', 'Organisationsstruktur mit Abteilungsleitern'],
+                  ['🔔', 'Benachrichtigungen', 'Echtzeit-Notifications bei Statusänderungen'],
+                  ['⌘', 'Command Palette', 'Schnellsuche via ⌘K / Ctrl+K'],
                 ].map(([icon, title, desc]) => (
                   <div key={title} className="rounded border border-border bg-muted/30 px-3 py-2.5">
                     <div className="flex items-center gap-1.5 mb-1">
@@ -147,24 +104,353 @@ export default function Documentation() {
             </Card>
           </div>
 
-          <Card title="Dark Mode & Compact Tables" id="darkmode">
-            <p><strong className="text-foreground">Dark Mode</strong> ist der Standard bei Erstanmeldung. Der Toggle befindet sich im Profil-Dropdown (unten links in der Sidebar).</p>
-            <Rule label="Theme-Preference" value="Wird pro User in user_preferences gespeichert (DB)" color="success" />
-            <Rule label="Dark als Default" value="HTML-Root-Klasse .dark ist im index.html gesetzt" color="success" />
-            <Rule label="Keine harten Farben" value="Alle Farben über CSS-Tokens (HSL-Variablen)" color="success" />
-            <p className="mt-2"><strong className="text-foreground">Compact Tables</strong> reduziert Zellenpaddding von <Badge>px-4 py-2.5</Badge> auf <Badge>px-3 py-1.5</Badge> — ~25% mehr Zeilen sichtbar. Toggle ebenfalls im Profil-Dropdown.</p>
-            <p className="text-[11px] mt-2">Beide Einstellungen werden in der Tabelle <Badge color="primary">user_preferences</Badge> pro User gespeichert und beim nächsten Login automatisch geladen.</p>
+          {/* ─── ANMELDUNG ─── */}
+          <Card title="Anmeldung & Zugang" id="login">
+            <p>
+              Der Zugang zur Anwendung erfolgt über die Login-Seite unter <Badge color="primary">/auth</Badge>. 
+              Es gibt <strong className="text-foreground">keine öffentliche Registrierung</strong> — neue Benutzer werden ausschließlich 
+              von Administratoren über die Mitarbeiterverwaltung angelegt.
+            </p>
+
+            <SubHeading>Login-Prozess</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="E-Mail + Passwort" value="Standard-Anmeldung über E-Mail und Passwort" color="success" />
+              <Rule label="Passwort vergessen" value="Link auf der Login-Seite → E-Mail mit Reset-Link wird gesendet" color="success" />
+              <Rule label="Passwort zurücksetzen" value="Über /reset-password — Link ist 24h gültig" color="success" />
+            </div>
+
+            <SubHeading>Erstanmeldung neuer Benutzer</SubHeading>
+            <p>
+              Ein Admin legt den Benutzer an (Verwaltung → Mitarbeiter → «Neuer Mitarbeiter»). 
+              Der Benutzer erhält automatisch einen Account und muss dann über «Passwort vergessen» sein eigenes Passwort setzen.
+            </p>
+
+            <Warning>
+              Es gibt keine Selbstregistrierung. Alle Benutzerkonten werden zentral vom Admin erstellt.
+            </Warning>
           </Card>
 
+          {/* ─── NAVIGATION ─── */}
+          <Card title="Navigation & Layout" id="navigation">
+            <p>
+              Die Anwendung verwendet ein Sidebar-Layout mit einer festen linken Navigation und einem Hauptinhaltsbereich rechts.
+            </p>
+
+            <SubHeading>Hauptnavigation (Sidebar)</SubHeading>
+            <Table
+              headers={['Menüpunkt', 'Route', 'Beschreibung']}
+              rows={[
+                ['Suche', '⌘K', 'Öffnet die Command Palette (Schnellsuche)'],
+                ['Dashboard', '/', 'Übersicht mit KPIs und eigenen Vorgängen'],
+                ['Vorgänge', '/cases', 'Masterliste aller Vorgänge mit Filtern'],
+                ['Kanban', '/cases/kanban', 'Kanban-Board-Ansicht der Vorgänge'],
+                ['Projekte', '/projects', 'Projektliste mit Status und Sichtbarkeit'],
+                ['Dokumentation', '/docs', 'Diese Seite'],
+              ]}
+            />
+
+            <SubHeading>Admin-Navigation (nur für Admins sichtbar)</SubHeading>
+            <Table
+              headers={['Menüpunkt', 'Route', 'Beschreibung']}
+              rows={[
+                ['Dashboard', '/admin/dashboard', 'Erweitertes Dashboard mit Charts und Statistiken'],
+                ['Mitarbeiter', '/admin/users', 'Benutzerverwaltung: Rollen, Abteilungen, Status'],
+                ['Abteilungen', '/admin/departments', 'Abteilungen anlegen und verwalten'],
+                ['Stammdaten', '/admin/master-data', 'Kunden, Produkte, Bereiche, CSV-Import'],
+              ]}
+            />
+
+            <SubHeading>Profil-Dropdown (unten links in der Sidebar)</SubHeading>
+            <p>Über das Profil-Menü können folgende Einstellungen vorgenommen werden:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Dark/Light Mode" value="Umschalter zwischen Hell- und Dunkel-Modus" color="success" />
+              <Rule label="Tabellen kompakt/normal" value="Reduziert das Padding in allen Tabellen" color="success" />
+              <Rule label="Abmelden" value="Beendet die aktuelle Sitzung" color="warn" />
+            </div>
+
+            <SubHeading>Responsive Design</SubHeading>
+            <p>
+              Auf Mobilgeräten wird die Sidebar ausgeblendet und über ein Hamburger-Menü (☰) erreichbar. 
+              Die Benachrichtigungs-Glocke und Suche sind in der mobilen Kopfzeile verfügbar.
+            </p>
+          </Card>
+
+          {/* ─── DASHBOARD ─── */}
+          <Card title="Dashboard" id="dashboard">
+            <p>
+              Das Dashboard (<Badge color="primary">/</Badge>) zeigt eine Echtzeit-Übersicht aller Vorgänge mit automatischer Aktualisierung 
+              via Realtime-Subscription.
+            </p>
+
+            <SubHeading>KPI-Karten (oben)</SubHeading>
+            <Table
+              headers={['KPI', 'Beschreibung']}
+              rows={[
+                ['Offen', 'Vorgänge mit Status „Nicht begonnen"'],
+                ['In Arbeit', 'Vorgänge mit Status „In Arbeit" oder „In Planung"'],
+                ['In Verzug', 'Vorgänge mit Status „In Verzug" oder überschrittenem Endtermin'],
+                ['Heute fällig', 'Vorgänge deren Endtermin heute ist'],
+                ['Diese Woche', 'Vorgänge die in den nächsten 7 Tagen fällig sind'],
+              ]}
+            />
+
+            <SubHeading>Listen-Bereiche</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Meine Vorgänge" value="Aktive Vorgänge, die dem eingeloggten Benutzer zugewiesen sind (max. 10)" color="success" />
+              <Rule label="Frei zum Abholen" value="Nicht zugewiesene, aktive Vorgänge — können per Klick ‚abgeholt' werden" color="success" />
+            </div>
+
+            <Tip>
+              Beide Listen sind Links — ein Klick auf «Alle anzeigen» führt zur Vorgangsliste mit voreingestelltem Filter.
+            </Tip>
+
+            <SubHeading>Admin Dashboard</SubHeading>
+            <p>
+              Unter <Badge color="primary">/admin/dashboard</Badge> (nur für Admins) gibt es ein erweitertes Dashboard mit:
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Statusverteilung" value="Donut-Chart der aktiven Vorgänge nach Status" color="success" />
+              <Rule label="Auslastung" value="Horizontales Balkendiagramm: aktive Vorgänge pro Bearbeiter + davon in Verzug" color="success" />
+              <Rule label="Zeitfilter" value="Filter nach Gesamt / 7 Tage / 30 Tage / Quartal" color="success" />
+              <Rule label="Echtzeit" value="Automatische Aktualisierung bei Datenänderungen" color="success" />
+            </div>
+          </Card>
+
+          {/* ─── VORGÄNGE ─── */}
+          <Card title="Vorgänge (Cases)" id="cases">
+            <p>
+              Vorgänge sind die zentrale Arbeitseinheit im System. Sie repräsentieren einzelne Aufgaben, Aufträge 
+              oder Arbeitspakete, die einem Bearbeiter zugewiesen und durch verschiedene Status geführt werden.
+            </p>
+
+            <SubHeading>Vorgangsliste (/cases)</SubHeading>
+            <p>Die Masterliste zeigt alle Vorgänge in Tabellenform mit folgenden Spalten:</p>
+            <Table
+              headers={['Spalte', 'Beschreibung']}
+              rows={[
+                ['Status', 'Farbkodierter Status-Badge'],
+                ['Nr.', 'Eindeutige Vorgangsnummer (manuell vergeben)'],
+                ['Projektname', 'Bezeichnung des Vorgangs'],
+                ['Projekt', 'Verknüpftes Projekt (falls vorhanden) mit Projekt-Nr.'],
+                ['Bearbeiter', 'Kürzel des zugewiesenen Mitarbeiters'],
+                ['Kunde', 'Kundennummer'],
+                ['Endtermin', 'Fälligkeitsdatum'],
+                ['Aktionen', 'Abholen / Freigeben / Abschließen'],
+              ]}
+            />
+
+            <SubHeading>Filter-Optionen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Textsuche" value="Durchsucht Vorgangsnr., Projektname, Kunde, Artikelnr., verknüpftes Projekt" color="success" />
+              <Rule label="Status-Filter" value="Alle 7 Status-Werte einzeln filterbar" color="success" />
+              <Rule label="Bearbeiter-Filter" value="Alle Mitarbeiter + ‚Nicht zugewiesen'" color="success" />
+              <Rule label="Projekt-Filter" value="Alle aktiven Projekte + ‚Ohne Projekt'" color="success" />
+              <Rule label="‚Nur meine'" value="Toggle-Button — zeigt nur eigene zugewiesene Vorgänge (wird im LocalStorage gespeichert)" color="success" />
+            </div>
+
+            <SubHeading>Vorgang-Status-Workflow</SubHeading>
+            <Table
+              headers={['Status', 'Bedeutung', 'Farbe']}
+              rows={[
+                ['Nicht begonnen', 'Vorgang erstellt, noch nicht bearbeitet', 'Grau'],
+                ['In Planung', 'Planung läuft, noch nicht aktiv bearbeitet', 'Blau'],
+                ['In Arbeit', 'Aktive Bearbeitung durch zugewiesenen Mitarbeiter', 'Gelb/Orange'],
+                ['In Verzug', 'Endtermin überschritten oder manuell markiert', 'Rot'],
+                ['Abgeschlossen', 'Vorgang erfolgreich fertiggestellt', 'Grün'],
+                ['Verworfen', 'Vorgang wurde abgelehnt/storniert', 'Rot/Grau'],
+                ['Archiv', 'Abgelegter Vorgang, nicht mehr aktiv', 'Grau'],
+              ]}
+            />
+
+            <SubHeading>Aktionen auf Vorgänge</SubHeading>
+            <Table
+              headers={['Aktion', 'Wer', 'Bedingung']}
+              rows={[
+                ['Abholen (Claim)', 'Staff / Admin', 'Vorgang hat keinen Bearbeiter und ist nicht abgeschlossen'],
+                ['Freigeben (Unclaim)', 'Zugewiesener User', 'Vorgang ist nicht abgeschlossen'],
+                ['Abschließen', 'Zugewiesener User / Admin', 'Vorgang ist nicht abgeschlossen'],
+                ['Status ändern', 'Zugewiesener User / Admin', 'Im Vorgang-Detail, über Dropdown'],
+              ]}
+            />
+
+            <SubHeading>Vorgang erstellen</SubHeading>
+            <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Pflichtfelder:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Vorgangsnummer" value="Manuelle, eindeutige Kennung (z.B. VG-001)" color="warn" />
+              <Rule label="Projektname" value="Beschreibender Name des Vorgangs" color="warn" />
+            </div>
+            <p className="mt-2">
+              Optionale Felder: Verknüpftes Projekt, Kunde, Auftraggeber, Produkt, Bereich intern, 
+              Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden.
+            </p>
+            <Tip>
+              Wenn ein Projekt verknüpft wird, übernimmt der Vorgang automatisch den Projektnamen als Vorgabe.
+            </Tip>
+
+            <SubHeading>Vorgang-Detailseite (/cases/:id)</SubHeading>
+            <p>Zeigt alle Details eines Vorgangs in strukturierter Form:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
+              <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
+              <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
+              <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
+              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Kommentare)" color="success" />
+            </div>
+
+            <SubHeading>Kanban-Board (/cases/kanban)</SubHeading>
+            <p>
+              Alternative Ansicht der Vorgänge als Kanban-Board, gruppiert nach Status-Spalten. 
+              Vorgänge können per Drag-and-Drop zwischen Spalten verschoben werden.
+            </p>
+          </Card>
+
+          {/* ─── PROJEKTE ─── */}
+          <Card title="Projekte" id="projects">
+            <p>
+              Projekte dienen als übergeordnete Container für Vorgänge und Dateien. Sie haben eine automatische 
+              Nummerierung, Sichtbarkeitsregeln und eine integrierte Ordnerstruktur.
+            </p>
+
+            <SubHeading>Projektliste (/projects)</SubHeading>
+            <Table
+              headers={['Spalte', 'Beschreibung']}
+              rows={[
+                ['Projekt-Nr.', 'Automatisch vergebene Nummer (PRJ-YYYY-nnnn)'],
+                ['Name', 'Projektname + optionale Beschreibung'],
+                ['Abteilung', 'Zugeordnete Abteilung'],
+                ['Status', 'Aktiv / Abgeschlossen / Archiviert'],
+                ['Sichtbarkeit', 'Team / Abteilung / Privat'],
+                ['Erstellt', 'Erstellungsdatum'],
+                ['Aktionen', 'Details und Dateien-Link'],
+              ]}
+            />
+
+            <SubHeading>Projekt erstellen</SubHeading>
+            <p>Über «Neues Projekt» (nur Staff/Admin). Felder:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Projektname *" value="Pflichtfeld — beschreibender Name" color="warn" />
+              <Rule label="Beschreibung" value="Optionale kurze Beschreibung" color="success" />
+              <Rule label="Abteilung" value="Optionale Zuordnung zu einer Abteilung" color="success" />
+              <Rule label="Sichtbarkeit" value="Nur Team (Standard), Abteilung, oder Privat" color="success" />
+            </div>
+
+            <p className="mt-2">Beim Anlegen passiert automatisch:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Projektnummer" value="PRJ-YYYY-nnnn wird atomar vergeben" color="success" />
+              <Rule label="Projektcode" value="Wird aus den ersten 6 Zeichen des Namens abgeleitet" color="success" />
+              <Rule label="Team-Mitglied" value="Ersteller wird automatisch als Projektleiter hinzugefügt" color="success" />
+              <Rule label="6 Standard-Ordner" value="01_Admin, 02_Briefing, 03_Kalkulation, 04_Assets, 05_Delivery, 99_Archiv" color="success" />
+            </div>
+
+            <SubHeading>Projekt-Detailseite (/projects/:id)</SubHeading>
+            <p>Umfassende Projektansicht mit:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="KPI-Karten" value="Vorgänge gesamt, Offen, In Verzug, Abgeschlossen (mit Fortschritt in %)" color="success" />
+              <Rule label="Fortschrittsbalken" value="Visueller Balken mit Farb-Segmenten pro Status" color="success" />
+              <Rule label="Inline-Bearbeitung" value="Name, Beschreibung, Status, Sichtbarkeit, Abteilung — per Hover editierbar (Stift-Icon)" color="success" />
+              <Rule label="Vorgangsliste" value="Alle verknüpften Vorgänge mit Status und Bearbeiter" color="success" />
+              <Rule label="Team-Verwaltung" value="Projektmitglieder anzeigen und verwalten" color="success" />
+              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Projektänderungen" color="success" />
+            </div>
+
+            <SubHeading>Sichtbarkeitsregeln</SubHeading>
+            <Table
+              headers={['Sichtbarkeit', 'Wer sieht das Projekt?']}
+              rows={[
+                ['Nur Team (project_members)', 'Ersteller, Owner und eingetragene Team-Mitglieder'],
+                ['Abteilung (department)', 'Alle User der gleichen Abteilung + Ersteller/Owner + Team-Mitglieder'],
+                ['Privat (private)', 'Nur der Ersteller/Owner'],
+              ]}
+            />
+            <p className="mt-1 text-[11px]">Admins sehen immer alle Projekte.</p>
+          </Card>
+
+          {/* ─── DATEIABLAGE ─── */}
+          <Card title="Dateiablage" id="files">
+            <p>
+              Jedes Projekt hat eine integrierte Dateiablage unter <Badge color="primary">/projects/:id/files</Badge>. 
+              Die Dateien werden im Storage-Bucket <Badge>project-files</Badge> gespeichert.
+            </p>
+
+            <SubHeading>Ordnerstruktur</SubHeading>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {[
+                ['01_Admin', 'Administrative Dokumente'],
+                ['02_Briefing', 'Briefing-Unterlagen'],
+                ['03_Kalkulation', 'Kalkulationen & Kostenvoranschläge'],
+                ['04_Assets', 'Medien, Bilder, Design-Dateien'],
+                ['05_Delivery', 'Lieferbare Ergebnisse'],
+                ['99_Archiv', 'Archivierte Dateien'],
+              ].map(([name, desc]) => (
+                <div key={name} className="rounded border border-border px-2.5 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <FolderOpen className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="text-[11px] font-mono text-foreground">{name}</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <SubHeading>Funktionen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Upload" value="Dateien in den aktiven Ordner hochladen (per Button oder Datei-Auswahl)" color="success" />
+              <Rule label="Download" value="Dateien einzeln herunterladen" color="success" />
+              <Rule label="Löschen" value="Dateien entfernen (Admin/Staff)" color="warn" />
+              <Rule label="Aktualisieren" value="Dateiliste manuell neu laden" color="success" />
+            </div>
+
+            <SubHeading>Team-Verwaltung</SubHeading>
+            <p>
+              Über den «Team»-Button können Projektmitglieder hinzugefügt/entfernt werden. 
+              Rollen: <Badge>Projektleiter</Badge> (manager) und <Badge>Mitglied</Badge> (member).
+              Nur Admins und Projekt-Owner können das Team verwalten.
+            </p>
+          </Card>
+
+          {/* ─── DARK MODE ─── */}
+          <Card title="Dark Mode & Compact Tables" id="darkmode">
+            <p>
+              <strong className="text-foreground">Dark Mode</strong> ist der Standard bei Erstanmeldung. 
+              Der Toggle befindet sich im Profil-Dropdown (unten links in der Sidebar).
+            </p>
+            <div className="space-y-1 mt-2">
+              <Rule label="Theme-Preference" value="Wird pro User in user_preferences gespeichert (DB)" color="success" />
+              <Rule label="Dark als Default" value="Neue User starten im Dark Mode" color="success" />
+              <Rule label="Keine harten Farben" value="Alle Farben über CSS-Tokens (HSL-Variablen)" color="success" />
+              <Rule label="Sofort wirksam" value="Umschaltung ohne Neuladen der Seite" color="success" />
+            </div>
+
+            <SubHeading>Compact Tables</SubHeading>
+            <p>
+              Reduziert das Zellen-Padding von <Badge>px-4 py-2.5</Badge> auf <Badge>px-3 py-1.5</Badge> — 
+              ca. 25% mehr Zeilen sichtbar. Toggle ebenfalls im Profil-Dropdown.
+            </p>
+            <p className="text-[11px] mt-2">
+              Beide Einstellungen werden in der Tabelle <Badge color="primary">user_preferences</Badge> pro User 
+              gespeichert und beim nächsten Login automatisch geladen.
+            </p>
+          </Card>
+
+          {/* ─── ABTEILUNGEN ─── */}
           <Card title="Abteilungen (Departments)" id="departments">
-            <p>Abteilungen ergänzen das bestehende Rollensystem (<Badge>admin</Badge> <Badge>staff</Badge> <Badge>viewer</Badge>) um eine Organisationsstruktur.</p>
-            <div className="mt-2 space-y-1">
+            <p>
+              Abteilungen ergänzen das bestehende Rollensystem (<Badge>admin</Badge> <Badge>staff</Badge> <Badge>viewer</Badge>) 
+              um eine Organisationsstruktur. Verwaltung unter: <Badge color="primary">Verwaltung → Abteilungen</Badge>
+            </p>
+
+            <SubHeading>Funktionsweise</SubHeading>
+            <div className="space-y-1 mt-1">
               <Rule label="Parallel zu app_role" value="user_roles-Tabelle bleibt für Zugriffssteuerung aktiv" color="success" />
               <Rule label="Abteilungs-Zuordnung" value="users_profile.department_id → departments.id" color="success" />
               <Rule label="Manager-Flag" value="users_profile.is_manager = true für Abteilungsleiter" color="success" />
-              <Rule label="Direkte Vorgesetzte" value="users_profile.manager_id → users_profile.id" color="success" />
+              <Rule label="Direkter Vorgesetzter" value="users_profile.manager_id → users_profile.id" color="success" />
+              <Rule label="Abteilungsleiter" value="departments.manager_user_id — kann in der Abteilungsverwaltung gesetzt werden" color="success" />
             </div>
-            <p className="mt-2">Verwaltung unter: <Badge color="primary">Verwaltung → Abteilungen</Badge></p>
+
+            <SubHeading>Abteilung anlegen</SubHeading>
+            <p>In der Abteilungsverwaltung (nur Admin): Name, Kürzel (wird automatisch UPPERCASE) und optionaler Abteilungsleiter.</p>
+
             <Table
               headers={['Tabelle', 'Spalte', 'Zweck']}
               rows={[
@@ -177,86 +463,202 @@ export default function Documentation() {
             />
           </Card>
 
-          <Card title="Projekte & automatische Ordnerstruktur" id="projects">
-            <p>Beim Anlegen eines Projekts wird automatisch eine Standard-Ordnerstruktur in Storage + Datenbank erstellt.</p>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {['01_Admin', '02_Briefing', '03_Kalkulation', '04_Assets', '05_Delivery', '99_Archiv'].map(f => (
-                <div key={f} className="flex items-center gap-1.5 rounded border border-border px-2 py-1.5">
-                  <FolderOpen className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="text-[11px] font-mono text-foreground">{f}</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3">Die Erstellung erfolgt über die Edge Function <Badge color="primary">create-project-folders</Badge>, die:</p>
-            <div className="space-y-1 mt-1">
-              <Rule label="DB-Einträge" value="Legt Einträge in project_folders an (virtuell)" color="success" />
-              <Rule label="Storage-Objekte" value="Erstellt .keep-Platzhalter im Bucket project-files" color="success" />
-              <Rule label="Pfadstruktur" value="{project_code}_{project_number}/{ordner}/" color="success" />
-            </div>
-            <p className="mt-3">Datei-Upload erfolgt direkt in den jeweiligen Ordner via Supabase Storage.</p>
-          </Card>
-
+          {/* ─── AUTO-NUMMERIERUNG ─── */}
           <Card title="Auto-Nummerierung" id="numbering">
-            <p>Alle neuen Objekte erhalten eine menschenlesbare, fortlaufende Nummer, die atomar per DB-Funktion vergeben wird.</p>
+            <p>
+              Alle Projekte und Vorgänge erhalten eine menschenlesbare, fortlaufende Nummer, 
+              die atomar per Datenbank-Funktion vergeben wird.
+            </p>
             <Table
-              headers={['Objekt', 'Format', 'Beispiel']}
+              headers={['Objekt', 'Format', 'Beispiel', 'Trigger']}
               rows={[
-                ['Projekt', 'PRJ-YYYY-nnnn', 'PRJ-2026-0001'],
-                ['Vorgang', 'VOR-YYYY-nnnn', 'VOR-2026-0042'],
+                ['Projekt', 'PRJ-YYYY-nnnn', 'PRJ-2026-0001', 'assign_project_number()'],
+                ['Vorgang', 'VOR-YYYY-nnnn', 'VOR-2026-0042', 'assign_case_number()'],
               ]}
             />
-            <p className="mt-3">Technisch: Jede Erstellung ruft <Badge color="primary">next_counter(key)</Badge> auf — ein atomares <Badge>UPDATE … RETURNING</Badge>, das Race Conditions verhindert.</p>
+            <p className="mt-3">
+              Technisch: Jede Erstellung ruft <Badge color="primary">next_counter(key)</Badge> auf — 
+              ein atomares <Badge>INSERT … ON CONFLICT DO UPDATE … RETURNING</Badge>, das Race Conditions verhindert.
+            </p>
             <Code>{`-- Zähler-Funktion (atomic)
 SELECT public.next_counter('project_2026');
 -- Gibt nächsten Wert zurück + erhöht atomar
 
 -- Trigger auf projects:
-NEW.project_number := 'PRJ-' || year || '-' || lpad(counter, 4, '0');`}</Code>
-            <p className="mt-2 text-[11px]">Hinweis: Falls ein INSERT fehlschlägt, kann eine Nummer "verbrannt" werden. Dies ist akzeptables Verhalten bei atomaren Countern.</p>
+NEW.project_number := 'PRJ-' || year || '-' || lpad(counter, 4, '0');
+
+-- Trigger auf cases:
+NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
+            <Warning>
+              Falls ein INSERT fehlschlägt, kann eine Nummer "verbrannt" werden. Dies ist akzeptables Verhalten bei atomaren Countern und kein Bug.
+            </Warning>
           </Card>
 
+          {/* ─── ROLLEN ─── */}
           <Card title="Rollen & Zugriffsrechte" id="roles">
-            <p>Das System kennt 3 App-Rollen (<Badge color="primary">app_role</Badge>) + optionale Flags.</p>
+            <p>
+              Das System kennt 3 App-Rollen (<Badge color="primary">app_role</Badge>) + optionale Flags. 
+              Die Rolle wird in der Tabelle <Badge>user_roles</Badge> gespeichert.
+            </p>
             <Table
               headers={['Rolle', 'Lesen', 'Erstellen', 'Bearbeiten', 'Löschen', 'Admin-Bereich']}
               rows={[
                 ['admin', '✓ Alles', '✓ Alles', '✓ Alles', '✓ Alles', '✓'],
                 ['staff', '✓ Alles', '✓ Vorgänge/Projekte', '○ Eigene/Zugewiesen', '✗', '✗'],
                 ['viewer', '✓ Alles', '✗', '✗', '✗', '✗'],
-                ['is_manager', '+ Abteilung + Reports', '✓', '○ Abteilung', '✗', '✗'],
               ]}
             />
-            <div className="mt-3 space-y-1">
-              <Rule label="Admin" value="Sieht und verwaltet alles im System" color="success" />
-              <Rule label="Staff" value="Kann Vorgänge abholen, erstellen, bearbeiten — eigene zugewiesene" color="success" />
-              <Rule label="Viewer" value="Nur lesender Zugriff auf alle Daten" color="warn" />
-              <Rule label="Manager" value="Sieht Abteilungs-Items + alle direkten Reports" color="success" />
+
+            <SubHeading>Rollenrechte im Detail</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Admin" value="Vollzugriff auf alle Bereiche, Benutzerverwaltung, Stammdaten, Abteilungen" color="success" />
+              <Rule label="Staff (Mitarbeiter)" value="Kann Vorgänge erstellen, abholen, bearbeiten (eigene/zugewiesene). Kann Projekte erstellen. Kann Dateien hochladen/löschen." color="success" />
+              <Rule label="Viewer" value="Nur lesender Zugriff auf alle Daten. Kann nichts erstellen, bearbeiten oder löschen." color="warn" />
             </div>
+
+            <SubHeading>Zusätzliche Flags</SubHeading>
+            <Table
+              headers={['Flag', 'Auf', 'Wirkung']}
+              rows={[
+                ['is_admin', 'users_profile', 'Wird zusätzlich zu user_roles geprüft (Fallback)'],
+                ['is_manager', 'users_profile', 'Abteilungsleiter-Rechte: sieht Abteilungs-Items und direkte Reports'],
+              ]}
+            />
+
+            <Tip>
+              Beim Anlegen eines neuen Users wird automatisch die Rolle «staff» vergeben. Admins können dies in der Mitarbeiterverwaltung ändern.
+            </Tip>
           </Card>
 
-          <Card title="RLS-Logik & Policies" id="rls">
-            <p>Alle Tabellen haben Row-Level-Security (RLS) aktiviert. Die Logik basiert auf Security-Definer-Funktionen, um rekursive Policies zu vermeiden.</p>
-            <div className="space-y-2 mt-2">
-              <p className="text-xs font-medium text-foreground">Helper-Funktionen:</p>
-              <Table
-                headers={['Funktion', 'Zweck']}
-                rows={[
-                  ['check_is_admin(uid)', 'Prüft user_roles + is_admin Flag'],
-                  ['check_is_manager(uid)', 'Prüft is_manager Flag auf users_profile'],
-                  ['user_department(uid)', 'Gibt department_id des Users zurück'],
-                  ['is_direct_report(mgr, uid)', 'Prüft ob uid unter mgr als manager_id hat'],
-                  ['is_project_member(project_id, uid)', 'Prüft project_members Tabelle'],
-                  ['has_role(uid, role)', 'Prüft user_roles Tabelle (original)'],
-                  ['next_counter(key)', 'Atomarer Counter-Increment'],
-                ]}
-              />
-            </div>
-            <p className="text-xs font-medium text-foreground mt-3">Visibility-Regeln für Projekte:</p>
+          {/* ─── ADMIN-VERWALTUNG ─── */}
+          <Card title="Admin-Verwaltung" id="admin">
+            <p>
+              Der Admin-Bereich ist nur für Benutzer mit der Rolle <Badge color="primary">admin</Badge> sichtbar 
+              und zugänglich. Er umfasst 4 Bereiche:
+            </p>
+
+            <SubHeading>1. Mitarbeiterverwaltung (/admin/users)</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="private" value="Nur Ersteller/Owner sieht das Projekt" color="warn" />
-              <Rule label="department" value="Alle User der selben Abteilung sehen es" color="success" />
-              <Rule label="project_members" value="Nur in project_members eingetragene User" color="success" />
+              <Rule label="Übersicht" value="Tabelle aller Benutzer mit Name, Kürzel, Rolle, Abteilung und Aktiv-Status" color="success" />
+              <Rule label="Bearbeiten" value="Name, Kürzel, Rolle, Abteilung und Aktiv-Status ändern" color="success" />
+              <Rule label="Neuer Mitarbeiter" value="E-Mail, Name, Kürzel, Rolle und Abteilung — Passwort wird per Reset-Flow gesetzt" color="success" />
             </div>
+
+            <SubHeading>2. Abteilungen (/admin/departments)</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Anlegen" value="Name + Kürzel + optionaler Abteilungsleiter" color="success" />
+              <Rule label="Bearbeiten" value="Alle Felder inkl. Abteilungsleiter änderbar" color="success" />
+            </div>
+
+            <SubHeading>3. Stammdaten (/admin/master-data)</SubHeading>
+            <p>Verwaltung von Referenzdaten in 3 Tabs:</p>
+            <Table
+              headers={['Tab', 'Beschreibung', 'Felder']}
+              rows={[
+                ['Kunden', 'Kundenstammdaten', 'Kundennr. + Name'],
+                ['Produkte', 'Produktkatalog', 'Code + Name'],
+                ['Bereiche', 'Interne Bereiche/Abteilungscodes', 'Code + Name'],
+              ]}
+            />
+            <p className="mt-2">
+              Zusätzlich gibt es einen <Badge color="primary">CSV-Import</Badge>-Tab für den Massenimport von Vorgängen.
+            </p>
+
+            <SubHeading>4. Admin Dashboard (/admin/dashboard)</SubHeading>
+            <p>Erweitertes Dashboard — siehe Abschnitt «Dashboard» oben.</p>
+          </Card>
+
+          {/* ─── BENACHRICHTIGUNGEN ─── */}
+          <Card title="Benachrichtigungen" id="notifications">
+            <p>
+              Das System verfügt über ein integriertes Benachrichtigungssystem. Benachrichtigungen erscheinen 
+              als Badge an der Glocke (🔔) in der oberen rechten Ecke.
+            </p>
+
+            <SubHeading>Wann werden Benachrichtigungen erzeugt?</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Statusänderung" value="Bei jeder Statusänderung eines Vorgangs werden Ersteller und Bearbeiter benachrichtigt (sofern nicht selbst Auslöser)" color="success" />
+            </div>
+
+            <SubHeading>Benachrichtigungs-Inhalt</SubHeading>
+            <Table
+              headers={['Feld', 'Beschreibung']}
+              rows={[
+                ['Titel', 'z.B. „Status geändert: VG-001"'],
+                ['Body', 'Projektname → neuer Status'],
+                ['Link', 'Direkt-Link zum betroffenen Vorgang'],
+                ['Gelesen-Status', 'Kann als gelesen markiert werden'],
+              ]}
+            />
+
+            <p className="mt-2 text-[11px]">
+              Benachrichtigungen werden in der Tabelle <Badge color="primary">notifications</Badge> gespeichert. 
+              Jeder User sieht nur seine eigenen (RLS-Policy).
+            </p>
+          </Card>
+
+          {/* ─── SUCHE ─── */}
+          <Card title="Suche & Command Palette" id="search">
+            <p>
+              Die Command Palette ist eine Schnellsuche, die über <Badge>⌘K</Badge> (Mac) oder <Badge>Ctrl+K</Badge> (Windows) 
+              oder den Suche-Eintrag in der Sidebar geöffnet wird.
+            </p>
+
+            <SubHeading>Funktionen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Verwaltung etc." color="success" />
+              <Rule label="Suche" value="Durchsucht Menüpunkte und Aktionen" color="success" />
+              <Rule label="Tastaturnavigation" value="↑/↓ zum Navigieren, Enter zum Ausführen, Escape zum Schließen" color="success" />
+            </div>
+
+            <Tip>
+              Die Command Palette ist von jeder Seite aus erreichbar — ideal für Power-User, die schnell zwischen Bereichen wechseln möchten.
+            </Tip>
+          </Card>
+
+          {/* ─── RLS ─── */}
+          <Card title="RLS-Logik & Policies" id="rls">
+            <p>
+              Alle Tabellen haben Row-Level-Security (RLS) aktiviert. Die Logik basiert auf 
+              Security-Definer-Funktionen, um rekursive Policies zu vermeiden.
+            </p>
+
+            <SubHeading>Helper-Funktionen</SubHeading>
+            <Table
+              headers={['Funktion', 'Zweck']}
+              rows={[
+                ['check_is_admin(uid)', 'Prüft user_roles + is_admin Flag'],
+                ['check_is_manager(uid)', 'Prüft is_manager Flag auf users_profile'],
+                ['user_department(uid)', 'Gibt department_id des Users zurück'],
+                ['is_direct_report(mgr, uid)', 'Prüft ob uid unter mgr als manager_id hat'],
+                ['is_project_member(project_id, uid)', 'Prüft project_members Tabelle'],
+                ['has_role(uid, role)', 'Prüft user_roles Tabelle'],
+                ['is_admin()', 'Shortcut: has_role(auth.uid(), admin)'],
+                ['next_counter(key)', 'Atomarer Counter-Increment'],
+              ]}
+            />
+
+            <SubHeading>Policy-Übersicht pro Tabelle</SubHeading>
+            <Table
+              headers={['Tabelle', 'SELECT', 'INSERT', 'UPDATE', 'DELETE']}
+              rows={[
+                ['cases', 'Alle auth. User', 'Staff + Admin', 'Zugewiesener + Admin + Nicht zugewiesen', 'Nur Admin'],
+                ['projects', 'Admin: alle; Andere: eigene/Member/Dept', 'Staff + Admin', 'Owner + Admin', 'Nur Admin'],
+                ['project_members', 'Alle auth. User', 'Nur Admin', '–', 'Nur Admin'],
+                ['project_folders', 'Admin + Member + Owner/Dept', 'Nur Admin', '–', 'Nur Admin'],
+                ['departments', 'Alle auth. User', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
+                ['user_roles', 'Alle auth. User', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
+                ['users_profile', 'Alle auth. User', 'Admin + Self', 'Self + Admin', 'Nur Admin'],
+                ['user_preferences', 'Nur eigene', 'Nur eigene', 'Nur eigene', 'Nur eigene'],
+                ['notifications', 'Nur eigene', 'Staff/Admin/Self', 'Nur eigene', 'Nur eigene'],
+                ['case_activity', 'Alle auth. User', 'Staff + Admin', '–', 'Nur Admin'],
+                ['project_activity', 'Alle auth. User', 'Staff + Admin', '–', 'Nur Admin'],
+                ['customers/products/areas', 'Alle auth. User', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
+                ['counters', 'Niemand direkt', '–', '–', '–'],
+              ]}
+            />
+
+            <SubHeading>Visibility-Regeln für Projekte (SELECT)</SubHeading>
             <Code>{`-- SELECT Policy auf projects (vereinfacht):
 USING (
   check_is_admin()
@@ -268,23 +670,87 @@ USING (
 )`}</Code>
           </Card>
 
-          <Card title="Datenmodell — neue Tabellen v1.5" id="schema">
+          {/* ─── DATENMODELL ─── */}
+          <Card title="Datenmodell" id="schema">
+            <p>Übersicht aller Tabellen im System:</p>
+
+            <SubHeading>Kern-Tabellen</SubHeading>
             <Table
               headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
               rows={[
-                ['departments', 'Abteilungen', 'id, name, code, manager_user_id'],
-                ['user_preferences', 'Theme & Compact pro User', 'user_id (PK), theme, compact_tables'],
-                ['counters', 'Atomare Nummerierung', 'key (unique), value (int)'],
-                ['projects', 'Projekte', 'project_number, name, visibility, department_id'],
-                ['project_members', 'Team pro Projekt', 'project_id, user_id, role'],
-                ['project_folders', 'Virtuelle Ordnerstruktur', 'project_id, name, path, sort_order'],
-                ['cases (erweitert)', 'Vorgänge + neue Felder', '+ project_id, department_id, visibility, case_number'],
-                ['users_profile (erweitert)', 'Profil + neue Felder', '+ department_id, manager_id, is_admin, is_manager'],
+                ['cases', 'Vorgänge/Aufgaben', 'case_no, case_number (auto), project_name, status, assignee_id, due_at, project_id, department_id, visibility'],
+                ['projects', 'Projekte', 'project_number (auto), project_code, name, status, visibility, department_id, owner_id'],
+                ['project_members', 'Team pro Projekt', 'project_id, user_id, role (manager/member)'],
+                ['project_folders', 'Virtuelle Ordnerstruktur', 'project_id, name, path, sort_order, parent_id'],
               ]}
             />
-            <p className="mt-3 text-[11px]">Storage-Bucket: <Badge color="primary">project-files</Badge> (privat, auth required für alle Operationen)</p>
-            <p className="text-[11px] mt-1">Edge Function: <Badge color="primary">create-project-folders</Badge> — wird nach Projekt-Insert vom Client aufgerufen</p>
+
+            <SubHeading>Benutzer & Organisation</SubHeading>
+            <Table
+              headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
+              rows={[
+                ['users_profile', 'Benutzerprofil', 'display_name, short_code, department_id, manager_id, is_admin, is_manager, active'],
+                ['user_roles', 'Rollenverknüpfung', 'user_id, role (admin/staff/viewer)'],
+                ['user_preferences', 'Einstellungen', 'user_id, theme (dark/light), compact_tables'],
+                ['departments', 'Abteilungen', 'name, code, manager_user_id'],
+              ]}
+            />
+
+            <SubHeading>Referenz- / Stammdaten</SubHeading>
+            <Table
+              headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
+              rows={[
+                ['customers', 'Kundenstamm', 'customer_no, name'],
+                ['products', 'Produktkatalog', 'code, name'],
+                ['internal_areas', 'Interne Bereiche', 'code, name'],
+                ['counters', 'Atomare Nummerierung', 'key (unique), value (int)'],
+              ]}
+            />
+
+            <SubHeading>Aktivitäten & Benachrichtigungen</SubHeading>
+            <Table
+              headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
+              rows={[
+                ['case_activity', 'Vorgang-Audit-Trail', 'case_id, actor_id, action, field, old_value, new_value, message'],
+                ['project_activity', 'Projekt-Audit-Trail', 'project_id, actor_id, action, field, old_value, new_value, message'],
+                ['notifications', 'User-Benachrichtigungen', 'user_id, type, title, body, href, read'],
+              ]}
+            />
+
+            <SubHeading>Storage</SubHeading>
+            <p className="mt-1">
+              <Badge color="primary">project-files</Badge> — Privater Storage-Bucket. Authentifizierung für alle Operationen erforderlich. 
+              Pfadstruktur: <Badge>{'{project_code}_{project_number}/{ordner}/'}</Badge>
+            </p>
+
+            <SubHeading>Backend-Funktionen</SubHeading>
+            <Table
+              headers={['Funktion', 'Typ', 'Beschreibung']}
+              rows={[
+                ['create-project-folders', 'Edge Function', 'Erstellt DB-Einträge + Storage-Platzhalter nach Projekt-Insert'],
+                ['create-user', 'Edge Function', 'Legt neuen Auth-User an + Profil + Rolle (nur Admin)'],
+                ['send-password-reset', 'Edge Function', 'Sendet Passwort-Reset-E-Mail mit korrektem Redirect'],
+                ['send-due-notifications', 'Edge Function', 'Verschickt Fälligkeits-Benachrichtigungen (geplant)'],
+                ['assign_project_number()', 'DB Trigger', 'Vergibt atomare Projektnummer bei INSERT'],
+                ['assign_case_number()', 'DB Trigger', 'Vergibt atomare Vorgangsnummer bei INSERT'],
+                ['handle_new_user()', 'DB Trigger', 'Erstellt users_profile + user_roles bei neuem Auth-User'],
+              ]}
+            />
           </Card>
+
+          {/* ─── TASTENKÜRZEL ─── */}
+          <Card title="Tastenkürzel" id="shortcuts">
+            <Table
+              headers={['Kürzel', 'Aktion']}
+              rows={[
+                ['⌘K / Ctrl+K', 'Command Palette öffnen/schließen'],
+                ['↑ / ↓', 'In Command Palette navigieren'],
+                ['Enter', 'Ausgewählten Befehl ausführen'],
+                ['Escape', 'Dialog/Palette schließen'],
+              ]}
+            />
+          </Card>
+
         </div>
       </div>
     </AppLayout>
