@@ -1,13 +1,14 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Badge, Rule, Card, Table, Code, Tip, Warning, SubHeading } from '@/components/docs/DocComponents';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Moon, Building2, FolderOpen, Hash, Shield, Users, Layers,
   GitBranch, Lock, LayoutDashboard, ClipboardList, Search,
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
-  KeyRound, Database, BarChart3, Columns, BookOpen, Printer,
+  KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
 } from 'lucide-react';
 
 interface Section {
@@ -38,28 +39,55 @@ const SECTIONS: Section[] = [
 
 export default function Documentation() {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [tocOpen, setTocOpen] = useState(false);
 
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
 
+  const tocLinks = (onNavigate?: () => void) => (
+    <>
+      {SECTIONS.map(s => (
+        <a
+          key={s.id}
+          href={`#${s.id}`}
+          onClick={onNavigate}
+          className="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <s.icon className="h-3 w-3 shrink-0" />
+          {s.label}
+        </a>
+      ))}
+    </>
+  );
+
   return (
     <AppLayout>
       <div className="flex gap-6 max-w-6xl">
+        {/* Mobile TOC Button */}
+        <div className="fixed bottom-4 right-4 z-40 lg:hidden print:hidden">
+          <Sheet open={tocOpen} onOpenChange={setTocOpen}>
+            <SheetTrigger asChild>
+              <Button size="icon" className="h-11 w-11 rounded-full shadow-lg">
+                <List className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <SheetHeader className="px-4 pt-4 pb-2">
+                <SheetTitle className="text-sm">Inhaltsverzeichnis</SheetTitle>
+              </SheetHeader>
+              <div className="px-2 pb-4 space-y-0.5 overflow-y-auto max-h-[calc(100vh-5rem)]">
+                {tocLinks(() => setTocOpen(false))}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
         {/* Sidebar TOC */}
         <div className="hidden lg:block w-48 shrink-0">
           <div className="sticky top-0 space-y-0.5 pt-1 max-h-[calc(100vh-6rem)] overflow-y-auto">
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-2 pb-2">Inhalt</p>
-            {SECTIONS.map(s => (
-              <a
-                key={s.id}
-                href={`#${s.id}`}
-                className="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-              >
-                <s.icon className="h-3 w-3 shrink-0" />
-                {s.label}
-              </a>
-            ))}
+            {tocLinks()}
           </div>
         </div>
 
