@@ -18,6 +18,7 @@ type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
   roleId: string | null;
   department_name?: string | null;
+  email?: string | null;
 };
 
 interface Department { id: string; name: string; code: string; }
@@ -67,10 +68,24 @@ export default function AdminUsers() {
     const roles = rolesRes.data || [];
     const depts = (deptsRes.data || []) as Department[];
     setDepartments(depts);
+
+    // Fetch emails from edge function
+    let emailMap: Record<string, string> = {};
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-user-emails`, {
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
+      if (res.ok) emailMap = await res.json();
+    } catch { /* ignore */ }
+
     setUsers(profiles.map((p: any) => {
       const r = roles.find(r => r.user_id === p.id);
       const dept = depts.find(d => d.id === p.department_id);
-      return { ...p, role: r?.role || null, roleId: r?.id || null, department_name: dept?.name || null };
+      return { ...p, role: r?.role || null, roleId: r?.id || null, department_name: dept?.name || null, email: emailMap[p.id] || null };
     }));
     setLoading(false);
   };
@@ -343,6 +358,12 @@ export default function AdminUsers() {
           <DialogContent>
             <DialogHeader><DialogTitle className="text-sm font-semibold">{editing?.display_name} bearbeiten</DialogTitle></DialogHeader>
             <div className="space-y-4">
+              {editing?.email && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">E-Mail</Label>
+                  <p className="text-xs font-mono text-foreground bg-muted/50 rounded px-3 py-2">{editing.email}</p>
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Vollständiger Name</Label>
                 <Input value={newDisplayName} onChange={e => setNewDisplayName(e.target.value)} className="h-8 text-xs" />
