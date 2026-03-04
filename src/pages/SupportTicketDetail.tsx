@@ -196,12 +196,6 @@ export default function SupportTicketDetail() {
           </CardContent>
         </Card>
 
-        {/* AI Analysis */}
-        <TicketAIAnalysis
-          ticket={{ title: ticket.title, description: ticket.description }}
-          messages={messages}
-          onInsertResponse={(text) => setReplyText(text)}
-        />
 
         {/* Attachments */}
         <Card>
