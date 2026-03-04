@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones,
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,7 @@ const navItems = [
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
   { href: '/org', label: 'Organigramm', icon: Building2 },
   { href: '/projects', label: 'Projekte', icon: FolderKanban },
+  { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [

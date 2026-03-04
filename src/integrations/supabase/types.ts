@@ -370,6 +370,53 @@ export type Database = {
           },
         ]
       }
+      portal_customers: {
+        Row: {
+          auth_user_id: string | null
+          company_name: string | null
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          display_name: string
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_customers_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           code: string
@@ -593,6 +640,107 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          closed_at: string | null
+          created_at: string
+          customer_id: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["support_ticket_status"]
+          ticket_number: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string
+          customer_id: string
+          description: string
+          id?: string
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          ticket_number?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_ticket_status"]
+          ticket_number?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "portal_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          sender_id: string
+          sender_type: string
+          ticket_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id: string
+          sender_type: string
+          ticket_id: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id?: string
+          sender_type?: string
+          ticket_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_preferences: {
         Row: {
           compact_tables: boolean
@@ -721,6 +869,7 @@ export type Database = {
         Args: { manager_uid: string; target_uid: string }
         Returns: boolean
       }
+      is_portal_customer: { Args: { uid?: string }; Returns: boolean }
       is_project_member: {
         Args: { p_project_id: string; uid?: string }
         Returns: boolean
@@ -738,6 +887,13 @@ export type Database = {
         | "abgeschlossen"
         | "verworfen"
         | "archiv"
+      support_ticket_priority: "low" | "medium" | "high" | "critical"
+      support_ticket_status:
+        | "open"
+        | "in_progress"
+        | "waiting"
+        | "resolved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -874,6 +1030,14 @@ export const Constants = {
         "abgeschlossen",
         "verworfen",
         "archiv",
+      ],
+      support_ticket_priority: ["low", "medium", "high", "critical"],
+      support_ticket_status: [
+        "open",
+        "in_progress",
+        "waiting",
+        "resolved",
+        "closed",
       ],
     },
   },
