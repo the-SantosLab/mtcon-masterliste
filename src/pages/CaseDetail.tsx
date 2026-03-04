@@ -67,6 +67,9 @@ export default function CaseDetail() {
 
     const { error } = await supabase.from('cases').update({
       department_id: resolvedId,
+      assignee_id: null,
+      status: 'nicht_begonnen' as Enums<'case_status'>,
+      started_at: null,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
     }).eq('id', c.id);
