@@ -28,7 +28,7 @@ const SECTIONS: Section[] = [
   { id: 'files', label: 'Dateiablage', icon: FileUp },
   { id: 'support', label: 'Support-Tickets', icon: Headphones },
   { id: 'portal', label: 'Kundenportal', icon: Globe },
-  { id: 'orgchart', label: 'Organigramm', icon: Network },
+  { id: 'attachments', label: 'Anhänge & Dokumente', icon: FileUp },
   { id: 'darkmode', label: 'Dark Mode & Tabellen', icon: Moon },
   { id: 'departments', label: 'Abteilungen', icon: Building2 },
   { id: 'numbering', label: 'Auto-Nummerierung', icon: Hash },
@@ -135,7 +135,7 @@ export default function Documentation() {
                   ['📊', 'Dashboard & KPIs', 'Echtzeit-Übersicht mit Status-Verteilung und Auslastungs-Charts'],
                   ['🎫', 'Support-Tickets', 'Ticketsystem für Kundenanfragen mit Prioritäten und Chat-Verlauf'],
                   ['🌐', 'Kundenportal', 'Eigenständiges Portal unter /portal für externe Kunden'],
-                  ['🏢', 'Organigramm', 'Visuelle Darstellung der Abteilungsstruktur mit Mitarbeitern und Vorgangszähler'],
+                  ['📎', 'Anhänge & Dokumente', 'Dateien direkt an Vorgänge und Tickets anhängen, öffnen und herunterladen'],
                   ['🔐', 'Rollen & RLS', '3-stufiges Rollensystem mit Row-Level-Security auf Datenbankebene'],
                   ['🌙', 'Dark Mode', 'Glassmorphism Dark-Theme als Standard, umschaltbar pro User'],
                   ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-Ansicht'],
@@ -197,7 +197,6 @@ export default function Documentation() {
                 ['Dashboard', '/', 'Übersicht mit KPIs und eigenen Vorgängen'],
                 ['Vorgänge', '/cases', 'Masterliste aller Vorgänge mit Filtern'],
                 ['Kanban', '/cases/kanban', 'Kanban-Board-Ansicht der Vorgänge'],
-                ['Organigramm', '/org', 'Visuelle Abteilungsstruktur mit Mitarbeitern'],
                 ['Projekte', '/projects', 'Projektliste mit Status und Sichtbarkeit'],
                 ['Support', '/support', 'Support-Tickets von Kunden verwalten'],
                 ['Dokumentation', '/docs', 'Diese Seite'],
@@ -337,6 +336,7 @@ export default function Documentation() {
             <div className="space-y-1 mt-1">
               <Rule label="Projektname" value="Beschreibender Name des Vorgangs (Pflichtfeld)" color="warn" />
               <Rule label="Vorgangsnummer" value="Wird automatisch als VOR-YYYY-nnnn vergeben (kein manuelles Eingabefeld)" color="success" />
+              <Rule label="Anhänge" value="Dateien können direkt beim Erstellen angehängt werden" color="success" />
             </div>
             <p className="mt-2">
               Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
@@ -355,6 +355,7 @@ export default function Documentation() {
               <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
               <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter und macht den Vorgang wieder abholbereit" color="success" />
               <Rule label="Aufgaben-Checkliste" value="Aufgaben hinzufügen, abhaken und löschen — mit Fortschrittsanzeige" color="success" />
+              <Rule label="Anhänge" value="Dokumente direkt am Vorgang anhängen, öffnen und herunterladen. Dateien werden im Storage-Bucket case-attachments gespeichert." color="success" />
               <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
               <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Abteilung, Kommentare)" color="success" />
             </div>
@@ -514,6 +515,7 @@ export default function Documentation() {
               <Rule label="Ticket-Informationen" value="Alle Metadaten: Priorität, Status, Kunde, Bearbeiter, Zeitstempel" color="success" />
               <Rule label="Chat/Nachrichten" value="Nachrichtenverlauf zwischen internem Team und Kunde" color="success" />
               <Rule label="Interne Notizen" value="Nachrichten mit ‚Nur intern'-Toggle — für Kunden nicht sichtbar" color="success" />
+              <Rule label="Anhänge" value="Dokumente direkt im Ticket ansehen, herunterladen, hochladen und löschen. Anhänge werden im Storage-Bucket support-attachments gespeichert." color="success" />
               <Rule label="Status ändern" value="Status über Dropdown ändern (z.B. Gelöst → Geschlossen)" color="success" />
               <Rule label="Zuweisung" value="Bearbeiter zuweisen — setzt Status automatisch auf ‚In Bearbeitung'" color="success" />
             </div>
@@ -568,9 +570,10 @@ export default function Documentation() {
             <SubHeading>Kunden-Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Dashboard" value="Übersicht: offene Tickets, letzte Aktivitäten" color="success" />
-              <Rule label="Ticket erstellen" value="Neues Ticket mit Titel, Beschreibung und Priorität" color="success" />
+              <Rule label="Ticket erstellen" value="Neues Ticket mit Titel, Beschreibung, Priorität und optionalen Datei-Anhängen" color="success" />
               <Rule label="Ticket-Verlauf" value="Chat-Ansicht mit allen öffentlichen Nachrichten" color="success" />
-              <Rule label="Antworten" value="Kunde kann auf Tickets antworten" color="success" />
+              <Rule label="Anhänge" value="Kunden können Dateien an Tickets anhängen und bestehende Anhänge öffnen/herunterladen" color="success" />
+              <Rule label="Antworten" value="Kunde kann auf Tickets antworten und weitere Dateien anhängen" color="success" />
             </div>
 
             <Warning>
@@ -585,25 +588,45 @@ export default function Documentation() {
             </p>
           </Card>
 
-          {/* ─── ORGANIGRAMM ─── */}
-          <Card title="Organigramm" id="orgchart">
+          {/* ─── ANHÄNGE & DOKUMENTE ─── */}
+          <Card title="Anhänge & Dokumente" id="attachments">
             <p>
-              Das Organigramm (<Badge color="primary">/org</Badge>) zeigt die Abteilungsstruktur als visuellen Baum.
-              Jede Abteilung wird als Karte dargestellt mit ihren Mitarbeitern und offenen Vorgängen.
+              Das System unterstützt Datei-Anhänge an <strong className="text-foreground">Vorgängen</strong> und 
+              <strong className="text-foreground"> Support-Tickets</strong>. Anhänge können direkt in der Anwendung 
+              geöffnet, heruntergeladen oder gelöscht werden.
             </p>
 
-            <SubHeading>Darstellung</SubHeading>
+            <SubHeading>Vorgangs-Anhänge</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="Hierarchie" value="Haupt-Abteilungen mit ausklappbaren Unter-Abteilungen (Teams)" color="success" />
-              <Rule label="Abteilungsleiter" value="Wird prominent oben in der Abteilungskarte angezeigt" color="success" />
-              <Rule label="Mitarbeiter" value="Liste aller aktiven Mitarbeiter der Abteilung" color="success" />
-              <Rule label="Vorgangszähler" value="Zeigt die Anzahl offener (nicht abgeschlossener) Vorgänge pro Abteilung" color="success" />
-              <Rule label="Vorgang erstellen" value="Button zum direkten Erstellen eines Vorgangs mit vorausgewählter Abteilung" color="success" />
+              <Rule label="Bucket" value="case-attachments (privat, nur authentifizierte User)" color="success" />
+              <Rule label="Beim Erstellen" value="Dateien können direkt beim Anlegen eines Vorgangs angehängt werden" color="success" />
+              <Rule label="Im Detail" value="Anhänge werden im Vorgang-Detail unter ‚Anhänge' aufgelistet mit Öffnen/Download/Löschen" color="success" />
+              <Rule label="Öffnen" value="Klick auf Dateiname oder ↗-Icon öffnet die Datei direkt im Browser (neuer Tab)" color="success" />
+              <Rule label="Upload" value="Staff und Admin können jederzeit weitere Dateien anhängen" color="success" />
+              <Rule label="Löschen" value="Staff und Admin können Anhänge entfernen" color="warn" />
             </div>
 
+            <SubHeading>Ticket-Anhänge</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Bucket" value="support-attachments (privat, nur authentifizierte User)" color="success" />
+              <Rule label="Kunden-Upload" value="Kunden können beim Erstellen oder im Ticket-Detail Dateien anhängen" color="success" />
+              <Rule label="Staff-Zugriff" value="Internes Team sieht alle Anhänge, kann hochladen und löschen" color="success" />
+              <Rule label="Portal-Zugriff" value="Kunden sehen Anhänge ihrer eigenen Tickets und können neue Dateien hinzufügen" color="success" />
+            </div>
+
+            <SubHeading>Unterstützte Aktionen pro Datei</SubHeading>
+            <Table
+              headers={['Aktion', 'Icon', 'Beschreibung']}
+              rows={[
+                ['Öffnen', '↗ / Dateiname', 'Öffnet die Datei in einem neuen Browser-Tab (signierte URL, 5 Min. gültig)'],
+                ['Herunterladen', '↓', 'Erzwingt den Download der Datei'],
+                ['Löschen', '🗑', 'Entfernt die Datei dauerhaft (nur bei Berechtigung, Hover-sichtbar)'],
+              ]}
+            />
+
             <Tip>
-              Das Organigramm ist besonders nützlich, um die Auslastung pro Abteilung auf einen Blick zu sehen 
-              und Vorgänge direkt einer Abteilung zuzuordnen.
+              Alle Dateien werden über signierte URLs bereitgestellt, die 5 Minuten gültig sind. 
+              Dies gewährleistet, dass keine Dateien ohne Authentifizierung zugänglich sind.
             </Tip>
           </Card>
 
@@ -826,7 +849,7 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
 
             <SubHeading>Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Support, Organigramm, Verwaltung etc." color="success" />
+              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Support, Verwaltung etc." color="success" />
               <Rule label="Suche" value="Durchsucht Menüpunkte und Aktionen" color="success" />
               <Rule label="Tastaturnavigation" value="↑/↓ zum Navigieren, Enter zum Ausführen, Escape zum Schließen" color="success" />
             </div>
@@ -952,10 +975,11 @@ USING (
             />
 
             <SubHeading>Storage</SubHeading>
-            <p className="mt-1">
-              <Badge color="primary">project-files</Badge> — Privater Storage-Bucket. Authentifizierung für alle Operationen erforderlich. 
-              Pfadstruktur: <Badge>{'{project_code}_{project_number}/{ordner}/'}</Badge>
-            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="project-files" value="Privater Bucket für Projekt-Dateien. Pfadstruktur: {project_code}_{project_number}/{ordner}/" color="success" />
+              <Rule label="case-attachments" value="Privater Bucket für Vorgangs-Anhänge. Pfadstruktur: cases/{case_id}/{timestamp}_{filename}" color="success" />
+              <Rule label="support-attachments" value="Privater Bucket für Ticket-Anhänge. Pfadstruktur: tickets/{ticket_id}/{timestamp}_{filename}" color="success" />
+            </div>
 
             <SubHeading>Backend-Funktionen</SubHeading>
             <Table
