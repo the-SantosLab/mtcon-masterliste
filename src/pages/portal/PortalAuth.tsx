@@ -25,7 +25,7 @@ export default function PortalAuth() {
   }
 
   if (session && customer) {
-    return <Navigate to="/portal/tickets" replace />;
+    return <Navigate to="/portal" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
