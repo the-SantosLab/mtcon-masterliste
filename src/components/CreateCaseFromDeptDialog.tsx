@@ -34,6 +34,7 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
   const [dueAt, setDueAt] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [saving, setSaving] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (open) {
