@@ -214,10 +214,10 @@ export function CsvImport() {
         <div>
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">CSV-Datei auswählen</h3>
           <p className="text-[11px] text-muted-foreground mb-3">
-            Erwartete Spalten: case_no, project_name, customer_no, client_name, internal_area_code, product_code, project_article_no, received_at, due_at, estimated_hours, note
+            Erwartete Spalten: project_name, customer_no, client_name, internal_area_code, product_code, project_article_no, received_at, due_at, estimated_hours, note
           </p>
           <p className="text-[11px] text-muted-foreground mb-3">
-            Pflichtfelder: case_no, project_name. Trennzeichen: Komma oder Semikolon.
+            Pflichtfeld: project_name. Vorgangsnummer wird automatisch vergeben. Trennzeichen: Komma oder Semikolon.
           </p>
 
           <div className="flex items-center gap-3 flex-wrap">
