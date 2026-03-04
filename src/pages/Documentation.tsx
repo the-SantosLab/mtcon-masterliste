@@ -98,7 +98,7 @@ export default function Documentation() {
           <div id="overview">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <h1 className="text-lg font-semibold text-foreground">KS Command Light — Dokumentation</h1>
+                <h1 className="text-lg font-semibold text-foreground">Masterliste — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge color="primary">v1.5</Badge>
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
