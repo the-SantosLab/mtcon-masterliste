@@ -48,11 +48,42 @@ export default function CaseDetail() {
 
   useEffect(() => { fetchCase(); }, [id]);
 
+  useEffect(() => {
+    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
+      .then(r => setDepartments((r.data || []) as DeptOption[]));
+  }, []);
+
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
 
+  const changeDepartment = async (newDeptId: string) => {
+    if (!c || !user) return;
+    const oldDeptName = c.department?.name || 'Keine';
+    const resolvedId = newDeptId === '_none' ? null : newDeptId;
+    const newDept = departments.find(d => d.id === resolvedId);
+    const newDeptName = newDept?.name || 'Keine';
+
+    const { error } = await supabase.from('cases').update({
+      department_id: resolvedId,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: 'DEPT_MOVE',
+      field: 'department_id',
+      old_value: oldDeptName,
+      new_value: newDeptName,
+      actor_id: user.id,
+    });
+
+    toast.success(`Abteilung geändert: ${newDeptName}`);
+    refresh();
+  };
 
 
   const changeStatus = async (newStatus: string) => {
