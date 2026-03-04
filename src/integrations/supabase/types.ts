@@ -593,141 +593,6 @@ export type Database = {
           },
         ]
       }
-      ticket_events: {
-        Row: {
-          actor_id: string | null
-          created_at: string
-          event_type: string
-          from_department_id: string | null
-          from_status: string | null
-          id: string
-          meta: Json
-          ticket_id: string
-          to_department_id: string | null
-          to_status: string | null
-        }
-        Insert: {
-          actor_id?: string | null
-          created_at?: string
-          event_type: string
-          from_department_id?: string | null
-          from_status?: string | null
-          id?: string
-          meta?: Json
-          ticket_id: string
-          to_department_id?: string | null
-          to_status?: string | null
-        }
-        Update: {
-          actor_id?: string | null
-          created_at?: string
-          event_type?: string
-          from_department_id?: string | null
-          from_status?: string | null
-          id?: string
-          meta?: Json
-          ticket_id?: string
-          to_department_id?: string | null
-          to_status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ticket_events_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "users_profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_events_from_department_id_fkey"
-            columns: ["from_department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_events_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "tickets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_events_to_department_id_fkey"
-            columns: ["to_department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tickets: {
-        Row: {
-          assigned_to: string | null
-          created_at: string
-          created_by: string | null
-          department_id: string
-          description: string | null
-          due_date: string | null
-          id: string
-          priority: string
-          status: string
-          ticket_key: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_to?: string | null
-          created_at?: string
-          created_by?: string | null
-          department_id: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          priority?: string
-          status?: string
-          ticket_key: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_to?: string | null
-          created_at?: string
-          created_by?: string | null
-          department_id?: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          priority?: string
-          status?: string
-          ticket_key?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "users_profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users_profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_preferences: {
         Row: {
           compact_tables: boolean
@@ -842,23 +707,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      change_ticket_status: {
-        Args: { p_ticket_id: string; p_to_status: string }
-        Returns: undefined
-      }
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
-      create_ticket_atomic: {
-        Args: {
-          p_assigned_to?: string
-          p_department_id?: string
-          p_description?: string
-          p_due_date?: string
-          p_priority?: string
-          p_title: string
-        }
-        Returns: string
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -874,10 +724,6 @@ export type Database = {
       is_project_member: {
         Args: { p_project_id: string; uid?: string }
         Returns: boolean
-      }
-      move_ticket: {
-        Args: { p_ticket_id: string; p_to_department_id: string }
-        Returns: undefined
       }
       next_counter: { Args: { p_key: string }; Returns: number }
       user_department: { Args: { uid?: string }; Returns: string }
