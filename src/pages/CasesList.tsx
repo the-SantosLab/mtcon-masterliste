@@ -171,6 +171,18 @@ export default function CasesList() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Abteilung" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Abteilungen</SelectItem>
+              <SelectItem value="_none">Ohne Abteilung</SelectItem>
+              {departments.filter(d => !d.parent_id).map(d => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             onClick={toggleOnlyMine}
             className={cn(
