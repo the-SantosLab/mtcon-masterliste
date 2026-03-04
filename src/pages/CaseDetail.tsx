@@ -22,6 +22,7 @@ type CaseWithRels = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
   creator: { display_name: string; short_code: string } | null;
   project: { id: string; project_number: string; name: string } | null;
+  department: { id: string; name: string } | null;
 };
 
 export default function CaseDetail() {
