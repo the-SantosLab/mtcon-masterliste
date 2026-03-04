@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Download, Trash2, Loader2, X, FileText } from 'lucide-react';
+import { Paperclip, Download, Trash2, Loader2, X, FileText, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,9 +54,24 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
     }
   };
 
-  const handleDownload = async (fileName: string) => {
+  const getSignedUrl = async (fileName: string) => {
     const path = `${folder}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) {
+      toast.error('Datei konnte nicht geöffnet werden');
+      return null;
+    }
+    return data.signedUrl;
+  };
+
+  const handleOpen = async (fileName: string) => {
+    const url = await getSignedUrl(fileName);
+    if (url) window.open(url, '_blank');
+  };
+
+  const handleDownload = async (fileName: string) => {
+    const path = `${folder}/${fileName}`;
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
       toast.error('Download fehlgeschlagen');
       return;
@@ -114,8 +129,21 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
               )}
             >
               <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-xs text-foreground truncate flex-1">{displayName(f.name)}</span>
+              <button
+                onClick={() => handleOpen(f.name)}
+                className="text-xs text-primary hover:underline truncate flex-1 text-left"
+                title="Datei öffnen"
+              >
+                {displayName(f.name)}
+              </button>
               {f.metadata?.size && <span className="text-[10px] text-muted-foreground shrink-0">{formatSize(f.metadata.size)}</span>}
+              <button
+                onClick={() => handleOpen(f.name)}
+                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                title="Öffnen"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </button>
               <button
                 onClick={() => handleDownload(f.name)}
                 className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
