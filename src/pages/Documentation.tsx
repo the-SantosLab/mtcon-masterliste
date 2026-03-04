@@ -135,7 +135,7 @@ export default function Documentation() {
                   ['📊', 'Dashboard & KPIs', 'Echtzeit-Übersicht mit Status-Verteilung und Auslastungs-Charts'],
                   ['🎫', 'Support-Tickets', 'Ticketsystem für Kundenanfragen mit Prioritäten und Chat-Verlauf'],
                   ['🌐', 'Kundenportal', 'Eigenständiges Portal unter /portal für externe Kunden'],
-                  ['🏢', 'Organigramm', 'Visuelle Darstellung der Abteilungsstruktur mit Mitarbeitern und Vorgangszähler'],
+                  ['📎', 'Anhänge & Dokumente', 'Dateien direkt an Vorgänge und Tickets anhängen, öffnen und herunterladen'],
                   ['🔐', 'Rollen & RLS', '3-stufiges Rollensystem mit Row-Level-Security auf Datenbankebene'],
                   ['🌙', 'Dark Mode', 'Glassmorphism Dark-Theme als Standard, umschaltbar pro User'],
                   ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-Ansicht'],
