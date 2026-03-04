@@ -188,16 +188,29 @@ export default function CasesKanban() {
     if (!card) return;
     const targetId = over.id as string;
 
+    const now = new Date().toISOString();
     if (hasChildren) {
       if (card.department_id === targetId) return;
-      const { error } = await supabase.rpc('move_case_department' as any, { p_case_id: card.id, p_to_department_id: targetId });
+      const { error } = await supabase
+        .from('cases')
+        .update({ department_id: targetId, status: 'nicht_begonnen' as const, assignee_id: null, started_at: null, last_changed_by: user?.id, last_changed_at: now })
+        .eq('id', card.id);
       if (error) { toast.error(error.message); return; }
+      if (user?.id) {
+        await supabase.from('case_activity').insert({ case_id: card.id, action: 'DEPT_MOVE', actor_id: user.id, field: 'department_id', new_value: targetId });
+      }
       const targetDept = departments.find(d => d.id === targetId);
       toast.success(`Vorgang nach "${targetDept?.name}" verschoben`);
     } else {
       if (card.status === targetId) return;
-      const { error } = await supabase.rpc('change_case_status_rpc' as any, { p_case_id: card.id, p_to_status: targetId });
+      const { error } = await supabase
+        .from('cases')
+        .update({ status: targetId as CaseStatus, last_changed_by: user?.id, last_changed_at: now })
+        .eq('id', card.id);
       if (error) { toast.error(error.message); return; }
+      if (user?.id) {
+        await supabase.from('case_activity').insert({ case_id: card.id, action: 'STATUS_CHANGE', actor_id: user.id, field: 'status', new_value: targetId });
+      }
       toast.success(`Status auf "${STATUS_LABELS[targetId as CaseStatus]}" geändert`);
     }
     fetchCases();
