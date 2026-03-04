@@ -14,7 +14,7 @@ import CaseDetail from "./pages/CaseDetail";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
 import AdminDepartments from "./pages/AdminDepartments";
-import OrgChart from "./pages/OrgChart";
+
 import ProjectsList from "./pages/ProjectsList";
 import ProjectFiles from "./pages/ProjectFiles";
 import ProjectDetail from "./pages/ProjectDetail";
