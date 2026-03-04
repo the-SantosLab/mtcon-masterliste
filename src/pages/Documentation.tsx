@@ -901,7 +901,7 @@ USING (
             <Table
               headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
               rows={[
-                ['cases', 'Vorgänge/Aufgaben', 'case_no, case_number (auto), project_name, status, assignee_id, due_at, project_id, department_id, visibility'],
+                ['cases', 'Vorgänge/Aufgaben', 'case_no (auto), case_number (auto), project_name, status, assignee_id, due_at, project_id, department_id'],
                 ['projects', 'Projekte', 'project_number (auto), project_code, name, status, visibility, department_id, owner_id'],
                 ['project_members', 'Team pro Projekt', 'project_id, user_id, role (manager/member)'],
                 ['project_folders', 'Virtuelle Ordnerstruktur', 'project_id, name, path, sort_order, parent_id'],
