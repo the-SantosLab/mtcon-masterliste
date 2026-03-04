@@ -12,6 +12,7 @@ import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS }
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { ArrowLeft, Building2 } from 'lucide-react';
+import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
