@@ -242,6 +242,8 @@ export default function CasesList() {
   );
 }
 
+interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+
 function CreateCaseForm({ customers, products, areas, projects, userId, onCreated }: {
   customers: Tables<'customers'>[];
   products: Tables<'products'>[];
@@ -252,11 +254,26 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
 }) {
   const [form, setForm] = useState({
     case_no: '', project_name: '', project_id: '',
+    department_id: '', team_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
   });
+  const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
+      .then(r => setDepartments((r.data || []) as DeptOption[]));
+  }, []);
+
+  const topLevel = departments.filter(d => !d.parent_id);
+  const teams = departments.filter(d => d.parent_id === form.department_id);
+
+  const handleDeptChange = (v: string) => {
+    set('department_id', v === '_none' ? '' : v);
+    set('team_id', '');
+  };
 
   const handleProjectChange = (projectId: string) => {
     const proj = projects.find(p => p.id === projectId);
