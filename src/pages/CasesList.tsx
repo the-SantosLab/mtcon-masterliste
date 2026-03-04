@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 type CaseRow = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
   project: { id: string; project_number: string; name: string } | null;
+  department: { name: string } | null;
 };
 
 interface ProjectOption { id: string; project_number: string; name: string; }
