@@ -243,6 +243,7 @@ export default function CasesList() {
                     )}
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
+                  <td className={cn(cellCls, 'text-muted-foreground')}>{c.department?.name || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
                   <td className={cellCls}>
