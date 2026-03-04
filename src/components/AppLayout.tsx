@@ -114,7 +114,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <img src={mtconLogo} alt="MTCON Logo" className="h-10 w-10 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Command Light</p>
+            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Masterliste</p>
             <p className="text-[8px] text-muted-foreground/60 tracking-widest uppercase">v1.5</p>
           </div>
           <button onClick={() => setOpen(false)} className="lg:hidden text-muted-foreground hover:text-foreground">
