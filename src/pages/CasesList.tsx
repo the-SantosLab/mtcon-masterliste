@@ -217,9 +217,9 @@ export default function CasesList() {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
+                <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
+                <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cellCls}><StatusBadge status={c.status} /></td>
