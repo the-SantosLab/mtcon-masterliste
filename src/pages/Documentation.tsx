@@ -336,6 +336,7 @@ export default function Documentation() {
             <div className="space-y-1 mt-1">
               <Rule label="Projektname" value="Beschreibender Name des Vorgangs (Pflichtfeld)" color="warn" />
               <Rule label="Vorgangsnummer" value="Wird automatisch als VOR-YYYY-nnnn vergeben (kein manuelles Eingabefeld)" color="success" />
+              <Rule label="Anhänge" value="Dateien können direkt beim Erstellen angehängt werden" color="success" />
             </div>
             <p className="mt-2">
               Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
