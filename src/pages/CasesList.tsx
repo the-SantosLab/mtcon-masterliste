@@ -209,6 +209,7 @@ export default function CasesList() {
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Abteilung</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Endtermin</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Aktionen</th>
