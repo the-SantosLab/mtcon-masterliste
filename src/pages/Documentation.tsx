@@ -570,9 +570,10 @@ export default function Documentation() {
             <SubHeading>Kunden-Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Dashboard" value="Übersicht: offene Tickets, letzte Aktivitäten" color="success" />
-              <Rule label="Ticket erstellen" value="Neues Ticket mit Titel, Beschreibung und Priorität" color="success" />
+              <Rule label="Ticket erstellen" value="Neues Ticket mit Titel, Beschreibung, Priorität und optionalen Datei-Anhängen" color="success" />
               <Rule label="Ticket-Verlauf" value="Chat-Ansicht mit allen öffentlichen Nachrichten" color="success" />
-              <Rule label="Antworten" value="Kunde kann auf Tickets antworten" color="success" />
+              <Rule label="Anhänge" value="Kunden können Dateien an Tickets anhängen und bestehende Anhänge öffnen/herunterladen" color="success" />
+              <Rule label="Antworten" value="Kunde kann auf Tickets antworten und weitere Dateien anhängen" color="success" />
             </div>
 
             <Warning>
