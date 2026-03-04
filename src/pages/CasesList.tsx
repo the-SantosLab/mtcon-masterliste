@@ -69,6 +69,8 @@ export default function CasesList() {
     supabase.from('internal_areas').select('*').then(r => setAreas(r.data || []));
     supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
       .then(r => setProjects((r.data || []) as ProjectOption[]));
+    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
+      .then(r => setDepartments((r.data || []) as DeptFilterOption[]));
     const ch = supabase.channel('list-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
