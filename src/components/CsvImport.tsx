@@ -268,7 +268,6 @@ export function CsvImport() {
                   {parsed.slice(0, 50).map((r, i) => (
                     <tr key={i} className="hover:bg-muted/40">
                       <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                      <td className="px-3 py-2 font-mono">{r.case_no}</td>
                       <td className="px-3 py-2 text-foreground">{r.project_name}</td>
                       <td className="px-3 py-2 text-muted-foreground">{r.customer_no || '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground tabular-nums">{r.due_at || '–'}</td>

@@ -52,7 +52,6 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
       // case_no is auto-generated via trigger, but we need a placeholder
       const { error } = await supabase.from('cases').insert({
         project_name: projectName.trim(),
-        case_no: 'TEMP', // will be overwritten by assign_case_number trigger via case_number
         note: note.trim() || null,
         department_id: deptId,
         assignee_id: assigneeId || null,
