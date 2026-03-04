@@ -25,6 +25,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import PortalAuth from "./pages/portal/PortalAuth";
+import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
 import PortalCreateTicket from "./pages/portal/PortalCreateTicket";
 import PortalTicketDetail from "./pages/portal/PortalTicketDetail";
@@ -76,6 +77,7 @@ function PortalApp() {
   return (
     <Routes>
       <Route path="/portal/auth" element={<PortalAuth />} />
+      <Route path="/portal" element={<PortalProtectedRoute><PortalDashboard /></PortalProtectedRoute>} />
       <Route path="/portal/tickets" element={<PortalProtectedRoute><PortalTickets /></PortalProtectedRoute>} />
       <Route path="/portal/tickets/new" element={<PortalProtectedRoute><PortalCreateTicket /></PortalProtectedRoute>} />
       <Route path="/portal/tickets/:id" element={<PortalProtectedRoute><PortalTicketDetail /></PortalProtectedRoute>} />

@@ -5,6 +5,7 @@ import { Ticket, Plus, LogOut, LayoutDashboard } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 const portalNav = [
+  { href: '/portal', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/portal/tickets', label: 'Meine Tickets', icon: Ticket },
   { href: '/portal/tickets/new', label: 'Neues Ticket', icon: Plus },
 ];
