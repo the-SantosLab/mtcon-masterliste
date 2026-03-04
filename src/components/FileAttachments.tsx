@@ -54,9 +54,24 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
     }
   };
 
-  const handleDownload = async (fileName: string) => {
+  const getSignedUrl = async (fileName: string) => {
     const path = `${folder}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) {
+      toast.error('Datei konnte nicht geöffnet werden');
+      return null;
+    }
+    return data.signedUrl;
+  };
+
+  const handleOpen = async (fileName: string) => {
+    const url = await getSignedUrl(fileName);
+    if (url) window.open(url, '_blank');
+  };
+
+  const handleDownload = async (fileName: string) => {
+    const path = `${folder}/${fileName}`;
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
       toast.error('Download fehlgeschlagen');
       return;
