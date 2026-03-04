@@ -675,30 +675,34 @@ export default function Documentation() {
           {/* ─── AUTO-NUMMERIERUNG ─── */}
           <Card title="Auto-Nummerierung" id="numbering">
             <p>
-              Alle Projekte, Vorgänge und Support-Tickets erhalten eine menschenlesbare, fortlaufende Nummer, 
-              die atomar per Datenbank-Funktion vergeben wird.
+              Alle Projekte, Vorgänge und Support-Tickets erhalten <strong className="text-foreground">vollautomatisch</strong> eine 
+              menschenlesbare, fortlaufende Nummer, die atomar per Datenbank-Trigger vergeben wird.
+              Bei Vorgängen muss keine Nummer manuell eingegeben werden — der Trigger setzt sowohl 
+              <Badge color="primary">case_number</Badge> als auch <Badge color="primary">case_no</Badge> automatisch.
             </p>
             <Table
               headers={['Objekt', 'Format', 'Beispiel', 'Trigger']}
               rows={[
                 ['Projekt', 'PRJ-YYYY-nnnn', 'PRJ-2026-0001', 'assign_project_number()'],
                 ['Vorgang', 'VOR-YYYY-nnnn', 'VOR-2026-0042', 'assign_case_number()'],
-                ['Ticket', 'SUP-YYYY-nnnn', 'SUP-2026-0005', 'assign_ticket_number()'],
+                ['Ticket', 'TKT-YYYY-nnnn', 'TKT-2026-0005', 'assign_ticket_number()'],
               ]}
             />
+            <Tip>
+              Beim CSV-Import ist keine Vorgangsnummer erforderlich — sie wird automatisch vergeben. 
+              Einziges Pflichtfeld ist <Badge color="primary">project_name</Badge>.
+            </Tip>
             <p className="mt-3">
               Technisch: Jede Erstellung ruft <Badge color="primary">next_counter(key)</Badge> auf — 
               ein atomares <Badge>INSERT … ON CONFLICT DO UPDATE … RETURNING</Badge>, das Race Conditions verhindert.
             </p>
             <Code>{`-- Zähler-Funktion (atomic)
-SELECT public.next_counter('project_2026');
+SELECT public.next_counter('case_2026');
 -- Gibt nächsten Wert zurück + erhöht atomar
 
--- Trigger auf projects:
-NEW.project_number := 'PRJ-' || year || '-' || lpad(counter, 4, '0');
-
--- Trigger auf cases:
-NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
+-- BEFORE INSERT Trigger auf cases:
+NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');
+NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
             <Warning>
               Falls ein INSERT fehlschlägt, kann eine Nummer "verbrannt" werden. Dies ist akzeptables Verhalten bei atomaren Countern und kein Bug.
             </Warning>
