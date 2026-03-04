@@ -204,7 +204,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-[1]">
-        <header className="lg:hidden flex items-center gap-3 px-4 h-14 glass-header shrink-0">
+        <header className="lg:hidden flex items-center gap-3 px-4 h-14 glass-header shrink-0 relative z-[100]">
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
           <span className="text-sm font-semibold text-foreground flex-1">Masterliste</span>
           <div className="flex items-center gap-1">
