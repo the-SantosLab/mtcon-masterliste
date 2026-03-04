@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { PortalAuthProvider, usePortalAuth } from "@/contexts/PortalAuthContext";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
@@ -21,6 +22,12 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import SupportTickets from "./pages/SupportTickets";
+import SupportTicketDetail from "./pages/SupportTicketDetail";
+import PortalAuth from "./pages/portal/PortalAuth";
+import PortalTickets from "./pages/portal/PortalTickets";
+import PortalCreateTicket from "./pages/portal/PortalCreateTicket";
+import PortalTicketDetail from "./pages/portal/PortalTicketDetail";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +35,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
   if (!session) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
+
+function PortalProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { session, customer, loading } = usePortalAuth();
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
+  if (!session || !customer) return <Navigate to="/portal/auth" replace />;
   return <>{children}</>;
 }
 
@@ -46,6 +60,8 @@ function AuthenticatedApp() {
         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
         <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
+        <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
@@ -56,15 +72,31 @@ function AuthenticatedApp() {
   );
 }
 
+function PortalApp() {
+  return (
+    <Routes>
+      <Route path="/portal/auth" element={<PortalAuth />} />
+      <Route path="/portal/tickets" element={<PortalProtectedRoute><PortalTickets /></PortalProtectedRoute>} />
+      <Route path="/portal/tickets/new" element={<PortalProtectedRoute><PortalCreateTicket /></PortalProtectedRoute>} />
+      <Route path="/portal/tickets/:id" element={<PortalProtectedRoute><PortalTicketDetail /></PortalProtectedRoute>} />
+    </Routes>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <AuthenticatedApp />
-        </AuthProvider>
+        <PortalAuthProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/portal/*" element={<PortalApp />} />
+              <Route path="/*" element={<AuthenticatedApp />} />
+            </Routes>
+          </AuthProvider>
+        </PortalAuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
