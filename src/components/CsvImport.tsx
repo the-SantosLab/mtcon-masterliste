@@ -13,7 +13,6 @@ const EXPECTED_HEADERS = [
 
 const SAMPLE_DATA = [
   {
-    case_no: 'VG-001',
     project_name: 'Website Redesign',
     customer_no: '10001',
     client_name: 'Max Müller',
@@ -26,7 +25,6 @@ const SAMPLE_DATA = [
     note: 'Responsive Design erforderlich',
   },
   {
-    case_no: 'VG-002',
     project_name: 'Mobile App Entwicklung',
     customer_no: '10002',
     client_name: 'Anna Schmidt',
@@ -39,7 +37,6 @@ const SAMPLE_DATA = [
     note: 'iOS und Android Versionen',
   },
   {
-    case_no: 'VG-003',
     project_name: 'Datenbankoptimierung',
     customer_no: '10003',
     client_name: 'Peter Weber',
