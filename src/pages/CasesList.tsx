@@ -281,7 +281,7 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
   onCreated: () => void;
 }) {
   const [form, setForm] = useState({
-    case_no: '', project_name: '', project_id: '',
+    project_name: '', project_id: '',
     department_id: '', team_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
@@ -311,11 +311,11 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.case_no || !form.project_name) { toast.error('Nr. und Projektname sind Pflicht'); return; }
+    if (!form.project_name) { toast.error('Projektname ist Pflicht'); return; }
     setSaving(true);
     const effectiveDeptId = form.team_id || form.department_id || null;
     const { data: newCase, error } = await supabase.from('cases').insert({
-      case_no: form.case_no, project_name: form.project_name,
+      project_name: form.project_name,
       project_id: form.project_id || null,
       department_id: effectiveDeptId,
       customer_no: form.customer_no || null,
@@ -335,7 +335,7 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
   return (
     <form onSubmit={submit} className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer *</Label><Input value={form.case_no} onChange={e => set('case_no', e.target.value)} placeholder="VG-001" required className="h-8 text-xs" /></div>
+        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer</Label><Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" /></div>
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
       </div>
       <div className="grid grid-cols-2 gap-3">
