@@ -129,8 +129,21 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
               )}
             >
               <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-xs text-foreground truncate flex-1">{displayName(f.name)}</span>
+              <button
+                onClick={() => handleOpen(f.name)}
+                className="text-xs text-primary hover:underline truncate flex-1 text-left"
+                title="Datei öffnen"
+              >
+                {displayName(f.name)}
+              </button>
               {f.metadata?.size && <span className="text-[10px] text-muted-foreground shrink-0">{formatSize(f.metadata.size)}</span>}
+              <button
+                onClick={() => handleOpen(f.name)}
+                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                title="Öffnen"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </button>
               <button
                 onClick={() => handleDownload(f.name)}
                 className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
