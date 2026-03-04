@@ -975,10 +975,11 @@ USING (
             />
 
             <SubHeading>Storage</SubHeading>
-            <p className="mt-1">
-              <Badge color="primary">project-files</Badge> — Privater Storage-Bucket. Authentifizierung für alle Operationen erforderlich. 
-              Pfadstruktur: <Badge>{'{project_code}_{project_number}/{ordner}/'}</Badge>
-            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="project-files" value="Privater Bucket für Projekt-Dateien. Pfadstruktur: {project_code}_{project_number}/{ordner}/" color="success" />
+              <Rule label="case-attachments" value="Privater Bucket für Vorgangs-Anhänge. Pfadstruktur: cases/{case_id}/{timestamp}_{filename}" color="success" />
+              <Rule label="support-attachments" value="Privater Bucket für Ticket-Anhänge. Pfadstruktur: tickets/{ticket_id}/{timestamp}_{filename}" color="success" />
+            </div>
 
             <SubHeading>Backend-Funktionen</SubHeading>
             <Table
