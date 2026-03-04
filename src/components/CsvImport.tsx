@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const EXPECTED_HEADERS = [
-  'case_no', 'project_name', 'customer_no', 'client_name',
+  'project_name', 'customer_no', 'client_name',
   'internal_area_code', 'product_code', 'project_article_no',
   'received_at', 'due_at', 'estimated_hours', 'note',
 ];
