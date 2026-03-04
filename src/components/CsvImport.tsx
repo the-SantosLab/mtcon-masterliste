@@ -117,7 +117,7 @@ export function CsvImport() {
       const { headers, rows } = parseCSV(text);
 
       const errs: string[] = [];
-      const missing = ['case_no', 'project_name'].filter(h => !headers.includes(h));
+      const missing = ['project_name'].filter(h => !headers.includes(h));
       if (missing.length > 0) {
         errs.push(`Pflichtfelder fehlen: ${missing.join(', ')}`);
       }
