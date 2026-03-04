@@ -50,9 +50,9 @@ Deno.serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'KS Command <noreply@kscommand.com>',
+      from: 'Masterliste <noreply@kscommand.com>',
       to: [email],
-      subject: 'Passwort zurücksetzen – KS Command',
+      subject: 'Passwort zurücksetzen – Masterliste',
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
           <h2 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">Passwort zurücksetzen</h2>
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
             Dieser Link ist 1 Stunde gültig. Falls du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="font-size: 11px; color: #bbb; margin: 0;">KS Command · MTCON</p>
+          <p style="font-size: 11px; color: #bbb; margin: 0;">Masterliste · MTCON</p>
         </div>
       `,
     }),

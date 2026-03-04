@@ -98,7 +98,7 @@ export default function Documentation() {
           <div id="overview">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <h1 className="text-lg font-semibold text-foreground">KS Command Light — Dokumentation</h1>
+                <h1 className="text-lg font-semibold text-foreground">Masterliste — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge color="primary">v1.5</Badge>
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
@@ -115,9 +115,9 @@ export default function Documentation() {
               </Button>
             </div>
 
-            <Card title="Was ist KS Command Light?" id="overview-card">
+            <Card title="Was ist Masterliste?" id="overview-card">
               <p>
-                <strong className="text-foreground">KS Command Light</strong> ist eine web-basierte Projekt- und Vorgangsmanagement-Anwendung, 
+                <strong className="text-foreground">Masterliste</strong> ist eine web-basierte Projekt- und Vorgangsmanagement-Anwendung,
                 die speziell für die zentrale Erfassung, Zuweisung und Bearbeitung von Vorgängen (Cases) und Projekten entwickelt wurde. 
                 Die Software bietet ein Excel-ähnliches Masterlisten-Konzept, erweitert um digitale Workflows, automatische Nummerierung, 
                 Dateiverwaltung und Echtzeit-Benachrichtigungen.

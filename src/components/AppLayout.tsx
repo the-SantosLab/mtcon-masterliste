@@ -114,7 +114,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <img src={mtconLogo} alt="MTCON Logo" className="h-10 w-10 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Command Light</p>
+            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Masterliste</p>
             <p className="text-[8px] text-muted-foreground/60 tracking-widest uppercase">v1.5</p>
           </div>
           <button onClick={() => setOpen(false)} className="lg:hidden text-muted-foreground hover:text-foreground">
@@ -206,7 +206,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex-1 flex flex-col overflow-hidden relative z-[1]">
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 glass-header shrink-0">
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
-          <span className="text-sm font-semibold text-foreground flex-1">KS Command Light</span>
+          <span className="text-sm font-semibold text-foreground flex-1">Masterliste</span>
           <div className="flex items-center gap-1">
             <NotificationBell />
             <button onClick={() => setCmdOpen(true)} className="text-muted-foreground hover:text-foreground transition-colors h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted/60">

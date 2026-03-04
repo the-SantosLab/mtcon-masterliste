@@ -62,7 +62,7 @@ export default function Auth() {
           <div className="mx-auto mb-3 h-14 w-14 flex items-center justify-center">
             <img src={mtconLogo} alt="MTCON Logo" className="h-14 w-14 object-contain" />
           </div>
-          <h1 className="text-base font-semibold text-foreground">KS Command Light</h1>
+          <h1 className="text-base font-semibold text-foreground">Masterliste</h1>
         </div>
 
         <div className="glass-card p-6">
