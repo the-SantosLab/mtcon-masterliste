@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowLeft, Send, Loader2, CheckCircle, XCircle, RotateCcw, UserPlus } from 'lucide-react';
 import { FileAttachments } from '@/components/FileAttachments';
 import { TicketTemplates } from '@/components/TicketTemplates';
-import { TicketAIAnalysis } from '@/components/TicketAIAnalysis';
+
 import { CreateCaseFromTicket } from '@/components/CreateCaseFromTicket';
 import { format, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
