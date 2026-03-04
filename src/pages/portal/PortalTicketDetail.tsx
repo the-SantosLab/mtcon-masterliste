@@ -110,7 +110,7 @@ export default function PortalTicketDetail() {
 
   return (
     <PortalLayout>
-      <div className="space-y-6 max-w-3xl">
+      <div className="space-y-6 max-w-5xl">
         {/* Header */}
         <div>
           <button
@@ -144,91 +144,94 @@ export default function PortalTicketDetail() {
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="portal-glass-strong p-6">
-          <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
-            Nachrichten ({messages.length})
-          </h2>
+        {/* Two-column layout: Messages left, Attachments right */}
+        <div className="grid lg:grid-cols-[1fr,280px] gap-6">
+          {/* Messages */}
+          <div className="portal-glass-strong p-6">
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
+              Nachrichten ({messages.length})
+            </h2>
 
-          {messages.length === 0 ? (
-            <p className="text-xs text-center py-8" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
-              Noch keine Nachrichten.
-            </p>
-          ) : (
-            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-              {messages.map(msg => (
-                <div
-                  key={msg.id}
-                  className={`px-4 py-3 text-sm ${
-                    msg.sender_type === 'customer' ? 'portal-msg-customer ml-8' : 'portal-msg-support mr-8'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-xs font-medium" style={{ color: 'hsl(var(--portal-text))' }}>
-                      {msg.sender_type === 'customer' ? 'Sie' : 'Support-Team'}
-                    </span>
-                    <span className="text-[11px]" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
-                      {format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: de })}
-                    </span>
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap" style={{ color: 'hsl(var(--portal-text) / 0.85)' }}>
-                    {msg.body}
-                  </p>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-
-          {/* Reply */}
-          {ticket.status !== 'closed' && (
-            <div className="mt-5 pt-5" style={{ borderTop: '1px solid hsl(var(--portal-glass-border) / 0.3)' }}>
-              <textarea
-                placeholder="Ihre Nachricht..."
-                value={newMessage}
-                onChange={e => setNewMessage(e.target.value)}
-                rows={3}
-                className="portal-textarea"
-                disabled={sending}
-              />
-              {files.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {files.map((f, i) => (
-                    <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px]"
-                      style={{ background: 'hsl(var(--portal-surface))', color: 'hsl(var(--portal-text-secondary))' }}>
-                      <Paperclip className="h-3 w-3" />
-                      <span className="truncate max-w-[120px]">{f.name}</span>
-                      <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
-                        <X className="h-3 w-3" />
-                      </button>
+            {messages.length === 0 ? (
+              <p className="text-xs text-center py-8" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                Noch keine Nachrichten.
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                {messages.map(msg => (
+                  <div
+                    key={msg.id}
+                    className={`px-4 py-3 text-sm ${
+                      msg.sender_type === 'customer' ? 'portal-msg-customer ml-8' : 'portal-msg-support mr-8'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-xs font-medium" style={{ color: 'hsl(var(--portal-text))' }}>
+                        {msg.sender_type === 'customer' ? 'Sie' : 'Support-Team'}
+                      </span>
+                      <span className="text-[11px]" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                        {format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: de })}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
-              <div className="flex items-center gap-3 mt-3">
-                <button className="portal-btn-primary" onClick={handleSend} disabled={sending || (!newMessage.trim() && files.length === 0)}>
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Senden
-                </button>
-                <label className="cursor-pointer transition-opacity hover:opacity-70" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
-                  <Paperclip className="h-4 w-4" />
-                  <input type="file" className="hidden" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} multiple disabled={sending} />
-                </label>
+                    <p className="text-sm whitespace-pre-wrap" style={{ color: 'hsl(var(--portal-text) / 0.85)' }}>
+                      {msg.body}
+                    </p>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* Attachments */}
-        <div className="portal-glass-strong p-6">
-          <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
-            Anhänge
-          </h2>
-          <FileAttachments
-            bucket="support-attachments"
-            folder={`tickets/${id}`}
-            canUpload={ticket.status !== 'closed'}
-          />
+            {/* Reply */}
+            {ticket.status !== 'closed' && (
+              <div className="mt-5 pt-5" style={{ borderTop: '1px solid hsl(var(--portal-glass-border) / 0.3)' }}>
+                <textarea
+                  placeholder="Ihre Nachricht..."
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  rows={3}
+                  className="portal-textarea"
+                  disabled={sending}
+                />
+                {files.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {files.map((f, i) => (
+                      <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px]"
+                        style={{ background: 'hsl(var(--portal-surface))', color: 'hsl(var(--portal-text-secondary))' }}>
+                        <Paperclip className="h-3 w-3" />
+                        <span className="truncate max-w-[120px]">{f.name}</span>
+                        <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-3 mt-3">
+                  <button className="portal-btn-primary" onClick={handleSend} disabled={sending || (!newMessage.trim() && files.length === 0)}>
+                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    Senden
+                  </button>
+                  <label className="cursor-pointer transition-opacity hover:opacity-70" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                    <Paperclip className="h-4 w-4" />
+                    <input type="file" className="hidden" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} multiple disabled={sending} />
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Attachments sidebar */}
+          <div className="portal-glass-strong p-5 h-fit lg:sticky lg:top-4">
+            <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
+              Anhänge
+            </h2>
+            <FileAttachments
+              bucket="support-attachments"
+              folder={`tickets/${id}`}
+              canUpload={ticket.status !== 'closed'}
+            />
+          </div>
         </div>
       </div>
     </PortalLayout>
