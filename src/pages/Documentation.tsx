@@ -352,8 +352,10 @@ export default function Documentation() {
               <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
               <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
               <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
+              <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben (mit Aktivitätslog)" color="success" />
+              <Rule label="Aufgaben-Checkliste" value="Aufgaben hinzufügen, abhaken und löschen — mit Fortschrittsanzeige" color="success" />
               <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
-              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Kommentare)" color="success" />
+              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Abteilung, Kommentare)" color="success" />
             </div>
 
             <SubHeading>Kanban-Board (/cases/kanban)</SubHeading>
