@@ -335,7 +335,7 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
   return (
     <form onSubmit={submit} className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer *</Label><Input value={form.case_no} onChange={e => set('case_no', e.target.value)} placeholder="VG-001" required className="h-8 text-xs" /></div>
+        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer</Label><Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" /></div>
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
       </div>
       <div className="grid grid-cols-2 gap-3">
