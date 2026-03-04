@@ -259,8 +259,7 @@ export function CsvImport() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">#</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Nr.</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Projektname</th>
+                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Projektname</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Kunde</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Endtermin</th>
                   </tr>
