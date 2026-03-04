@@ -849,7 +849,7 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
 
             <SubHeading>Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Support, Organigramm, Verwaltung etc." color="success" />
+              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Support, Verwaltung etc." color="success" />
               <Rule label="Suche" value="Durchsucht Menüpunkte und Aktionen" color="success" />
               <Rule label="Tastaturnavigation" value="↑/↓ zum Navigieren, Enter zum Ausführen, Escape zum Schließen" color="success" />
             </div>
