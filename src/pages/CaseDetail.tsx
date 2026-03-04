@@ -204,6 +204,43 @@ export default function CaseDetail() {
               </div>
             )}
 
+            {/* Department move */}
+            {!isViewer && !isTerminalStatus(c.status) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Abteilung verschieben</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    Aktuell: <span className="text-foreground font-medium">{c.department?.name || 'Keine'}</span>
+                  </div>
+                  <Select value={c.department_id || '_none'} onValueChange={changeDepartment}>
+                    <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Abteilung wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Keine Abteilung</SelectItem>
+                      {departments.filter(d => !d.parent_id).map(d => {
+                        const children = departments.filter(ch => ch.parent_id === d.id);
+                        return [
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                          </SelectItem>,
+                          ...children.map(ch => (
+                            <SelectItem key={ch.id} value={ch.id}>
+                              <span className="ml-3">{ch.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{ch.code}</span> : null}{ch.name}</span>
+                            </SelectItem>
+                          )),
+                        ];
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Tasks checklist */}
+            <CaseTasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
+
             <CaseNotes caseId={c.id} canEdit={canEdit && !isTerminalStatus(c.status)} userId={user?.id || ''} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
