@@ -158,7 +158,7 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
-          case_no: string
+          case_no?: string
           case_number?: string | null
           client_name?: string | null
           closed_at?: string | null
