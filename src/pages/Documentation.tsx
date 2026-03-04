@@ -28,7 +28,7 @@ const SECTIONS: Section[] = [
   { id: 'files', label: 'Dateiablage', icon: FileUp },
   { id: 'support', label: 'Support-Tickets', icon: Headphones },
   { id: 'portal', label: 'Kundenportal', icon: Globe },
-  { id: 'orgchart', label: 'Organigramm', icon: Network },
+  { id: 'attachments', label: 'Anhänge & Dokumente', icon: FileUp },
   { id: 'darkmode', label: 'Dark Mode & Tabellen', icon: Moon },
   { id: 'departments', label: 'Abteilungen', icon: Building2 },
   { id: 'numbering', label: 'Auto-Nummerierung', icon: Hash },
