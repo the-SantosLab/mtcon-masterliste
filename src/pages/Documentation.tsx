@@ -515,6 +515,7 @@ export default function Documentation() {
               <Rule label="Ticket-Informationen" value="Alle Metadaten: Priorität, Status, Kunde, Bearbeiter, Zeitstempel" color="success" />
               <Rule label="Chat/Nachrichten" value="Nachrichtenverlauf zwischen internem Team und Kunde" color="success" />
               <Rule label="Interne Notizen" value="Nachrichten mit ‚Nur intern'-Toggle — für Kunden nicht sichtbar" color="success" />
+              <Rule label="Anhänge" value="Dokumente direkt im Ticket ansehen, herunterladen, hochladen und löschen. Anhänge werden im Storage-Bucket support-attachments gespeichert." color="success" />
               <Rule label="Status ändern" value="Status über Dropdown ändern (z.B. Gelöst → Geschlossen)" color="success" />
               <Rule label="Zuweisung" value="Bearbeiter zuweisen — setzt Status automatisch auf ‚In Bearbeitung'" color="success" />
             </div>
