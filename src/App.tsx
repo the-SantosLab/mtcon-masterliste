@@ -14,8 +14,6 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
 import AdminDepartments from "./pages/AdminDepartments";
 import OrgChart from "./pages/OrgChart";
-import Tickets from "./pages/Tickets";
-import TicketDetail from "./pages/TicketDetail";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectFiles from "./pages/ProjectFiles";
 import ProjectDetail from "./pages/ProjectDetail";
