@@ -100,6 +100,14 @@ export default function CasesList() {
       if (projectFilter === '_none' && c.project_id !== null) return false;
       if (projectFilter !== '_none' && c.project_id !== projectFilter) return false;
     }
+    if (deptFilter !== 'all') {
+      if (deptFilter === '_none' && c.department_id !== null) return false;
+      if (deptFilter !== '_none') {
+        // Include cases in selected dept or its children
+        const childIds = departments.filter(d => d.parent_id === deptFilter).map(d => d.id);
+        if (c.department_id !== deptFilter && !childIds.includes(c.department_id || '')) return false;
+      }
+    }
     if (search) {
       const s = search.toLowerCase();
       if (![c.case_no, c.project_name, c.client_name, c.project_article_no, c.project?.project_number, c.project?.name].some(v => v?.toLowerCase().includes(s))) return false;
