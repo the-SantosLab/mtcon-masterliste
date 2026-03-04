@@ -58,36 +58,36 @@
   }
 
   /* ============================================================
-     DARK MODE TOKENS
+     DARK MODE TOKENS — Glassmorphism
   ============================================================ */
   .dark {
-    --background: 222 20% 10%;
-    --foreground: 210 20% 92%;
+    --background: 228 15% 7%;
+    --foreground: 220 20% 95%;
 
-    --card: 222 18% 13%;
-    --card-foreground: 210 20% 92%;
+    --card: 228 14% 14% / 0.6;
+    --card-foreground: 220 20% 95%;
 
-    --popover: 222 18% 13%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 228 12% 12%;
+    --popover-foreground: 220 20% 95%;
 
-    --primary: 210 60% 55%;
-    --primary-foreground: 222 20% 8%;
+    --primary: 210 100% 60%;
+    --primary-foreground: 228 15% 7%;
 
-    --secondary: 222 16% 18%;
-    --secondary-foreground: 210 15% 80%;
+    --secondary: 228 12% 18%;
+    --secondary-foreground: 220 10% 80%;
 
-    --muted: 222 18% 16%;
-    --muted-foreground: 220 9% 52%;
+    --muted: 228 14% 16%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 222 16% 18%;
-    --accent-foreground: 210 20% 92%;
+    --accent: 228 12% 18%;
+    --accent-foreground: 220 20% 95%;
 
     --destructive: 0 55% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 16% 20%;
-    --input: 222 16% 18%;
-    --ring: 210 60% 55%;
+    --border: 228 14% 22%;
+    --input: 228 12% 18%;
+    --ring: 210 100% 60%;
 
     --status-open: 220 9% 60%;
     --status-planning: 215 25% 58%;
@@ -97,15 +97,93 @@
     --status-rejected: 0 45% 55%;
     --status-archive: 250 14% 58%;
 
-    --sidebar-background: 222 20% 8%;
-    --sidebar-foreground: 220 9% 56%;
-    --sidebar-primary: 210 60% 55%;
-    --sidebar-primary-foreground: 222 20% 8%;
-    --sidebar-accent: 222 18% 14%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 222 16% 16%;
-    --sidebar-ring: 210 60% 55%;
+    --sidebar-background: 228 15% 7% / 0.7;
+    --sidebar-foreground: 220 10% 55%;
+    --sidebar-primary: 210 100% 60%;
+    --sidebar-primary-foreground: 228 15% 7%;
+    --sidebar-accent: 228 14% 14% / 0.6;
+    --sidebar-accent-foreground: 220 20% 95%;
+    --sidebar-border: 228 14% 22% / 0.5;
+    --sidebar-ring: 210 100% 60%;
   }
+}
+
+/* ============================================================
+   GLASSMORPHISM UTILITIES — Main App
+============================================================ */
+.glass-bg {
+  position: relative;
+  overflow-x: hidden;
+}
+
+.glass-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, hsl(250 80% 60% / 0.06), transparent),
+    radial-gradient(ellipse 60% 60% at 80% 30%, hsl(210 100% 55% / 0.05), transparent),
+    radial-gradient(ellipse 50% 50% at 50% 80%, hsl(170 80% 45% / 0.03), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .glass-sidebar {
+  background: hsl(228 15% 7% / 0.7);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border-right: 1px solid hsl(228 14% 22% / 0.5);
+}
+
+.dark .glass-card {
+  background: hsl(228 14% 14% / 0.6);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid hsl(228 14% 22% / 0.5);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.dark .glass-card:hover {
+  background: hsl(228 14% 14% / 0.75);
+  border-color: hsl(228 14% 22% / 0.7);
+}
+
+.dark .glass-header {
+  background: hsl(228 12% 12% / 0.7);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid hsl(228 14% 22% / 0.3);
+}
+
+.dark .glass-kpi {
+  position: relative;
+  overflow: hidden;
+}
+
+.dark .glass-kpi::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  height: 100%;
+  background: radial-gradient(ellipse at top right, hsl(210 100% 60% / 0.06), transparent);
+  pointer-events: none;
+}
+
+/* Custom scrollbar for glass theme */
+.dark .glass-bg ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark .glass-bg ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark .glass-bg ::-webkit-scrollbar-thumb {
+  background: hsl(228 14% 22% / 0.5);
+  border-radius: 3px;
 }
 
 @layer base {
