@@ -4,27 +4,32 @@ import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { CaseNotes } from '@/components/CaseNotes';
+import { CaseTasks } from '@/components/CaseTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+
+interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 
 type CaseWithRels = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
   creator: { display_name: string; short_code: string } | null;
   project: { id: string; project_number: string; name: string } | null;
+  department: { id: string; name: string } | null;
 };
 
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, isViewer } = useAuth();
   const [c, setCase] = useState<CaseWithRels | null>(null);
+  const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -32,7 +37,7 @@ export default function CaseDetail() {
     if (!id) return;
     const { data } = await supabase
       .from('cases')
-      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), creator:users_profile!cases_created_by_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name)')
+      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), creator:users_profile!cases_created_by_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name), department:departments!cases_department_id_fkey(id, name)')
       .eq('id', id)
       .single();
     if (data) {
@@ -43,11 +48,42 @@ export default function CaseDetail() {
 
   useEffect(() => { fetchCase(); }, [id]);
 
+  useEffect(() => {
+    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
+      .then(r => setDepartments((r.data || []) as DeptOption[]));
+  }, []);
+
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
 
+  const changeDepartment = async (newDeptId: string) => {
+    if (!c || !user) return;
+    const oldDeptName = c.department?.name || 'Keine';
+    const resolvedId = newDeptId === '_none' ? null : newDeptId;
+    const newDept = departments.find(d => d.id === resolvedId);
+    const newDeptName = newDept?.name || 'Keine';
+
+    const { error } = await supabase.from('cases').update({
+      department_id: resolvedId,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: 'DEPT_MOVE',
+      field: 'department_id',
+      old_value: oldDeptName,
+      new_value: newDeptName,
+      actor_id: user.id,
+    });
+
+    toast.success(`Abteilung geändert: ${newDeptName}`);
+    refresh();
+  };
 
 
   const changeStatus = async (newStatus: string) => {
@@ -167,6 +203,43 @@ export default function CaseDetail() {
                 </Select>
               </div>
             )}
+
+            {/* Department move */}
+            {!isViewer && !isTerminalStatus(c.status) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Abteilung verschieben</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    Aktuell: <span className="text-foreground font-medium">{c.department?.name || 'Keine'}</span>
+                  </div>
+                  <Select value={c.department_id || '_none'} onValueChange={changeDepartment}>
+                    <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Abteilung wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Keine Abteilung</SelectItem>
+                      {departments.filter(d => !d.parent_id).map(d => {
+                        const children = departments.filter(ch => ch.parent_id === d.id);
+                        return [
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                          </SelectItem>,
+                          ...children.map(ch => (
+                            <SelectItem key={ch.id} value={ch.id}>
+                              <span className="ml-3">{ch.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{ch.code}</span> : null}{ch.name}</span>
+                            </SelectItem>
+                          )),
+                        ];
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Tasks checklist */}
+            <CaseTasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
 
             <CaseNotes caseId={c.id} canEdit={canEdit && !isTerminalStatus(c.status)} userId={user?.id || ''} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
