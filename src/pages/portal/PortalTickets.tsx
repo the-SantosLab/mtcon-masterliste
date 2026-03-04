@@ -3,34 +3,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { PortalLayout } from '@/components/PortalLayout';
 import { usePortalAuth } from '@/contexts/PortalAuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Ticket, Plus, Loader2 } from 'lucide-react';
+import { Ticket, Plus, Loader2, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 const STATUS_LABELS: Record<string, string> = {
-  open: 'Offen',
-  in_progress: 'In Bearbeitung',
-  waiting: 'Wartend',
-  resolved: 'Gelöst',
-  closed: 'Geschlossen',
+  open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartend', resolved: 'Gelöst', closed: 'Geschlossen',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  open: 'bg-[hsl(var(--status-open))]',
-  in_progress: 'bg-[hsl(var(--status-working))]',
-  waiting: 'bg-[hsl(var(--status-planning))]',
-  resolved: 'bg-[hsl(var(--status-done))]',
-  closed: 'bg-muted-foreground',
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  open: 'portal-badge-open', in_progress: 'portal-badge-working', waiting: 'portal-badge-waiting',
+  resolved: 'portal-badge-done', closed: 'portal-badge-closed',
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
-  low: 'Niedrig',
-  medium: 'Mittel',
-  high: 'Hoch',
-  critical: 'Kritisch',
+  low: 'Niedrig', medium: 'Mittel', high: 'Hoch', critical: 'Kritisch',
 };
 
 export default function PortalTickets() {
@@ -57,7 +44,7 @@ export default function PortalTickets() {
     return (
       <PortalLayout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin" style={{ color: 'hsl(var(--portal-text-secondary))' }} />
         </div>
       </PortalLayout>
     );
@@ -68,55 +55,64 @@ export default function PortalTickets() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Meine Tickets</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Ihre Support-Anfragen im Überblick</p>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'hsl(var(--portal-text))' }}>
+              Meine Tickets
+            </h1>
+            <p className="text-sm mt-1" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+              Ihre Support-Anfragen im Überblick
+            </p>
           </div>
-          <Button size="sm" onClick={() => navigate('/portal/tickets/new')}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <button className="portal-btn-primary" onClick={() => navigate('/portal/tickets/new')}>
+            <Plus className="h-4 w-4" />
             Neues Ticket
-          </Button>
+          </button>
         </div>
 
         {tickets.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <Ticket className="h-10 w-10 text-muted-foreground mb-3" />
-              <h3 className="text-sm font-medium mb-1">Keine Tickets</h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Sie haben noch keine Support-Tickets erstellt.
-              </p>
-              <Button size="sm" onClick={() => navigate('/portal/tickets/new')}>
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Erstes Ticket erstellen
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="portal-glass text-center py-16 px-6">
+            <Ticket className="h-10 w-10 mx-auto mb-3" style={{ color: 'hsl(var(--portal-text-secondary))' }} />
+            <h3 className="text-sm font-medium mb-1" style={{ color: 'hsl(var(--portal-text))' }}>Keine Tickets</h3>
+            <p className="text-xs mb-5" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+              Sie haben noch keine Support-Tickets erstellt.
+            </p>
+            <button className="portal-btn-primary" onClick={() => navigate('/portal/tickets/new')}>
+              <Plus className="h-4 w-4" />
+              Erstes Ticket erstellen
+            </button>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {tickets.map(ticket => (
-              <Link key={ticket.id} to={`/portal/tickets/${ticket.id}`}>
-                <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-                  <CardContent className="py-4 px-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="font-mono text-[11px] text-muted-foreground">{ticket.ticket_number}</span>
-                          <Badge className={`${STATUS_COLORS[ticket.status]} text-white text-[10px] px-1.5 py-0`}>
-                            {STATUS_LABELS[ticket.status] || ticket.status}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {PRIORITY_LABELS[ticket.priority] || ticket.priority}
-                          </Badge>
-                        </div>
-                        <h3 className="text-sm font-medium text-foreground truncate">{ticket.title}</h3>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{ticket.description}</p>
+              <Link key={ticket.id} to={`/portal/tickets/${ticket.id}`} className="block">
+                <div className="portal-glass px-5 py-4 cursor-pointer group">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2.5 mb-1.5">
+                        <span className="font-mono text-[11px]" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                          {ticket.ticket_number}
+                        </span>
+                        <span className={`portal-badge ${STATUS_BADGE_CLASS[ticket.status] || 'portal-badge-open'}`}>
+                          {STATUS_LABELS[ticket.status] || ticket.status}
+                        </span>
+                        <span className="portal-badge portal-badge-open">
+                          {PRIORITY_LABELS[ticket.priority] || ticket.priority}
+                        </span>
                       </div>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap mt-1">
+                      <h3 className="text-sm font-medium truncate" style={{ color: 'hsl(var(--portal-text))' }}>
+                        {ticket.title}
+                      </h3>
+                      <p className="text-xs mt-1 line-clamp-1" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                        {ticket.description}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[11px] whitespace-nowrap" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
                         {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: de })}
                       </span>
+                      <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'hsl(var(--portal-text-secondary))' }} />
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
