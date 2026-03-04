@@ -51,7 +51,6 @@ const SAMPLE_DATA = [
 ];
 
 interface ParsedRow {
-  case_no: string;
   project_name: string;
   customer_no: string | null;
   client_name: string | null;
