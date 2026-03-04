@@ -23,9 +23,11 @@ import { cn } from '@/lib/utils';
 type CaseRow = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
   project: { id: string; project_number: string; name: string } | null;
+  department: { name: string } | null;
 };
 
 interface ProjectOption { id: string; project_number: string; name: string; }
+interface DeptFilterOption { id: string; name: string; code: string | null; parent_id: string | null; }
 
 export default function CasesList() {
   const { user, isAdmin, isViewer } = useAuth();
@@ -38,11 +40,13 @@ export default function CasesList() {
   const [products, setProducts] = useState<Tables<'products'>[]>([]);
   const [areas, setAreas] = useState<Tables<'internal_areas'>[]>([]);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [departments, setDepartments] = useState<DeptFilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [deptFilter, setDeptFilter] = useState<string>('all');
   const [onlyMine, setOnlyMine] = useState<boolean>(() => {
     try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
   });
@@ -52,7 +56,7 @@ export default function CasesList() {
   const fetchCases = async () => {
     const { data } = await supabase
       .from('cases')
-      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name)')
+      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name), department:departments!cases_department_id_fkey(name)')
       .order('created_at', { ascending: false });
     setCases((data as CaseRow[]) || []);
     setLoading(false);
@@ -66,6 +70,8 @@ export default function CasesList() {
     supabase.from('internal_areas').select('*').then(r => setAreas(r.data || []));
     supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
       .then(r => setProjects((r.data || []) as ProjectOption[]));
+    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
+      .then(r => setDepartments((r.data || []) as DeptFilterOption[]));
     const ch = supabase.channel('list-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
@@ -94,6 +100,14 @@ export default function CasesList() {
     if (projectFilter !== 'all') {
       if (projectFilter === '_none' && c.project_id !== null) return false;
       if (projectFilter !== '_none' && c.project_id !== projectFilter) return false;
+    }
+    if (deptFilter !== 'all') {
+      if (deptFilter === '_none' && c.department_id !== null) return false;
+      if (deptFilter !== '_none') {
+        // Include cases in selected dept or its children
+        const childIds = departments.filter(d => d.parent_id === deptFilter).map(d => d.id);
+        if (c.department_id !== deptFilter && !childIds.includes(c.department_id || '')) return false;
+      }
     }
     if (search) {
       const s = search.toLowerCase();
@@ -158,6 +172,18 @@ export default function CasesList() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Abteilung" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Abteilungen</SelectItem>
+              <SelectItem value="_none">Ohne Abteilung</SelectItem>
+              {departments.filter(d => !d.parent_id).map(d => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             onClick={toggleOnlyMine}
             className={cn(
@@ -183,6 +209,7 @@ export default function CasesList() {
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Abteilung</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Endtermin</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Aktionen</th>
@@ -190,9 +217,9 @@ export default function CasesList() {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
+                <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
+                <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cellCls}><StatusBadge status={c.status} /></td>
@@ -216,6 +243,7 @@ export default function CasesList() {
                     )}
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
+                  <td className={cn(cellCls, 'text-muted-foreground')}>{c.department?.name || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
                   <td className={cellCls}>
@@ -242,7 +270,7 @@ export default function CasesList() {
   );
 }
 
-interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+type DeptOption = DeptFilterOption;
 
 function CreateCaseForm({ customers, products, areas, projects, userId, onCreated }: {
   customers: Tables<'customers'>[];
