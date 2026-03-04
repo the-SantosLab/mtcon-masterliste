@@ -256,6 +256,16 @@ export default function CaseDetail() {
               />
             </div>
 
+            {/* Ticket-Verlauf / Notiz */}
+            {c.note && (
+              <div className="rounded-md border border-border bg-card p-5 space-y-2">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {c.note.includes('--- Ticket-Verlauf:') ? 'Ticket-Verlauf' : 'Notiz'}
+                </h3>
+                <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">{c.note}</pre>
+              </div>
+            )}
+
             <CaseNotes caseId={c.id} canEdit={canEdit && !isTerminalStatus(c.status)} userId={user?.id || ''} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
