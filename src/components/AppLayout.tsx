@@ -101,7 +101,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isCompact = preferences.compactTables;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background glass-bg">
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
