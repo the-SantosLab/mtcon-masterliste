@@ -29,6 +29,7 @@ export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, isViewer } = useAuth();
   const [c, setCase] = useState<CaseWithRels | null>(null);
+  const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
