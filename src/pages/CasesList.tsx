@@ -242,6 +242,8 @@ export default function CasesList() {
   );
 }
 
+interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+
 function CreateCaseForm({ customers, products, areas, projects, userId, onCreated }: {
   customers: Tables<'customers'>[];
   products: Tables<'products'>[];
@@ -252,11 +254,26 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
 }) {
   const [form, setForm] = useState({
     case_no: '', project_name: '', project_id: '',
+    department_id: '', team_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
   });
+  const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
+      .then(r => setDepartments((r.data || []) as DeptOption[]));
+  }, []);
+
+  const topLevel = departments.filter(d => !d.parent_id);
+  const teams = departments.filter(d => d.parent_id === form.department_id);
+
+  const handleDeptChange = (v: string) => {
+    set('department_id', v === '_none' ? '' : v);
+    set('team_id', '');
+  };
 
   const handleProjectChange = (projectId: string) => {
     const proj = projects.find(p => p.id === projectId);
@@ -268,9 +285,11 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
     e.preventDefault();
     if (!form.case_no || !form.project_name) { toast.error('Nr. und Projektname sind Pflicht'); return; }
     setSaving(true);
+    const effectiveDeptId = form.team_id || form.department_id || null;
     const { data: newCase, error } = await supabase.from('cases').insert({
       case_no: form.case_no, project_name: form.project_name,
       project_id: form.project_id || null,
+      department_id: effectiveDeptId,
       customer_no: form.customer_no || null,
       client_name: form.client_name || null, internal_area_code: form.internal_area_code || null,
       product_code: form.product_code || null, project_article_no: form.project_article_no || null,
@@ -290,6 +309,34 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer *</Label><Input value={form.case_no} onChange={e => set('case_no', e.target.value)} placeholder="VG-001" required className="h-8 text-xs" /></div>
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Abteilung</Label>
+          <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">Keine Abteilung</SelectItem>
+              {topLevel.map(d => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Teilbereich</Label>
+          <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine Teilbereiche' : 'Wählen'} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">Kein Teilbereich</SelectItem>
+              {teams.map(t => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
