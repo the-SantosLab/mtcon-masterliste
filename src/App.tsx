@@ -25,6 +25,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import PortalAuth from "./pages/portal/PortalAuth";
+import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
 import PortalCreateTicket from "./pages/portal/PortalCreateTicket";
 import PortalTicketDetail from "./pages/portal/PortalTicketDetail";
