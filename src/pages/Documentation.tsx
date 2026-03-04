@@ -588,25 +588,45 @@ export default function Documentation() {
             </p>
           </Card>
 
-          {/* ─── ORGANIGRAMM ─── */}
-          <Card title="Organigramm" id="orgchart">
+          {/* ─── ANHÄNGE & DOKUMENTE ─── */}
+          <Card title="Anhänge & Dokumente" id="attachments">
             <p>
-              Das Organigramm (<Badge color="primary">/org</Badge>) zeigt die Abteilungsstruktur als visuellen Baum.
-              Jede Abteilung wird als Karte dargestellt mit ihren Mitarbeitern und offenen Vorgängen.
+              Das System unterstützt Datei-Anhänge an <strong className="text-foreground">Vorgängen</strong> und 
+              <strong className="text-foreground"> Support-Tickets</strong>. Anhänge können direkt in der Anwendung 
+              geöffnet, heruntergeladen oder gelöscht werden.
             </p>
 
-            <SubHeading>Darstellung</SubHeading>
+            <SubHeading>Vorgangs-Anhänge</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="Hierarchie" value="Haupt-Abteilungen mit ausklappbaren Unter-Abteilungen (Teams)" color="success" />
-              <Rule label="Abteilungsleiter" value="Wird prominent oben in der Abteilungskarte angezeigt" color="success" />
-              <Rule label="Mitarbeiter" value="Liste aller aktiven Mitarbeiter der Abteilung" color="success" />
-              <Rule label="Vorgangszähler" value="Zeigt die Anzahl offener (nicht abgeschlossener) Vorgänge pro Abteilung" color="success" />
-              <Rule label="Vorgang erstellen" value="Button zum direkten Erstellen eines Vorgangs mit vorausgewählter Abteilung" color="success" />
+              <Rule label="Bucket" value="case-attachments (privat, nur authentifizierte User)" color="success" />
+              <Rule label="Beim Erstellen" value="Dateien können direkt beim Anlegen eines Vorgangs angehängt werden" color="success" />
+              <Rule label="Im Detail" value="Anhänge werden im Vorgang-Detail unter ‚Anhänge' aufgelistet mit Öffnen/Download/Löschen" color="success" />
+              <Rule label="Öffnen" value="Klick auf Dateiname oder ↗-Icon öffnet die Datei direkt im Browser (neuer Tab)" color="success" />
+              <Rule label="Upload" value="Staff und Admin können jederzeit weitere Dateien anhängen" color="success" />
+              <Rule label="Löschen" value="Staff und Admin können Anhänge entfernen" color="warn" />
             </div>
 
+            <SubHeading>Ticket-Anhänge</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Bucket" value="support-attachments (privat, nur authentifizierte User)" color="success" />
+              <Rule label="Kunden-Upload" value="Kunden können beim Erstellen oder im Ticket-Detail Dateien anhängen" color="success" />
+              <Rule label="Staff-Zugriff" value="Internes Team sieht alle Anhänge, kann hochladen und löschen" color="success" />
+              <Rule label="Portal-Zugriff" value="Kunden sehen Anhänge ihrer eigenen Tickets und können neue Dateien hinzufügen" color="success" />
+            </div>
+
+            <SubHeading>Unterstützte Aktionen pro Datei</SubHeading>
+            <Table
+              headers={['Aktion', 'Icon', 'Beschreibung']}
+              rows={[
+                ['Öffnen', '↗ / Dateiname', 'Öffnet die Datei in einem neuen Browser-Tab (signierte URL, 5 Min. gültig)'],
+                ['Herunterladen', '↓', 'Erzwingt den Download der Datei'],
+                ['Löschen', '🗑', 'Entfernt die Datei dauerhaft (nur bei Berechtigung, Hover-sichtbar)'],
+              ]}
+            />
+
             <Tip>
-              Das Organigramm ist besonders nützlich, um die Auslastung pro Abteilung auf einen Blick zu sehen 
-              und Vorgänge direkt einer Abteilung zuzuordnen.
+              Alle Dateien werden über signierte URLs bereitgestellt, die 5 Minuten gültig sind. 
+              Dies gewährleistet, dass keine Dateien ohne Authentifizierung zugänglich sind.
             </Tip>
           </Card>
 
