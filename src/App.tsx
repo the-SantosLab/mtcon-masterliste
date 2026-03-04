@@ -77,6 +77,7 @@ function PortalApp() {
   return (
     <Routes>
       <Route path="/portal/auth" element={<PortalAuth />} />
+      <Route path="/portal" element={<PortalProtectedRoute><PortalDashboard /></PortalProtectedRoute>} />
       <Route path="/portal/tickets" element={<PortalProtectedRoute><PortalTickets /></PortalProtectedRoute>} />
       <Route path="/portal/tickets/new" element={<PortalProtectedRoute><PortalCreateTicket /></PortalProtectedRoute>} />
       <Route path="/portal/tickets/:id" element={<PortalProtectedRoute><PortalTicketDetail /></PortalProtectedRoute>} />
