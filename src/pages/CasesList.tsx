@@ -281,7 +281,7 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
   onCreated: () => void;
 }) {
   const [form, setForm] = useState({
-    case_no: '', project_name: '', project_id: '',
+    project_name: '', project_id: '',
     department_id: '', team_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
