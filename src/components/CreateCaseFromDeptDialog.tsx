@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Paperclip, X } from 'lucide-react';
 import type { Department } from '@/lib/case-utils';
 
 interface Props {
@@ -34,6 +34,7 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
   const [dueAt, setDueAt] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [saving, setSaving] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -49,18 +50,26 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
     if (!user?.id) return toast.error('Nicht angemeldet');
     setSaving(true);
     try {
-      // case_no is auto-generated via trigger, but we need a placeholder
-      const { error } = await supabase.from('cases').insert({
+      const { data: caseData, error } = await supabase.from('cases').insert({
         project_name: projectName.trim(),
         note: note.trim() || null,
         department_id: deptId,
         assignee_id: assigneeId || null,
         due_at: dueAt || null,
         created_by: user.id,
-      });
+      }).select('id').single();
       if (error) throw error;
+
+      // Upload files
+      if (files.length > 0 && caseData) {
+        for (const file of files) {
+          const path = `cases/${caseData.id}/${Date.now()}_${file.name}`;
+          await supabase.storage.from('case-attachments').upload(path, file);
+        }
+      }
+
       toast.success('Vorgang erstellt');
-      setProjectName(''); setNote(''); setAssigneeId(''); setDueAt('');
+      setProjectName(''); setNote(''); setAssigneeId(''); setDueAt(''); setFiles([]);
       onClose();
       onCreated?.();
     } catch (err: any) {
@@ -113,6 +122,28 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Fällig am</Label>
             <Input type="date" value={dueAt} onChange={e => setDueAt(e.target.value)} className="h-8 text-xs" />
+          </div>
+          {/* File attachments */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Anhänge</Label>
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1 rounded border border-border bg-muted/30 px-2 py-1 text-[11px] text-muted-foreground">
+                    <Paperclip className="h-3 w-3" />
+                    <span className="truncate max-w-[120px]">{f.name}</span>
+                    <button type="button" onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer text-primary hover:opacity-70 transition-opacity">
+              <Paperclip className="h-3.5 w-3.5" />
+              Datei hinzufügen
+              <input type="file" className="hidden" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} multiple />
+            </label>
           </div>
           <Button onClick={handleSave} disabled={saving} className="w-full h-8 text-xs mt-1">
             {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />Erstellen…</> : 'Vorgang erstellen'}

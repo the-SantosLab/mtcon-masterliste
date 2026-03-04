@@ -12,6 +12,7 @@ import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS }
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { ArrowLeft, Building2 } from 'lucide-react';
+import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -243,6 +244,17 @@ export default function CaseDetail() {
 
             {/* Tasks checklist */}
             <CaseTasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
+
+            {/* Attachments */}
+            <div className="rounded-md border border-border bg-card p-5">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Anhänge</h3>
+              <FileAttachments
+                bucket="case-attachments"
+                folder={`cases/${c.id}`}
+                canUpload={!isViewer && !isTerminalStatus(c.status)}
+                canDelete={!isViewer}
+              />
+            </div>
 
             <CaseNotes caseId={c.id} canEdit={canEdit && !isTerminalStatus(c.status)} userId={user?.id || ''} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>

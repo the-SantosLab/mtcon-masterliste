@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Send, Loader2, CheckCircle, XCircle, RotateCcw, UserPlus } from 'lucide-react';
+import { FileAttachments } from '@/components/FileAttachments';
 import { format, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -185,6 +186,21 @@ export default function SupportTicketDetail() {
                 Auf Rückmeldung warten
               </Button>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Attachments */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Anhänge</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FileAttachments
+              bucket="support-attachments"
+              folder={`tickets/${id}`}
+              canUpload
+              canDelete
+            />
           </CardContent>
         </Card>
 

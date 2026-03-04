@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PortalLayout } from '@/components/PortalLayout';
 import { usePortalAuth } from '@/contexts/PortalAuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Send, Loader2, Paperclip, X } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Paperclip, X, FileText, Download } from 'lucide-react';
+import { FileAttachments } from '@/components/FileAttachments';
 import { formatDistanceToNow, format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -216,6 +217,18 @@ export default function PortalTicketDetail() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Attachments */}
+        <div className="portal-glass-strong p-6">
+          <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
+            Anhänge
+          </h2>
+          <FileAttachments
+            bucket="support-attachments"
+            folder={`tickets/${id}`}
+            canUpload={ticket.status !== 'closed'}
+          />
         </div>
       </div>
     </PortalLayout>
