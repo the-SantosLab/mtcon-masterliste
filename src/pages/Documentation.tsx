@@ -328,6 +328,7 @@ export default function Documentation() {
                 ['Freigeben (Unclaim)', 'Zugewiesener User', 'Vorgang ist nicht abgeschlossen'],
                 ['Abschließen', 'Zugewiesener User / Admin', 'Vorgang ist nicht abgeschlossen'],
                 ['Status ändern', 'Zugewiesener User / Admin', 'Im Vorgang-Detail, über Dropdown'],
+                ['Abteilung verschieben', 'Staff / Admin', 'Setzt Status auf „Nicht begonnen", entfernt Bearbeiter und Startzeitpunkt — Vorgang ist wieder abholbereit'],
               ]}
             />
 
