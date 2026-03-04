@@ -285,7 +285,7 @@ export default function Documentation() {
               headers={['Spalte', 'Beschreibung']}
               rows={[
                 ['Status', 'Farbkodierter Status-Badge'],
-                ['Nr.', 'Eindeutige Vorgangsnummer (manuell vergeben)'],
+                ['Nr.', 'Automatisch vergebene Vorgangsnummer (VOR-YYYY-nnnn)'],
                 ['Projektname', 'Bezeichnung des Vorgangs'],
                 ['Projekt', 'Verknüpftes Projekt (falls vorhanden) mit Projekt-Nr.'],
                 ['Bearbeiter', 'Kürzel des zugewiesenen Mitarbeiters'],
