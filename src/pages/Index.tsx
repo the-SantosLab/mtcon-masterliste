@@ -76,8 +76,8 @@ export default function Dashboard() {
           <KPICard title="Diese Woche" value={dueWeek} icon={Calendar} />
         </div>
         <div className="grid lg:grid-cols-2 gap-4">
-          <div className="rounded-md border border-border bg-card">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="glass-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
               <h2 className="text-sm font-medium text-foreground">Meine Vorgänge</h2>
               <Link to="/cases?filter=mine">
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">
@@ -87,8 +87,8 @@ export default function Dashboard() {
             </div>
             <CaseList items={myCases} empty="Keine zugewiesenen Vorgänge" />
           </div>
-          <div className="rounded-md border border-border bg-card">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="glass-card overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
               <h2 className="text-sm font-medium text-foreground">Frei zum Abholen</h2>
               <Link to="/cases?filter=available">
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">

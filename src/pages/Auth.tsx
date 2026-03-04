@@ -56,8 +56,8 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-background glass-bg p-4">
+      <div className="w-full max-w-sm relative z-[1]">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 h-14 w-14 flex items-center justify-center">
             <img src={mtconLogo} alt="MTCON Logo" className="h-14 w-14 object-contain" />
@@ -65,7 +65,7 @@ export default function Auth() {
           <h1 className="text-base font-semibold text-foreground">KS Command Light</h1>
         </div>
 
-        <div className="rounded-md border border-border bg-card p-6">
+        <div className="glass-card p-6">
           <h2 className="text-sm font-semibold text-foreground mb-5">
             {view === 'login' ? 'Anmeldung' : 'Passwort zurücksetzen'}
           </h2>
