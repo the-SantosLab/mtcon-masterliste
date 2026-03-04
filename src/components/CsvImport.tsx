@@ -144,15 +144,13 @@ export function CsvImport() {
       const rowErrors: string[] = [...errs];
 
       rows.forEach((row, i) => {
-        const caseNo = get(row, 'case_no');
         const projectName = get(row, 'project_name');
-        if (!caseNo || !projectName) {
-          rowErrors.push(`Zeile ${i + 2}: case_no oder project_name fehlt`);
+        if (!projectName) {
+          rowErrors.push(`Zeile ${i + 2}: project_name fehlt`);
           return;
         }
         const hours = get(row, 'estimated_hours');
         parsedRows.push({
-          case_no: caseNo,
           project_name: projectName,
           customer_no: get(row, 'customer_no') || null,
           client_name: get(row, 'client_name') || null,
