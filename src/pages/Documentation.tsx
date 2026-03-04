@@ -9,6 +9,7 @@ import {
   GitBranch, Lock, LayoutDashboard, ClipboardList, Search,
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
   KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
+  Headphones, Globe, Network,
 } from 'lucide-react';
 
 interface Section {
@@ -25,6 +26,9 @@ const SECTIONS: Section[] = [
   { id: 'cases', label: 'Vorgänge', icon: ClipboardList },
   { id: 'projects', label: 'Projekte', icon: FolderKanban },
   { id: 'files', label: 'Dateiablage', icon: FileUp },
+  { id: 'support', label: 'Support-Tickets', icon: Headphones },
+  { id: 'portal', label: 'Kundenportal', icon: Globe },
+  { id: 'orgchart', label: 'Organigramm', icon: Network },
   { id: 'darkmode', label: 'Dark Mode & Tabellen', icon: Moon },
   { id: 'departments', label: 'Abteilungen', icon: Building2 },
   { id: 'numbering', label: 'Auto-Nummerierung', icon: Hash },
@@ -100,7 +104,7 @@ export default function Documentation() {
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Masterliste — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge color="primary">v1.5</Badge>
+                  <Badge color="primary">v2.0</Badge>
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
                 </div>
               </div>
@@ -120,7 +124,7 @@ export default function Documentation() {
                 <strong className="text-foreground">Masterliste</strong> ist eine web-basierte Projekt- und Vorgangsmanagement-Anwendung,
                 die speziell für die zentrale Erfassung, Zuweisung und Bearbeitung von Vorgängen (Cases) und Projekten entwickelt wurde. 
                 Die Software bietet ein Excel-ähnliches Masterlisten-Konzept, erweitert um digitale Workflows, automatische Nummerierung, 
-                Dateiverwaltung und Echtzeit-Benachrichtigungen.
+                Dateiverwaltung, Support-Ticketing mit Kundenportal und Echtzeit-Benachrichtigungen.
               </p>
 
               <SubHeading>Kernfunktionen auf einen Blick</SubHeading>
@@ -129,11 +133,13 @@ export default function Documentation() {
                   ['📋', 'Vorgangsverwaltung', 'Erstellen, zuweisen, bearbeiten, abschließen — mit vollständigem Audit-Trail'],
                   ['📁', 'Projektverwaltung', 'Projekte mit automatischer Ordnerstruktur und Team-Management'],
                   ['📊', 'Dashboard & KPIs', 'Echtzeit-Übersicht mit Status-Verteilung und Auslastungs-Charts'],
+                  ['🎫', 'Support-Tickets', 'Ticketsystem für Kundenanfragen mit Prioritäten und Chat-Verlauf'],
+                  ['🌐', 'Kundenportal', 'Eigenständiges Portal unter /portal für externe Kunden'],
+                  ['🏢', 'Organigramm', 'Visuelle Darstellung der Abteilungsstruktur mit Mitarbeitern und Vorgangszähler'],
                   ['🔐', 'Rollen & RLS', '3-stufiges Rollensystem mit Row-Level-Security auf Datenbankebene'],
-                  ['🌙', 'Dark Mode', 'Standard-Theme ist Dark, umschaltbar pro User'],
+                  ['🌙', 'Dark Mode', 'Glassmorphism Dark-Theme als Standard, umschaltbar pro User'],
                   ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-Ansicht'],
-                  ['#️⃣', 'Auto-Nummerierung', 'Atomare Projekt- und Vorgangsnummern (PRJ-/VOR-)'],
-                  ['🏢', 'Abteilungen', 'Organisationsstruktur mit Abteilungsleitern'],
+                  ['#️⃣', 'Auto-Nummerierung', 'Atomare Projekt-, Vorgang- und Ticket-Nummern'],
                   ['🔔', 'Benachrichtigungen', 'Echtzeit-Notifications bei Statusänderungen'],
                   ['⌘', 'Command Palette', 'Schnellsuche via ⌘K / Ctrl+K'],
                 ].map(([icon, title, desc]) => (
@@ -162,6 +168,7 @@ export default function Documentation() {
               <Rule label="E-Mail + Passwort" value="Standard-Anmeldung über E-Mail und Passwort" color="success" />
               <Rule label="Passwort vergessen" value="Link auf der Login-Seite → E-Mail mit Reset-Link wird gesendet" color="success" />
               <Rule label="Passwort zurücksetzen" value="Über /reset-password — Link ist 24h gültig" color="success" />
+              <Rule label="Passwort ändern" value="Im Profil-Dropdown (Sidebar unten) → Passwort ändern (min. 8 Zeichen)" color="success" />
             </div>
 
             <SubHeading>Erstanmeldung neuer Benutzer</SubHeading>
@@ -179,6 +186,7 @@ export default function Documentation() {
           <Card title="Navigation & Layout" id="navigation">
             <p>
               Die Anwendung verwendet ein Sidebar-Layout mit einer festen linken Navigation und einem Hauptinhaltsbereich rechts.
+              Das Design nutzt ein Premium Glassmorphism-Theme mit halbtransparenten Oberflächen und Backdrop-Blur-Effekten.
             </p>
 
             <SubHeading>Hauptnavigation (Sidebar)</SubHeading>
@@ -189,7 +197,9 @@ export default function Documentation() {
                 ['Dashboard', '/', 'Übersicht mit KPIs und eigenen Vorgängen'],
                 ['Vorgänge', '/cases', 'Masterliste aller Vorgänge mit Filtern'],
                 ['Kanban', '/cases/kanban', 'Kanban-Board-Ansicht der Vorgänge'],
+                ['Organigramm', '/org', 'Visuelle Abteilungsstruktur mit Mitarbeitern'],
                 ['Projekte', '/projects', 'Projektliste mit Status und Sichtbarkeit'],
+                ['Support', '/support', 'Support-Tickets von Kunden verwalten'],
                 ['Dokumentation', '/docs', 'Diese Seite'],
               ]}
             />
@@ -210,6 +220,7 @@ export default function Documentation() {
             <div className="space-y-1 mt-1">
               <Rule label="Dark/Light Mode" value="Umschalter zwischen Hell- und Dunkel-Modus" color="success" />
               <Rule label="Tabellen kompakt/normal" value="Reduziert das Padding in allen Tabellen" color="success" />
+              <Rule label="Passwort ändern" value="Dialog zum Ändern des eigenen Passworts (min. 8 Zeichen)" color="success" />
               <Rule label="Abmelden" value="Beendet die aktuelle Sitzung" color="warn" />
             </div>
 
@@ -278,6 +289,7 @@ export default function Documentation() {
                 ['Projektname', 'Bezeichnung des Vorgangs'],
                 ['Projekt', 'Verknüpftes Projekt (falls vorhanden) mit Projekt-Nr.'],
                 ['Bearbeiter', 'Kürzel des zugewiesenen Mitarbeiters'],
+                ['Abteilung', 'Zugeordnete Abteilung des Vorgangs'],
                 ['Kunde', 'Kundennummer'],
                 ['Endtermin', 'Fälligkeitsdatum'],
                 ['Aktionen', 'Abholen / Freigeben / Abschließen'],
@@ -290,6 +302,7 @@ export default function Documentation() {
               <Rule label="Status-Filter" value="Alle 7 Status-Werte einzeln filterbar" color="success" />
               <Rule label="Bearbeiter-Filter" value="Alle Mitarbeiter + ‚Nicht zugewiesen'" color="success" />
               <Rule label="Projekt-Filter" value="Alle aktiven Projekte + ‚Ohne Projekt'" color="success" />
+              <Rule label="Abteilungs-Filter" value="Alle Abteilungen + ‚Ohne Abteilung' — inkludiert Unter-Abteilungen (Teams)" color="success" />
               <Rule label="‚Nur meine'" value="Toggle-Button — zeigt nur eigene zugewiesene Vorgänge (wird im LocalStorage gespeichert)" color="success" />
             </div>
 
@@ -325,11 +338,12 @@ export default function Documentation() {
               <Rule label="Projektname" value="Beschreibender Name des Vorgangs" color="warn" />
             </div>
             <p className="mt-2">
-              Optionale Felder: Verknüpftes Projekt, Kunde, Auftraggeber, Produkt, Bereich intern, 
+              Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
               Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden.
             </p>
             <Tip>
               Wenn ein Projekt verknüpft wird, übernimmt der Vorgang automatisch den Projektnamen als Vorgabe.
+              Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
             </Tip>
 
             <SubHeading>Vorgang-Detailseite (/cases/:id)</SubHeading>
@@ -453,15 +467,155 @@ export default function Documentation() {
             </p>
           </Card>
 
+          {/* ─── SUPPORT-TICKETS ─── */}
+          <Card title="Support-Tickets" id="support">
+            <p>
+              Das Support-Ticket-System ermöglicht die Verwaltung von Kundenanfragen. Tickets werden entweder
+              von Kunden über das <strong className="text-foreground">Kundenportal</strong> erstellt oder intern zugewiesen.
+              Internes Management erfolgt über <Badge color="primary">/support</Badge>.
+            </p>
+
+            <SubHeading>Übersichtsseite (/support)</SubHeading>
+            <p>Die Ticket-Liste zeigt alle eingehenden Kundenanfragen:</p>
+            <Table
+              headers={['Spalte', 'Beschreibung']}
+              rows={[
+                ['Nr.', 'Automatische Ticketnummer (SUP-YYYY-nnnn)'],
+                ['Betreff', 'Titel/Beschreibung des Tickets'],
+                ['Kunde', 'Name und Firma des Portal-Kunden'],
+                ['Priorität', 'Niedrig / Mittel / Hoch / Kritisch'],
+                ['Status', 'Offen / In Bearbeitung / Wartend / Gelöst / Geschlossen'],
+                ['Bearbeiter', 'Zugewiesener interner Mitarbeiter (Kürzel)'],
+                ['Erstellt', 'Zeitangabe relativ (z.B. „vor 2 Stunden")'],
+              ]}
+            />
+
+            <SubHeading>KPI-Karten</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Offen" value="Tickets mit Status ‚Offen' oder ‚In Bearbeitung'" color="success" />
+              <Rule label="Gelöst" value="Tickets mit Status ‚Gelöst' oder ‚Geschlossen'" color="success" />
+              <Rule label="Gesamt" value="Gesamtzahl aller Tickets" color="success" />
+              <Rule label="Wartend" value="Tickets die auf Kundenrückmeldung warten" color="success" />
+            </div>
+
+            <SubHeading>Filter</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Textsuche" value="Durchsucht Ticketnummer, Betreff, Kundenname, Firma" color="success" />
+              <Rule label="Status-Filter" value="Alle 5 Status-Werte" color="success" />
+              <Rule label="Prioritäts-Filter" value="4 Prioritätsstufen" color="success" />
+              <Rule label="Bearbeiter-Filter" value="Alle Mitarbeiter + ‚Nicht zugewiesen'" color="success" />
+            </div>
+
+            <SubHeading>Ticket-Detail (/support/:id)</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Ticket-Informationen" value="Alle Metadaten: Priorität, Status, Kunde, Bearbeiter, Zeitstempel" color="success" />
+              <Rule label="Chat/Nachrichten" value="Nachrichtenverlauf zwischen internem Team und Kunde" color="success" />
+              <Rule label="Interne Notizen" value="Nachrichten mit ‚Nur intern'-Toggle — für Kunden nicht sichtbar" color="success" />
+              <Rule label="Status ändern" value="Status über Dropdown ändern (z.B. Gelöst → Geschlossen)" color="success" />
+              <Rule label="Zuweisung" value="Bearbeiter zuweisen — setzt Status automatisch auf ‚In Bearbeitung'" color="success" />
+            </div>
+
+            <SubHeading>Ticket-Status-Workflow</SubHeading>
+            <Table
+              headers={['Status', 'Bedeutung']}
+              rows={[
+                ['Offen (open)', 'Neues Ticket, noch nicht bearbeitet'],
+                ['In Bearbeitung (in_progress)', 'Einem Mitarbeiter zugewiesen und in Arbeit'],
+                ['Wartend (waiting)', 'Wartet auf Rückmeldung vom Kunden'],
+                ['Gelöst (resolved)', 'Problem wurde gelöst'],
+                ['Geschlossen (closed)', 'Ticket endgültig geschlossen'],
+              ]}
+            />
+
+            <SubHeading>Kunden einladen</SubHeading>
+            <p>
+              Über den Button «Kunden einladen» auf der Support-Seite können neue Portal-Kunden angelegt werden.
+              Eingaben: E-Mail (Pflicht), Name (Pflicht), Firma (optional). Ein Passwort wird automatisch generiert
+              und muss dem Kunden mitgeteilt werden.
+            </p>
+          </Card>
+
+          {/* ─── KUNDENPORTAL ─── */}
+          <Card title="Kundenportal" id="portal">
+            <p>
+              Das <strong className="text-foreground">Kundenportal</strong> ist eine eigenständige Oberfläche unter 
+              <Badge color="primary">/portal</Badge>, die externen Kunden den Zugang zu ihren Support-Tickets ermöglicht.
+              Es hat ein eigenes Login, eigenes Layout und eigene Berechtigungen.
+            </p>
+
+            <SubHeading>Portal-Routen</SubHeading>
+            <Table
+              headers={['Route', 'Beschreibung']}
+              rows={[
+                ['/portal/auth', 'Login-Seite für Portal-Kunden'],
+                ['/portal', 'Dashboard mit Übersicht offener Tickets'],
+                ['/portal/tickets', 'Liste aller eigenen Tickets'],
+                ['/portal/tickets/new', 'Neues Ticket erstellen'],
+                ['/portal/tickets/:id', 'Ticket-Detail mit Nachrichtenverlauf'],
+              ]}
+            />
+
+            <SubHeading>Authentifizierung</SubHeading>
+            <p>
+              Portal-Kunden verwenden ein separates Login-System. Der Account wird von einem internen Admin
+              über die «Kunden einladen»-Funktion erstellt. Nach Anmeldung wird geprüft, ob der Auth-User
+              einen aktiven Eintrag in <Badge color="primary">portal_customers</Badge> hat.
+            </p>
+
+            <SubHeading>Kunden-Funktionen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Dashboard" value="Übersicht: offene Tickets, letzte Aktivitäten" color="success" />
+              <Rule label="Ticket erstellen" value="Neues Ticket mit Titel, Beschreibung und Priorität" color="success" />
+              <Rule label="Ticket-Verlauf" value="Chat-Ansicht mit allen öffentlichen Nachrichten" color="success" />
+              <Rule label="Antworten" value="Kunde kann auf Tickets antworten" color="success" />
+            </div>
+
+            <Warning>
+              Kunden sehen nur ihre eigenen Tickets und keine als „intern" markierten Nachrichten. 
+              Die Trennung wird über RLS-Policies und den <Badge>is_internal</Badge>-Flag auf Nachrichten sichergestellt.
+            </Warning>
+
+            <SubHeading>Design</SubHeading>
+            <p>
+              Das Portal verwendet ein eigenständiges Glassmorphism-Theme mit Portal-spezifischen CSS-Variablen
+              (<Badge>--portal-bg</Badge>, <Badge>--portal-accent</Badge>, etc.) und eigenem Layout ohne Sidebar.
+            </p>
+          </Card>
+
+          {/* ─── ORGANIGRAMM ─── */}
+          <Card title="Organigramm" id="orgchart">
+            <p>
+              Das Organigramm (<Badge color="primary">/org</Badge>) zeigt die Abteilungsstruktur als visuellen Baum.
+              Jede Abteilung wird als Karte dargestellt mit ihren Mitarbeitern und offenen Vorgängen.
+            </p>
+
+            <SubHeading>Darstellung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Hierarchie" value="Haupt-Abteilungen mit ausklappbaren Unter-Abteilungen (Teams)" color="success" />
+              <Rule label="Abteilungsleiter" value="Wird prominent oben in der Abteilungskarte angezeigt" color="success" />
+              <Rule label="Mitarbeiter" value="Liste aller aktiven Mitarbeiter der Abteilung" color="success" />
+              <Rule label="Vorgangszähler" value="Zeigt die Anzahl offener (nicht abgeschlossener) Vorgänge pro Abteilung" color="success" />
+              <Rule label="Vorgang erstellen" value="Button zum direkten Erstellen eines Vorgangs mit vorausgewählter Abteilung" color="success" />
+            </div>
+
+            <Tip>
+              Das Organigramm ist besonders nützlich, um die Auslastung pro Abteilung auf einen Blick zu sehen 
+              und Vorgänge direkt einer Abteilung zuzuordnen.
+            </Tip>
+          </Card>
+
           {/* ─── DARK MODE ─── */}
           <Card title="Dark Mode & Compact Tables" id="darkmode">
             <p>
-              <strong className="text-foreground">Dark Mode</strong> ist der Standard bei Erstanmeldung. 
+              <strong className="text-foreground">Dark Mode</strong> ist der Standard bei Erstanmeldung.
+              Das Theme verwendet ein Premium Glassmorphism-Design mit halbtransparenten Oberflächen,
+              Backdrop-Blur-Effekten und einem Ambient-Mesh-Gradient im Hintergrund.
               Der Toggle befindet sich im Profil-Dropdown (unten links in der Sidebar).
             </p>
             <div className="space-y-1 mt-2">
               <Rule label="Theme-Preference" value="Wird pro User in user_preferences gespeichert (DB)" color="success" />
               <Rule label="Dark als Default" value="Neue User starten im Dark Mode" color="success" />
+              <Rule label="Glassmorphism" value="Sidebar, Header und Karten nutzen backdrop-filter: blur(24px) saturate(1.2)" color="success" />
               <Rule label="Keine harten Farben" value="Alle Farben über CSS-Tokens (HSL-Variablen)" color="success" />
               <Rule label="Sofort wirksam" value="Umschaltung ohne Neuladen der Seite" color="success" />
             </div>
@@ -484,6 +638,13 @@ export default function Documentation() {
               um eine Organisationsstruktur. Verwaltung unter: <Badge color="primary">Verwaltung → Abteilungen</Badge>
             </p>
 
+            <SubHeading>Hierarchie</SubHeading>
+            <p>
+              Abteilungen unterstützen eine zweistufige Hierarchie: <strong className="text-foreground">Haupt-Abteilungen</strong> und 
+              <strong className="text-foreground"> Unter-Abteilungen (Teams)</strong>. Teams werden über <Badge>parent_id</Badge> 
+              der übergeordneten Abteilung zugeordnet.
+            </p>
+
             <SubHeading>Funktionsweise</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Parallel zu app_role" value="user_roles-Tabelle bleibt für Zugriffssteuerung aktiv" color="success" />
@@ -491,6 +652,7 @@ export default function Documentation() {
               <Rule label="Manager-Flag" value="users_profile.is_manager = true für Abteilungsleiter" color="success" />
               <Rule label="Direkter Vorgesetzter" value="users_profile.manager_id → users_profile.id" color="success" />
               <Rule label="Abteilungsleiter" value="departments.manager_user_id — kann in der Abteilungsverwaltung gesetzt werden" color="success" />
+              <Rule label="Unter-Abteilungen" value="departments.parent_id → departments.id für Team-Zuordnung" color="success" />
             </div>
 
             <SubHeading>Abteilung anlegen</SubHeading>
@@ -500,7 +662,9 @@ export default function Documentation() {
               headers={['Tabelle', 'Spalte', 'Zweck']}
               rows={[
                 ['departments', 'id, name, code', 'Abteilungs-Stammdaten'],
+                ['departments', 'parent_id', 'Verweis auf Haupt-Abteilung (für Teams)'],
                 ['departments', 'manager_user_id', 'Abteilungsleiter (FK → users_profile)'],
+                ['departments', 'sort_order', 'Reihenfolge der Anzeige'],
                 ['users_profile', 'department_id', 'Zuordnung User → Abteilung'],
                 ['users_profile', 'manager_id', 'Direkter Vorgesetzter'],
                 ['users_profile', 'is_admin, is_manager', 'Flags für Rollenlogik'],
@@ -511,7 +675,7 @@ export default function Documentation() {
           {/* ─── AUTO-NUMMERIERUNG ─── */}
           <Card title="Auto-Nummerierung" id="numbering">
             <p>
-              Alle Projekte und Vorgänge erhalten eine menschenlesbare, fortlaufende Nummer, 
+              Alle Projekte, Vorgänge und Support-Tickets erhalten eine menschenlesbare, fortlaufende Nummer, 
               die atomar per Datenbank-Funktion vergeben wird.
             </p>
             <Table
@@ -519,6 +683,7 @@ export default function Documentation() {
               rows={[
                 ['Projekt', 'PRJ-YYYY-nnnn', 'PRJ-2026-0001', 'assign_project_number()'],
                 ['Vorgang', 'VOR-YYYY-nnnn', 'VOR-2026-0042', 'assign_case_number()'],
+                ['Ticket', 'SUP-YYYY-nnnn', 'SUP-2026-0005', 'assign_ticket_number()'],
               ]}
             />
             <p className="mt-3">
@@ -556,8 +721,8 @@ NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
 
             <SubHeading>Rollenrechte im Detail</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="Admin" value="Vollzugriff auf alle Bereiche, Benutzerverwaltung, Stammdaten, Abteilungen" color="success" />
-              <Rule label="Staff (Mitarbeiter)" value="Kann Vorgänge erstellen, abholen, bearbeiten (eigene/zugewiesene). Kann Projekte erstellen. Kann Dateien hochladen/löschen." color="success" />
+              <Rule label="Admin" value="Vollzugriff auf alle Bereiche, Benutzerverwaltung, Stammdaten, Abteilungen, Support-Tickets" color="success" />
+              <Rule label="Staff (Mitarbeiter)" value="Kann Vorgänge erstellen, abholen, bearbeiten (eigene/zugewiesene). Kann Projekte erstellen. Kann Dateien hochladen/löschen. Kann Support-Tickets bearbeiten." color="success" />
               <Rule label="Viewer" value="Nur lesender Zugriff auf alle Daten. Kann nichts erstellen, bearbeiten oder löschen." color="warn" />
             </div>
 
@@ -587,12 +752,15 @@ NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
               <Rule label="Übersicht" value="Tabelle aller Benutzer mit Name, Kürzel, Rolle, Abteilung und Aktiv-Status" color="success" />
               <Rule label="Bearbeiten" value="Name, Kürzel, Rolle, Abteilung und Aktiv-Status ändern" color="success" />
               <Rule label="Neuer Mitarbeiter" value="E-Mail, Name, Kürzel, Rolle und Abteilung — Passwort wird per Reset-Flow gesetzt" color="success" />
+              <Rule label="Passwort zurücksetzen" value="Admin kann für jeden User einen Passwort-Reset auslösen" color="success" />
+              <Rule label="Benutzer löschen" value="Admin kann Benutzerkonten dauerhaft entfernen" color="danger" />
             </div>
 
             <SubHeading>2. Abteilungen (/admin/departments)</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Anlegen" value="Name + Kürzel + optionaler Abteilungsleiter" color="success" />
               <Rule label="Bearbeiten" value="Alle Felder inkl. Abteilungsleiter änderbar" color="success" />
+              <Rule label="Hierarchie" value="Unter-Abteilungen (Teams) können einer Haupt-Abteilung zugeordnet werden" color="success" />
             </div>
 
             <SubHeading>3. Stammdaten (/admin/master-data)</SubHeading>
@@ -651,7 +819,7 @@ NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
 
             <SubHeading>Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
-              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Verwaltung etc." color="success" />
+              <Rule label="Navigation" value="Schneller Sprung zu Dashboard, Vorgänge, Projekte, Support, Organigramm, Verwaltung etc." color="success" />
               <Rule label="Suche" value="Durchsucht Menüpunkte und Aktionen" color="success" />
               <Rule label="Tastaturnavigation" value="↑/↓ zum Navigieren, Enter zum Ausführen, Escape zum Schließen" color="success" />
             </div>
@@ -679,6 +847,7 @@ NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
                 ['is_project_member(project_id, uid)', 'Prüft project_members Tabelle'],
                 ['has_role(uid, role)', 'Prüft user_roles Tabelle'],
                 ['is_admin()', 'Shortcut: has_role(auth.uid(), admin)'],
+                ['is_portal_customer(uid)', 'Prüft ob User ein aktiver Portal-Kunde ist'],
                 ['next_counter(key)', 'Atomarer Counter-Increment'],
               ]}
             />
@@ -699,6 +868,9 @@ NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
                 ['case_activity', 'Alle auth. User', 'Staff + Admin', '–', 'Nur Admin'],
                 ['project_activity', 'Alle auth. User', 'Staff + Admin', '–', 'Nur Admin'],
                 ['customers/products/areas', 'Alle auth. User', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
+                ['support_tickets', 'Staff/Admin + eigener Kunde', 'Portal-Kunde + Staff/Admin', 'Staff + Admin', 'Nur Admin'],
+                ['ticket_messages', 'Beteiligte (intern: nicht für Kunden)', 'Beteiligte', '–', 'Nur Admin'],
+                ['portal_customers', 'Staff/Admin + Self', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
                 ['counters', 'Niemand direkt', '–', '–', '–'],
               ]}
             />
@@ -730,6 +902,16 @@ USING (
               ]}
             />
 
+            <SubHeading>Support & Portal</SubHeading>
+            <Table
+              headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
+              rows={[
+                ['support_tickets', 'Kundentickets', 'ticket_number (auto), title, description, status, priority, customer_id, assigned_to'],
+                ['ticket_messages', 'Nachrichten zu Tickets', 'ticket_id, sender_id, sender_type, body, is_internal'],
+                ['portal_customers', 'Portal-Kunden', 'auth_user_id, email, display_name, company_name, is_active, invited_by'],
+              ]}
+            />
+
             <SubHeading>Benutzer & Organisation</SubHeading>
             <Table
               headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
@@ -737,7 +919,7 @@ USING (
                 ['users_profile', 'Benutzerprofil', 'display_name, short_code, department_id, manager_id, is_admin, is_manager, active'],
                 ['user_roles', 'Rollenverknüpfung', 'user_id, role (admin/staff/viewer)'],
                 ['user_preferences', 'Einstellungen', 'user_id, theme (dark/light), compact_tables'],
-                ['departments', 'Abteilungen', 'name, code, manager_user_id'],
+                ['departments', 'Abteilungen', 'name, code, parent_id, manager_user_id, sort_order'],
               ]}
             />
 
@@ -774,7 +956,11 @@ USING (
               rows={[
                 ['create-project-folders', 'Edge Function', 'Erstellt DB-Einträge + Storage-Platzhalter nach Projekt-Insert'],
                 ['create-user', 'Edge Function', 'Legt neuen Auth-User an + Profil + Rolle (nur Admin)'],
+                ['delete-user', 'Edge Function', 'Löscht Auth-User und zugehöriges Profil (nur Admin)'],
+                ['list-user-emails', 'Edge Function', 'Listet E-Mail-Adressen der Auth-User für Admin-Übersicht'],
+                ['invite-portal-customer', 'Edge Function', 'Erstellt Portal-Kunden-Account mit Auth-User + portal_customers-Eintrag'],
                 ['send-password-reset', 'Edge Function', 'Sendet Passwort-Reset-E-Mail mit korrektem Redirect'],
+                ['reset-user-password', 'Edge Function', 'Setzt Passwort eines Users zurück (Admin-Aktion)'],
                 ['send-due-notifications', 'Edge Function', 'Verschickt Fälligkeits-Benachrichtigungen (geplant)'],
                 ['assign_project_number()', 'DB Trigger', 'Vergibt atomare Projektnummer bei INSERT'],
                 ['assign_case_number()', 'DB Trigger', 'Vergibt atomare Vorgangsnummer bei INSERT'],
