@@ -3,10 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PortalLayout } from '@/components/PortalLayout';
 import { usePortalAuth } from '@/contexts/PortalAuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Send, Loader2, Paperclip, X } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -15,13 +11,10 @@ import { toast } from 'sonner';
 const STATUS_LABELS: Record<string, string> = {
   open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartend', resolved: 'Gelöst', closed: 'Geschlossen',
 };
-
-const STATUS_COLORS: Record<string, string> = {
-  open: 'bg-[hsl(var(--status-open))]', in_progress: 'bg-[hsl(var(--status-working))]',
-  waiting: 'bg-[hsl(var(--status-planning))]', resolved: 'bg-[hsl(var(--status-done))]',
-  closed: 'bg-muted-foreground',
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  open: 'portal-badge-open', in_progress: 'portal-badge-working', waiting: 'portal-badge-waiting',
+  resolved: 'portal-badge-done', closed: 'portal-badge-closed',
 };
-
 const PRIORITY_LABELS: Record<string, string> = {
   low: 'Niedrig', medium: 'Mittel', high: 'Hoch', critical: 'Kritisch',
 };
@@ -41,7 +34,6 @@ export default function PortalTicketDetail() {
   useEffect(() => {
     if (customer && id) {
       fetchData();
-      // Realtime subscription
       const channel = supabase
         .channel(`portal-ticket-${id}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_messages', filter: `ticket_id=eq.${id}` }, () => fetchMessages())
@@ -56,20 +48,13 @@ export default function PortalTicketDetail() {
   };
 
   const fetchTicket = async () => {
-    const { data } = await supabase
-      .from('support_tickets')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data } = await supabase.from('support_tickets').select('*').eq('id', id).single();
     setTicket(data);
   };
 
   const fetchMessages = async () => {
     const { data } = await supabase
-      .from('ticket_messages')
-      .select('*')
-      .eq('ticket_id', id)
-      .eq('is_internal', false)
+      .from('ticket_messages').select('*').eq('ticket_id', id).eq('is_internal', false)
       .order('created_at', { ascending: true });
     setMessages(data || []);
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -79,30 +64,22 @@ export default function PortalTicketDetail() {
     if (!newMessage.trim() && files.length === 0) return;
     setSending(true);
     try {
-      // Upload files
       const attachmentPaths: string[] = [];
       for (const file of files) {
         const path = `tickets/${id}/${Date.now()}_${file.name}`;
         const { error } = await supabase.storage.from('support-attachments').upload(path, file);
         if (!error) attachmentPaths.push(path);
       }
-
       const body = newMessage.trim() + (attachmentPaths.length > 0
-        ? '\n\n📎 Anhänge: ' + attachmentPaths.map(p => p.split('/').pop()).join(', ')
-        : '');
-
+        ? '\n\n📎 Anhänge: ' + attachmentPaths.map(p => p.split('/').pop()).join(', ') : '');
       const { error } = await supabase.from('ticket_messages').insert({
-        ticket_id: id,
-        sender_type: 'customer',
-        sender_id: customer!.auth_user_id,
-        body,
-        is_internal: false,
+        ticket_id: id, sender_type: 'customer', sender_id: customer!.auth_user_id, body, is_internal: false,
       });
       if (error) throw error;
       setNewMessage('');
       setFiles([]);
       fetchMessages();
-    } catch (err: any) {
+    } catch {
       toast.error('Nachricht konnte nicht gesendet werden');
     } finally {
       setSending(false);
@@ -113,7 +90,7 @@ export default function PortalTicketDetail() {
     return (
       <PortalLayout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin" style={{ color: 'hsl(var(--portal-text-secondary))' }} />
         </div>
       </PortalLayout>
     );
@@ -123,8 +100,8 @@ export default function PortalTicketDetail() {
     return (
       <PortalLayout>
         <div className="text-center py-16">
-          <p className="text-muted-foreground text-sm">Ticket nicht gefunden</p>
-          <Button size="sm" variant="outline" onClick={() => navigate('/portal/tickets')} className="mt-3">Zurück</Button>
+          <p className="text-sm" style={{ color: 'hsl(var(--portal-text-secondary))' }}>Ticket nicht gefunden</p>
+          <button onClick={() => navigate('/portal/tickets')} className="portal-btn-primary mt-4">Zurück</button>
         </div>
       </PortalLayout>
     );
@@ -132,25 +109,34 @@ export default function PortalTicketDetail() {
 
   return (
     <PortalLayout>
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-6 max-w-3xl">
         {/* Header */}
         <div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/portal/tickets')} className="mb-2">
-            <ArrowLeft className="h-4 w-4 mr-1.5" />Zurück
-          </Button>
+          <button
+            onClick={() => navigate('/portal/tickets')}
+            className="flex items-center gap-1.5 text-xs font-medium mb-4 transition-colors hover:opacity-80"
+            style={{ color: 'hsl(var(--portal-accent))' }}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Zurück zu Tickets
+          </button>
           <div className="flex items-start gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-mono text-xs text-muted-foreground">{ticket.ticket_number}</span>
-                <Badge className={`${STATUS_COLORS[ticket.status]} text-white text-[10px] px-1.5 py-0`}>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <span className="font-mono text-xs" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                  {ticket.ticket_number}
+                </span>
+                <span className={`portal-badge ${STATUS_BADGE_CLASS[ticket.status] || 'portal-badge-open'}`}>
                   {STATUS_LABELS[ticket.status]}
-                </Badge>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                </span>
+                <span className="portal-badge portal-badge-open">
                   {PRIORITY_LABELS[ticket.priority]}
-                </Badge>
+                </span>
               </div>
-              <h1 className="text-lg font-semibold text-foreground">{ticket.title}</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h1 className="text-xl font-bold tracking-tight" style={{ color: 'hsl(var(--portal-text))' }}>
+                {ticket.title}
+              </h1>
+              <p className="text-xs mt-1" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
                 Erstellt {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: de })}
               </p>
             </div>
@@ -158,80 +144,79 @@ export default function PortalTicketDetail() {
         </div>
 
         {/* Messages */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Nachrichten ({messages.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {messages.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">
-                Noch keine Nachrichten.
-              </p>
-            ) : (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                {messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`rounded-lg px-4 py-3 text-sm ${
-                      msg.sender_type === 'customer'
-                        ? 'bg-primary/10 ml-8'
-                        : 'bg-muted mr-8'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-xs font-medium text-foreground">
-                        {msg.sender_type === 'customer' ? 'Sie' : 'Support-Team'}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: de })}
-                      </span>
-                    </div>
-                    <p className="text-sm whitespace-pre-wrap text-foreground/90">{msg.body}</p>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
+        <div className="portal-glass-strong p-6">
+          <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
+            Nachrichten ({messages.length})
+          </h2>
 
-            {/* Reply box - only if ticket is not closed */}
-            {ticket.status !== 'closed' && (
-              <div className="border-t border-border pt-4 space-y-3">
-                <Textarea
-                  placeholder="Ihre Nachricht..."
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  rows={3}
-                  className="text-sm"
-                  disabled={sending}
-                />
-                {/* File attachments */}
-                {files.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {files.map((f, i) => (
-                      <div key={i} className="flex items-center gap-1.5 bg-muted rounded px-2 py-1 text-[11px]">
-                        <Paperclip className="h-3 w-3" />
-                        <span className="truncate max-w-[120px]">{f.name}</span>
-                        <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+          {messages.length === 0 ? (
+            <p className="text-xs text-center py-8" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+              Noch keine Nachrichten.
+            </p>
+          ) : (
+            <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+              {messages.map(msg => (
+                <div
+                  key={msg.id}
+                  className={`px-4 py-3 text-sm ${
+                    msg.sender_type === 'customer' ? 'portal-msg-customer ml-8' : 'portal-msg-support mr-8'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-medium" style={{ color: 'hsl(var(--portal-text))' }}>
+                      {msg.sender_type === 'customer' ? 'Sie' : 'Support-Team'}
+                    </span>
+                    <span className="text-[11px]" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                      {format(new Date(msg.created_at), 'dd.MM.yyyy HH:mm', { locale: de })}
+                    </span>
                   </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleSend} disabled={sending || (!newMessage.trim() && files.length === 0)}>
-                    {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
-                    Senden
-                  </Button>
-                  <label className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-                    <Paperclip className="h-4 w-4" />
-                    <input type="file" className="hidden" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} multiple disabled={sending} />
-                  </label>
+                  <p className="text-sm whitespace-pre-wrap" style={{ color: 'hsl(var(--portal-text) / 0.85)' }}>
+                    {msg.body}
+                  </p>
                 </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+
+          {/* Reply */}
+          {ticket.status !== 'closed' && (
+            <div className="mt-5 pt-5" style={{ borderTop: '1px solid hsl(var(--portal-glass-border) / 0.3)' }}>
+              <textarea
+                placeholder="Ihre Nachricht..."
+                value={newMessage}
+                onChange={e => setNewMessage(e.target.value)}
+                rows={3}
+                className="portal-textarea"
+                disabled={sending}
+              />
+              {files.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {files.map((f, i) => (
+                    <div key={i} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px]"
+                      style={{ background: 'hsl(var(--portal-surface))', color: 'hsl(var(--portal-text-secondary))' }}>
+                      <Paperclip className="h-3 w-3" />
+                      <span className="truncate max-w-[120px]">{f.name}</span>
+                      <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-3 mt-3">
+                <button className="portal-btn-primary" onClick={handleSend} disabled={sending || (!newMessage.trim() && files.length === 0)}>
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  Senden
+                </button>
+                <label className="cursor-pointer transition-opacity hover:opacity-70" style={{ color: 'hsl(var(--portal-text-secondary))' }}>
+                  <Paperclip className="h-4 w-4" />
+                  <input type="file" className="hidden" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} multiple disabled={sending} />
+                </label>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        </div>
       </div>
     </PortalLayout>
   );
