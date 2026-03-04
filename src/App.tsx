@@ -13,6 +13,9 @@ import CaseDetail from "./pages/CaseDetail";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
 import AdminDepartments from "./pages/AdminDepartments";
+import OrgChart from "./pages/OrgChart";
+import Tickets from "./pages/Tickets";
+import TicketDetail from "./pages/TicketDetail";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectFiles from "./pages/ProjectFiles";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -40,6 +43,9 @@ function AuthenticatedApp() {
         <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
         <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
         <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
+        <Route path="/org" element={<ProtectedRoute><OrgChart /></ProtectedRoute>} />
+        <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
+        <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
         <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />

@@ -33,6 +33,8 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
+  { href: '/org', label: 'Organigramm', icon: Building2 },
+  { href: '/tickets', label: 'Tickets', icon: ClipboardList },
   { href: '/projects', label: 'Projekte', icon: FolderKanban },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
