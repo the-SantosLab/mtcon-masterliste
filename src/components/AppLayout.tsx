@@ -101,12 +101,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isCompact = preferences.compactTables;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background glass-bg">
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside className={cn(
-        'fixed lg:static inset-y-0 left-0 z-50 w-56 flex flex-col bg-sidebar border-r border-sidebar-border transition-transform duration-200',
+        'fixed lg:static inset-y-0 left-0 z-50 w-56 flex flex-col glass-sidebar transition-transform duration-200',
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       )}>
         <div className="flex items-center gap-2 px-3 h-14 border-b border-sidebar-border shrink-0">
@@ -203,8 +203,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border bg-card shrink-0">
+      <div className="flex-1 flex flex-col overflow-hidden relative z-[1]">
+        <header className="lg:hidden flex items-center gap-3 px-4 h-14 glass-header shrink-0">
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
           <span className="text-sm font-semibold text-foreground flex-1">KS Command Light</span>
           <div className="flex items-center gap-1">
@@ -215,10 +215,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </header>
         {/* Desktop header bar with notifications */}
-        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 border-b border-border bg-card/50 shrink-0">
+        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0">
           <NotificationBell />
         </header>
-        <main className="flex-1 overflow-y-auto p-5 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]">{children}</main>
       </div>
 
       {/* Password change dialog */}
