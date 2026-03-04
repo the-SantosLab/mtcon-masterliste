@@ -37,7 +37,7 @@ export default function CaseDetail() {
     if (!id) return;
     const { data } = await supabase
       .from('cases')
-      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), creator:users_profile!cases_created_by_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name)')
+      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code), creator:users_profile!cases_created_by_fkey(display_name, short_code), project:projects!cases_project_id_fkey(id, project_number, name), department:departments!cases_department_id_fkey(id, name)')
       .eq('id', id)
       .single();
     if (data) {
