@@ -218,6 +218,18 @@ export default function PortalTicketDetail() {
             </div>
           )}
         </div>
+
+        {/* Attachments */}
+        <div className="portal-glass-strong p-6">
+          <h2 className="text-sm font-semibold mb-4" style={{ color: 'hsl(var(--portal-text))' }}>
+            Anhänge
+          </h2>
+          <FileAttachments
+            bucket="support-attachments"
+            folder={`tickets/${id}`}
+            canUpload={ticket.status !== 'closed'}
+          />
+        </div>
       </div>
     </PortalLayout>
   );

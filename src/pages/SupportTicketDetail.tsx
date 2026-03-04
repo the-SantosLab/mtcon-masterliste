@@ -189,6 +189,21 @@ export default function SupportTicketDetail() {
           </CardContent>
         </Card>
 
+        {/* Attachments */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Anhänge</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FileAttachments
+              bucket="support-attachments"
+              folder={`tickets/${id}`}
+              canUpload
+              canDelete
+            />
+          </CardContent>
+        </Card>
+
         {/* Messages */}
         <Card>
           <CardHeader className="pb-3">

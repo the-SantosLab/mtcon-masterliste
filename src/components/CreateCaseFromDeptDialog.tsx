@@ -123,6 +123,28 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
             <Label className="text-xs text-muted-foreground">Fällig am</Label>
             <Input type="date" value={dueAt} onChange={e => setDueAt(e.target.value)} className="h-8 text-xs" />
           </div>
+          {/* File attachments */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Anhänge</Label>
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1 rounded border border-border bg-muted/30 px-2 py-1 text-[11px] text-muted-foreground">
+                    <Paperclip className="h-3 w-3" />
+                    <span className="truncate max-w-[120px]">{f.name}</span>
+                    <button type="button" onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer text-primary hover:opacity-70 transition-opacity">
+              <Paperclip className="h-3.5 w-3.5" />
+              Datei hinzufügen
+              <input type="file" className="hidden" onChange={e => { if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)]); }} multiple />
+            </label>
+          </div>
           <Button onClick={handleSave} disabled={saving} className="w-full h-8 text-xs mt-1">
             {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />Erstellen…</> : 'Vorgang erstellen'}
           </Button>

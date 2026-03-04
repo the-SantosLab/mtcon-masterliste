@@ -245,6 +245,17 @@ export default function CaseDetail() {
             {/* Tasks checklist */}
             <CaseTasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
 
+            {/* Attachments */}
+            <div className="rounded-md border border-border bg-card p-5">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Anhänge</h3>
+              <FileAttachments
+                bucket="case-attachments"
+                folder={`cases/${c.id}`}
+                canUpload={!isViewer && !isTerminalStatus(c.status)}
+                canDelete={!isViewer}
+              />
+            </div>
+
             <CaseNotes caseId={c.id} canEdit={canEdit && !isTerminalStatus(c.status)} userId={user?.id || ''} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
