@@ -26,6 +26,7 @@ type CaseRow = Tables<'cases'> & {
 };
 
 interface ProjectOption { id: string; project_number: string; name: string; }
+interface DeptFilterOption { id: string; name: string; code: string | null; parent_id: string | null; }
 
 export default function CasesList() {
   const { user, isAdmin, isViewer } = useAuth();
