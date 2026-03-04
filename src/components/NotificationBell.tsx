@@ -127,7 +127,7 @@ export function NotificationBell() {
 
       {open && (
         <div className={cn(
-          'fixed right-4 top-14 w-80 max-h-[480px] flex flex-col',
+          'absolute right-0 top-10 w-80 max-h-[480px] flex flex-col',
           'rounded-xl border border-border bg-card shadow-2xl z-[100] overflow-hidden',
         )}>
           {/* Header */}

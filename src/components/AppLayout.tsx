@@ -215,7 +215,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </header>
         {/* Desktop header bar with notifications */}
-        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0">
+        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0 relative z-[100]">
           <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]">{children}</main>
