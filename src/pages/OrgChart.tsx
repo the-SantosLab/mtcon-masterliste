@@ -16,7 +16,7 @@ export default function OrgChart() {
   const fetchData = async () => {
     const [deptRes, ticketRes, profileRes] = await Promise.all([
       supabase.from('departments').select('*').order('sort_order'),
-      supabase.from('tickets' as any).select('department_id').neq('status', 'done'),
+      supabase.from('tickets' as any).select('department_id').neq('status', 'done') as any,
       supabase.from('users_profile').select('id, display_name').eq('active', true),
     ]);
 

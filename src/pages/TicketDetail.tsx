@@ -48,8 +48,8 @@ export default function TicketDetail() {
       supabase.from('users_profile').select('id, display_name, short_code').eq('active', true).order('display_name'),
     ]);
 
-    const t = ticketRes.data as Ticket | null;
-    const evts = (eventsRes.data || []) as TicketEvent[];
+    const t = ticketRes.data as unknown as Ticket | null;
+    const evts = (eventsRes.data || []) as unknown as TicketEvent[];
     const depts = (deptRes.data || []) as Department[];
     const profs = (profileRes.data || []) as Profile[];
 

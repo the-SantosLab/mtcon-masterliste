@@ -88,10 +88,10 @@ export default function Tickets() {
       .from('tickets' as any)
       .select('*')
       .in('department_id', allIds)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as any;
 
     // Fetch assignee names
-    const tickets = (data || []) as Ticket[];
+    const tickets = (data || []) as unknown as Ticket[];
     const userIds = [...new Set(tickets.map(t => t.assigned_to).filter(Boolean))] as string[];
     if (userIds.length > 0) {
       const { data: profiles } = await supabase.from('users_profile').select('id, display_name').in('id', userIds);
