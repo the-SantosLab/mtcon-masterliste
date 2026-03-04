@@ -37,6 +37,7 @@ export const ACTION_LABELS: Record<string, string> = {
   CLAIM: 'Vorgang abgeholt',
   UNCLAIM: 'Vorgang freigegeben',
   STATUS_CHANGE: 'Status geändert',
+  DEPT_MOVE: 'Abteilung geändert',
   EDIT: 'Bearbeitet',
   COMMENT: 'Kommentar',
   CLOSE: 'Abgeschlossen',
@@ -75,3 +76,44 @@ export const formatRelativeTime = (date: string) => {
   if (diffDays < 7) return `vor ${diffDays} Tag${diffDays > 1 ? 'en' : ''}`;
   return formatDate(date);
 };
+
+// ── Department types (moved from ticket-types.ts) ──
+
+export interface Department {
+  id: string;
+  name: string;
+  code: string | null;
+  parent_id: string | null;
+  manager_user_id: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface DepartmentNode extends Department {
+  children: DepartmentNode[];
+  case_count?: number;
+  head_name?: string;
+}
+
+export function buildTree(departments: Department[]): DepartmentNode[] {
+  const map = new Map<string, DepartmentNode>();
+  const roots: DepartmentNode[] = [];
+
+  departments.forEach(d => map.set(d.id, { ...d, children: [] }));
+  departments.forEach(d => {
+    const node = map.get(d.id)!;
+    if (d.parent_id && map.has(d.parent_id)) {
+      map.get(d.parent_id)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  const sortNodes = (nodes: DepartmentNode[]) => {
+    nodes.sort((a, b) => a.sort_order - b.sort_order);
+    nodes.forEach(n => sortNodes(n.children));
+  };
+  sortNodes(roots);
+  return roots;
+}

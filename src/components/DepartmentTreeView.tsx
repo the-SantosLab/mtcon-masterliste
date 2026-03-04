@@ -1,19 +1,19 @@
 import { useState } from 'react';
-import { ChevronRight, Plus, User, Ticket } from 'lucide-react';
+import { ChevronRight, Plus, User, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { DepartmentNode } from '@/lib/ticket-types';
+import type { DepartmentNode } from '@/lib/case-utils';
 
 interface Props {
   nodes: DepartmentNode[];
   selectedId?: string | null;
   onSelect?: (id: string) => void;
-  onCreateTicket?: (departmentId: string) => void;
+  onCreateCase?: (departmentId: string) => void;
   showCounts?: boolean;
   compact?: boolean;
 }
 
 function TreeNode({
-  node, depth, selectedId, onSelect, onCreateTicket, showCounts, compact,
+  node, depth, selectedId, onSelect, onCreateCase, showCounts, compact,
 }: { node: DepartmentNode; depth: number } & Omit<Props, 'nodes'>) {
   const [open, setOpen] = useState(depth === 0);
   const hasChildren = node.children.length > 0;
@@ -46,10 +46,10 @@ function TreeNode({
           {node.name}
         </span>
 
-        {showCounts && node.ticket_count !== undefined && node.ticket_count > 0 && (
+        {showCounts && node.case_count !== undefined && node.case_count > 0 && (
           <span className="flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-            <Ticket className="h-2.5 w-2.5" />
-            {node.ticket_count}
+            <ClipboardList className="h-2.5 w-2.5" />
+            {node.case_count}
           </span>
         )}
 
@@ -60,11 +60,11 @@ function TreeNode({
           </span>
         )}
 
-        {onCreateTicket && (
+        {onCreateCase && (
           <button
-            onClick={e => { e.stopPropagation(); onCreateTicket(node.id); }}
+            onClick={e => { e.stopPropagation(); onCreateCase(node.id); }}
             className="opacity-0 group-hover:opacity-100 shrink-0 p-0.5 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
-            title="Ticket erstellen"
+            title="Vorgang erstellen"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
@@ -80,7 +80,7 @@ function TreeNode({
               depth={depth + 1}
               selectedId={selectedId}
               onSelect={onSelect}
-              onCreateTicket={onCreateTicket}
+              onCreateCase={onCreateCase}
               showCounts={showCounts}
               compact={compact}
             />
@@ -91,7 +91,7 @@ function TreeNode({
   );
 }
 
-export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateTicket, showCounts, compact }: Props) {
+export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, showCounts, compact }: Props) {
   if (nodes.length === 0) {
     return <p className="text-xs text-muted-foreground p-4">Keine Abteilungen vorhanden</p>;
   }
@@ -104,7 +104,7 @@ export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateTicket
           depth={0}
           selectedId={selectedId}
           onSelect={onSelect}
-          onCreateTicket={onCreateTicket}
+          onCreateCase={onCreateCase}
           showCounts={showCounts}
           compact={compact}
         />
