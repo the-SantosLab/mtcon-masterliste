@@ -50,9 +50,9 @@ Deno.serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'KS Command <noreply@kscommand.com>',
+      from: 'Masterliste <noreply@kscommand.com>',
       to: [email],
-      subject: 'Passwort zurücksetzen – KS Command',
+      subject: 'Passwort zurücksetzen – Masterliste',
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
           <h2 style="font-size: 18px; font-weight: 600; margin: 0 0 8px;">Passwort zurücksetzen</h2>
