@@ -332,17 +332,17 @@ export default function Documentation() {
             />
 
             <SubHeading>Vorgang erstellen</SubHeading>
-            <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Pflichtfelder:</p>
+            <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Die Vorgangsnummer wird automatisch vergeben.</p>
             <div className="space-y-1 mt-1">
-              <Rule label="Vorgangsnummer" value="Manuelle, eindeutige Kennung (z.B. VG-001)" color="warn" />
-              <Rule label="Projektname" value="Beschreibender Name des Vorgangs" color="warn" />
+              <Rule label="Projektname" value="Beschreibender Name des Vorgangs (Pflichtfeld)" color="warn" />
+              <Rule label="Vorgangsnummer" value="Wird automatisch als VOR-YYYY-nnnn vergeben (kein manuelles Eingabefeld)" color="success" />
             </div>
             <p className="mt-2">
               Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
               Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden.
             </p>
             <Tip>
-              Wenn ein Projekt verknüpft wird, übernimmt der Vorgang automatisch den Projektnamen als Vorgabe.
+              Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
               Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
             </Tip>
 
