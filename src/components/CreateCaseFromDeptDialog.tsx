@@ -50,18 +50,26 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
     if (!user?.id) return toast.error('Nicht angemeldet');
     setSaving(true);
     try {
-      // case_no is auto-generated via trigger, but we need a placeholder
-      const { error } = await supabase.from('cases').insert({
+      const { data: caseData, error } = await supabase.from('cases').insert({
         project_name: projectName.trim(),
         note: note.trim() || null,
         department_id: deptId,
         assignee_id: assigneeId || null,
         due_at: dueAt || null,
         created_by: user.id,
-      });
+      }).select('id').single();
       if (error) throw error;
+
+      // Upload files
+      if (files.length > 0 && caseData) {
+        for (const file of files) {
+          const path = `cases/${caseData.id}/${Date.now()}_${file.name}`;
+          await supabase.storage.from('case-attachments').upload(path, file);
+        }
+      }
+
       toast.success('Vorgang erstellt');
-      setProjectName(''); setNote(''); setAssigneeId(''); setDueAt('');
+      setProjectName(''); setNote(''); setAssigneeId(''); setDueAt(''); setFiles([]);
       onClose();
       onCreated?.();
     } catch (err: any) {
