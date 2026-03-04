@@ -12,6 +12,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Send, Loader2, CheckCircle, XCircle, RotateCcw, UserPlus } from 'lucide-react';
 import { FileAttachments } from '@/components/FileAttachments';
+import { TicketTemplates } from '@/components/TicketTemplates';
+import { TicketAIAnalysis } from '@/components/TicketAIAnalysis';
+import { CreateCaseFromTicket } from '@/components/CreateCaseFromTicket';
 import { format, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -132,7 +135,7 @@ export default function SupportTicketDetail() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-4xl">
+      <div className="space-y-4 max-w-5xl">
         {/* Header */}
         <div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/support')} className="mb-2">
@@ -186,8 +189,19 @@ export default function SupportTicketDetail() {
                 Auf Rückmeldung warten
               </Button>
             )}
+
+            <div className="border-l border-border mx-1" />
+
+            <CreateCaseFromTicket ticket={ticket} messages={messages} profiles={profiles} />
           </CardContent>
         </Card>
+
+        {/* AI Analysis */}
+        <TicketAIAnalysis
+          ticket={{ title: ticket.title, description: ticket.description }}
+          messages={messages}
+          onInsertResponse={(text) => setReplyText(text)}
+        />
 
         {/* Attachments */}
         <Card>
@@ -238,6 +252,9 @@ export default function SupportTicketDetail() {
 
             {/* Reply */}
             <div className="border-t border-border pt-4 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <TicketTemplates onSelect={(body) => setReplyText(prev => prev ? prev + '\n' + body : body)} />
+              </div>
               <Textarea
                 placeholder={isInternal ? 'Interne Notiz (nicht sichtbar für den Kunden)...' : 'Antwort an den Kunden...'}
                 value={replyText}
@@ -245,16 +262,20 @@ export default function SupportTicketDetail() {
                 rows={4}
                 className={cn('text-sm', isInternal && 'border-yellow-500/40')}
                 disabled={sending}
+                onKeyDown={e => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleReply(); }}
               />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Switch id="internal" checked={isInternal} onCheckedChange={setIsInternal} />
                   <Label htmlFor="internal" className="text-xs text-muted-foreground cursor-pointer">Interne Notiz</Label>
                 </div>
-                <Button size="sm" onClick={handleReply} disabled={sending || !replyText.trim()}>
-                  {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
-                  {isInternal ? 'Notiz speichern' : 'Antwort senden'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Cmd/Ctrl + Enter</span>
+                  <Button size="sm" onClick={handleReply} disabled={sending || !replyText.trim()}>
+                    {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
+                    {isInternal ? 'Notiz speichern' : 'Antwort senden'}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
