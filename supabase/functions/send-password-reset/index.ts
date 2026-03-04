@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
             Dieser Link ist 1 Stunde gültig. Falls du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="font-size: 11px; color: #bbb; margin: 0;">KS Command · MTCON</p>
+          <p style="font-size: 11px; color: #bbb; margin: 0;">Masterliste · MTCON</p>
         </div>
       `,
     }),
