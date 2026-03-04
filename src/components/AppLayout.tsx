@@ -204,7 +204,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-[1]">
-        <header className="lg:hidden flex items-center gap-3 px-4 h-14 glass-header shrink-0">
+        <header className="lg:hidden flex items-center gap-3 px-4 h-14 glass-header shrink-0 relative z-[100]">
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
           <span className="text-sm font-semibold text-foreground flex-1">Masterliste</span>
           <div className="flex items-center gap-1">
@@ -215,7 +215,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </header>
         {/* Desktop header bar with notifications */}
-        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0">
+        <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0 relative z-[100]">
           <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]">{children}</main>
