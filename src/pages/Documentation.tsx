@@ -197,7 +197,6 @@ export default function Documentation() {
                 ['Dashboard', '/', 'Übersicht mit KPIs und eigenen Vorgängen'],
                 ['Vorgänge', '/cases', 'Masterliste aller Vorgänge mit Filtern'],
                 ['Kanban', '/cases/kanban', 'Kanban-Board-Ansicht der Vorgänge'],
-                ['Organigramm', '/org', 'Visuelle Abteilungsstruktur mit Mitarbeitern'],
                 ['Projekte', '/projects', 'Projektliste mit Status und Sichtbarkeit'],
                 ['Support', '/support', 'Support-Tickets von Kunden verwalten'],
                 ['Dokumentation', '/docs', 'Diese Seite'],
