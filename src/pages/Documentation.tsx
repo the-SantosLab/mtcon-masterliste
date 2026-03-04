@@ -285,7 +285,7 @@ export default function Documentation() {
               headers={['Spalte', 'Beschreibung']}
               rows={[
                 ['Status', 'Farbkodierter Status-Badge'],
-                ['Nr.', 'Eindeutige Vorgangsnummer (manuell vergeben)'],
+                ['Nr.', 'Automatisch vergebene Vorgangsnummer (VOR-YYYY-nnnn)'],
                 ['Projektname', 'Bezeichnung des Vorgangs'],
                 ['Projekt', 'Verknüpftes Projekt (falls vorhanden) mit Projekt-Nr.'],
                 ['Bearbeiter', 'Kürzel des zugewiesenen Mitarbeiters'],
@@ -332,17 +332,17 @@ export default function Documentation() {
             />
 
             <SubHeading>Vorgang erstellen</SubHeading>
-            <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Pflichtfelder:</p>
+            <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Die Vorgangsnummer wird automatisch vergeben.</p>
             <div className="space-y-1 mt-1">
-              <Rule label="Vorgangsnummer" value="Manuelle, eindeutige Kennung (z.B. VG-001)" color="warn" />
-              <Rule label="Projektname" value="Beschreibender Name des Vorgangs" color="warn" />
+              <Rule label="Projektname" value="Beschreibender Name des Vorgangs (Pflichtfeld)" color="warn" />
+              <Rule label="Vorgangsnummer" value="Wird automatisch als VOR-YYYY-nnnn vergeben (kein manuelles Eingabefeld)" color="success" />
             </div>
             <p className="mt-2">
               Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
               Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden.
             </p>
             <Tip>
-              Wenn ein Projekt verknüpft wird, übernimmt der Vorgang automatisch den Projektnamen als Vorgabe.
+              Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
               Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
             </Tip>
 
@@ -352,8 +352,10 @@ export default function Documentation() {
               <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
               <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
               <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
+              <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben (mit Aktivitätslog)" color="success" />
+              <Rule label="Aufgaben-Checkliste" value="Aufgaben hinzufügen, abhaken und löschen — mit Fortschrittsanzeige" color="success" />
               <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
-              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Kommentare)" color="success" />
+              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Abteilung, Kommentare)" color="success" />
             </div>
 
             <SubHeading>Kanban-Board (/cases/kanban)</SubHeading>
@@ -675,30 +677,34 @@ export default function Documentation() {
           {/* ─── AUTO-NUMMERIERUNG ─── */}
           <Card title="Auto-Nummerierung" id="numbering">
             <p>
-              Alle Projekte, Vorgänge und Support-Tickets erhalten eine menschenlesbare, fortlaufende Nummer, 
-              die atomar per Datenbank-Funktion vergeben wird.
+              Alle Projekte, Vorgänge und Support-Tickets erhalten <strong className="text-foreground">vollautomatisch</strong> eine 
+              menschenlesbare, fortlaufende Nummer, die atomar per Datenbank-Trigger vergeben wird.
+              Bei Vorgängen muss keine Nummer manuell eingegeben werden — der Trigger setzt sowohl 
+              <Badge color="primary">case_number</Badge> als auch <Badge color="primary">case_no</Badge> automatisch.
             </p>
             <Table
               headers={['Objekt', 'Format', 'Beispiel', 'Trigger']}
               rows={[
                 ['Projekt', 'PRJ-YYYY-nnnn', 'PRJ-2026-0001', 'assign_project_number()'],
                 ['Vorgang', 'VOR-YYYY-nnnn', 'VOR-2026-0042', 'assign_case_number()'],
-                ['Ticket', 'SUP-YYYY-nnnn', 'SUP-2026-0005', 'assign_ticket_number()'],
+                ['Ticket', 'TKT-YYYY-nnnn', 'TKT-2026-0005', 'assign_ticket_number()'],
               ]}
             />
+            <Tip>
+              Beim CSV-Import ist keine Vorgangsnummer erforderlich — sie wird automatisch vergeben. 
+              Einziges Pflichtfeld ist <Badge color="primary">project_name</Badge>.
+            </Tip>
             <p className="mt-3">
               Technisch: Jede Erstellung ruft <Badge color="primary">next_counter(key)</Badge> auf — 
               ein atomares <Badge>INSERT … ON CONFLICT DO UPDATE … RETURNING</Badge>, das Race Conditions verhindert.
             </p>
             <Code>{`-- Zähler-Funktion (atomic)
-SELECT public.next_counter('project_2026');
+SELECT public.next_counter('case_2026');
 -- Gibt nächsten Wert zurück + erhöht atomar
 
--- Trigger auf projects:
-NEW.project_number := 'PRJ-' || year || '-' || lpad(counter, 4, '0');
-
--- Trigger auf cases:
-NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');`}</Code>
+-- BEFORE INSERT Trigger auf cases:
+NEW.case_number := 'VOR-' || year || '-' || lpad(counter, 4, '0');
+NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
             <Warning>
               Falls ein INSERT fehlschlägt, kann eine Nummer "verbrannt" werden. Dies ist akzeptables Verhalten bei atomaren Countern und kein Bug.
             </Warning>
@@ -895,7 +901,7 @@ USING (
             <Table
               headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
               rows={[
-                ['cases', 'Vorgänge/Aufgaben', 'case_no, case_number (auto), project_name, status, assignee_id, due_at, project_id, department_id, visibility'],
+                ['cases', 'Vorgänge/Aufgaben', 'case_no (auto), case_number (auto), project_name, status, assignee_id, due_at, project_id, department_id'],
                 ['projects', 'Projekte', 'project_number (auto), project_code, name, status, visibility, department_id, owner_id'],
                 ['project_members', 'Team pro Projekt', 'project_id, user_id, role (manager/member)'],
                 ['project_folders', 'Virtuelle Ordnerstruktur', 'project_id, name, path, sort_order, parent_id'],

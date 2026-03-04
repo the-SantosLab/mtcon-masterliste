@@ -6,14 +6,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const EXPECTED_HEADERS = [
-  'case_no', 'project_name', 'customer_no', 'client_name',
+  'project_name', 'customer_no', 'client_name',
   'internal_area_code', 'product_code', 'project_article_no',
   'received_at', 'due_at', 'estimated_hours', 'note',
 ];
 
 const SAMPLE_DATA = [
   {
-    case_no: 'VG-001',
     project_name: 'Website Redesign',
     customer_no: '10001',
     client_name: 'Max Müller',
@@ -26,7 +25,6 @@ const SAMPLE_DATA = [
     note: 'Responsive Design erforderlich',
   },
   {
-    case_no: 'VG-002',
     project_name: 'Mobile App Entwicklung',
     customer_no: '10002',
     client_name: 'Anna Schmidt',
@@ -39,7 +37,6 @@ const SAMPLE_DATA = [
     note: 'iOS und Android Versionen',
   },
   {
-    case_no: 'VG-003',
     project_name: 'Datenbankoptimierung',
     customer_no: '10003',
     client_name: 'Peter Weber',
@@ -54,7 +51,6 @@ const SAMPLE_DATA = [
 ];
 
 interface ParsedRow {
-  case_no: string;
   project_name: string;
   customer_no: string | null;
   client_name: string | null;
@@ -121,7 +117,7 @@ export function CsvImport() {
       const { headers, rows } = parseCSV(text);
 
       const errs: string[] = [];
-      const missing = ['case_no', 'project_name'].filter(h => !headers.includes(h));
+      const missing = ['project_name'].filter(h => !headers.includes(h));
       if (missing.length > 0) {
         errs.push(`Pflichtfelder fehlen: ${missing.join(', ')}`);
       }
@@ -148,15 +144,13 @@ export function CsvImport() {
       const rowErrors: string[] = [...errs];
 
       rows.forEach((row, i) => {
-        const caseNo = get(row, 'case_no');
         const projectName = get(row, 'project_name');
-        if (!caseNo || !projectName) {
-          rowErrors.push(`Zeile ${i + 2}: case_no oder project_name fehlt`);
+        if (!projectName) {
+          rowErrors.push(`Zeile ${i + 2}: project_name fehlt`);
           return;
         }
         const hours = get(row, 'estimated_hours');
         parsedRows.push({
-          case_no: caseNo,
           project_name: projectName,
           customer_no: get(row, 'customer_no') || null,
           client_name: get(row, 'client_name') || null,
@@ -220,10 +214,10 @@ export function CsvImport() {
         <div>
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">CSV-Datei auswählen</h3>
           <p className="text-[11px] text-muted-foreground mb-3">
-            Erwartete Spalten: case_no, project_name, customer_no, client_name, internal_area_code, product_code, project_article_no, received_at, due_at, estimated_hours, note
+            Erwartete Spalten: project_name, customer_no, client_name, internal_area_code, product_code, project_article_no, received_at, due_at, estimated_hours, note
           </p>
           <p className="text-[11px] text-muted-foreground mb-3">
-            Pflichtfelder: case_no, project_name. Trennzeichen: Komma oder Semikolon.
+            Pflichtfeld: project_name. Vorgangsnummer wird automatisch vergeben. Trennzeichen: Komma oder Semikolon.
           </p>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -265,8 +259,7 @@ export function CsvImport() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">#</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Nr.</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Projektname</th>
+                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Projektname</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Kunde</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Endtermin</th>
                   </tr>
@@ -275,7 +268,6 @@ export function CsvImport() {
                   {parsed.slice(0, 50).map((r, i) => (
                     <tr key={i} className="hover:bg-muted/40">
                       <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                      <td className="px-3 py-2 font-mono">{r.case_no}</td>
                       <td className="px-3 py-2 text-foreground">{r.project_name}</td>
                       <td className="px-3 py-2 text-muted-foreground">{r.customer_no || '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground tabular-nums">{r.due_at || '–'}</td>
