@@ -39,11 +39,13 @@ export default function CasesList() {
   const [products, setProducts] = useState<Tables<'products'>[]>([]);
   const [areas, setAreas] = useState<Tables<'internal_areas'>[]>([]);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [departments, setDepartments] = useState<DeptFilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [deptFilter, setDeptFilter] = useState<string>('all');
   const [onlyMine, setOnlyMine] = useState<boolean>(() => {
     try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
   });
