@@ -311,11 +311,11 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.case_no || !form.project_name) { toast.error('Nr. und Projektname sind Pflicht'); return; }
+    if (!form.project_name) { toast.error('Projektname ist Pflicht'); return; }
     setSaving(true);
     const effectiveDeptId = form.team_id || form.department_id || null;
     const { data: newCase, error } = await supabase.from('cases').insert({
-      case_no: form.case_no, project_name: form.project_name,
+      project_name: form.project_name,
       project_id: form.project_id || null,
       department_id: effectiveDeptId,
       customer_no: form.customer_no || null,
