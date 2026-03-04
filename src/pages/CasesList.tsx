@@ -310,6 +310,34 @@ function CreateCaseForm({ customers, products, areas, projects, userId, onCreate
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer *</Label><Input value={form.case_no} onChange={e => set('case_no', e.target.value)} placeholder="VG-001" required className="h-8 text-xs" /></div>
         <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Abteilung</Label>
+          <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">Keine Abteilung</SelectItem>
+              {topLevel.map(d => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Teilbereich</Label>
+          <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine Teilbereiche' : 'Wählen'} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">Kein Teilbereich</SelectItem>
+              {teams.map(t => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
         <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
