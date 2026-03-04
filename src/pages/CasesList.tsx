@@ -270,7 +270,7 @@ export default function CasesList() {
   );
 }
 
-interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+type DeptOption = DeptFilterOption;
 
 function CreateCaseForm({ customers, products, areas, projects, userId, onCreated }: {
   customers: Tables<'customers'>[];
