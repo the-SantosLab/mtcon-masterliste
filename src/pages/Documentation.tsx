@@ -354,6 +354,7 @@ export default function Documentation() {
               <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
               <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter und macht den Vorgang wieder abholbereit" color="success" />
               <Rule label="Aufgaben-Checkliste" value="Aufgaben hinzufügen, abhaken und löschen — mit Fortschrittsanzeige" color="success" />
+              <Rule label="Anhänge" value="Dokumente direkt am Vorgang anhängen, öffnen und herunterladen. Dateien werden im Storage-Bucket case-attachments gespeichert." color="success" />
               <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
               <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Abteilung, Kommentare)" color="success" />
             </div>
