@@ -255,7 +255,7 @@ export default function CaseDetail() {
             )}
 
             {/* Tasks checklist */}
-            <CaseTasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
+            <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
 
             {/* Attachments */}
             <div className="rounded-md border border-border bg-card p-5">
