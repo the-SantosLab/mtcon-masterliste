@@ -581,13 +581,28 @@ export default function Documentation() {
               ))}
             </div>
 
-            <SubHeading>Funktionen</SubHeading>
+            <SubHeading>Datei-Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Upload" value="Dateien in den aktiven Ordner hochladen (per Button oder Datei-Auswahl)" color="success" />
               <Rule label="Download" value="Dateien einzeln herunterladen" color="success" />
               <Rule label="Löschen" value="Dateien entfernen (Admin/Staff)" color="warn" />
               <Rule label="Aktualisieren" value="Dateiliste manuell neu laden" color="success" />
             </div>
+
+            <SubHeading>Ordner-Verwaltung</SubHeading>
+            <p>
+              Neben den automatisch erstellten Standard-Ordnern können Benutzer (Staff/Admin) eigene Ordner 
+              direkt in der Sidebar erstellen, umbenennen und löschen.
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Neuer Ordner" value="Über das +-Icon in der Sidebar — Name eingeben und mit Enter bestätigen" color="success" />
+              <Rule label="Umbenennen" value="Über das Kontextmenü (···) am Ordner → ‚Umbenennen'" color="success" />
+              <Rule label="Löschen" value="Über das Kontextmenü (···) am Ordner → ‚Löschen' — nur leere Ordner oder nach Bestätigung" color="warn" />
+            </div>
+            <Tip>
+              Ordner werden sowohl in der Datenbank (project_folders) als auch im Storage-Bucket (project-files) angelegt. 
+              Ein .keep-Platzhalter stellt sicher, dass der Ordner im Storage existiert.
+            </Tip>
 
             <SubHeading>Team-Verwaltung</SubHeading>
             <p>
