@@ -109,13 +109,60 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   };
 
   const autoForward = async (completedTask: Subtask) => {
-    // Find next incomplete subtask
+    setWarning(null);
     const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
     const currentIdx = sortedTasks.findIndex(t => t.id === completedTask.id);
     const nextTask = sortedTasks.slice(currentIdx + 1).find(t => t.status !== 'done');
 
-    if (nextTask?.department_id && nextTask.department_id !== completedTask.department_id) {
-      // Move main case to next department
+    // Case 1: No more subtasks → ready_for_review
+    if (!nextTask) {
+      const allDone = sortedTasks.filter(t => t.id !== completedTask.id).every(t => t.status === 'done');
+      if (allDone) {
+        await supabase.from('cases').update({
+          status: 'ready_for_review' as any,
+          last_changed_by: userId,
+          last_changed_at: new Date().toISOString(),
+        }).eq('id', caseId);
+
+        await supabase.from('case_activity').insert({
+          case_id: caseId,
+          action: 'auto_forward',
+          field: 'status',
+          old_value: 'in_arbeit',
+          new_value: 'ready_for_review',
+          actor_id: userId,
+          message: 'Alle Unteraufgaben erledigt – Vorgang zur Prüfung bereit',
+        });
+        toast.success('Alle Unteraufgaben erledigt – Vorgang ist zur Prüfung bereit');
+      }
+      return;
+    }
+
+    // Case 2: Next subtask has no department → blocked
+    if (!nextTask.department_id) {
+      await supabase.from('cases').update({
+        status: 'blocked' as any,
+        last_changed_by: userId,
+        last_changed_at: new Date().toISOString(),
+      }).eq('id', caseId);
+
+      await supabase.from('case_activity').insert({
+        case_id: caseId,
+        action: 'auto_forward',
+        field: 'status',
+        old_value: 'in_arbeit',
+        new_value: 'blocked',
+        actor_id: userId,
+        message: `Blockiert: Unteraufgabe "${nextTask.title}" hat keine zugewiesene Abteilung`,
+      });
+
+      setWarning(`Nächste Unteraufgabe "${nextTask.title}" hat keine zugewiesene Abteilung`);
+      toast.warning('Vorgang blockiert – nächste Unteraufgabe hat keine Abteilung');
+      return;
+    }
+
+    // Case 3: Next subtask has a different department → forward
+    if (nextTask.department_id !== completedTask.department_id) {
       const dept = departments.find(d => d.id === nextTask.department_id);
       const { error } = await supabase.from('cases').update({
         department_id: nextTask.department_id,
@@ -128,7 +175,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
       if (!error && dept) {
         await supabase.from('case_activity').insert({
           case_id: caseId,
-          action: 'DEPT_MOVE',
+          action: 'auto_forward',
           field: 'department_id',
           old_value: departments.find(d => d.id === completedTask.department_id)?.name || 'Unbekannt',
           new_value: dept.name,
