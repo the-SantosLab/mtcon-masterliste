@@ -85,8 +85,16 @@ export default function ProjectFiles() {
   const [addRole, setAddRole] = useState('member');
   const [addingMember, setAddingMember] = useState(false);
 
+  // Folder management
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [editFolderId, setEditFolderId] = useState<string | null>(null);
+  const [editFolderName, setEditFolderName] = useState('');
+  const [creatingSub, setCreatingSub] = useState(false);
+
   const isOwner = project && (project.owner_id === user?.id || project.created_by === user?.id);
   const canManageMembers = isAdmin || isOwner;
+  const canManageFolders = !isViewer;
 
   // Load project + folders
   useEffect(() => {
