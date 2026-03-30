@@ -7,15 +7,13 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
-import type { Tables, Enums } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { Search, Plus, UserCheck } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { CreateCaseForm } from '@/components/CreateCaseForm';
 
@@ -25,7 +23,6 @@ type CaseRow = Tables<'cases'> & {
   department: { name: string } | null;
 };
 
-interface ProjectOption { id: string; project_number: string; name: string; }
 interface DeptFilterOption { id: string; name: string; code: string | null; parent_id: string | null; }
 
 export default function CasesList() {
@@ -35,10 +32,6 @@ export default function CasesList() {
   const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [profiles, setProfiles] = useState<Tables<'users_profile'>[]>([]);
-  const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
-  const [products, setProducts] = useState<Tables<'products'>[]>([]);
-  const [areas, setAreas] = useState<Tables<'internal_areas'>[]>([]);
-  const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [departments, setDepartments] = useState<DeptFilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -51,6 +44,7 @@ export default function CasesList() {
   });
   const [searchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
+  const [projects, setProjects] = useState<{ id: string; project_number: string; name: string }[]>([]);
 
   const fetchCases = async () => {
     const { data } = await supabase
@@ -64,11 +58,8 @@ export default function CasesList() {
   useEffect(() => {
     fetchCases();
     supabase.from('users_profile').select('*').then(r => setProfiles((r.data || []) as any[]));
-    supabase.from('customers').select('*').then(r => setCustomers(r.data || []));
-    supabase.from('products').select('*').then(r => setProducts(r.data || []));
-    supabase.from('internal_areas').select('*').then(r => setAreas(r.data || []));
     supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
-      .then(r => setProjects((r.data || []) as ProjectOption[]));
+      .then(r => setProjects(r.data || []));
     supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
       .then(r => setDepartments((r.data || []) as DeptFilterOption[]));
     const ch = supabase.channel('list-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
@@ -103,7 +94,6 @@ export default function CasesList() {
     if (deptFilter !== 'all') {
       if (deptFilter === '_none' && c.department_id !== null) return false;
       if (deptFilter !== '_none') {
-        // Include cases in selected dept or its children
         const childIds = departments.filter(d => d.parent_id === deptFilter).map(d => d.id);
         if (c.department_id !== deptFilter && !childIds.includes(c.department_id || '')) return false;
       }
@@ -230,16 +220,10 @@ export default function CasesList() {
                   </td>
                   <td className={cellCls}>
                     {c.project ? (
-                      <Link
-                        to={`/projects/${c.project.id}`}
-                        className="inline-flex items-center gap-1 group"
-                        title={c.project.name}
-                      >
+                      <Link to={`/projects/${c.project.id}`} className="inline-flex items-center gap-1 group" title={c.project.name}>
                         <span className="font-mono text-[11px] text-primary group-hover:underline">{c.project.project_number}</span>
                       </Link>
-                    ) : (
-                      <span className="text-muted-foreground">–</span>
-                    )}
+                    ) : <span className="text-muted-foreground">–</span>}
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.department?.name || '–'}</td>
@@ -266,136 +250,5 @@ export default function CasesList() {
         <p className="text-[11px] text-muted-foreground">{filtered.length} Vorgang/Vorgänge</p>
       </div>
     </AppLayout>
-  );
-}
-  const [form, setForm] = useState({
-    project_name: '', project_id: '',
-    department_id: '', team_id: '',
-    customer_no: '', client_name: '', internal_area_code: '', product_code: '',
-    project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
-  });
-  const [departments, setDepartments] = useState<DeptOption[]>([]);
-  const [saving, setSaving] = useState(false);
-  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
-
-  useEffect(() => {
-    supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
-      .then(r => setDepartments((r.data || []) as DeptOption[]));
-  }, []);
-
-  const topLevel = departments.filter(d => !d.parent_id);
-  const teams = departments.filter(d => d.parent_id === form.department_id);
-
-  const handleDeptChange = (v: string) => {
-    set('department_id', v === '_none' ? '' : v);
-    set('team_id', '');
-  };
-
-  const handleProjectChange = (projectId: string) => {
-    const proj = projects.find(p => p.id === projectId);
-    set('project_id', projectId);
-    if (proj) set('project_name', proj.name);
-  };
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.project_name) { toast.error('Projektname ist Pflicht'); return; }
-    setSaving(true);
-    const effectiveDeptId = form.team_id || form.department_id || null;
-    const { data: newCase, error } = await supabase.from('cases').insert({
-      project_name: form.project_name,
-      project_id: form.project_id || null,
-      department_id: effectiveDeptId,
-      customer_no: form.customer_no || null,
-      client_name: form.client_name || null, internal_area_code: form.internal_area_code || null,
-      product_code: form.product_code || null, project_article_no: form.project_article_no || null,
-      received_at: form.received_at || null, due_at: form.due_at || null, note: form.note || null,
-      estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : null,
-      created_by: userId, last_changed_by: userId, last_changed_at: new Date().toISOString(),
-    }).select('id').single();
-    setSaving(false);
-    if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
-    await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
-    toast.success('Vorgang erstellt');
-    onCreated();
-  };
-
-  return (
-    <form onSubmit={submit} className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Vorgangsnummer</Label><Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" /></div>
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektname *</Label><Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" /></div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Abteilung</Label>
-          <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none">Keine Abteilung</SelectItem>
-              {topLevel.map(d => (
-                <SelectItem key={d.id} value={d.id}>
-                  {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Teilbereich</Label>
-          <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine Teilbereiche' : 'Wählen'} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none">Kein Teilbereich</SelectItem>
-              {teams.map(t => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
-        <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="_none">Kein Projekt</SelectItem>
-            {projects.map(p => (
-              <SelectItem key={p.id} value={p.id}>
-                <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>{p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Kunde</Label>
-          <Select value={form.customer_no} onValueChange={v => set('customer_no', v)}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-            <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.customer_no}>{c.customer_no} – {c.name}</SelectItem>)}</SelectContent>
-          </Select></div>
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Auftraggeber</Label><Input value={form.client_name} onChange={e => set('client_name', e.target.value)} className="h-8 text-xs" /></div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Produkt</Label>
-          <Select value={form.product_code} onValueChange={v => set('product_code', v)}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-            <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.code}>{p.code} – {p.name}</SelectItem>)}</SelectContent>
-          </Select></div>
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Bereich intern</Label>
-          <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-            <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
-          </Select></div>
-      </div>
-      <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label><Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" /></div>
-      <div className="grid grid-cols-3 gap-3">
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Auftragseingang</Label><Input type="date" value={form.received_at} onChange={e => set('received_at', e.target.value)} className="h-8 text-xs" /></div>
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Endtermin</Label><Input type="date" value={form.due_at} onChange={e => set('due_at', e.target.value)} className="h-8 text-xs" /></div>
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
-      </div>
-      <div className="space-y-1"><Label className="text-xs text-muted-foreground">Bemerkung</Label><Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={2} className="text-xs" /></div>
-      <Button type="submit" className="w-full h-8 text-xs" disabled={saving}>{saving ? 'Speichern…' : 'Vorgang anlegen'}</Button>
-    </form>
   );
 }
