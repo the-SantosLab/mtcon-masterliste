@@ -321,6 +321,8 @@ export default function Documentation() {
                 ['In Arbeit', 'Aktive Bearbeitung durch zugewiesenen Mitarbeiter', 'Gelb/Orange'],
                 ['In Verzug', 'Endtermin überschritten oder manuell markiert', 'Rot'],
                 ['Abgeschlossen', 'Vorgang erfolgreich fertiggestellt', 'Grün'],
+                ['Zur Prüfung', 'Alle Unteraufgaben erledigt — Vorgang wartet auf Freigabe/Prüfung', 'Amber'],
+                ['Blockiert', 'Workflow-Problem: nächste Unteraufgabe hat keine Abteilung', 'Rot/Destructive'],
                 ['Verworfen', 'Vorgang wurde abgelehnt/storniert', 'Rot/Grau'],
                 ['Archiv', 'Abgelegter Vorgang, nicht mehr aktiv', 'Grau'],
               ]}
