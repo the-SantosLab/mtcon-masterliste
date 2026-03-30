@@ -1190,6 +1190,8 @@ USING (
                 ['send-password-reset', 'Edge Function', 'Sendet Passwort-Reset-E-Mail mit korrektem Redirect'],
                 ['reset-user-password', 'Edge Function', 'Setzt Passwort eines Users zurück (Admin-Aktion)'],
                 ['send-due-notifications', 'Edge Function', 'Verschickt Fälligkeits-Benachrichtigungen (geplant)'],
+                ['api-dashboard', 'Edge Function', 'REST-API für externe Dashboards (Bearer Token Auth, Ressourcen: stats, cases, tickets, projects, users, departments)'],
+                ['analyze-ticket', 'Edge Function', 'KI-gestützte Analyse von Support-Tickets'],
                 ['assign_project_number()', 'DB Trigger', 'Vergibt atomare Projektnummer bei INSERT'],
                 ['assign_case_number()', 'DB Trigger', 'Vergibt atomare Vorgangsnummer bei INSERT'],
                 ['handle_new_user()', 'DB Trigger', 'Erstellt users_profile + user_roles bei neuem Auth-User'],
