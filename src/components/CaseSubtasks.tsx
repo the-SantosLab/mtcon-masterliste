@@ -50,6 +50,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   const [newDeptId, setNewDeptId] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   const fetchTasks = async () => {
     const { data } = await supabase
