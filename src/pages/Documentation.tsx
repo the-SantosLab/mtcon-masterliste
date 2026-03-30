@@ -1095,6 +1095,8 @@ curl -H "Authorization: Bearer YOUR_KEY" \\
                 ['ticket_messages', 'Beteiligte (intern: nicht für Kunden)', 'Beteiligte', '–', 'Nur Admin'],
                 ['portal_customers', 'Staff/Admin + Self', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
                 ['counters', 'Niemand direkt', '–', '–', '–'],
+                ['case_tasks', 'Alle auth. User', 'Staff + Admin', 'Staff + Admin', 'Staff + Admin'],
+                ['workflow_settings', 'Staff + Admin', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
               ]}
             />
 
