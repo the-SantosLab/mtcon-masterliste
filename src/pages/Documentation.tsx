@@ -9,7 +9,7 @@ import {
   GitBranch, Lock, LayoutDashboard, ClipboardList, Search,
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
   KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
-  Headphones, Globe, Network,
+  Headphones, Globe, Network, Workflow, Lightbulb, FolderPlus, Plug,
 } from 'lucide-react';
 
 interface Section {
@@ -24,6 +24,8 @@ const SECTIONS: Section[] = [
   { id: 'navigation', label: 'Navigation & Layout', icon: LayoutDashboard },
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
   { id: 'cases', label: 'Vorgänge', icon: ClipboardList },
+  { id: 'workflow', label: 'Workflow & Automatisierung', icon: Workflow },
+  { id: 'autofill', label: 'Autofill & Lernfunktion', icon: Lightbulb },
   { id: 'projects', label: 'Projekte', icon: FolderKanban },
   { id: 'files', label: 'Dateiablage', icon: FileUp },
   { id: 'support', label: 'Support-Tickets', icon: Headphones },
@@ -36,6 +38,7 @@ const SECTIONS: Section[] = [
   { id: 'admin', label: 'Admin-Verwaltung', icon: Settings },
   { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
   { id: 'search', label: 'Suche & Kommandos', icon: Search },
+  { id: 'api', label: 'API-Schnittstelle', icon: Plug },
   { id: 'rls', label: 'RLS-Logik & Policies', icon: Lock },
   { id: 'schema', label: 'Datenmodell', icon: GitBranch },
   { id: 'shortcuts', label: 'Tastenkürzel', icon: Columns },
@@ -104,7 +107,7 @@ export default function Documentation() {
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Masterliste — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge color="primary">v2.0</Badge>
+                  <Badge color="primary">v3.0</Badge>
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
                 </div>
               </div>
@@ -130,7 +133,7 @@ export default function Documentation() {
               <SubHeading>Kernfunktionen auf einen Blick</SubHeading>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {[
-                  ['📋', 'Vorgangsverwaltung', 'Erstellen, zuweisen, bearbeiten, abschließen — mit vollständigem Audit-Trail'],
+                  ['📋', 'Vorgangsverwaltung', 'Erstellen, zuweisen, bearbeiten — mit Audit-Trail, Unteraufgaben und Auto-Workflow'],
                   ['📁', 'Projektverwaltung', 'Projekte mit automatischer Ordnerstruktur und Team-Management'],
                   ['📊', 'Dashboard & KPIs', 'Echtzeit-Übersicht mit Status-Verteilung und Auslastungs-Charts'],
                   ['🎫', 'Support-Tickets', 'Ticketsystem für Kundenanfragen mit Prioritäten und Chat-Verlauf'],
@@ -138,10 +141,14 @@ export default function Documentation() {
                   ['📎', 'Anhänge & Dokumente', 'Dateien direkt an Vorgänge und Tickets anhängen, öffnen und herunterladen'],
                   ['🔐', 'Rollen & RLS', '3-stufiges Rollensystem mit Row-Level-Security auf Datenbankebene'],
                   ['🌙', 'Dark Mode', 'Glassmorphism Dark-Theme als Standard, umschaltbar pro User'],
-                  ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-Ansicht'],
+                  ['⚡', 'Workflow-Automatisierung', 'Unteraufgaben mit Abteilungszuweisung und automatischem Weiterschieben'],
+                  ['💡', 'Autofill & Lernfunktion', 'Intelligente Vorschläge basierend auf bisherigen Vorgängen'],
+                  ['👤', 'Inline-Erstellung', 'Kunden und Produkte direkt beim Vorgang erstellen'],
                   ['#️⃣', 'Auto-Nummerierung', 'Atomare Projekt-, Vorgang- und Ticket-Nummern'],
                   ['🔔', 'Benachrichtigungen', 'Echtzeit-Notifications bei Statusänderungen'],
+                  ['🔌', 'REST API', 'Externe API-Schnittstelle mit Bearer-Token für Dashboard-Integration'],
                   ['⌘', 'Command Palette', 'Schnellsuche via ⌘K / Ctrl+K'],
+                  ['📂', 'Ordner-Verwaltung', 'Ordner erstellen, umbenennen und löschen in der Dateiablage'],
                 ].map(([icon, title, desc]) => (
                   <div key={title} className="rounded border border-border bg-muted/30 px-3 py-2.5">
                     <div className="flex items-center gap-1.5 mb-1">
@@ -298,7 +305,7 @@ export default function Documentation() {
             <SubHeading>Filter-Optionen</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Textsuche" value="Durchsucht Vorgangsnr., Projektname, Kunde, Artikelnr., verknüpftes Projekt" color="success" />
-              <Rule label="Status-Filter" value="Alle 7 Status-Werte einzeln filterbar" color="success" />
+              <Rule label="Status-Filter" value="Alle 9 Status-Werte einzeln filterbar" color="success" />
               <Rule label="Bearbeiter-Filter" value="Alle Mitarbeiter + ‚Nicht zugewiesen'" color="success" />
               <Rule label="Projekt-Filter" value="Alle aktiven Projekte + ‚Ohne Projekt'" color="success" />
               <Rule label="Abteilungs-Filter" value="Alle Abteilungen + ‚Ohne Abteilung' — inkludiert Unter-Abteilungen (Teams)" color="success" />
@@ -314,6 +321,8 @@ export default function Documentation() {
                 ['In Arbeit', 'Aktive Bearbeitung durch zugewiesenen Mitarbeiter', 'Gelb/Orange'],
                 ['In Verzug', 'Endtermin überschritten oder manuell markiert', 'Rot'],
                 ['Abgeschlossen', 'Vorgang erfolgreich fertiggestellt', 'Grün'],
+                ['Zur Prüfung', 'Alle Unteraufgaben erledigt — Vorgang wartet auf Freigabe/Prüfung', 'Amber'],
+                ['Blockiert', 'Workflow-Problem: nächste Unteraufgabe hat keine Abteilung', 'Rot/Destructive'],
                 ['Verworfen', 'Vorgang wurde abgelehnt/storniert', 'Rot/Grau'],
                 ['Archiv', 'Abgelegter Vorgang, nicht mehr aktiv', 'Grau'],
               ]}
@@ -336,12 +345,30 @@ export default function Documentation() {
             <div className="space-y-1 mt-1">
               <Rule label="Projektname" value="Beschreibender Name des Vorgangs (Pflichtfeld)" color="warn" />
               <Rule label="Vorgangsnummer" value="Wird automatisch als VOR-YYYY-nnnn vergeben (kein manuelles Eingabefeld)" color="success" />
+              <Rule label="Kunde" value="Autocomplete-Auswahl bestehender Kunden oder inline ‚Neuen Kunden erstellen'" color="success" />
+              <Rule label="Produkt" value="Freitext + Vorschläge aus Produktliste — neue Produkte werden automatisch gespeichert" color="success" />
+              <Rule label="Abteilung & Team" value="Abteilung wählen, optional Unter-Abteilung (Team)" color="success" />
+              <Rule label="Zuständig" value="Mitarbeiter innerhalb der gewählten Abteilung zuweisen" color="success" />
+              <Rule label="Projektinfos" value="SOP, Menge, Projektdauer — eigener Bereich für erweiterte Informationen" color="success" />
               <Rule label="Anhänge" value="Dateien können direkt beim Erstellen angehängt werden" color="success" />
             </div>
             <p className="mt-2">
-              Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
-              Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden.
+              Optionale Felder: Verknüpftes Projekt, Kunde, Auftraggeber, Produkt, Bereich intern, 
+              Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden, SOP, Menge, Projektdauer.
             </p>
+
+            <SubHeading>Inline-Erstellung von Kunden & Produkten</SubHeading>
+            <p>
+              Beim Erstellen eines Vorgangs können <strong className="text-foreground">neue Kunden</strong> und 
+              <strong className="text-foreground"> neue Produkte</strong> direkt im Formular angelegt werden, 
+              ohne vorher in die Stammdatenverwaltung wechseln zu müssen.
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Kunde" value="Dropdown mit Autocomplete — Option ‚Neuen Kunden erstellen' fügt sofort einen neuen Eintrag in die Kunden-Tabelle ein" color="success" />
+              <Rule label="Produkt" value="Freitext-Eingabe mit Vorschlägen — bei neuem Produkt wird es automatisch in der Produkttabelle gespeichert" color="success" />
+              <Rule label="Häufige Kunden" value="System merkt sich häufig verwendete Kunden und zeigt sie priorisiert" color="success" />
+            </div>
+
             <Tip>
               Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
               Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
@@ -351,13 +378,14 @@ export default function Documentation() {
             <p>Zeigt alle Details eines Vorgangs in strukturierter Form:</p>
             <div className="space-y-1 mt-1">
               <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
+              <Rule label="Projektinformationen" value="SOP, Menge, Projektdauer — eigener Abschnitt für erweiterte Metadaten" color="success" />
               <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
-              <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
-              <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter und macht den Vorgang wieder abholbereit" color="success" />
-              <Rule label="Aufgaben-Checkliste" value="Aufgaben hinzufügen, abhaken und löschen — mit Fortschrittsanzeige" color="success" />
-              <Rule label="Anhänge" value="Dokumente direkt am Vorgang anhängen, öffnen und herunterladen. Dateien werden im Storage-Bucket case-attachments gespeichert." color="success" />
+              <Rule label="Status ändern" value="Dropdown zur Statusänderung mit allen 9 Status-Werten" color="success" />
+              <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter" color="success" />
+              <Rule label="Unteraufgaben" value="Unteraufgaben mit Abteilungszuweisung, Verantwortlichem und Status (Offen/In Arbeit/Erledigt) — mit automatischem Weiterschieben" color="success" />
+              <Rule label="Anhänge" value="Dokumente direkt am Vorgang anhängen, öffnen und herunterladen" color="success" />
               <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
-              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Abteilung, Kommentare)" color="success" />
+              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen inkl. automatischer Workflow-Aktionen" color="success" />
             </div>
 
             <SubHeading>Kanban-Board (/cases/kanban)</SubHeading>
@@ -365,6 +393,104 @@ export default function Documentation() {
               Alternative Ansicht der Vorgänge als Kanban-Board, gruppiert nach Status-Spalten. 
               Vorgänge können per Drag-and-Drop zwischen Spalten verschoben werden.
             </p>
+          </Card>
+
+          {/* ─── WORKFLOW & AUTOMATISIERUNG ─── */}
+          <Card title="Workflow & Automatisierung" id="workflow">
+            <p>
+              Das System bietet eine <strong className="text-foreground">automatische Workflow-Steuerung</strong> über 
+              Unteraufgaben (Subtasks). Jede Unteraufgabe kann einer Abteilung und einem Mitarbeiter zugewiesen werden. 
+              Beim Abschließen einer Unteraufgabe wird der Vorgang automatisch an die nächste Abteilung weitergeleitet.
+            </p>
+
+            <SubHeading>Unteraufgaben mit Abteilungszuweisung</SubHeading>
+            <p>Jede Unteraufgabe hat folgende Eigenschaften:</p>
+            <Table
+              headers={['Feld', 'Beschreibung']}
+              rows={[
+                ['Titel', 'Beschreibung der Teilaufgabe'],
+                ['Status', 'Offen → In Arbeit → Erledigt'],
+                ['Abteilung', 'Welche Abteilung ist zuständig (optional)'],
+                ['Zuständig', 'Konkreter Mitarbeiter (optional)'],
+                ['Reihenfolge', 'sort_order bestimmt die Abarbeitungsreihenfolge'],
+              ]}
+            />
+
+            <SubHeading>Automatisches Weiterschieben (Auto-Forward)</SubHeading>
+            <p>
+              Wenn eine Unteraufgabe auf <Badge color="primary">Erledigt</Badge> gesetzt wird, prüft das System 
+              automatisch die nächste Unteraufgabe und reagiert wie folgt:
+            </p>
+
+            <Table
+              headers={['Situation', 'Aktion', 'Neuer Status']}
+              rows={[
+                ['Nächste Unteraufgabe hat andere Abteilung', 'Vorgang wird automatisch an die neue Abteilung verschoben, Bearbeiter wird entfernt', 'In Arbeit'],
+                ['Nächste Unteraufgabe hat keine Abteilung', 'Vorgang wird blockiert, Warnung wird angezeigt', 'Blockiert'],
+                ['Keine weitere Unteraufgabe vorhanden', 'Alle Aufgaben erledigt — Vorgang wird zur Prüfung bereitgestellt', 'Zur Prüfung'],
+                ['Nächste Unteraufgabe hat gleiche Abteilung', 'Keine Verschiebung — Vorgang bleibt in der aktuellen Abteilung', 'Unverändert'],
+              ]}
+            />
+
+            <SubHeading>Audit-Log für Workflow-Aktionen</SubHeading>
+            <p>
+              Jede automatische Aktion wird im Audit-Log protokolliert mit dem Event-Typ <Badge color="primary">auto_forward</Badge>:
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Abteilungswechsel" value="Alte und neue Abteilung werden dokumentiert" color="success" />
+              <Rule label="Zur Prüfung" value="‚Alle Unteraufgaben erledigt' wird als Nachricht gespeichert" color="success" />
+              <Rule label="Blockiert" value="Fehlende Abteilung der nächsten Unteraufgabe wird protokolliert" color="warn" />
+            </div>
+
+            <Warning>
+              Wenn eine Unteraufgabe keine Abteilung zugewiesen hat und als nächste in der Reihenfolge kommt, 
+              wird der Vorgang auf «Blockiert» gesetzt. Eine sichtbare Warnung erscheint im UI. Weisen Sie der 
+              Unteraufgabe eine Abteilung zu, um den Workflow fortzusetzen.
+            </Warning>
+
+            <SubHeading>Workflow-Einstellungen (workflow_settings)</SubHeading>
+            <p>
+              Das Workflow-Verhalten ist über die Tabelle <Badge color="primary">workflow_settings</Badge> konfigurierbar. 
+              Aktuell verfügbare Einstellungen:
+            </p>
+            <Table
+              headers={['Schlüssel', 'Beschreibung', 'Standardwert']}
+              rows={[
+                ['auto_forward', 'Automatisches Weiterschieben aktiviert/deaktiviert + Zielstatus', '{"enabled": true, "on_all_done": "ready_for_review", "on_no_department": "blocked"}'],
+                ['case_defaults', 'Standard-Werte für neue Vorgänge', '{"initial_status": "nicht_begonnen"}'],
+              ]}
+            />
+            <Tip>
+              Nur Admins können Workflow-Einstellungen ändern. Die Konfiguration wird als JSON in der Datenbank gespeichert.
+            </Tip>
+          </Card>
+
+          {/* ─── AUTOFILL & LERNFUNKTION ─── */}
+          <Card title="Autofill & Lernfunktion" id="autofill">
+            <p>
+              Das System lernt aus bisherigen Vorgängen und schlägt beim Erstellen neuer Vorgänge 
+              automatisch passende Werte vor. Die Lernfunktion wird über das <strong className="text-foreground">Glühbirnen-Icon</strong> (💡) 
+              im Erstellungsformular aktiviert.
+            </p>
+
+            <SubHeading>Wie funktioniert es?</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Ähnliche Vorgänge" value="System durchsucht die letzten 20 ähnlichen Vorgänge (LIKE-Suche auf Titel, Kunde, Produkt)" color="success" />
+              <Rule label="Beschreibung" value="Vorschlag basierend auf ähnlichen Vorgängen" color="success" />
+              <Rule label="Typische Unteraufgaben" value="Vorschläge für Subtasks basierend auf bisheriger Abteilungsstruktur" color="success" />
+              <Rule label="Autocomplete" value="Kunden- und Produkt-Dropdown mit Vorschlägen basierend auf Häufigkeit" color="success" />
+            </div>
+
+            <SubHeading>Vorlage übernehmen</SubHeading>
+            <p>
+              Über den Button «Vorlage übernehmen» können die Vorschläge des Systems direkt in das 
+              Erstellungsformular übernommen werden. Der Benutzer kann alle Werte anschließend noch anpassen.
+            </p>
+
+            <Tip>
+              Je mehr Vorgänge im System erfasst werden, desto genauer werden die Vorschläge. 
+              Die Lernfunktion funktioniert ohne KI — rein auf Basis von Datenbankabfragen und Ähnlichkeitsvergleichen.
+            </Tip>
           </Card>
 
           {/* ─── PROJEKTE ─── */}
@@ -455,13 +581,28 @@ export default function Documentation() {
               ))}
             </div>
 
-            <SubHeading>Funktionen</SubHeading>
+            <SubHeading>Datei-Funktionen</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Upload" value="Dateien in den aktiven Ordner hochladen (per Button oder Datei-Auswahl)" color="success" />
               <Rule label="Download" value="Dateien einzeln herunterladen" color="success" />
               <Rule label="Löschen" value="Dateien entfernen (Admin/Staff)" color="warn" />
               <Rule label="Aktualisieren" value="Dateiliste manuell neu laden" color="success" />
             </div>
+
+            <SubHeading>Ordner-Verwaltung</SubHeading>
+            <p>
+              Neben den automatisch erstellten Standard-Ordnern können Benutzer (Staff/Admin) eigene Ordner 
+              direkt in der Sidebar erstellen, umbenennen und löschen.
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Neuer Ordner" value="Über das +-Icon in der Sidebar — Name eingeben und mit Enter bestätigen" color="success" />
+              <Rule label="Umbenennen" value="Über das Kontextmenü (···) am Ordner → ‚Umbenennen'" color="success" />
+              <Rule label="Löschen" value="Über das Kontextmenü (···) am Ordner → ‚Löschen' — nur leere Ordner oder nach Bestätigung" color="warn" />
+            </div>
+            <Tip>
+              Ordner werden sowohl in der Datenbank (project_folders) als auch im Storage-Bucket (project-files) angelegt. 
+              Ein .keep-Platzhalter stellt sicher, dass der Ordner im Storage existiert.
+            </Tip>
 
             <SubHeading>Team-Verwaltung</SubHeading>
             <p>
@@ -859,6 +1000,58 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
             </Tip>
           </Card>
 
+          {/* ─── API-SCHNITTSTELLE ─── */}
+          <Card title="API-Schnittstelle (REST)" id="api">
+            <p>
+              Das System bietet eine <strong className="text-foreground">REST-API</strong> für die Anbindung 
+              externer Dashboards und Drittsysteme. Die API ist über eine Backend-Funktion realisiert und 
+              erfordert einen <Badge color="primary">Bearer Token</Badge> zur Authentifizierung.
+            </p>
+
+            <SubHeading>Authentifizierung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Methode" value="Bearer Token im Authorization-Header" color="success" />
+              <Rule label="API-Key" value="Wird als Secret (DASHBOARD_API_KEY) in der Backend-Konfiguration hinterlegt" color="success" />
+              <Rule label="Format" value="Authorization: Bearer YOUR_API_KEY" color="success" />
+            </div>
+
+            <SubHeading>Verfügbare Ressourcen</SubHeading>
+            <Table
+              headers={['Resource', 'Parameter', 'Beschreibung']}
+              rows={[
+                ['stats', '—', 'Aggregierte Zähler: Vorgänge, Tickets, Projekte nach Status'],
+                ['cases', 'status, limit, offset', 'Vorgangsliste mit Bearbeitern und Abteilungen'],
+                ['tickets', 'status, limit, offset', 'Support-Tickets mit Kundendaten'],
+                ['ticket_messages', 'ticket_id (Pflicht)', 'Nachrichtenverlauf eines Tickets'],
+                ['projects', 'limit, offset', 'Projektliste mit Owner und Abteilung'],
+                ['users', '—', 'Benutzerliste mit Profil, Rollen und Abteilung'],
+                ['departments', '—', 'Abteilungsliste mit Hierarchie'],
+              ]}
+            />
+
+            <SubHeading>Beispiel-Aufruf</SubHeading>
+            <Code>{`# Statistiken abrufen
+curl -H "Authorization: Bearer YOUR_KEY" \\
+  "https://YOUR_URL/functions/v1/api-dashboard?resource=stats"
+
+# Vorgänge filtern
+curl -H "Authorization: Bearer YOUR_KEY" \\
+  "https://YOUR_URL/functions/v1/api-dashboard?resource=cases&status=in_arbeit&limit=50"
+
+# Antwort-Format: JSON
+{
+  "data": [...],
+  "count": 42,
+  "limit": 50,
+  "offset": 0
+}`}</Code>
+
+            <Warning>
+              Der API-Key hat vollen Lesezugriff auf alle Daten (Admin-Level). Teilen Sie ihn nur mit 
+              vertrauenswürdigen Systemen und rotieren Sie ihn regelmäßig.
+            </Warning>
+          </Card>
+
           {/* ─── RLS ─── */}
           <Card title="RLS-Logik & Policies" id="rls">
             <p>
@@ -902,6 +1095,8 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
                 ['ticket_messages', 'Beteiligte (intern: nicht für Kunden)', 'Beteiligte', '–', 'Nur Admin'],
                 ['portal_customers', 'Staff/Admin + Self', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
                 ['counters', 'Niemand direkt', '–', '–', '–'],
+                ['case_tasks', 'Alle auth. User', 'Staff + Admin', 'Staff + Admin', 'Staff + Admin'],
+                ['workflow_settings', 'Staff + Admin', 'Nur Admin', 'Nur Admin', 'Nur Admin'],
               ]}
             />
 
@@ -925,10 +1120,12 @@ USING (
             <Table
               headers={['Tabelle', 'Zweck', 'Wichtige Spalten']}
               rows={[
-                ['cases', 'Vorgänge/Aufgaben', 'case_no (auto), case_number (auto), project_name, status, assignee_id, due_at, project_id, department_id'],
+                ['cases', 'Vorgänge/Aufgaben', 'case_no (auto), project_name, status, assignee_id, due_at, department_id, sop, quantity, project_duration'],
+                ['case_tasks', 'Unteraufgaben', 'case_id, title, status, department_id, assigned_to, sort_order, description'],
                 ['projects', 'Projekte', 'project_number (auto), project_code, name, status, visibility, department_id, owner_id'],
                 ['project_members', 'Team pro Projekt', 'project_id, user_id, role (manager/member)'],
                 ['project_folders', 'Virtuelle Ordnerstruktur', 'project_id, name, path, sort_order, parent_id'],
+                ['workflow_settings', 'Workflow-Konfiguration', 'key (unique), value (jsonb), description, updated_by'],
               ]}
             />
 
@@ -993,6 +1190,8 @@ USING (
                 ['send-password-reset', 'Edge Function', 'Sendet Passwort-Reset-E-Mail mit korrektem Redirect'],
                 ['reset-user-password', 'Edge Function', 'Setzt Passwort eines Users zurück (Admin-Aktion)'],
                 ['send-due-notifications', 'Edge Function', 'Verschickt Fälligkeits-Benachrichtigungen (geplant)'],
+                ['api-dashboard', 'Edge Function', 'REST-API für externe Dashboards (Bearer Token Auth, Ressourcen: stats, cases, tickets, projects, users, departments)'],
+                ['analyze-ticket', 'Edge Function', 'KI-gestützte Analyse von Support-Tickets'],
                 ['assign_project_number()', 'DB Trigger', 'Vergibt atomare Projektnummer bei INSERT'],
                 ['assign_case_number()', 'DB Trigger', 'Vergibt atomare Vorgangsnummer bei INSERT'],
                 ['handle_new_user()', 'DB Trigger', 'Erstellt users_profile + user_roles bei neuem Auth-User'],
