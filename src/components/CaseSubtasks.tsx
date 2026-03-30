@@ -41,6 +41,12 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   done: { label: 'Erledigt', color: 'bg-[hsl(var(--status-done))]' },
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  nicht_begonnen: 'Nicht begonnen', in_planung: 'In Planung', in_arbeit: 'In Arbeit',
+  in_verzug: 'In Verzug', ready_for_review: 'Zur Prüfung', blocked: 'Blockiert',
+  abgeschlossen: 'Abgeschlossen', verworfen: 'Verworfen', archiv: 'Archiv',
+};
+
 export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
