@@ -981,6 +981,41 @@ export type Database = {
           },
         ]
       }
+      workflow_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1016,6 +1051,8 @@ export type Database = {
         | "in_arbeit"
         | "in_verzug"
         | "abgeschlossen"
+        | "ready_for_review"
+        | "blocked"
         | "verworfen"
         | "archiv"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
@@ -1159,6 +1196,8 @@ export const Constants = {
         "in_arbeit",
         "in_verzug",
         "abgeschlossen",
+        "ready_for_review",
+        "blocked",
         "verworfen",
         "archiv",
       ],
