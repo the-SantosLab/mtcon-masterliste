@@ -8,6 +8,8 @@ export const STATUS_LABELS: Record<CaseStatus, string> = {
   in_arbeit: 'In Arbeit',
   in_verzug: 'In Verzug',
   abgeschlossen: 'Abgeschlossen',
+  ready_for_review: 'Zur Prüfung',
+  blocked: 'Blockiert',
   verworfen: 'Verworfen',
   archiv: 'Archiv',
 };
@@ -18,6 +20,8 @@ export const STATUS_DOT_COLORS: Record<CaseStatus, string> = {
   in_arbeit: 'bg-[hsl(var(--status-working))]',
   in_verzug: 'bg-[hsl(var(--status-overdue))]',
   abgeschlossen: 'bg-[hsl(var(--status-done))]',
+  ready_for_review: 'bg-[hsl(var(--chart-4))]',
+  blocked: 'bg-destructive',
   verworfen: 'bg-[hsl(var(--status-rejected))]',
   archiv: 'bg-[hsl(var(--status-archive))]',
 };
@@ -29,6 +33,8 @@ export const STATUS_VARIANTS: Record<CaseStatus, string> = {
   in_arbeit: 'bg-status-working',
   in_verzug: 'bg-status-overdue',
   abgeschlossen: 'bg-status-done',
+  ready_for_review: 'bg-chart-4',
+  blocked: 'bg-destructive',
   verworfen: 'bg-status-rejected',
   archiv: 'bg-status-archive',
 };
