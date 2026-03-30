@@ -268,13 +268,6 @@ export default function CasesList() {
     </AppLayout>
   );
 }
-
-  products: Tables<'products'>[];
-  areas: Tables<'internal_areas'>[];
-  projects: ProjectOption[];
-  userId: string;
-  onCreated: () => void;
-}) {
   const [form, setForm] = useState({
     project_name: '', project_id: '',
     department_id: '', team_id: '',
