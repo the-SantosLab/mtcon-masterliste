@@ -19,6 +19,7 @@ import ProjectsList from "./pages/ProjectsList";
 import ProjectFiles from "./pages/ProjectFiles";
 import ProjectDetail from "./pages/ProjectDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminWorkflows from "./pages/AdminWorkflows";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
