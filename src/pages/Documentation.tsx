@@ -345,12 +345,30 @@ export default function Documentation() {
             <div className="space-y-1 mt-1">
               <Rule label="Projektname" value="Beschreibender Name des Vorgangs (Pflichtfeld)" color="warn" />
               <Rule label="Vorgangsnummer" value="Wird automatisch als VOR-YYYY-nnnn vergeben (kein manuelles Eingabefeld)" color="success" />
+              <Rule label="Kunde" value="Autocomplete-Auswahl bestehender Kunden oder inline ‚Neuen Kunden erstellen'" color="success" />
+              <Rule label="Produkt" value="Freitext + Vorschläge aus Produktliste — neue Produkte werden automatisch gespeichert" color="success" />
+              <Rule label="Abteilung & Team" value="Abteilung wählen, optional Unter-Abteilung (Team)" color="success" />
+              <Rule label="Zuständig" value="Mitarbeiter innerhalb der gewählten Abteilung zuweisen" color="success" />
+              <Rule label="Projektinfos" value="SOP, Menge, Projektdauer — eigener Bereich für erweiterte Informationen" color="success" />
               <Rule label="Anhänge" value="Dateien können direkt beim Erstellen angehängt werden" color="success" />
             </div>
             <p className="mt-2">
-              Optionale Felder: Verknüpftes Projekt, Abteilung (Haupt + Team), Kunde, Auftraggeber, Produkt, Bereich intern, 
-              Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden.
+              Optionale Felder: Verknüpftes Projekt, Kunde, Auftraggeber, Produkt, Bereich intern, 
+              Projekt-/Artikelnr., Auftragseingang, Endtermin, Notiz, geschätzte Stunden, SOP, Menge, Projektdauer.
             </p>
+
+            <SubHeading>Inline-Erstellung von Kunden & Produkten</SubHeading>
+            <p>
+              Beim Erstellen eines Vorgangs können <strong className="text-foreground">neue Kunden</strong> und 
+              <strong className="text-foreground"> neue Produkte</strong> direkt im Formular angelegt werden, 
+              ohne vorher in die Stammdatenverwaltung wechseln zu müssen.
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Kunde" value="Dropdown mit Autocomplete — Option ‚Neuen Kunden erstellen' fügt sofort einen neuen Eintrag in die Kunden-Tabelle ein" color="success" />
+              <Rule label="Produkt" value="Freitext-Eingabe mit Vorschlägen — bei neuem Produkt wird es automatisch in der Produkttabelle gespeichert" color="success" />
+              <Rule label="Häufige Kunden" value="System merkt sich häufig verwendete Kunden und zeigt sie priorisiert" color="success" />
+            </div>
+
             <Tip>
               Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
               Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
