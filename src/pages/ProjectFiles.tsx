@@ -5,15 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
-  Folder, FolderOpen, Upload, File, Trash2,
+  Folder, FolderOpen, FolderPlus, Upload, File, Trash2,
   ChevronRight, ArrowLeft, RefreshCw, Download,
-  Users, UserPlus, X, Crown,
+  Users, UserPlus, X, Crown, Pencil, MoreVertical,
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 interface ProjectFolder {
