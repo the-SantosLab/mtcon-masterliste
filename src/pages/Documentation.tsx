@@ -1000,6 +1000,58 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
             </Tip>
           </Card>
 
+          {/* ─── API-SCHNITTSTELLE ─── */}
+          <Card title="API-Schnittstelle (REST)" id="api">
+            <p>
+              Das System bietet eine <strong className="text-foreground">REST-API</strong> für die Anbindung 
+              externer Dashboards und Drittsysteme. Die API ist über eine Backend-Funktion realisiert und 
+              erfordert einen <Badge color="primary">Bearer Token</Badge> zur Authentifizierung.
+            </p>
+
+            <SubHeading>Authentifizierung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Methode" value="Bearer Token im Authorization-Header" color="success" />
+              <Rule label="API-Key" value="Wird als Secret (DASHBOARD_API_KEY) in der Backend-Konfiguration hinterlegt" color="success" />
+              <Rule label="Format" value="Authorization: Bearer YOUR_API_KEY" color="success" />
+            </div>
+
+            <SubHeading>Verfügbare Ressourcen</SubHeading>
+            <Table
+              headers={['Resource', 'Parameter', 'Beschreibung']}
+              rows={[
+                ['stats', '—', 'Aggregierte Zähler: Vorgänge, Tickets, Projekte nach Status'],
+                ['cases', 'status, limit, offset', 'Vorgangsliste mit Bearbeitern und Abteilungen'],
+                ['tickets', 'status, limit, offset', 'Support-Tickets mit Kundendaten'],
+                ['ticket_messages', 'ticket_id (Pflicht)', 'Nachrichtenverlauf eines Tickets'],
+                ['projects', 'limit, offset', 'Projektliste mit Owner und Abteilung'],
+                ['users', '—', 'Benutzerliste mit Profil, Rollen und Abteilung'],
+                ['departments', '—', 'Abteilungsliste mit Hierarchie'],
+              ]}
+            />
+
+            <SubHeading>Beispiel-Aufruf</SubHeading>
+            <Code>{`# Statistiken abrufen
+curl -H "Authorization: Bearer YOUR_KEY" \\
+  "https://YOUR_URL/functions/v1/api-dashboard?resource=stats"
+
+# Vorgänge filtern
+curl -H "Authorization: Bearer YOUR_KEY" \\
+  "https://YOUR_URL/functions/v1/api-dashboard?resource=cases&status=in_arbeit&limit=50"
+
+# Antwort-Format: JSON
+{
+  "data": [...],
+  "count": 42,
+  "limit": 50,
+  "offset": 0
+}`}</Code>
+
+            <Warning>
+              Der API-Key hat vollen Lesezugriff auf alle Daten (Admin-Level). Teilen Sie ihn nur mit 
+              vertrauenswürdigen Systemen und rotieren Sie ihn regelmäßig.
+            </Warning>
+          </Card>
+
           {/* ─── RLS ─── */}
           <Card title="RLS-Logik & Policies" id="rls">
             <p>
