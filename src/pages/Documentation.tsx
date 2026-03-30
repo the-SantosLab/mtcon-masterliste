@@ -133,7 +133,7 @@ export default function Documentation() {
               <SubHeading>Kernfunktionen auf einen Blick</SubHeading>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {[
-                  ['📋', 'Vorgangsverwaltung', 'Erstellen, zuweisen, bearbeiten, abschließen — mit vollständigem Audit-Trail'],
+                  ['📋', 'Vorgangsverwaltung', 'Erstellen, zuweisen, bearbeiten — mit Audit-Trail, Unteraufgaben und Auto-Workflow'],
                   ['📁', 'Projektverwaltung', 'Projekte mit automatischer Ordnerstruktur und Team-Management'],
                   ['📊', 'Dashboard & KPIs', 'Echtzeit-Übersicht mit Status-Verteilung und Auslastungs-Charts'],
                   ['🎫', 'Support-Tickets', 'Ticketsystem für Kundenanfragen mit Prioritäten und Chat-Verlauf'],
@@ -141,10 +141,14 @@ export default function Documentation() {
                   ['📎', 'Anhänge & Dokumente', 'Dateien direkt an Vorgänge und Tickets anhängen, öffnen und herunterladen'],
                   ['🔐', 'Rollen & RLS', '3-stufiges Rollensystem mit Row-Level-Security auf Datenbankebene'],
                   ['🌙', 'Dark Mode', 'Glassmorphism Dark-Theme als Standard, umschaltbar pro User'],
-                  ['📐', 'Compact Tables', 'Toggle für dichtere Tabellen-Ansicht'],
+                  ['⚡', 'Workflow-Automatisierung', 'Unteraufgaben mit Abteilungszuweisung und automatischem Weiterschieben'],
+                  ['💡', 'Autofill & Lernfunktion', 'Intelligente Vorschläge basierend auf bisherigen Vorgängen'],
+                  ['👤', 'Inline-Erstellung', 'Kunden und Produkte direkt beim Vorgang erstellen'],
                   ['#️⃣', 'Auto-Nummerierung', 'Atomare Projekt-, Vorgang- und Ticket-Nummern'],
                   ['🔔', 'Benachrichtigungen', 'Echtzeit-Notifications bei Statusänderungen'],
+                  ['🔌', 'REST API', 'Externe API-Schnittstelle mit Bearer-Token für Dashboard-Integration'],
                   ['⌘', 'Command Palette', 'Schnellsuche via ⌘K / Ctrl+K'],
+                  ['📂', 'Ordner-Verwaltung', 'Ordner erstellen, umbenennen und löschen in der Dateiablage'],
                 ].map(([icon, title, desc]) => (
                   <div key={title} className="rounded border border-border bg-muted/30 px-3 py-2.5">
                     <div className="flex items-center gap-1.5 mb-1">
