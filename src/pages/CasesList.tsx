@@ -269,9 +269,6 @@ export default function CasesList() {
   );
 }
 
-type DeptOption = DeptFilterOption;
-
-function CreateCaseForm({ customers, products, areas, projects, userId, onCreated }: {
   customers: Tables<'customers'>[];
   products: Tables<'products'>[];
   areas: Tables<'internal_areas'>[];
