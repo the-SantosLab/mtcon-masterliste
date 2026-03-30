@@ -378,13 +378,14 @@ export default function Documentation() {
             <p>Zeigt alle Details eines Vorgangs in strukturierter Form:</p>
             <div className="space-y-1 mt-1">
               <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
+              <Rule label="Projektinformationen" value="SOP, Menge, Projektdauer — eigener Abschnitt für erweiterte Metadaten" color="success" />
               <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
-              <Rule label="Status ändern" value="Dropdown zur Statusänderung (nur wenn bearbeitbar)" color="success" />
-              <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter und macht den Vorgang wieder abholbereit" color="success" />
-              <Rule label="Aufgaben-Checkliste" value="Aufgaben hinzufügen, abhaken und löschen — mit Fortschrittsanzeige" color="success" />
-              <Rule label="Anhänge" value="Dokumente direkt am Vorgang anhängen, öffnen und herunterladen. Dateien werden im Storage-Bucket case-attachments gespeichert." color="success" />
+              <Rule label="Status ändern" value="Dropdown zur Statusänderung mit allen 9 Status-Werten" color="success" />
+              <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter" color="success" />
+              <Rule label="Unteraufgaben" value="Unteraufgaben mit Abteilungszuweisung, Verantwortlichem und Status (Offen/In Arbeit/Erledigt) — mit automatischem Weiterschieben" color="success" />
+              <Rule label="Anhänge" value="Dokumente direkt am Vorgang anhängen, öffnen und herunterladen" color="success" />
               <Rule label="Notizen" value="Notiz-Bereich zum Hinterlegen von Anmerkungen" color="success" />
-              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen (Claim, Status, Abteilung, Kommentare)" color="success" />
+              <Rule label="Aktivitäten-Timeline" value="Chronologischer Verlauf aller Änderungen inkl. automatischer Workflow-Aktionen" color="success" />
             </div>
 
             <SubHeading>Kanban-Board (/cases/kanban)</SubHeading>
