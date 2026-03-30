@@ -110,69 +110,90 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
 
   const autoForward = async (completedTask: Subtask) => {
     setWarning(null);
+
+    // Fetch workflow settings from DB
+    const { data: wsRows } = await supabase.from('workflow_settings').select('key, value');
+    const ws: Record<string, any> = {};
+    (wsRows || []).forEach(r => { ws[r.key] = r.value; });
+
+    const allDoneStatus = ws['all_tasks_done_status'] || 'ready_for_review';
+    const noDeptStatus = ws['no_department_status'] || 'blocked';
+    const forwardEnabled = ws['auto_forward_enabled'] !== false && ws['auto_forward_enabled'] !== 'false';
+    const autoAssign = ws['auto_assign_on_forward'] === true || ws['auto_assign_on_forward'] === 'true';
+
     const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
     const currentIdx = sortedTasks.findIndex(t => t.id === completedTask.id);
     const nextTask = sortedTasks.slice(currentIdx + 1).find(t => t.status !== 'done');
 
-    // Case 1: No more subtasks → ready_for_review
+    // Case 1: No more subtasks → configurable status
     if (!nextTask) {
       const allDone = sortedTasks.filter(t => t.id !== completedTask.id).every(t => t.status === 'done');
       if (allDone) {
         await supabase.from('cases').update({
-          status: 'ready_for_review' as any,
+          status: allDoneStatus as any,
           last_changed_by: userId,
           last_changed_at: new Date().toISOString(),
         }).eq('id', caseId);
 
+        const statusLabel = STATUS_LABELS[allDoneStatus] || allDoneStatus;
         await supabase.from('case_activity').insert({
           case_id: caseId,
           action: 'auto_forward',
           field: 'status',
           old_value: 'in_arbeit',
-          new_value: 'ready_for_review',
+          new_value: allDoneStatus,
           actor_id: userId,
-          message: 'Alle Unteraufgaben erledigt – Vorgang zur Prüfung bereit',
+          message: `Alle Unteraufgaben erledigt – Vorgang auf „${statusLabel}" gesetzt`,
         });
-        toast.success('Alle Unteraufgaben erledigt – Vorgang ist zur Prüfung bereit');
+        toast.success(`Alle Unteraufgaben erledigt – Status: ${statusLabel}`);
       }
       return;
     }
 
-    // Case 2: Next subtask has no department → blocked
+    // Case 2: Next subtask has no department → configurable status
     if (!nextTask.department_id) {
       await supabase.from('cases').update({
-        status: 'blocked' as any,
+        status: noDeptStatus as any,
         last_changed_by: userId,
         last_changed_at: new Date().toISOString(),
       }).eq('id', caseId);
 
+      const statusLabel = STATUS_LABELS[noDeptStatus] || noDeptStatus;
       await supabase.from('case_activity').insert({
         case_id: caseId,
         action: 'auto_forward',
         field: 'status',
         old_value: 'in_arbeit',
-        new_value: 'blocked',
+        new_value: noDeptStatus,
         actor_id: userId,
-        message: `Blockiert: Unteraufgabe "${nextTask.title}" hat keine zugewiesene Abteilung`,
+        message: `${statusLabel}: Unteraufgabe "${nextTask.title}" hat keine zugewiesene Abteilung`,
       });
 
       setWarning(`Nächste Unteraufgabe "${nextTask.title}" hat keine zugewiesene Abteilung`);
-      toast.warning('Vorgang blockiert – nächste Unteraufgabe hat keine Abteilung');
+      toast.warning(`Vorgang ${statusLabel.toLowerCase()} – nächste Unteraufgabe hat keine Abteilung`);
       return;
     }
 
-    // Case 3: Next subtask has a different department → forward
+    // Case 3: Auto-forward disabled → skip
+    if (!forwardEnabled) return;
+
+    // Case 4: Next subtask has a different department → forward
     if (nextTask.department_id !== completedTask.department_id) {
       const dept = departments.find(d => d.id === nextTask.department_id);
+      const deptManager = autoAssign ? dept && profiles.find(p => p.department_id === nextTask.department_id) : null;
+
       const { error } = await supabase.from('cases').update({
         department_id: nextTask.department_id,
-        assignee_id: null,
+        assignee_id: deptManager?.id || null,
         status: 'in_arbeit' as any,
         last_changed_by: userId,
         last_changed_at: new Date().toISOString(),
       }).eq('id', caseId);
 
       if (!error && dept) {
+        const msg = deptManager
+          ? `Automatisch an ${dept.name} weitergeleitet und ${deptManager.display_name} zugewiesen`
+          : `Automatisch weitergeleitet (Unteraufgabe "${completedTask.title}" erledigt)`;
         await supabase.from('case_activity').insert({
           case_id: caseId,
           action: 'auto_forward',
@@ -180,7 +201,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
           old_value: departments.find(d => d.id === completedTask.department_id)?.name || 'Unbekannt',
           new_value: dept.name,
           actor_id: userId,
-          message: `Automatisch weitergeleitet (Unteraufgabe "${completedTask.title}" erledigt)`,
+          message: msg,
         });
         toast.success(`Vorgang automatisch an ${dept.name} weitergeleitet`);
       }
