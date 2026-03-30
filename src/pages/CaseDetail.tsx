@@ -186,6 +186,18 @@ export default function CaseDetail() {
                </div>
             </div>
 
+            {/* Projektinformationen */}
+            {((c as any).sop || (c as any).quantity || (c as any).project_duration) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Projektinformationen</h3>
+                <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+                  <Field label="SOP" value={(c as any).sop} />
+                  <Field label="Stückzahl" value={(c as any).quantity?.toString()} />
+                  <Field label="Projektdauer" value={(c as any).project_duration} />
+                </div>
+              </div>
+            )}
+
             <div className="rounded-md border border-border bg-card p-5">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Termine</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
