@@ -305,7 +305,7 @@ export default function Documentation() {
             <SubHeading>Filter-Optionen</SubHeading>
             <div className="space-y-1 mt-1">
               <Rule label="Textsuche" value="Durchsucht Vorgangsnr., Projektname, Kunde, Artikelnr., verknüpftes Projekt" color="success" />
-              <Rule label="Status-Filter" value="Alle 7 Status-Werte einzeln filterbar" color="success" />
+              <Rule label="Status-Filter" value="Alle 9 Status-Werte einzeln filterbar" color="success" />
               <Rule label="Bearbeiter-Filter" value="Alle Mitarbeiter + ‚Nicht zugewiesen'" color="success" />
               <Rule label="Projekt-Filter" value="Alle aktiven Projekte + ‚Ohne Projekt'" color="success" />
               <Rule label="Abteilungs-Filter" value="Alle Abteilungen + ‚Ohne Abteilung' — inkludiert Unter-Abteilungen (Teams)" color="success" />
