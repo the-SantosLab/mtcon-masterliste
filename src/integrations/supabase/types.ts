@@ -67,39 +67,58 @@ export type Database = {
       }
       case_tasks: {
         Row: {
+          assigned_to: string | null
           case_id: string
           completed: boolean
           completed_at: string | null
           completed_by: string | null
           created_at: string
           created_by: string
+          department_id: string | null
+          description: string | null
           id: string
           sort_order: number
+          status: string
           title: string
         }
         Insert: {
+          assigned_to?: string | null
           case_id: string
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
           created_by: string
+          department_id?: string | null
+          description?: string | null
           id?: string
           sort_order?: number
+          status?: string
           title: string
         }
         Update: {
+          assigned_to?: string | null
           case_id?: string
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
           created_by?: string
+          department_id?: string | null
+          description?: string | null
           id?: string
           sort_order?: number
+          status?: string
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "case_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "case_tasks_case_id_fkey"
             columns: ["case_id"]
@@ -119,6 +138,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_tasks_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
         ]
@@ -147,11 +173,14 @@ export type Database = {
           note: string | null
           product_code: string | null
           project_article_no: string | null
+          project_duration: string | null
           project_id: string | null
           project_name: string
+          quantity: number | null
           received_at: string | null
           secondary_check_by: string | null
           secondary_check_confirmed_at: string | null
+          sop: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
           visibility: string
@@ -179,11 +208,14 @@ export type Database = {
           note?: string | null
           product_code?: string | null
           project_article_no?: string | null
+          project_duration?: string | null
           project_id?: string | null
           project_name: string
+          quantity?: number | null
           received_at?: string | null
           secondary_check_by?: string | null
           secondary_check_confirmed_at?: string | null
+          sop?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           visibility?: string
@@ -211,11 +243,14 @@ export type Database = {
           note?: string | null
           product_code?: string | null
           project_article_no?: string | null
+          project_duration?: string | null
           project_id?: string | null
           project_name?: string
+          quantity?: number | null
           received_at?: string | null
           secondary_check_by?: string | null
           secondary_check_confirmed_at?: string | null
+          sop?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           visibility?: string

@@ -1,0 +1,468 @@
+import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Loader2, Plus, ChevronsUpDown, Check, Lightbulb } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import type { Tables } from '@/integrations/supabase/types';
+
+interface ProjectOption { id: string; project_number: string; name: string; }
+interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+interface Profile { id: string; display_name: string; short_code: string; department_id: string | null; }
+
+interface CreateCaseFormProps {
+  userId: string;
+  onCreated: () => void;
+}
+
+export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
+  const [form, setForm] = useState({
+    project_name: '', project_id: '', department_id: '', team_id: '',
+    customer_no: '', client_name: '', internal_area_code: '', product_code: '',
+    project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
+    sop: '', quantity: '', project_duration: '',
+  });
+
+  const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
+  const [products, setProducts] = useState<Tables<'products'>[]>([]);
+  const [areas, setAreas] = useState<Tables<'internal_areas'>[]>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [departments, setDepartments] = useState<DeptOption[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  // Customer creation
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerNo, setNewCustomerNo] = useState('');
+
+  // Product freetext
+  const [productSearch, setProductSearch] = useState('');
+  const [productOpen, setProductOpen] = useState(false);
+
+  // Autofill suggestions
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('customers').select('*').order('name'),
+      supabase.from('products').select('*').order('name'),
+      supabase.from('internal_areas').select('*').order('name'),
+      supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false }),
+      supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order'),
+      supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name'),
+    ]).then(([cust, prod, ar, proj, dept, prof]) => {
+      setCustomers(cust.data || []);
+      setProducts(prod.data || []);
+      setAreas(ar.data || []);
+      setProjects((proj.data || []) as ProjectOption[]);
+      setDepartments((dept.data || []) as DeptOption[]);
+      setProfiles((prof.data || []) as Profile[]);
+    });
+  }, []);
+
+  const topLevel = departments.filter(d => !d.parent_id);
+  const teams = departments.filter(d => d.parent_id === form.department_id);
+  const effectiveDeptId = form.team_id || form.department_id;
+
+  // Filter profiles by department for assignee
+  const deptProfiles = useMemo(() => {
+    if (!effectiveDeptId) return profiles;
+    // Include all profiles in the department or its parent/children
+    const deptIds = new Set<string>();
+    deptIds.add(effectiveDeptId);
+    departments.filter(d => d.parent_id === effectiveDeptId).forEach(d => deptIds.add(d.id));
+    const parent = departments.find(d => d.id === effectiveDeptId);
+    if (parent?.parent_id) deptIds.add(parent.parent_id);
+    return profiles.filter(p => p.department_id && deptIds.has(p.department_id));
+  }, [effectiveDeptId, profiles, departments]);
+
+  // Filtered customers
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearch) return customers;
+    const s = customerSearch.toLowerCase();
+    return customers.filter(c => c.name.toLowerCase().includes(s) || c.customer_no.toLowerCase().includes(s));
+  }, [customers, customerSearch]);
+
+  // Filtered products
+  const filteredProducts = useMemo(() => {
+    if (!productSearch) return products;
+    const s = productSearch.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(s) || p.code.toLowerCase().includes(s));
+  }, [products, productSearch]);
+
+  // Autofill: fetch similar cases when project_name changes
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (form.project_name.length < 3) { setSuggestions([]); return; }
+      const { data } = await supabase.from('cases')
+        .select('project_name, customer_no, product_code, client_name, department_id, internal_area_code, note')
+        .ilike('project_name', `%${form.project_name}%`)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      setSuggestions(data || []);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [form.project_name]);
+
+  const applySuggestion = (s: any) => {
+    setForm(f => ({
+      ...f,
+      customer_no: s.customer_no || f.customer_no,
+      product_code: s.product_code || f.product_code,
+      client_name: s.client_name || f.client_name,
+      department_id: s.department_id || f.department_id,
+      internal_area_code: s.internal_area_code || f.internal_area_code,
+    }));
+    setShowSuggestions(false);
+    toast.success('Daten aus ähnlichem Vorgang übernommen');
+  };
+
+  const handleDeptChange = (v: string) => {
+    set('department_id', v === '_none' ? '' : v);
+    set('team_id', '');
+  };
+
+  const handleProjectChange = (projectId: string) => {
+    const proj = projects.find(p => p.id === projectId);
+    set('project_id', projectId);
+    if (proj) set('project_name', proj.name);
+  };
+
+  const createCustomer = async () => {
+    if (!newCustomerName.trim() || !newCustomerNo.trim()) {
+      toast.error('Name und Kundennummer sind Pflicht');
+      return;
+    }
+    const { data, error } = await supabase.from('customers').insert({
+      name: newCustomerName.trim(),
+      customer_no: newCustomerNo.trim(),
+    }).select().single();
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    setCustomers(prev => [...prev, data]);
+    set('customer_no', data.customer_no);
+    setNewCustomerOpen(false);
+    setNewCustomerName('');
+    setNewCustomerNo('');
+    toast.success('Kunde erstellt');
+  };
+
+  const selectProductOrCreate = async (value: string) => {
+    const existing = products.find(p => p.code === value);
+    if (existing) {
+      set('product_code', existing.code);
+    } else {
+      // Create from freetext
+      const code = value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 20) || value;
+      const { data, error } = await supabase.from('products').insert({
+        code,
+        name: value,
+      }).select().single();
+      if (error) { toast.error('Fehler: ' + error.message); return; }
+      setProducts(prev => [...prev, data]);
+      set('product_code', data.code);
+      toast.success('Produkt erstellt');
+    }
+    setProductOpen(false);
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.project_name) { toast.error('Projektname ist Pflicht'); return; }
+    setSaving(true);
+    const finalDeptId = form.team_id || form.department_id || null;
+    const { data: newCase, error } = await supabase.from('cases').insert({
+      project_name: form.project_name,
+      project_id: form.project_id || null,
+      department_id: finalDeptId,
+      customer_no: form.customer_no || null,
+      client_name: form.client_name || null,
+      internal_area_code: form.internal_area_code || null,
+      product_code: form.product_code || null,
+      project_article_no: form.project_article_no || null,
+      received_at: form.received_at || null,
+      due_at: form.due_at || null,
+      note: form.note || null,
+      estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : null,
+      sop: form.sop || null,
+      quantity: form.quantity ? Number(form.quantity) : null,
+      project_duration: form.project_duration || null,
+      created_by: userId,
+      last_changed_by: userId,
+      last_changed_at: new Date().toISOString(),
+    } as any).select('id').single();
+    setSaving(false);
+    if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
+    await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
+    toast.success('Vorgang erstellt');
+    onCreated();
+  };
+
+  const selectedCustomer = customers.find(c => c.customer_no === form.customer_no);
+  const selectedProduct = products.find(p => p.code === form.product_code);
+
+  return (
+    <>
+      <form onSubmit={submit} className="space-y-3">
+        {/* Auto-number */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
+            <Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Projektname *</Label>
+            <div className="relative">
+              <Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" />
+              {suggestions.length > 0 && form.project_name.length >= 3 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-8 px-2 text-amber-500"
+                  onClick={() => setShowSuggestions(!showSuggestions)}
+                  title="Ähnliche Vorgänge gefunden"
+                >
+                  <Lightbulb className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Autofill suggestions */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+            <p className="text-[11px] font-medium text-amber-600">Ähnliche Vorgänge – Daten übernehmen?</p>
+            {suggestions.map((s, i) => (
+              <button
+                type="button"
+                key={i}
+                onClick={() => applySuggestion(s)}
+                className="w-full text-left rounded px-2 py-1.5 text-xs hover:bg-amber-500/10 transition-colors"
+              >
+                <span className="font-medium">{s.project_name}</span>
+                <span className="text-muted-foreground ml-2">
+                  {[s.customer_no, s.product_code].filter(Boolean).join(' · ')}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Department & Team */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Abteilung</Label>
+            <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Keine Abteilung</SelectItem>
+                {topLevel.map(d => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Teilbereich</Label>
+            <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine' : 'Wählen'} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Kein Teilbereich</SelectItem>
+                {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Project link */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
+          <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">Kein Projekt</SelectItem>
+              {projects.map(p => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>{p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Customer with autocomplete + create */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Kunde</Label>
+            <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                  {selectedCustomer ? `${selectedCustomer.customer_no} – ${selectedCustomer.name}` : 'Kunde wählen…'}
+                  <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Suchen…" value={customerSearch} onValueChange={setCustomerSearch} className="text-xs" />
+                  <CommandList>
+                    <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">Kein Kunde gefunden</CommandEmpty>
+                    <CommandGroup>
+                      {filteredCustomers.map(c => (
+                        <CommandItem
+                          key={c.id}
+                          value={`${c.customer_no} ${c.name}`}
+                          onSelect={() => { set('customer_no', c.customer_no); setCustomerOpen(false); }}
+                          className="text-xs"
+                        >
+                          <Check className={cn('mr-2 h-3 w-3', form.customer_no === c.customer_no ? 'opacity-100' : 'opacity-0')} />
+                          <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{c.customer_no}</span>{c.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    <CommandGroup>
+                      <CommandItem onSelect={() => { setNewCustomerOpen(true); setCustomerOpen(false); }} className="text-xs text-primary">
+                        <Plus className="mr-2 h-3 w-3" />Neuen Kunden erstellen
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Auftraggeber</Label>
+            <Input value={form.client_name} onChange={e => set('client_name', e.target.value)} className="h-8 text-xs" />
+          </div>
+        </div>
+
+        {/* Product with freetext + autocomplete */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Produkt</Label>
+            <Popover open={productOpen} onOpenChange={setProductOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                  {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
+                  <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
+                  <CommandList>
+                    <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
+                      {productSearch.trim() ? (
+                        <button
+                          type="button"
+                          onClick={() => selectProductOrCreate(productSearch.trim())}
+                          className="text-primary hover:underline"
+                        >
+                          „{productSearch.trim()}" als neues Produkt erstellen
+                        </button>
+                      ) : 'Kein Produkt gefunden'}
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {filteredProducts.map(p => (
+                        <CommandItem
+                          key={p.id}
+                          value={`${p.code} ${p.name}`}
+                          onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
+                          className="text-xs"
+                        >
+                          <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
+                          <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Bereich intern</Label>
+            <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+              <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
+          <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+        </div>
+
+        {/* Dates & hours */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1"><Label className="text-xs text-muted-foreground">Auftragseingang</Label><Input type="date" value={form.received_at} onChange={e => set('received_at', e.target.value)} className="h-8 text-xs" /></div>
+          <div className="space-y-1"><Label className="text-xs text-muted-foreground">Endtermin</Label><Input type="date" value={form.due_at} onChange={e => set('due_at', e.target.value)} className="h-8 text-xs" /></div>
+          <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
+        </div>
+
+        {/* Project info section */}
+        <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
+            <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
+            <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
+          </div>
+        </div>
+
+        {/* Assignee (within department) */}
+        {effectiveDeptId && (
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Zuständig (Abteilung)</Label>
+            <Select value={form.client_name ? '' : '_none'} onValueChange={() => {}}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Direkt zuweisen (optional)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Nicht zuweisen</SelectItem>
+                {deptProfiles.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.display_name} ({p.short_code})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Bemerkung</Label><Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={2} className="text-xs" /></div>
+        <Button type="submit" className="w-full h-8 text-xs" disabled={saving}>{saving ? 'Speichern…' : 'Vorgang anlegen'}</Button>
+      </form>
+
+      {/* New Customer Dialog */}
+      <Dialog open={newCustomerOpen} onOpenChange={setNewCustomerOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-sm font-semibold">Neuen Kunden erstellen</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Kundennummer *</Label>
+              <Input value={newCustomerNo} onChange={e => setNewCustomerNo(e.target.value)} className="h-8 text-xs" placeholder="z.B. K-001" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Name *</Label>
+              <Input value={newCustomerName} onChange={e => setNewCustomerName(e.target.value)} className="h-8 text-xs" placeholder="Firmenname" />
+            </div>
+            <Button onClick={createCustomer} className="w-full h-8 text-xs">Kunde erstellen</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
