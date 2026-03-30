@@ -3,17 +3,12 @@ import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Plus, Save, Trash2, Settings2, Loader2, Pencil, AlertTriangle, Workflow } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Settings2, Loader2, Workflow, ArrowRight, CheckCircle2, AlertOctagon, RotateCcw, UserCheck, ShieldCheck, Info } from 'lucide-react';
 
 interface WorkflowSetting {
   id: string;
@@ -23,14 +18,6 @@ interface WorkflowSetting {
   updated_at: string;
   updated_by: string | null;
 }
-
-const PRESET_KEYS = [
-  { key: 'all_tasks_done_status', label: 'Status bei allen erledigten Aufgaben', description: 'Welcher Status wird gesetzt, wenn alle Unteraufgaben eines Vorgangs abgeschlossen sind?', type: 'status_select' },
-  { key: 'no_department_status', label: 'Status bei fehlender Abteilung', description: 'Welcher Status wird gesetzt, wenn die nächste Unteraufgabe keine Abteilung zugewiesen hat?', type: 'status_select' },
-  { key: 'auto_forward_enabled', label: 'Auto-Forwarding aktiv', description: 'Soll der Vorgang automatisch in die Abteilung der nächsten Unteraufgabe verschoben werden?', type: 'boolean' },
-  { key: 'auto_assign_on_forward', label: 'Auto-Zuweisung bei Weiterleitung', description: 'Soll der Vorgang beim Abteilungswechsel automatisch dem Abteilungsleiter zugewiesen werden?', type: 'boolean' },
-  { key: 'require_secondary_check', label: 'Zweitprüfung erforderlich', description: 'Muss ein Vorgang nach Abschluss aller Aufgaben eine Zweitprüfung durchlaufen?', type: 'boolean' },
-];
 
 const STATUS_OPTIONS = [
   { value: 'nicht_begonnen', label: 'Nicht begonnen' },
@@ -44,15 +31,60 @@ const STATUS_OPTIONS = [
   { value: 'archiv', label: 'Archiv' },
 ];
 
+const WORKFLOW_RULES = [
+  {
+    key: 'auto_forward_enabled',
+    icon: ArrowRight,
+    title: 'Automatische Weiterleitung',
+    question: 'Soll ein Vorgang automatisch an die nächste Abteilung weitergeleitet werden, wenn eine Unteraufgabe erledigt wird?',
+    example: 'Beispiel: Die Aufgabe „Design prüfen" ist erledigt → der Vorgang wandert automatisch zur Abteilung der nächsten Aufgabe.',
+    type: 'boolean' as const,
+    defaultValue: true,
+  },
+  {
+    key: 'all_tasks_done_status',
+    icon: CheckCircle2,
+    title: 'Alle Aufgaben erledigt',
+    question: 'Welchen Status soll der Vorgang bekommen, wenn alle Unteraufgaben abgeschlossen sind?',
+    example: 'Empfohlen: „Zur Prüfung" – damit ein Verantwortlicher das Ergebnis noch abnehmen kann, bevor der Vorgang abgeschlossen wird.',
+    type: 'status' as const,
+    defaultValue: 'ready_for_review',
+  },
+  {
+    key: 'no_department_status',
+    icon: AlertOctagon,
+    title: 'Fehlende Abteilung',
+    question: 'Was passiert, wenn die nächste Unteraufgabe keiner Abteilung zugeordnet ist?',
+    example: 'Empfohlen: „Blockiert" – damit der Vorgang nicht unbemerkt stehen bleibt und jemand die fehlende Zuordnung nachholt.',
+    type: 'status' as const,
+    defaultValue: 'blocked',
+  },
+  {
+    key: 'auto_assign_on_forward',
+    icon: UserCheck,
+    title: 'Automatische Zuweisung',
+    question: 'Soll beim Abteilungswechsel automatisch ein Mitarbeiter der neuen Abteilung zugewiesen werden?',
+    example: 'Wenn aktiv, wird der Vorgang beim Wechsel einem Mitarbeiter der Zielabteilung zugewiesen.',
+    type: 'boolean' as const,
+    defaultValue: false,
+  },
+  {
+    key: 'require_secondary_check',
+    icon: ShieldCheck,
+    title: 'Zweitprüfung (4-Augen-Prinzip)',
+    question: 'Muss ein Vorgang nach Abschluss aller Aufgaben von einer zweiten Person geprüft werden?',
+    example: 'Wichtig bei qualitätsrelevanten Prozessen – ein zweiter Mitarbeiter muss den Vorgang bestätigen.',
+    type: 'boolean' as const,
+    defaultValue: false,
+  },
+];
+
 export default function AdminWorkflows() {
   const { isAdmin } = useAuth();
   const [settings, setSettings] = useState<WorkflowSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [editDialog, setEditDialog] = useState<{ open: boolean; setting: WorkflowSetting | null; isNew: boolean }>({ open: false, setting: null, isNew: false });
-  const [formKey, setFormKey] = useState('');
-  const [formValue, setFormValue] = useState('');
-  const [formDesc, setFormDesc] = useState('');
+  const [initialized, setInitialized] = useState(false);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -63,70 +95,55 @@ export default function AdminWorkflows() {
 
   useEffect(() => { fetchSettings(); }, []);
 
-  const getPreset = (key: string) => PRESET_KEYS.find(p => p.key === key);
+  // Auto-initialize missing presets on first load
+  useEffect(() => {
+    if (loading || initialized || !isAdmin) return;
+    const existingKeys = settings.map(s => s.key);
+    const missing = WORKFLOW_RULES.filter(r => !existingKeys.includes(r.key));
+    if (missing.length > 0) {
+      Promise.all(missing.map(r =>
+        supabase.from('workflow_settings').insert({
+          key: r.key,
+          value: r.defaultValue,
+          description: r.question,
+        })
+      )).then(() => { fetchSettings(); });
+    }
+    setInitialized(true);
+  }, [loading, initialized, isAdmin, settings]);
 
-  const handleSave = async (setting: WorkflowSetting, newValue: any) => {
-    setSaving(setting.id);
-    const { error } = await supabase.from('workflow_settings').update({ value: newValue, updated_at: new Date().toISOString() }).eq('id', setting.id);
+  const getValue = (key: string) => {
+    const s = settings.find(s => s.key === key);
+    return s?.value;
+  };
+
+  const getSetting = (key: string) => settings.find(s => s.key === key);
+
+  const handleSave = async (key: string, newValue: any) => {
+    const setting = getSetting(key);
+    if (!setting) return;
+    setSaving(key);
+    const { error } = await supabase.from('workflow_settings')
+      .update({ value: newValue, updated_at: new Date().toISOString() })
+      .eq('id', setting.id);
     if (error) toast.error('Fehler beim Speichern');
-    else { toast.success('Einstellung gespeichert'); fetchSettings(); }
+    else {
+      toast.success('Einstellung gespeichert');
+      setSettings(prev => prev.map(s => s.key === key ? { ...s, value: newValue } : s));
+    }
     setSaving(null);
   };
 
-  const handleCreate = async () => {
-    if (!formKey.trim()) { toast.error('Schlüssel ist erforderlich'); return; }
-    let parsedValue: any = formValue;
-    try { parsedValue = JSON.parse(formValue); } catch { /* keep as string */ }
-    const { error } = await supabase.from('workflow_settings').insert({ key: formKey.trim(), value: parsedValue, description: formDesc || null });
-    if (error) {
-      if (error.code === '23505') toast.error('Schlüssel existiert bereits');
-      else toast.error('Fehler beim Erstellen');
-    } else {
-      toast.success('Einstellung erstellt');
-      setEditDialog({ open: false, setting: null, isNew: false });
-      setFormKey(''); setFormValue(''); setFormDesc('');
-      fetchSettings();
+  const resetDefaults = async () => {
+    for (const rule of WORKFLOW_RULES) {
+      const setting = getSetting(rule.key);
+      if (setting) {
+        await supabase.from('workflow_settings')
+          .update({ value: rule.defaultValue, updated_at: new Date().toISOString() })
+          .eq('id', setting.id);
+      }
     }
-  };
-
-  const handleUpdate = async () => {
-    if (!editDialog.setting) return;
-    let parsedValue: any = formValue;
-    try { parsedValue = JSON.parse(formValue); } catch { /* keep as string */ }
-    const { error } = await supabase.from('workflow_settings').update({ value: parsedValue, description: formDesc || null, updated_at: new Date().toISOString() }).eq('id', editDialog.setting.id);
-    if (error) toast.error('Fehler beim Speichern');
-    else { toast.success('Einstellung aktualisiert'); fetchSettings(); }
-    setEditDialog({ open: false, setting: null, isNew: false });
-  };
-
-  const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('workflow_settings').delete().eq('id', id);
-    if (error) toast.error('Fehler beim Löschen');
-    else { toast.success('Einstellung gelöscht'); fetchSettings(); }
-  };
-
-  const openNewDialog = () => {
-    setFormKey(''); setFormValue(''); setFormDesc('');
-    setEditDialog({ open: true, setting: null, isNew: true });
-  };
-
-  const openEditDialog = (s: WorkflowSetting) => {
-    setFormKey(s.key);
-    setFormValue(typeof s.value === 'string' ? s.value : JSON.stringify(s.value, null, 2));
-    setFormDesc(s.description || '');
-    setEditDialog({ open: true, setting: s, isNew: false });
-  };
-
-  // Ensure presets exist
-  const initPresets = async () => {
-    const existingKeys = settings.map(s => s.key);
-    const missing = PRESET_KEYS.filter(p => !existingKeys.includes(p.key));
-    if (missing.length === 0) { toast.info('Alle Standard-Einstellungen sind vorhanden'); return; }
-    for (const p of missing) {
-      const defaultVal = p.type === 'boolean' ? true : p.key === 'all_tasks_done_status' ? 'ready_for_review' : p.key === 'no_department_status' ? 'blocked' : '';
-      await supabase.from('workflow_settings').insert({ key: p.key, value: defaultVal, description: p.description });
-    }
-    toast.success(`${missing.length} Standard-Einstellung(en) erstellt`);
+    toast.success('Alle Einstellungen auf Standard zurückgesetzt');
     fetchSettings();
   };
 
@@ -142,134 +159,100 @@ export default function AdminWorkflows() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Workflow className="h-6 w-6 text-primary" />
-              Workflow-Einstellungen
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">Konfiguriere das automatische Verhalten des Vorgangssystems</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={initPresets} size="sm">
-              <Settings2 className="h-4 w-4 mr-1" /> Standards laden
-            </Button>
-            <Button onClick={openNewDialog} size="sm">
-              <Plus className="h-4 w-4 mr-1" /> Neue Einstellung
-            </Button>
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Workflow className="h-6 w-6 text-primary" />
+            Workflow-Regeln
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Bestimme, wie sich Vorgänge automatisch verhalten, wenn Aufgaben erledigt werden.
+          </p>
+        </div>
+
+        {/* Info box */}
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex gap-3">
+          <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <div className="text-sm text-foreground">
+            <p className="font-medium mb-1">So funktioniert es</p>
+            <p className="text-muted-foreground">
+              Jeder Vorgang kann mehrere Unteraufgaben haben, die verschiedenen Abteilungen zugeordnet sind.
+              Wenn eine Aufgabe erledigt wird, entscheiden diese Regeln, was als Nächstes passiert.
+              Änderungen gelten sofort für alle neuen Aktionen.
+            </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : settings.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <AlertTriangle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground mb-4">Keine Workflow-Einstellungen vorhanden.</p>
-              <Button onClick={initPresets}><Settings2 className="h-4 w-4 mr-1" /> Standard-Einstellungen laden</Button>
-            </CardContent>
-          </Card>
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {settings.map(s => {
-              const preset = getPreset(s.key);
+          <div className="space-y-4">
+            {WORKFLOW_RULES.map((rule, idx) => {
+              const Icon = rule.icon;
+              const currentValue = getValue(rule.key);
+              const isBool = rule.type === 'boolean';
+              const isActive = isBool && (currentValue === true || currentValue === 'true');
+
               return (
-                <Card key={s.id} className="relative group">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{preset?.label || s.key}</CardTitle>
-                        <CardDescription className="text-xs mt-1">{s.description || preset?.description || 'Keine Beschreibung'}</CardDescription>
+                <Card key={rule.key}>
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-lg bg-primary/10 p-2.5 shrink-0 mt-0.5">
+                        <Icon className="h-5 w-5 text-primary" />
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(s)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(s.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base mb-1">{rule.title}</h3>
+                        <p className="text-sm text-foreground mb-2">{rule.question}</p>
+                        <p className="text-xs text-muted-foreground mb-4 italic">{rule.example}</p>
+
+                        {isBool ? (
+                          <div className="flex items-center gap-3">
+                            <Switch
+                              checked={isActive}
+                              onCheckedChange={(checked) => handleSave(rule.key, checked)}
+                              disabled={saving === rule.key}
+                            />
+                            <span className={`text-sm font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                              {isActive ? 'Ja, automatisch' : 'Nein, manuell'}
+                            </span>
+                          </div>
+                        ) : (
+                          <Select
+                            value={String(currentValue || rule.defaultValue)}
+                            onValueChange={(v) => handleSave(rule.key, v)}
+                            disabled={saving === rule.key}
+                          >
+                            <SelectTrigger className="w-full max-w-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map(o => (
+                                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    {preset?.type === 'boolean' ? (
-                      <div className="flex items-center gap-3">
-                        <Switch
-                          checked={s.value === true || s.value === 'true'}
-                          onCheckedChange={(checked) => handleSave(s, checked)}
-                          disabled={saving === s.id}
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          {(s.value === true || s.value === 'true') ? 'Aktiviert' : 'Deaktiviert'}
-                        </span>
-                      </div>
-                    ) : preset?.type === 'status_select' ? (
-                      <Select
-                        value={String(s.value)}
-                        onValueChange={(v) => handleSave(s, v)}
-                        disabled={saving === s.id}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_OPTIONS.map(o => (
-                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="font-mono text-xs break-all max-w-full">
-                          {typeof s.value === 'object' ? JSON.stringify(s.value) : String(s.value)}
-                        </Badge>
-                      </div>
-                    )}
-                    <p className="text-[10px] text-muted-foreground mt-2">
-                      Schlüssel: <code className="bg-muted px-1 rounded">{s.key}</code>
-                    </p>
                   </CardContent>
                 </Card>
               );
             })}
+
+            <Separator className="my-2" />
+
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={resetDefaults} className="text-muted-foreground">
+                <RotateCcw className="h-4 w-4 mr-1.5" />
+                Alle auf Standard zurücksetzen
+              </Button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Create / Edit Dialog */}
-      <Dialog open={editDialog.open} onOpenChange={(o) => setEditDialog(p => ({ ...p, open: o }))}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editDialog.isNew ? 'Neue Einstellung' : 'Einstellung bearbeiten'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Schlüssel</Label>
-              {editDialog.isNew ? (
-                <Input value={formKey} onChange={e => setFormKey(e.target.value)} placeholder="z.B. auto_forward_delay" />
-              ) : (
-                <Input value={formKey} disabled className="opacity-60" />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Wert (Text, Zahl oder JSON)</Label>
-              <Textarea value={formValue} onChange={e => setFormValue(e.target.value)} rows={3} placeholder='z.B. true, "ready_for_review", {"key": "value"}' />
-            </div>
-            <div className="space-y-2">
-              <Label>Beschreibung</Label>
-              <Input value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="Optionale Beschreibung" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialog({ open: false, setting: null, isNew: false })}>Abbrechen</Button>
-            <Button onClick={editDialog.isNew ? handleCreate : handleUpdate}>
-              <Save className="h-4 w-4 mr-1" /> {editDialog.isNew ? 'Erstellen' : 'Speichern'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
