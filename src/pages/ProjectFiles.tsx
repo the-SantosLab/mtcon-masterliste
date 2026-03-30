@@ -207,6 +207,69 @@ export default function ProjectFiles() {
     else { toast.success('Mitglied entfernt'); loadMembers(); }
   };
 
+  const loadFolders = async () => {
+    const { data } = await supabase.from('project_folders').select('*').eq('project_id', id).order('sort_order');
+    const f = (data || []) as ProjectFolder[];
+    setFolders(f);
+    return f;
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim() || !project) return;
+    const safeName = newFolderName.trim();
+    const basePath = `${project.project_code || project.project_number}/`;
+    const path = `${basePath}${safeName}/`;
+    const nextOrder = folders.length;
+    const { error } = await supabase.from('project_folders').insert({
+      project_id: project.id,
+      name: safeName,
+      path,
+      sort_order: nextOrder,
+    });
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    // Create .keep file in storage to ensure folder exists
+    await supabase.storage.from('project-files').upload(`${path}.keep`, new Blob(['']));
+    toast.success(`Ordner "${safeName}" erstellt`);
+    setNewFolderName('');
+    setNewFolderOpen(false);
+    const updated = await loadFolders();
+    const created = updated.find(f => f.name === safeName);
+    if (created) setActiveFolder(created);
+  };
+
+  const handleRenameFolder = async () => {
+    if (!editFolderId || !editFolderName.trim() || !project) return;
+    const folder = folders.find(f => f.id === editFolderId);
+    if (!folder) return;
+    const basePath = `${project.project_code || project.project_number}/`;
+    const newPath = `${basePath}${editFolderName.trim()}/`;
+    const { error } = await supabase.from('project_folders').update({
+      name: editFolderName.trim(),
+      path: newPath,
+    }).eq('id', editFolderId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Ordner umbenannt');
+    setEditFolderId(null);
+    setEditFolderName('');
+    await loadFolders();
+    if (activeFolder?.id === editFolderId) {
+      setActiveFolder({ ...folder, name: editFolderName.trim(), path: newPath });
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    const folder = folders.find(f => f.id === folderId);
+    if (!folder) return;
+    if (!confirm(`Ordner "${folder.name}" wirklich löschen? Dateien im Ordner bleiben im Speicher erhalten.`)) return;
+    const { error } = await supabase.from('project_folders').delete().eq('id', folderId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Ordner gelöscht');
+    const updated = await loadFolders();
+    if (activeFolder?.id === folderId) {
+      setActiveFolder(updated.length > 0 ? updated[0] : null);
+    }
+  };
+
   if (!project) return (
     <AppLayout><div className="text-xs text-muted-foreground p-8">Laden…</div></AppLayout>
   );
