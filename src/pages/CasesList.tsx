@@ -132,7 +132,7 @@ export default function CasesList() {
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle className="text-sm font-semibold">Neuen Vorgang anlegen</DialogTitle></DialogHeader>
-                <CreateCaseForm customers={customers} products={products} areas={areas} projects={projects} userId={user?.id || ''} onCreated={() => { setCreateOpen(false); fetchCases(); }} />
+                <CreateCaseForm userId={user?.id || ''} onCreated={() => { setCreateOpen(false); fetchCases(); }} />
               </DialogContent>
             </Dialog>
           )}
