@@ -395,6 +395,104 @@ export default function Documentation() {
             </p>
           </Card>
 
+          {/* ─── WORKFLOW & AUTOMATISIERUNG ─── */}
+          <Card title="Workflow & Automatisierung" id="workflow">
+            <p>
+              Das System bietet eine <strong className="text-foreground">automatische Workflow-Steuerung</strong> über 
+              Unteraufgaben (Subtasks). Jede Unteraufgabe kann einer Abteilung und einem Mitarbeiter zugewiesen werden. 
+              Beim Abschließen einer Unteraufgabe wird der Vorgang automatisch an die nächste Abteilung weitergeleitet.
+            </p>
+
+            <SubHeading>Unteraufgaben mit Abteilungszuweisung</SubHeading>
+            <p>Jede Unteraufgabe hat folgende Eigenschaften:</p>
+            <Table
+              headers={['Feld', 'Beschreibung']}
+              rows={[
+                ['Titel', 'Beschreibung der Teilaufgabe'],
+                ['Status', 'Offen → In Arbeit → Erledigt'],
+                ['Abteilung', 'Welche Abteilung ist zuständig (optional)'],
+                ['Zuständig', 'Konkreter Mitarbeiter (optional)'],
+                ['Reihenfolge', 'sort_order bestimmt die Abarbeitungsreihenfolge'],
+              ]}
+            />
+
+            <SubHeading>Automatisches Weiterschieben (Auto-Forward)</SubHeading>
+            <p>
+              Wenn eine Unteraufgabe auf <Badge color="primary">Erledigt</Badge> gesetzt wird, prüft das System 
+              automatisch die nächste Unteraufgabe und reagiert wie folgt:
+            </p>
+
+            <Table
+              headers={['Situation', 'Aktion', 'Neuer Status']}
+              rows={[
+                ['Nächste Unteraufgabe hat andere Abteilung', 'Vorgang wird automatisch an die neue Abteilung verschoben, Bearbeiter wird entfernt', 'In Arbeit'],
+                ['Nächste Unteraufgabe hat keine Abteilung', 'Vorgang wird blockiert, Warnung wird angezeigt', 'Blockiert'],
+                ['Keine weitere Unteraufgabe vorhanden', 'Alle Aufgaben erledigt — Vorgang wird zur Prüfung bereitgestellt', 'Zur Prüfung'],
+                ['Nächste Unteraufgabe hat gleiche Abteilung', 'Keine Verschiebung — Vorgang bleibt in der aktuellen Abteilung', 'Unverändert'],
+              ]}
+            />
+
+            <SubHeading>Audit-Log für Workflow-Aktionen</SubHeading>
+            <p>
+              Jede automatische Aktion wird im Audit-Log protokolliert mit dem Event-Typ <Badge color="primary">auto_forward</Badge>:
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Abteilungswechsel" value="Alte und neue Abteilung werden dokumentiert" color="success" />
+              <Rule label="Zur Prüfung" value="‚Alle Unteraufgaben erledigt' wird als Nachricht gespeichert" color="success" />
+              <Rule label="Blockiert" value="Fehlende Abteilung der nächsten Unteraufgabe wird protokolliert" color="warn" />
+            </div>
+
+            <Warning>
+              Wenn eine Unteraufgabe keine Abteilung zugewiesen hat und als nächste in der Reihenfolge kommt, 
+              wird der Vorgang auf «Blockiert» gesetzt. Eine sichtbare Warnung erscheint im UI. Weisen Sie der 
+              Unteraufgabe eine Abteilung zu, um den Workflow fortzusetzen.
+            </Warning>
+
+            <SubHeading>Workflow-Einstellungen (workflow_settings)</SubHeading>
+            <p>
+              Das Workflow-Verhalten ist über die Tabelle <Badge color="primary">workflow_settings</Badge> konfigurierbar. 
+              Aktuell verfügbare Einstellungen:
+            </p>
+            <Table
+              headers={['Schlüssel', 'Beschreibung', 'Standardwert']}
+              rows={[
+                ['auto_forward', 'Automatisches Weiterschieben aktiviert/deaktiviert + Zielstatus', '{"enabled": true, "on_all_done": "ready_for_review", "on_no_department": "blocked"}'],
+                ['case_defaults', 'Standard-Werte für neue Vorgänge', '{"initial_status": "nicht_begonnen"}'],
+              ]}
+            />
+            <Tip>
+              Nur Admins können Workflow-Einstellungen ändern. Die Konfiguration wird als JSON in der Datenbank gespeichert.
+            </Tip>
+          </Card>
+
+          {/* ─── AUTOFILL & LERNFUNKTION ─── */}
+          <Card title="Autofill & Lernfunktion" id="autofill">
+            <p>
+              Das System lernt aus bisherigen Vorgängen und schlägt beim Erstellen neuer Vorgänge 
+              automatisch passende Werte vor. Die Lernfunktion wird über das <strong className="text-foreground">Glühbirnen-Icon</strong> (💡) 
+              im Erstellungsformular aktiviert.
+            </p>
+
+            <SubHeading>Wie funktioniert es?</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Ähnliche Vorgänge" value="System durchsucht die letzten 20 ähnlichen Vorgänge (LIKE-Suche auf Titel, Kunde, Produkt)" color="success" />
+              <Rule label="Beschreibung" value="Vorschlag basierend auf ähnlichen Vorgängen" color="success" />
+              <Rule label="Typische Unteraufgaben" value="Vorschläge für Subtasks basierend auf bisheriger Abteilungsstruktur" color="success" />
+              <Rule label="Autocomplete" value="Kunden- und Produkt-Dropdown mit Vorschlägen basierend auf Häufigkeit" color="success" />
+            </div>
+
+            <SubHeading>Vorlage übernehmen</SubHeading>
+            <p>
+              Über den Button «Vorlage übernehmen» können die Vorschläge des Systems direkt in das 
+              Erstellungsformular übernommen werden. Der Benutzer kann alle Werte anschließend noch anpassen.
+            </p>
+
+            <Tip>
+              Je mehr Vorgänge im System erfasst werden, desto genauer werden die Vorschläge. 
+              Die Lernfunktion funktioniert ohne KI — rein auf Basis von Datenbankabfragen und Ähnlichkeitsvergleichen.
+            </Tip>
+          </Card>
+
           {/* ─── PROJEKTE ─── */}
           <Card title="Projekte" id="projects">
             <p>
