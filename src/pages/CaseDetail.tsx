@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { CaseNotes } from '@/components/CaseNotes';
-import { CaseTasks } from '@/components/CaseTasks';
+import { CaseSubtasks } from '@/components/CaseSubtasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
