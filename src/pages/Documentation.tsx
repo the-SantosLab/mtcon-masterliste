@@ -9,7 +9,7 @@ import {
   GitBranch, Lock, LayoutDashboard, ClipboardList, Search,
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
   KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
-  Headphones, Globe, Network,
+  Headphones, Globe, Network, Workflow, Lightbulb, FolderPlus, Plug,
 } from 'lucide-react';
 
 interface Section {
