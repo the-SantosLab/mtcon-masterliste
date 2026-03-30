@@ -269,7 +269,6 @@ export default function CasesList() {
   );
 }
 
-  customers: Tables<'customers'>[];
   products: Tables<'products'>[];
   areas: Tables<'internal_areas'>[];
   projects: ProjectOption[];
