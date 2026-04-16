@@ -10,11 +10,28 @@ import type { Database } from '@/integrations/supabase/types';
 
 type CaseStatus = Database['public']['Enums']['case_status'];
 
-/* ── Column headers expected in the CSV ── */
+/* ── All CSV column headers ── */
 const CSV_HEADERS = [
-  'Titel (Projektname)', 'Beschreibung (Aktion)', 'Abteilung', 'Bearbeiter',
-  'Status', 'Priorität', 'Fälligkeitsdatum', 'Eingangsdatum', 'Erledigt am',
-  'Notiz', 'Original-Nr',
+  'Titel (Projektname)',
+  'Beschreibung (Aktion)',
+  'Abteilung',
+  'Bearbeiter',
+  'Auftraggeber',
+  'Kundennummer',
+  'Produktcode',
+  'Bereich intern',
+  'Projekt-/Artikelnr.',
+  'Status',
+  'Priorität',
+  'Geschätzte Stunden',
+  'Menge',
+  'SOP',
+  'Projektlaufzeit',
+  'Fälligkeitsdatum',
+  'Eingangsdatum',
+  'Erledigt am',
+  'Notiz',
+  'Original-Nr',
 ];
 
 /* ── Status mapping ── */
@@ -32,11 +49,10 @@ const STATUS_MAP: Record<string, CaseStatus> = {
 
 function mapStatus(raw: string): CaseStatus {
   if (!raw) return 'nicht_begonnen';
-  const key = raw.trim().toLowerCase();
-  return STATUS_MAP[key] ?? 'nicht_begonnen';
+  return STATUS_MAP[raw.trim().toLowerCase()] ?? 'nicht_begonnen';
 }
 
-/* ── Robust CSV parser that handles quoted fields ── */
+/* ── CSV parser (handles quoted fields) ── */
 function parseCSVLine(line: string): string[] {
   const fields: string[] = [];
   let current = '';
@@ -58,7 +74,6 @@ function parseCSVLine(line: string): string[] {
 }
 
 function parseCSV(text: string): { headers: string[]; rows: string[][] } {
-  // Strip BOM
   const clean = text.replace(/^\uFEFF/, '');
   const lines = clean.split(/\r?\n/).filter(l => l.trim());
   if (lines.length === 0) return { headers: [], rows: [] };
@@ -74,14 +89,35 @@ function parseDate(val: string): string | null {
   return d.toISOString().slice(0, 10);
 }
 
+function parseNumber(val: string): number | null {
+  if (!val) return null;
+  const n = Number(val.replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+function parseInt_(val: string): number | null {
+  if (!val) return null;
+  const n = parseInt(val, 10);
+  return isNaN(n) ? null : n;
+}
+
 /* ── Types ── */
 interface ParsedRow {
   project_name: string;
   description: string | null;
   department_name: string | null;
   assignee_name: string | null;
+  client_name: string | null;
+  customer_no: string | null;
+  product_code: string | null;
+  internal_area_code: string | null;
+  project_article_no: string | null;
   status: CaseStatus;
   priority: string | null;
+  estimated_hours: number | null;
+  quantity: number | null;
+  sop: string | null;
+  project_duration: string | null;
   due_at: string | null;
   received_at: string | null;
   completed_at: string | null;
@@ -89,37 +125,85 @@ interface ParsedRow {
   original_nr: string | null;
 }
 
-interface ImportError {
-  line: number;
-  reason: string;
-}
-
-interface ImportResult {
-  success: number;
-  failed: number;
-  skipped: ImportError[];
-}
+interface ImportError { line: number; reason: string; }
+interface ImportResult { success: number; failed: number; skipped: ImportError[]; }
 
 const STATUS_LABELS: Record<string, string> = {
-  nicht_begonnen: 'Nicht begonnen',
-  in_planung: 'In Planung',
-  in_arbeit: 'In Arbeit',
-  in_verzug: 'In Verzug',
-  abgeschlossen: 'Abgeschlossen',
-  ready_for_review: 'Zur Prüfung',
-  blocked: 'Blockiert',
-  verworfen: 'Verworfen',
-  archiv: 'Archiv',
+  nicht_begonnen: 'Nicht begonnen', in_planung: 'In Planung', in_arbeit: 'In Arbeit',
+  in_verzug: 'In Verzug', abgeschlossen: 'Abgeschlossen', ready_for_review: 'Zur Prüfung',
+  blocked: 'Blockiert', verworfen: 'Verworfen', archiv: 'Archiv',
 };
 
-/* ── Download sample CSV ── */
+/* ── Sample CSV ── */
 function downloadSampleCSV() {
   const rows = [
     CSV_HEADERS.join(','),
-    '"[001] MCPin 2nd Gen – Werkzeugänderung","Kosten der Werkzeugänderung prüfen","Konstruktion","Helena","Abgeschlossen","Hoch","2024-03-15","2024-01-10","2024-03-14","Resultat: INNERHALB VORGABE | Verlauf: Angebot eingeholt","001"',
-    '"[002] SMD Relay – Technische Daten","Kundenzeichnungen erstellen und Artikelnummern eintragen","Konstruktion","Danny","In Arbeit","Mittel","2024-04-30","2024-02-01","","Noch ausstehend: Step-Dateien","002"',
-    '"[003] Gehäuse Redesign","Neues Gehäusedesign nach Kundenvorgabe","Konstruktion","Ann-Christine","Nicht begonnen","Niedrig","2024-06-01","2024-03-15","","","003"',
-    '"[004] Steckverbinder Validierung","Validierungsbericht und Freigabe","Konstruktion","Max Mustermann","In Verzug","Hoch","2024-02-28","2024-01-05","","Wartet auf Muster vom Lieferanten","004"',
+    [
+      '"[001] MCPin 2nd Gen – Werkzeugänderung"',
+      '"Kosten der Werkzeugänderung prüfen"',
+      '"Konstruktion"',
+      '"Helena"',
+      '"Müller GmbH"',
+      '"10001"',
+      '"WEB"',
+      '"01"',
+      '"ART-2024-001"',
+      '"Abgeschlossen"',
+      '"Hoch"',
+      '"40"',
+      '"100"',
+      '"2024-02-01"',
+      '"6 Wochen"',
+      '"2024-03-15"',
+      '"2024-01-10"',
+      '"2024-03-14"',
+      '"Resultat: INNERHALB VORGABE"',
+      '"001"',
+    ].join(','),
+    [
+      '"[002] SMD Relay – Technische Daten"',
+      '"Kundenzeichnungen erstellen"',
+      '"Konstruktion"',
+      '"Danny"',
+      '"Schmidt AG"',
+      '"10002"',
+      '"APP"',
+      '"02"',
+      '"ART-2024-002"',
+      '"In Arbeit"',
+      '"Mittel"',
+      '"80"',
+      '""',
+      '""',
+      '"3 Monate"',
+      '"2024-04-30"',
+      '"2024-02-01"',
+      '""',
+      '"Step-Dateien ausstehend"',
+      '"002"',
+    ].join(','),
+    [
+      '"[003] Gehäuse Redesign"',
+      '"Neues Design nach Kundenvorgabe"',
+      '"Konstruktion"',
+      '""',
+      '""',
+      '""',
+      '""',
+      '""',
+      '""',
+      '"Nicht begonnen"',
+      '"Niedrig"',
+      '""',
+      '""',
+      '""',
+      '""',
+      '"2024-06-01"',
+      '"2024-03-15"',
+      '""',
+      '""',
+      '"003"',
+    ].join(','),
   ].join('\n');
   const blob = new Blob(['\uFEFF' + rows], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -156,7 +240,6 @@ export function CsvImport() {
       const { headers, rows } = parseCSV(text);
       const errs: ImportError[] = [];
 
-      // Check required header
       const titleIdx = headers.findIndex(h =>
         h.toLowerCase().includes('titel') || h.toLowerCase().includes('projektname')
       );
@@ -173,8 +256,17 @@ export function CsvImport() {
       const descIdx = colIdx('Beschreibung');
       const deptIdx = colIdx('Abteilung');
       const assigneeIdx = colIdx('Bearbeiter');
+      const clientIdx = colIdx('Auftraggeber');
+      const custNoIdx = colIdx('Kundennummer');
+      const prodIdx = colIdx('Produktcode');
+      const areaIdx = colIdx('Bereich intern');
+      const artIdx = colIdx('Artikelnr');
       const statusIdx = colIdx('Status');
       const prioIdx = colIdx('Priorität');
+      const hoursIdx = colIdx('Geschätzte Stunden');
+      const qtyIdx = colIdx('Menge');
+      const sopIdx = colIdx('SOP');
+      const durIdx = colIdx('Projektlaufzeit');
       const dueIdx = colIdx('Fälligkeitsdatum');
       const receivedIdx = colIdx('Eingangsdatum');
       const doneIdx = colIdx('Erledigt am');
@@ -188,14 +280,12 @@ export function CsvImport() {
       rows.forEach((row, i) => {
         const title = get(row, titleIdx);
         if (!title) {
-          errs.push({ line: i + 2, reason: 'Titel (Projektname) fehlt – Zeile übersprungen' });
+          errs.push({ line: i + 2, reason: 'Titel (Projektname) fehlt – übersprungen' });
           return;
         }
 
         const description = get(row, descIdx) || null;
         const noteField = get(row, noteIdx) || null;
-
-        // Combine description + note
         const combinedNote = [description, noteField].filter(Boolean).join('\n\n---\n\n') || null;
 
         parsedRows.push({
@@ -203,8 +293,17 @@ export function CsvImport() {
           description,
           department_name: get(row, deptIdx) || null,
           assignee_name: get(row, assigneeIdx) || null,
+          client_name: get(row, clientIdx) || null,
+          customer_no: get(row, custNoIdx) || null,
+          product_code: get(row, prodIdx) || null,
+          internal_area_code: get(row, areaIdx) || null,
+          project_article_no: get(row, artIdx) || null,
           status: mapStatus(get(row, statusIdx)),
           priority: get(row, prioIdx) || null,
+          estimated_hours: parseNumber(get(row, hoursIdx)),
+          quantity: parseInt_(get(row, qtyIdx)),
+          sop: get(row, sopIdx) || null,
+          project_duration: get(row, durIdx) || null,
           due_at: parseDate(get(row, dueIdx)),
           received_at: parseDate(get(row, receivedIdx)),
           completed_at: parseDate(get(row, doneIdx)),
@@ -224,16 +323,14 @@ export function CsvImport() {
     setImporting(true);
     setImportProgress({ current: 0, total: parsed.length });
 
-    // Lookup department "Konstruktion"
+    // Lookups
     const { data: departments } = await supabase.from('departments').select('id, name');
     const deptMap = new Map(departments?.map(d => [d.name.toLowerCase(), d.id]) || []);
 
-    // Lookup users by display_name (first name match)
-    const { data: users } = await supabase.from('users_profile').select('id, display_name, short_code');
+    const { data: usersData } = await supabase.from('users_profile').select('id, display_name, short_code');
     const userMap = new Map<string, string>();
-    users?.forEach(u => {
+    usersData?.forEach(u => {
       userMap.set(u.display_name.toLowerCase(), u.id);
-      // Also map first name
       const firstName = u.display_name.split(' ')[0].toLowerCase();
       if (!userMap.has(firstName)) userMap.set(firstName, u.id);
       userMap.set(u.short_code.toLowerCase(), u.id);
@@ -248,17 +345,15 @@ export function CsvImport() {
       const row = parsed[i];
       setImportProgress({ current: i + 1, total: parsed.length });
 
-      // Resolve department
       const deptId = row.department_name
         ? deptMap.get(row.department_name.toLowerCase()) || null
         : null;
 
-      // Resolve assignee
       const assigneeId = row.assignee_name
         ? userMap.get(row.assignee_name.toLowerCase()) || null
         : null;
 
-      // Build structured note
+      // Build note with metadata that has no dedicated DB field
       const noteParts: string[] = [];
       if (row.description) noteParts.push(`Aktion: ${row.description}`);
       if (row.priority) noteParts.push(`Priorität: ${row.priority}`);
@@ -271,26 +366,31 @@ export function CsvImport() {
         project_name: row.project_name,
         note: fullNote,
         status: row.status,
+        department_id: deptId,
+        assignee_id: assigneeId,
+        client_name: row.client_name || row.assignee_name || null,
+        customer_no: row.customer_no,
+        product_code: row.product_code,
+        internal_area_code: row.internal_area_code,
+        project_article_no: row.project_article_no || row.original_nr,
+        estimated_hours: row.estimated_hours,
+        quantity: row.quantity,
+        sop: row.sop,
+        project_duration: row.project_duration,
         due_at: row.due_at,
         received_at: row.received_at,
         completed_at: row.completed_at ? new Date(row.completed_at).toISOString() : null,
-        department_id: deptId,
-        assignee_id: assigneeId,
-        client_name: row.assignee_name || null,
-        project_article_no: row.original_nr,
         created_by: user.id,
         last_changed_by: user.id,
         last_changed_at: now,
       };
 
-      // Set started_at if status indicates work has begun
       if (['in_arbeit', 'in_verzug', 'abgeschlossen', 'ready_for_review'].includes(row.status)) {
         insertData.started_at = row.received_at
           ? new Date(row.received_at).toISOString()
           : now;
       }
 
-      // Set closed fields if completed
       if (row.status === 'abgeschlossen' && row.completed_at) {
         insertData.closed_at = new Date(row.completed_at).toISOString();
         insertData.closed_by = user.id;
@@ -310,11 +410,8 @@ export function CsvImport() {
     setResult(finalResult);
     setShowResultDialog(true);
 
-    if (failed === 0) {
-      toast.success(`${success} Vorgänge importiert`);
-    } else {
-      toast.error(`${success} importiert, ${failed} fehlgeschlagen`);
-    }
+    if (failed === 0) toast.success(`${success} Vorgänge importiert`);
+    else toast.error(`${success} importiert, ${failed} fehlgeschlagen`);
   };
 
   const reset = () => {
@@ -329,17 +426,18 @@ export function CsvImport() {
   return (
     <div className="space-y-4 mt-3">
       <div className="rounded-md border border-border bg-card p-5 space-y-4">
-        {/* Header */}
         <div>
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Vorgänge aus CSV importieren
           </h3>
           <p className="text-[11px] text-muted-foreground mb-1">
-            Erwartete Spalten: Titel (Projektname), Beschreibung, Abteilung, Bearbeiter, Status, Priorität, Fälligkeitsdatum, Eingangsdatum, Erledigt am, Notiz, Original-Nr
+            Pflichtfeld: <span className="font-medium text-foreground">Titel (Projektname)</span>. 
+            Alle anderen Spalten sind optional. Vorgangsnummer wird automatisch vergeben.
           </p>
           <p className="text-[11px] text-muted-foreground mb-3">
-            Pflichtfeld: <span className="font-medium text-foreground">Titel (Projektname)</span>. 
-            Vorgangsnummer wird automatisch vergeben. Trennzeichen: Komma. UTF-8 mit BOM wird unterstützt.
+            Unterstützte Felder: Titel, Beschreibung, Abteilung, Bearbeiter, Auftraggeber, Kundennummer, 
+            Produktcode, Bereich intern, Artikelnr., Status, Priorität, Geschätzte Stunden, Menge, SOP, 
+            Projektlaufzeit, Fälligkeitsdatum, Eingangsdatum, Erledigt am, Notiz, Original-Nr
           </p>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -358,7 +456,6 @@ export function CsvImport() {
           </div>
         </div>
 
-        {/* Parse errors */}
         {parseErrors.length > 0 && !result && (
           <div className="space-y-1">
             {parseErrors.map((err, i) => (
@@ -370,7 +467,6 @@ export function CsvImport() {
           </div>
         )}
 
-        {/* Preview table */}
         {parsed && parsed.length > 0 && !result && !importing && (
           <>
             <div className="rounded-md border border-border overflow-x-auto">
@@ -379,21 +475,23 @@ export function CsvImport() {
                   <tr className="border-b border-border">
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">#</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Titel</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Abteilung</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Bearbeiter</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Kunde</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Fällig</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Orig-Nr</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {parsed.slice(0, 50).map((r, i) => (
                     <tr key={i} className="hover:bg-muted/40">
                       <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                      <td className="px-3 py-2 text-foreground max-w-[300px] truncate">{r.project_name}</td>
+                      <td className="px-3 py-2 text-foreground max-w-[250px] truncate">{r.project_name}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{r.department_name || '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground">{r.assignee_name || '–'}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{r.customer_no || '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground">{STATUS_LABELS[r.status] || r.status}</td>
                       <td className="px-3 py-2 text-muted-foreground tabular-nums">{r.due_at || '–'}</td>
-                      <td className="px-3 py-2 text-muted-foreground font-mono">{r.original_nr || '–'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -411,7 +509,6 @@ export function CsvImport() {
           </>
         )}
 
-        {/* Progress */}
         {importing && (
           <div className="flex items-center gap-3 py-4">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -421,7 +518,6 @@ export function CsvImport() {
           </div>
         )}
 
-        {/* Quick result inline */}
         {result && !importing && (
           <div className="space-y-2">
             <p className="text-xs text-foreground flex items-center gap-1.5">
@@ -445,7 +541,6 @@ export function CsvImport() {
         )}
       </div>
 
-      {/* Result dialog */}
       <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -461,7 +556,7 @@ export function CsvImport() {
                 {result.skipped.length > 0 && (
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm font-medium">{result.skipped.length} Hinweise/Fehler</span>
+                    <span className="text-sm font-medium">{result.skipped.length} Hinweise</span>
                   </div>
                 )}
               </div>
