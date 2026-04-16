@@ -88,8 +88,9 @@ function parseCSV(text: string): { headers: string[]; rows: string[][] } {
   const clean = text.replace(/^\uFEFF/, '');
   const lines = clean.split(/\r?\n/).filter(l => l.trim());
   if (lines.length === 0) return { headers: [], rows: [] };
-  const headers = parseCSVLine(lines[0]);
-  const rows = lines.slice(1).map(l => parseCSVLine(l));
+  const delimiter = detectDelimiter(lines[0]);
+  const headers = parseCSVLine(lines[0], delimiter);
+  const rows = lines.slice(1).map(l => parseCSVLine(l, delimiter));
   return { headers, rows };
 }
 
