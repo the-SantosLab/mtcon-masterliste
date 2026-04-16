@@ -255,24 +255,25 @@ export function CsvImport() {
         ? userMap.get(row.assignee_name.toLowerCase()) || null
         : null;
 
-      // Build note with priority info
-      let fullNote = row.note || '';
-      if (row.priority) {
-        fullNote = `Priorität: ${row.priority}${fullNote ? '\n\n' + fullNote : ''}`;
-      }
-      if (row.original_nr) {
-        fullNote = `Original-Nr: ${row.original_nr}${fullNote ? '\n\n' + fullNote : ''}`;
-      }
+      // Build structured note
+      const noteParts: string[] = [];
+      if (row.description) noteParts.push(`Aktion: ${row.description}`);
+      if (row.priority) noteParts.push(`Priorität: ${row.priority}`);
+      if (row.original_nr) noteParts.push(`Original-Nr: ${row.original_nr}`);
+      if (row.assignee_name && !assigneeId) noteParts.push(`Bearbeiter (CSV): ${row.assignee_name}`);
+      if (row.note) noteParts.push(`---\n${row.note}`);
+      const fullNote = noteParts.join('\n') || null;
 
       const insertData: Record<string, unknown> = {
         project_name: row.project_name,
-        note: fullNote || null,
+        note: fullNote,
         status: row.status,
         due_at: row.due_at,
         received_at: row.received_at,
         completed_at: row.completed_at ? new Date(row.completed_at).toISOString() : null,
         department_id: deptId,
         assignee_id: assigneeId,
+        client_name: row.assignee_name || null,
         project_article_no: row.original_nr,
         created_by: user.id,
         last_changed_by: user.id,
