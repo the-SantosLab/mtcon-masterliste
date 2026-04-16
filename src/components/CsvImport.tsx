@@ -114,11 +114,14 @@ const STATUS_LABELS: Record<string, string> = {
 
 /* ── Download sample CSV ── */
 function downloadSampleCSV() {
-  const sample = [
+  const rows = [
     CSV_HEADERS.join(','),
-    '"[001] Beispielprojekt – Aktion","Beschreibung der Aufgabe","Konstruktion","Max Mustermann","Nicht begonnen","Mittel","2026-06-01","2026-01-15","","Beispiel-Notiz","001"',
+    '"[001] MCPin 2nd Gen – Werkzeugänderung","Kosten der Werkzeugänderung prüfen","Konstruktion","Helena","Abgeschlossen","Hoch","2024-03-15","2024-01-10","2024-03-14","Resultat: INNERHALB VORGABE | Verlauf: Angebot eingeholt","001"',
+    '"[002] SMD Relay – Technische Daten","Kundenzeichnungen erstellen und Artikelnummern eintragen","Konstruktion","Danny","In Arbeit","Mittel","2024-04-30","2024-02-01","","Noch ausstehend: Step-Dateien","002"',
+    '"[003] Gehäuse Redesign","Neues Gehäusedesign nach Kundenvorgabe","Konstruktion","Ann-Christine","Nicht begonnen","Niedrig","2024-06-01","2024-03-15","","","003"',
+    '"[004] Steckverbinder Validierung","Validierungsbericht und Freigabe","Konstruktion","Max Mustermann","In Verzug","Hoch","2024-02-28","2024-01-05","","Wartet auf Muster vom Lieferanten","004"',
   ].join('\n');
-  const blob = new Blob(['\uFEFF' + sample], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF' + rows], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = 'vorgaenge-import-vorlage.csv';
