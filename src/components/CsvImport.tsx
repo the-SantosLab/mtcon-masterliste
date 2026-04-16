@@ -52,8 +52,19 @@ function mapStatus(raw: string): CaseStatus {
   return STATUS_MAP[raw.trim().toLowerCase()] ?? 'nicht_begonnen';
 }
 
-/* ── CSV parser (handles quoted fields) ── */
-function parseCSVLine(line: string): string[] {
+/* ── CSV parser (handles quoted fields, auto-detects delimiter) ── */
+function detectDelimiter(line: string): string {
+  // Count occurrences outside quotes
+  let semis = 0, commas = 0, inQ = false;
+  for (const ch of line) {
+    if (ch === '"') { inQ = !inQ; continue; }
+    if (!inQ && ch === ';') semis++;
+    if (!inQ && ch === ',') commas++;
+  }
+  return semis > commas ? ';' : ',';
+}
+
+function parseCSVLine(line: string, delimiter: string): string[] {
   const fields: string[] = [];
   let current = '';
   let inQuotes = false;
@@ -65,7 +76,7 @@ function parseCSVLine(line: string): string[] {
       else { current += ch; }
     } else {
       if (ch === '"') { inQuotes = true; }
-      else if (ch === ',') { fields.push(current.trim()); current = ''; }
+      else if (ch === delimiter) { fields.push(current.trim()); current = ''; }
       else { current += ch; }
     }
   }
