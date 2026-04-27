@@ -52,11 +52,23 @@ function ApiKeyTab() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke('get-dashboard-api-key');
-    setLoading(false);
-    if (error) { toast.error('Zugriff verweigert'); return; }
-    if (data?.api_key) { setApiKey(data.api_key); setVisible(true); }
-    else if (data?.error) toast.error(data.error);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) { toast.error('Nicht angemeldet'); return; }
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-dashboard-api-key`,
+        { headers: { Authorization: `Bearer ${token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } },
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(json?.error === 'Forbidden' ? 'Zugriff verweigert' : (json?.error || `Fehler ${res.status}`));
+        return;
+      }
+      if (json?.api_key) { setApiKey(json.api_key); setVisible(true); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copy = async () => {
