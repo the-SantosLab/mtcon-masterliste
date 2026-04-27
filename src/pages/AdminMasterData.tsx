@@ -8,12 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, Copy, KeyRound } from 'lucide-react';
 import { CsvImport } from '@/components/CsvImport';
 
+const API_KEY_OWNER_EMAIL = 'js@santoslab.de';
+
 export default function AdminMasterData() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, loading: authLoading, user } = useAuth();
   if (!authLoading && !isAdmin) return <Navigate to="/" replace />;
+
+  const canSeeApiKey = user?.email?.toLowerCase() === API_KEY_OWNER_EMAIL;
 
   return (
     <AppLayout>
@@ -28,14 +32,75 @@ export default function AdminMasterData() {
             <TabsTrigger value="products" className="text-xs">Produkte</TabsTrigger>
             <TabsTrigger value="areas" className="text-xs">Bereiche</TabsTrigger>
             <TabsTrigger value="import" className="text-xs">CSV-Import</TabsTrigger>
+            {canSeeApiKey && <TabsTrigger value="api" className="text-xs">API-Key</TabsTrigger>}
           </TabsList>
           <TabsContent value="customers"><CustomersTab /></TabsContent>
           <TabsContent value="products"><ProductsTab /></TabsContent>
           <TabsContent value="areas"><AreasTab /></TabsContent>
           <TabsContent value="import"><CsvImport /></TabsContent>
+          {canSeeApiKey && <TabsContent value="api"><ApiKeyTab /></TabsContent>}
         </Tabs>
       </div>
     </AppLayout>
+  );
+}
+
+function ApiKeyTab() {
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke('get-dashboard-api-key');
+    setLoading(false);
+    if (error) { toast.error('Zugriff verweigert'); return; }
+    if (data?.api_key) { setApiKey(data.api_key); setVisible(true); }
+    else if (data?.error) toast.error(data.error);
+  };
+
+  const copy = async () => {
+    if (!apiKey) return;
+    await navigator.clipboard.writeText(apiKey);
+    toast.success('In Zwischenablage kopiert');
+  };
+
+  const masked = apiKey ? '•'.repeat(Math.min(apiKey.length, 40)) : '';
+
+  return (
+    <div className="space-y-3 mt-3">
+      <div className="rounded-md border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium text-foreground">Dashboard API-Key</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Statischer Bearer-Token zur Authentifizierung gegenüber der <code className="font-mono">api-dashboard</code> Edge Function. Ausschließlich für autorisierte Empfänger sichtbar.
+        </p>
+        {!apiKey ? (
+          <Button size="sm" onClick={load} disabled={loading} className="h-8 text-xs">
+            {loading ? 'Lade …' : 'API-Key anzeigen'}
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <code className="flex-1 px-3 py-2 rounded-md bg-secondary text-xs font-mono break-all">
+                {visible ? apiKey : masked}
+              </code>
+              <Button size="sm" variant="outline" onClick={() => setVisible(v => !v)} className="h-8 text-xs">
+                {visible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </Button>
+              <Button size="sm" variant="outline" onClick={copy} className="h-8 text-xs">
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Verwendung: <code className="font-mono">Authorization: Bearer &lt;key&gt;</code>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
