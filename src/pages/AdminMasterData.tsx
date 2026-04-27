@@ -11,7 +11,7 @@ import { Navigate } from 'react-router-dom';
 import { Plus, Trash2, Eye, EyeOff, Copy, KeyRound } from 'lucide-react';
 import { CsvImport } from '@/components/CsvImport';
 
-const API_KEY_OWNER_EMAIL = 'js@santoslab.de';
+const API_KEY_OWNER_EMAIL = 'js@santosfx.de';
 
 export default function AdminMasterData() {
   const { isAdmin, loading: authLoading, user } = useAuth();
