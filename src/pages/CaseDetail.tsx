@@ -261,6 +261,68 @@ export default function CaseDetail() {
               </div>
             )}
 
+            {/* Assign to user */}
+            {!isViewer && !isTerminalStatus(c.status) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bearbeiter zuweisen</h3>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    Aktuell: <span className="text-foreground font-medium">{c.assignee ? `${c.assignee.short_code} – ${c.assignee.display_name}` : 'Niemand'}</span>
+                  </div>
+                  <Select value={c.assignee_id || '_none'} onValueChange={assignCase}>
+                    <SelectTrigger className="w-[240px] h-8 text-xs"><SelectValue placeholder="Mitarbeiter wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Niemand – freigeben</SelectItem>
+                      {(() => {
+                        const deptId = c.department_id;
+                        const deptIds = new Set<string>();
+                        if (deptId) {
+                          deptIds.add(deptId);
+                          departments.filter(d => d.parent_id === deptId).forEach(d => deptIds.add(d.id));
+                          const parent = departments.find(d => d.id === deptId);
+                          if (parent?.parent_id) deptIds.add(parent.parent_id);
+                        }
+                        const inDept = deptId ? profiles.filter(p => p.department_id && deptIds.has(p.department_id)) : [];
+                        const others = profiles.filter(p => !inDept.includes(p));
+                        return (
+                          <>
+                            {inDept.length > 0 && (
+                              <>
+                                <div className="px-2 py-1 text-[10px] font-medium text-muted-foreground uppercase">Abteilung</div>
+                                {inDept.map(p => (
+                                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                                    <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                            {others.length > 0 && (
+                              <>
+                                <div className="px-2 py-1 text-[10px] font-medium text-muted-foreground uppercase">{inDept.length > 0 ? 'Andere' : 'Alle'}</div>
+                                {others.map(p => (
+                                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                                    <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </SelectContent>
+                  </Select>
+                  {user && c.assignee_id !== user.id && (
+                    <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => assignCase(user.id)}>
+                      Mir zuweisen
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Department move */}
             {!isViewer && !isTerminalStatus(c.status) && (
               <div className="rounded-md border border-border bg-card p-5">
