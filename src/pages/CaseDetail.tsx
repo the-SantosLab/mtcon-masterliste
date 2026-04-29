@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowLeft, Building2, UserCheck } from 'lucide-react';
 import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
