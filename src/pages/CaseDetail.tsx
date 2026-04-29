@@ -58,6 +58,8 @@ export default function CaseDetail() {
       .then(r => setDepartments((r.data || []) as DeptOption[]));
     supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name')
       .then(r => setProfiles((r.data || []) as ProfileOption[]));
+    supabase.from('projects').select('id, name, project_number, department_id, status').order('name')
+      .then(r => setProjectOptions((r.data || []) as ProjectOption[]));
   }, []);
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
