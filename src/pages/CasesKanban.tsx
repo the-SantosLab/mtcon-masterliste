@@ -21,6 +21,7 @@ interface ProjectRow {
   department_id: string | null;
   description: string | null;
   updated_at: string;
+  created_at: string;
 }
 
 interface ProjectCard extends ProjectRow {
@@ -115,8 +116,8 @@ export default function CasesKanban() {
   const fetchProjects = useCallback(async () => {
     const { data: projData } = await supabase
       .from('projects')
-      .select('id, name, project_number, status, department_id, description, updated_at')
-      .order('updated_at', { ascending: false });
+      .select('id, name, project_number, status, department_id, description, updated_at, created_at')
+      .order('created_at', { ascending: true });
     const list = (projData || []) as ProjectRow[];
 
     const ids = list.map(p => p.id);
@@ -157,7 +158,9 @@ export default function CasesKanban() {
 
   const columns = PROJECT_STATUSES.map(s => ({
     ...s,
-    cards: filtered.filter(p => p.status === s.id),
+    cards: filtered
+      .filter(p => p.status === s.id)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
   }));
 
   const handleDragStart = (e: DragStartEvent) => {
