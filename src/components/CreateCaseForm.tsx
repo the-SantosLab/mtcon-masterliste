@@ -20,6 +20,7 @@ interface Profile { id: string; display_name: string; short_code: string; depart
 interface CreateCaseFormProps {
   userId: string;
   onCreated: () => void;
+  defaultProjectId?: string;
 }
 
 const STEPS = [
@@ -30,10 +31,10 @@ const STEPS = [
   { id: 5, title: 'Bemerkung & Abschluss' },
 ];
 
-export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
+export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCaseFormProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
-    project_name: '', project_id: '', department_id: '', team_id: '', assignee_id: '',
+    project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: '', due_at: '', note: '', estimated_hours: '',
     sop: '', quantity: '', project_duration: '',
@@ -73,11 +74,19 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
       setCustomers(cust.data || []);
       setProducts(prod.data || []);
       setAreas(ar.data || []);
-      setProjects((proj.data || []) as ProjectOption[]);
+      const projectsData = (proj.data || []) as ProjectOption[];
+      setProjects(projectsData);
       setDepartments((dept.data || []) as DeptOption[]);
       setProfiles((prof.data || []) as Profile[]);
+      // Vorausgefüllter Projektname, wenn defaultProjectId gesetzt ist
+      if (defaultProjectId) {
+        const preset = projectsData.find(p => p.id === defaultProjectId);
+        if (preset) {
+          setForm(f => ({ ...f, project_id: preset.id, project_name: f.project_name || preset.name }));
+        }
+      }
     });
-  }, []);
+  }, [defaultProjectId]);
 
   const topLevel = departments.filter(d => !d.parent_id);
   const teams = departments.filter(d => d.parent_id === form.department_id);

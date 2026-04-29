@@ -14,8 +14,10 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
   CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
-  Pencil, Check, X, Clock, Activity,
+  Pencil, Check, X, Clock, Activity, Plus,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -235,11 +237,21 @@ export default function ProjectDetail() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const loadProject = async () => {
     if (!id) return;
     const { data } = await supabase.from('projects').select('*').eq('id', id).single();
     if (data) setProject(data as Project);
+  };
+
+  const reloadCases = async () => {
+    if (!id) return;
+    const { data } = await supabase.from('cases')
+      .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .eq('project_id', id)
+      .order('created_at', { ascending: false });
+    setCases((data || []) as CaseRow[]);
   };
 
   useEffect(() => {
@@ -353,11 +365,35 @@ export default function ProjectDetail() {
               <span>Erstellt {format(new Date(project.created_at), 'dd.MM.yyyy')}</span>
             </div>
           </div>
-          <Link to={`/projects/${project.id}/files`}>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-              <FolderOpen className="h-3.5 w-3.5" />Dateiablage
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-8 text-xs gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />Vorgang hinzufügen
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-sm font-semibold">
+                    Neuen Vorgang anlegen
+                    <span className="block text-[11px] font-normal text-muted-foreground mt-0.5">
+                      Verknüpft mit {project.project_number} – {project.name}
+                    </span>
+                  </DialogTitle>
+                </DialogHeader>
+                <CreateCaseForm
+                  userId={user?.id || ''}
+                  defaultProjectId={project.id}
+                  onCreated={() => { setCreateOpen(false); reloadCases(); }}
+                />
+              </DialogContent>
+            </Dialog>
+            <Link to={`/projects/${project.id}/files`}>
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                <FolderOpen className="h-3.5 w-3.5" />Dateiablage
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* KPI Stats */}
@@ -448,14 +484,16 @@ export default function ProjectDetail() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Verknüpfte Vorgänge ({cases.length})</h3>
-                <Link to="/cases" className="text-[11px] text-primary hover:underline">Alle anzeigen →</Link>
+                <button onClick={() => setCreateOpen(true)} className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                  <Plus className="h-3 w-3" />Vorgang hinzufügen
+                </button>
               </div>
               <div className="rounded-md border border-border bg-card overflow-hidden">
                 {cases.length === 0 ? (
                   <div className="py-10 text-center">
                     <XCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                     <p className="text-xs text-muted-foreground">Keine Vorgänge verknüpft</p>
-                    <Link to="/cases" className="text-[11px] text-primary hover:underline mt-1 inline-block">Vorgang anlegen</Link>
+                    <button onClick={() => setCreateOpen(true)} className="text-[11px] text-primary hover:underline mt-1 inline-block">Vorgang anlegen</button>
                   </div>
                 ) : (
                   <table className="w-full">
