@@ -292,7 +292,27 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
           </div>
         </div>
 
-        {/* Project link */}
+        {/* Assignee filtered by department/team */}
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Zuständiger Mitarbeiter (optional)</Label>
+          <Select value={form.assignee_id || '_none'} onValueChange={v => set('assignee_id', v === '_none' ? '' : v)}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder={effectiveDeptId ? 'Mitarbeiter wählen' : 'Erst Abteilung wählen (optional)'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">Niemand – landet im Pool</SelectItem>
+              {(effectiveDeptId ? deptProfiles : profiles).map(p => (
+                <SelectItem key={p.id} value={p.id} className="text-xs">
+                  <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
+                </SelectItem>
+              ))}
+              {effectiveDeptId && deptProfiles.length === 0 && (
+                <div className="px-2 py-1.5 text-[11px] text-muted-foreground">Keine Mitarbeiter dieser Abteilung</div>
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-[10px] text-muted-foreground">Vorgang landet zuerst bei diesem Mitarbeiter.</p>
+        </div>
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
           <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
