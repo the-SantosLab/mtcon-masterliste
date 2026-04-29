@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Loader2, Plus, ChevronsUpDown, Check, Lightbulb } from 'lucide-react';
+import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
@@ -22,7 +22,16 @@ interface CreateCaseFormProps {
   onCreated: () => void;
 }
 
+const STEPS = [
+  { id: 1, title: 'Projektname' },
+  { id: 2, title: 'Zuständigkeit' },
+  { id: 3, title: 'Kunde & Produkt' },
+  { id: 4, title: 'Termine & Details' },
+  { id: 5, title: 'Bemerkung & Abschluss' },
+];
+
 export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     project_name: '', project_id: '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
@@ -38,18 +47,15 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [saving, setSaving] = useState(false);
 
-  // Customer creation
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerOpen, setCustomerOpen] = useState(false);
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newCustomerNo, setNewCustomerNo] = useState('');
 
-  // Product freetext
   const [productSearch, setProductSearch] = useState('');
   const [productOpen, setProductOpen] = useState(false);
 
-  // Autofill suggestions
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -77,10 +83,8 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
   const teams = departments.filter(d => d.parent_id === form.department_id);
   const effectiveDeptId = form.team_id || form.department_id;
 
-  // Filter profiles by department for assignee
   const deptProfiles = useMemo(() => {
     if (!effectiveDeptId) return profiles;
-    // Include all profiles in the department or its parent/children
     const deptIds = new Set<string>();
     deptIds.add(effectiveDeptId);
     departments.filter(d => d.parent_id === effectiveDeptId).forEach(d => deptIds.add(d.id));
@@ -89,21 +93,18 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
     return profiles.filter(p => p.department_id && deptIds.has(p.department_id));
   }, [effectiveDeptId, profiles, departments]);
 
-  // Filtered customers
   const filteredCustomers = useMemo(() => {
     if (!customerSearch) return customers;
     const s = customerSearch.toLowerCase();
     return customers.filter(c => c.name.toLowerCase().includes(s) || c.customer_no.toLowerCase().includes(s));
   }, [customers, customerSearch]);
 
-  // Filtered products
   const filteredProducts = useMemo(() => {
     if (!productSearch) return products;
     const s = productSearch.toLowerCase();
     return products.filter(p => p.name.toLowerCase().includes(s) || p.code.toLowerCase().includes(s));
   }, [products, productSearch]);
 
-  // Autofill: fetch similar cases when project_name changes
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (form.project_name.length < 3) { setSuggestions([]); return; }
@@ -165,12 +166,8 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
     if (existing) {
       set('product_code', existing.code);
     } else {
-      // Create from freetext
       const code = value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 20) || value;
-      const { data, error } = await supabase.from('products').insert({
-        code,
-        name: value,
-      }).select().single();
+      const { data, error } = await supabase.from('products').insert({ code, name: value }).select().single();
       if (error) { toast.error('Fehler: ' + error.message); return; }
       setProducts(prev => [...prev, data]);
       set('product_code', data.code);
@@ -179,9 +176,8 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
     setProductOpen(false);
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.project_name) { toast.error('Projektname ist Pflicht'); return; }
+  const submit = async () => {
+    if (!form.project_name) { toast.error('Projektname ist Pflicht'); setStep(1); return; }
     setSaving(true);
     const finalDeptId = form.team_id || form.department_id || null;
     const { data: newCase, error } = await supabase.from('cases').insert({
@@ -215,258 +211,343 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
   const selectedCustomer = customers.find(c => c.customer_no === form.customer_no);
   const selectedProduct = products.find(p => p.code === form.product_code);
 
+  const canProceed = () => {
+    if (step === 1) return form.project_name.trim().length > 0;
+    return true;
+  };
+
+  const next = () => {
+    if (!canProceed()) {
+      if (step === 1) toast.error('Projektname ist Pflicht');
+      return;
+    }
+    setStep(s => Math.min(s + 1, STEPS.length));
+  };
+
+  const prev = () => setStep(s => Math.max(s - 1, 1));
+
   return (
     <>
-      <form onSubmit={submit} className="space-y-3">
-        {/* Auto-number */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
-            <Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" />
+      <div className="space-y-4">
+        {/* Stepper */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              Schritt {step} von {STEPS.length}
+            </span>
+            <span className="text-xs font-medium text-foreground">{STEPS[step - 1].title}</span>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Projektname *</Label>
-            <div className="relative">
-              <Input value={form.project_name} onChange={e => set('project_name', e.target.value)} placeholder="Projekt Alpha" required className="h-8 text-xs" />
-              {suggestions.length > 0 && form.project_name.length >= 3 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-8 px-2 text-amber-500"
-                  onClick={() => setShowSuggestions(!showSuggestions)}
-                  title="Ähnliche Vorgänge gefunden"
-                >
-                  <Lightbulb className="h-3.5 w-3.5" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Autofill suggestions */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
-            <p className="text-[11px] font-medium text-amber-600">Ähnliche Vorgänge – Daten übernehmen?</p>
-            {suggestions.map((s, i) => (
-              <button
-                type="button"
-                key={i}
-                onClick={() => applySuggestion(s)}
-                className="w-full text-left rounded px-2 py-1.5 text-xs hover:bg-amber-500/10 transition-colors"
-              >
-                <span className="font-medium">{s.project_name}</span>
-                <span className="text-muted-foreground ml-2">
-                  {[s.customer_no, s.product_code].filter(Boolean).join(' · ')}
-                </span>
-              </button>
+          <div className="flex gap-1">
+            {STEPS.map(s => (
+              <div
+                key={s.id}
+                className={cn(
+                  'h-1 flex-1 rounded-full transition-colors',
+                  s.id < step ? 'bg-primary' : s.id === step ? 'bg-primary/70' : 'bg-muted',
+                )}
+              />
             ))}
           </div>
-        )}
-
-        {/* Department & Team */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Abteilung</Label>
-            <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Keine Abteilung</SelectItem>
-                {topLevel.map(d => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Teilbereich</Label>
-            <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine' : 'Wählen'} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Kein Teilbereich</SelectItem>
-                {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
-        {/* Assignee filtered by department/team */}
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Zuständiger Mitarbeiter (optional)</Label>
-          <Select value={form.assignee_id || '_none'} onValueChange={v => set('assignee_id', v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder={effectiveDeptId ? 'Mitarbeiter wählen' : 'Erst Abteilung wählen (optional)'} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none">Niemand – landet im Pool</SelectItem>
-              {(effectiveDeptId ? deptProfiles : profiles).map(p => (
-                <SelectItem key={p.id} value={p.id} className="text-xs">
-                  <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
-                </SelectItem>
-              ))}
-              {effectiveDeptId && deptProfiles.length === 0 && (
-                <div className="px-2 py-1.5 text-[11px] text-muted-foreground">Keine Mitarbeiter dieser Abteilung</div>
+        <div className="space-y-3 min-h-[260px]">
+          {/* STEP 1: Projektname */}
+          {step === 1 && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
+                  <Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Projektname *</Label>
+                  <div className="relative">
+                    <Input
+                      value={form.project_name}
+                      onChange={e => set('project_name', e.target.value)}
+                      placeholder="Projekt Alpha"
+                      autoFocus
+                      className="h-8 text-xs"
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); next(); } }}
+                    />
+                    {suggestions.length > 0 && form.project_name.length >= 3 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-8 px-2 text-amber-500"
+                        onClick={() => setShowSuggestions(!showSuggestions)}
+                        title="Ähnliche Vorgänge gefunden"
+                      >
+                        <Lightbulb className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                  <p className="text-[11px] font-medium text-amber-600">Ähnliche Vorgänge – Daten übernehmen?</p>
+                  {suggestions.map((s, i) => (
+                    <button
+                      type="button"
+                      key={i}
+                      onClick={() => applySuggestion(s)}
+                      className="w-full text-left rounded px-2 py-1.5 text-xs hover:bg-amber-500/10 transition-colors"
+                    >
+                      <span className="font-medium">{s.project_name}</span>
+                      <span className="text-muted-foreground ml-2">
+                        {[s.customer_no, s.product_code].filter(Boolean).join(' · ')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               )}
-            </SelectContent>
-          </Select>
-          <p className="text-[10px] text-muted-foreground">Vorgang landet zuerst bei diesem Mitarbeiter.</p>
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Verknüpftes Projekt</Label>
-          <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none">Kein Projekt</SelectItem>
-              {projects.map(p => (
-                <SelectItem key={p.id} value={p.id}>
-                  <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>{p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Customer with autocomplete + create */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Kunde</Label>
-            <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
-                  {selectedCustomer ? `${selectedCustomer.customer_no} – ${selectedCustomer.name}` : 'Kunde wählen…'}
-                  <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[280px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Suchen…" value={customerSearch} onValueChange={setCustomerSearch} className="text-xs" />
-                  <CommandList>
-                    <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">Kein Kunde gefunden</CommandEmpty>
-                    <CommandGroup>
-                      {filteredCustomers.map(c => (
-                        <CommandItem
-                          key={c.id}
-                          value={`${c.customer_no} ${c.name}`}
-                          onSelect={() => { set('customer_no', c.customer_no); setCustomerOpen(false); }}
-                          className="text-xs"
-                        >
-                          <Check className={cn('mr-2 h-3 w-3', form.customer_no === c.customer_no ? 'opacity-100' : 'opacity-0')} />
-                          <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{c.customer_no}</span>{c.name}
-                        </CommandItem>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Verknüpftes Projekt (optional)</Label>
+                <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">Kein Projekt</SelectItem>
+                    {projects.map(p => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>{p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Zuständigkeit */}
+          {step === 2 && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Abteilung</Label>
+                  <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Keine Abteilung</SelectItem>
+                      {topLevel.map(d => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                        </SelectItem>
                       ))}
-                    </CommandGroup>
-                    <CommandGroup>
-                      <CommandItem onSelect={() => { setNewCustomerOpen(true); setCustomerOpen(false); }} className="text-xs text-primary">
-                        <Plus className="mr-2 h-3 w-3" />Neuen Kunden erstellen
-                      </CommandItem>
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Auftraggeber</Label>
-            <Input value={form.client_name} onChange={e => set('client_name', e.target.value)} className="h-8 text-xs" />
-          </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Teilbereich</Label>
+                  <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine' : 'Wählen'} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Kein Teilbereich</SelectItem>
+                      {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Zuständiger Mitarbeiter (optional)</Label>
+                <Select value={form.assignee_id || '_none'} onValueChange={v => set('assignee_id', v === '_none' ? '' : v)}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder={effectiveDeptId ? 'Mitarbeiter wählen' : 'Erst Abteilung wählen (optional)'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">Niemand – landet im Pool</SelectItem>
+                    {(effectiveDeptId ? deptProfiles : profiles).map(p => (
+                      <SelectItem key={p.id} value={p.id} className="text-xs">
+                        <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
+                      </SelectItem>
+                    ))}
+                    {effectiveDeptId && deptProfiles.length === 0 && (
+                      <div className="px-2 py-1.5 text-[11px] text-muted-foreground">Keine Mitarbeiter dieser Abteilung</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground">Vorgang landet zuerst bei diesem Mitarbeiter.</p>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Kunde & Produkt */}
+          {step === 3 && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Kunde</Label>
+                  <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                        {selectedCustomer ? `${selectedCustomer.customer_no} – ${selectedCustomer.name}` : 'Kunde wählen…'}
+                        <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Suchen…" value={customerSearch} onValueChange={setCustomerSearch} className="text-xs" />
+                        <CommandList>
+                          <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">Kein Kunde gefunden</CommandEmpty>
+                          <CommandGroup>
+                            {filteredCustomers.map(c => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.customer_no} ${c.name}`}
+                                onSelect={() => { set('customer_no', c.customer_no); setCustomerOpen(false); }}
+                                className="text-xs"
+                              >
+                                <Check className={cn('mr-2 h-3 w-3', form.customer_no === c.customer_no ? 'opacity-100' : 'opacity-0')} />
+                                <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{c.customer_no}</span>{c.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                          <CommandGroup>
+                            <CommandItem onSelect={() => { setNewCustomerOpen(true); setCustomerOpen(false); }} className="text-xs text-primary">
+                              <Plus className="mr-2 h-3 w-3" />Neuen Kunden erstellen
+                            </CommandItem>
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Auftraggeber</Label>
+                  <Input value={form.client_name} onChange={e => set('client_name', e.target.value)} className="h-8 text-xs" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Produkt</Label>
+                  <Popover open={productOpen} onOpenChange={setProductOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                        {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
+                        <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
+                        <CommandList>
+                          <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
+                            {productSearch.trim() ? (
+                              <button
+                                type="button"
+                                onClick={() => selectProductOrCreate(productSearch.trim())}
+                                className="text-primary hover:underline"
+                              >
+                                „{productSearch.trim()}" als neues Produkt erstellen
+                              </button>
+                            ) : 'Kein Produkt gefunden'}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {filteredProducts.map(p => (
+                              <CommandItem
+                                key={p.id}
+                                value={`${p.code} ${p.name}`}
+                                onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
+                                className="text-xs"
+                              >
+                                <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
+                                <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Bereich intern</Label>
+                  <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+                    <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
+                <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Termine & Details */}
+          {step === 4 && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1"><Label className="text-xs text-muted-foreground">Auftragseingang</Label><Input type="date" value={form.received_at} onChange={e => set('received_at', e.target.value)} className="h-8 text-xs" /></div>
+                <div className="space-y-1"><Label className="text-xs text-muted-foreground">Endtermin</Label><Input type="date" value={form.due_at} onChange={e => set('due_at', e.target.value)} className="h-8 text-xs" /></div>
+                <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
+              </div>
+
+              <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
+                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
+                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: Bemerkung & Zusammenfassung */}
+          {step === 5 && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Bemerkung</Label>
+                <Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={3} className="text-xs" />
+              </div>
+
+              <div className="rounded-md border border-border bg-muted/20 p-3 space-y-1.5">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Zusammenfassung</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <span className="text-muted-foreground">Projektname</span><span className="font-medium">{form.project_name || '–'}</span>
+                  <span className="text-muted-foreground">Abteilung</span><span>{departments.find(d => d.id === form.department_id)?.name || '–'}</span>
+                  <span className="text-muted-foreground">Teilbereich</span><span>{departments.find(d => d.id === form.team_id)?.name || '–'}</span>
+                  <span className="text-muted-foreground">Mitarbeiter</span><span>{profiles.find(p => p.id === form.assignee_id)?.display_name || 'Pool'}</span>
+                  <span className="text-muted-foreground">Kunde</span><span>{selectedCustomer?.name || '–'}</span>
+                  <span className="text-muted-foreground">Produkt</span><span>{selectedProduct?.name || '–'}</span>
+                  <span className="text-muted-foreground">Endtermin</span><span>{form.due_at || '–'}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Product with freetext + autocomplete */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Produkt</Label>
-            <Popover open={productOpen} onOpenChange={setProductOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
-                  {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
-                  <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[280px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
-                  <CommandList>
-                    <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
-                      {productSearch.trim() ? (
-                        <button
-                          type="button"
-                          onClick={() => selectProductOrCreate(productSearch.trim())}
-                          className="text-primary hover:underline"
-                        >
-                          „{productSearch.trim()}" als neues Produkt erstellen
-                        </button>
-                      ) : 'Kein Produkt gefunden'}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {filteredProducts.map(p => (
-                        <CommandItem
-                          key={p.id}
-                          value={`${p.code} ${p.name}`}
-                          onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
-                          className="text-xs"
-                        >
-                          <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
-                          <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Bereich intern</Label>
-            <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-              <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
+        {/* Navigation */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={prev}
+            disabled={step === 1}
+            className="h-8 text-xs"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Zurück
+          </Button>
+          {step < STEPS.length ? (
+            <Button type="button" size="sm" onClick={next} disabled={!canProceed()} className="h-8 text-xs">
+              Weiter <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          ) : (
+            <Button type="button" size="sm" onClick={submit} disabled={saving} className="h-8 text-xs">
+              {saving ? 'Speichern…' : 'Vorgang anlegen'}
+            </Button>
+          )}
         </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
-          <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
-        </div>
-
-        {/* Dates & hours */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-1"><Label className="text-xs text-muted-foreground">Auftragseingang</Label><Input type="date" value={form.received_at} onChange={e => set('received_at', e.target.value)} className="h-8 text-xs" /></div>
-          <div className="space-y-1"><Label className="text-xs text-muted-foreground">Endtermin</Label><Input type="date" value={form.due_at} onChange={e => set('due_at', e.target.value)} className="h-8 text-xs" /></div>
-          <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
-        </div>
-
-        {/* Project info section */}
-        <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</p>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
-            <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
-            <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
-          </div>
-        </div>
-
-        {/* Assignee (within department) */}
-        {effectiveDeptId && (
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">Zuständig (Abteilung)</Label>
-            <Select value={form.client_name ? '' : '_none'} onValueChange={() => {}}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Direkt zuweisen (optional)" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Nicht zuweisen</SelectItem>
-                {deptProfiles.map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.display_name} ({p.short_code})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div className="space-y-1"><Label className="text-xs text-muted-foreground">Bemerkung</Label><Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={2} className="text-xs" /></div>
-        <Button type="submit" className="w-full h-8 text-xs" disabled={saving}>{saving ? 'Speichern…' : 'Vorgang anlegen'}</Button>
-      </form>
+      </div>
 
       {/* New Customer Dialog */}
       <Dialog open={newCustomerOpen} onOpenChange={setNewCustomerOpen}>
