@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Building2, UserCheck } from 'lucide-react';
+import { ArrowLeft, Building2, UserCheck, FolderKanban } from 'lucide-react';
 import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
+interface ProjectOption { id: string; name: string; project_number: string | null; department_id: string | null; status: string; }
 
 type CaseWithRels = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
@@ -33,6 +34,7 @@ export default function CaseDetail() {
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -56,6 +58,8 @@ export default function CaseDetail() {
       .then(r => setDepartments((r.data || []) as DeptOption[]));
     supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name')
       .then(r => setProfiles((r.data || []) as ProfileOption[]));
+    supabase.from('projects').select('id, name, project_number, department_id, status').order('name')
+      .then(r => setProjectOptions((r.data || []) as ProjectOption[]));
   }, []);
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
@@ -90,6 +94,33 @@ export default function CaseDetail() {
     });
 
     toast.success(`Abteilung geändert: ${newDeptName}`);
+    refresh();
+  };
+
+  const changeProject = async (newProjectId: string) => {
+    if (!c || !user) return;
+    const resolvedId = newProjectId === '_none' ? null : newProjectId;
+    const oldProjectName = c.project ? `${c.project.project_number || ''} ${c.project.name}`.trim() : 'Keines';
+    const newProject = projectOptions.find(p => p.id === resolvedId);
+    const newProjectName = newProject ? `${newProject.project_number || ''} ${newProject.name}`.trim() : 'Keines';
+
+    const { error } = await supabase.from('cases').update({
+      project_id: resolvedId,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: 'PROJECT_MOVE',
+      field: 'project_id',
+      old_value: oldProjectName,
+      new_value: newProjectName,
+      actor_id: user.id,
+    });
+
+    toast.success(`Projekt geändert: ${newProjectName}`);
     refresh();
   };
 
@@ -351,6 +382,37 @@ export default function CaseDetail() {
                           )),
                         ];
                       })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Project move */}
+            {!isViewer && !isTerminalStatus(c.status) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <FolderKanban className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Projekt verschieben</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    Aktuell: <span className="text-foreground font-medium">
+                      {c.project ? `${c.project.project_number || ''} ${c.project.name}`.trim() : 'Keines'}
+                    </span>
+                  </div>
+                  <Select value={c.project_id || '_none'} onValueChange={changeProject}>
+                    <SelectTrigger className="w-[280px] h-8 text-xs"><SelectValue placeholder="Projekt wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Kein Projekt</SelectItem>
+                      {projectOptions
+                        .filter(p => p.status !== 'archived' || p.id === c.project_id)
+                        .map(p => (
+                          <SelectItem key={p.id} value={p.id} className="text-xs">
+                            {p.project_number && <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>}
+                            {p.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
