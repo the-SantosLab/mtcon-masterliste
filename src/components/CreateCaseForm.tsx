@@ -74,11 +74,19 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       setCustomers(cust.data || []);
       setProducts(prod.data || []);
       setAreas(ar.data || []);
-      setProjects((proj.data || []) as ProjectOption[]);
+      const projectsData = (proj.data || []) as ProjectOption[];
+      setProjects(projectsData);
       setDepartments((dept.data || []) as DeptOption[]);
       setProfiles((prof.data || []) as Profile[]);
+      // Vorausgefüllter Projektname, wenn defaultProjectId gesetzt ist
+      if (defaultProjectId) {
+        const preset = projectsData.find(p => p.id === defaultProjectId);
+        if (preset) {
+          setForm(f => ({ ...f, project_id: preset.id, project_name: f.project_name || preset.name }));
+        }
+      }
     });
-  }, []);
+  }, [defaultProjectId]);
 
   const topLevel = departments.filter(d => !d.parent_id);
   const teams = departments.filter(d => d.parent_id === form.department_id);
