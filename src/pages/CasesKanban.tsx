@@ -3,15 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { buildTree } from '@/lib/case-utils';
+import { buildTree, STATUS_LABELS, STATUS_DOT_COLORS } from '@/lib/case-utils';
 import type { Department, DepartmentNode } from '@/lib/case-utils';
 import { DepartmentTreeView } from '@/components/DepartmentTreeView';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Search, FolderKanban, Users } from 'lucide-react';
+import { Search, FolderKanban, Users, Calendar, User as UserIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { format } from 'date-fns';
+import type { Enums } from '@/integrations/supabase/types';
+
+type ViewMode = 'projects' | 'cases';
 
 interface ProjectRow {
   id: string;
@@ -29,11 +34,33 @@ interface ProjectCard extends ProjectRow {
   member_count: number;
 }
 
+interface CaseCard {
+  id: string;
+  case_no: string;
+  project_name: string;
+  status: string;
+  department_id: string | null;
+  due_at: string | null;
+  assignee_short_code?: string;
+  created_at: string;
+}
+
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
   { id: 'active', label: 'Aktiv', color: 'bg-[hsl(var(--status-working))]' },
   { id: 'on_hold', label: 'Pausiert', color: 'bg-[hsl(var(--status-planning))]' },
   { id: 'completed', label: 'Abgeschlossen', color: 'bg-[hsl(var(--status-done))]' },
   { id: 'archived', label: 'Archiviert', color: 'bg-[hsl(var(--status-archive))]' },
+];
+
+const CASE_STATUSES: { id: string; label: string; color: string }[] = [
+  { id: 'nicht_begonnen', label: STATUS_LABELS.nicht_begonnen, color: STATUS_DOT_COLORS.nicht_begonnen },
+  { id: 'in_planung', label: STATUS_LABELS.in_planung, color: STATUS_DOT_COLORS.in_planung },
+  { id: 'in_arbeit', label: STATUS_LABELS.in_arbeit, color: STATUS_DOT_COLORS.in_arbeit },
+  { id: 'ready_for_review', label: STATUS_LABELS.ready_for_review, color: STATUS_DOT_COLORS.ready_for_review },
+  { id: 'in_verzug', label: STATUS_LABELS.in_verzug, color: STATUS_DOT_COLORS.in_verzug },
+  { id: 'blocked', label: STATUS_LABELS.blocked, color: STATUS_DOT_COLORS.blocked },
+  { id: 'abgeschlossen', label: STATUS_LABELS.abgeschlossen, color: STATUS_DOT_COLORS.abgeschlossen },
+  { id: 'archiv', label: STATUS_LABELS.archiv, color: STATUS_DOT_COLORS.archiv },
 ];
 
 function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCard; onOpen?: () => void; isDragging?: boolean }) {
@@ -57,8 +84,42 @@ function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCa
   );
 }
 
+function CaseKanbanCardInner({ c, onOpen, isDragging }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean }) {
+  return (
+    <div
+      onClick={onOpen}
+      className={cn(
+        'rounded-md border border-border bg-card p-2.5 cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',
+        isDragging && 'opacity-50',
+      )}
+    >
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+        <span
+          className={cn('h-1.5 w-1.5 rounded-full shrink-0 mt-1', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
+        />
+      </div>
+      <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
+      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+        {c.due_at && (
+          <span className="inline-flex items-center gap-0.5">
+            <Calendar className="h-2.5 w-2.5" />
+            {format(new Date(c.due_at), 'dd.MM.')}
+          </span>
+        )}
+        {c.assignee_short_code && (
+          <span className="inline-flex items-center gap-0.5 ml-auto">
+            <UserIcon className="h-2.5 w-2.5" />
+            {c.assignee_short_code}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => void }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card } });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card, kind: 'project' } });
   return (
     <div ref={setNodeRef} {...listeners} {...attributes}>
       <ProjectKanbanCard project={card} onOpen={onOpen} isDragging={isDragging} />
@@ -66,7 +127,16 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DroppableColumn({ id, label, color, cards, onOpen }: { id: string; label: string; color: string; cards: ProjectCard[]; onOpen: (id: string) => void }) {
+function DraggableCase({ card, onOpen }: { card: CaseCard; onOpen: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card, kind: 'case' } });
+  return (
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} />
+    </div>
+  );
+}
+
+function DroppableColumn({ id, label, color, count, children }: { id: string; label: string; color: string; count: number; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div
@@ -79,15 +149,13 @@ function DroppableColumn({ id, label, color, cards, onOpen }: { id: string; labe
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border">
         <span className={cn('h-2 w-2 rounded-full', color)} />
         <span className="text-xs font-medium text-foreground">{label}</span>
-        <span className="text-[10px] font-mono text-muted-foreground ml-auto">{cards.length}</span>
+        <span className="text-[10px] font-mono text-muted-foreground ml-auto">{count}</span>
       </div>
       <div className="flex-1 p-2 space-y-2 overflow-y-auto min-h-[200px]">
-        {cards.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-8">Keine Projekte</p>
+        {count === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-8">Keine Einträge</p>
         )}
-        {cards.map(c => (
-          <DraggableProject key={c.id} card={c} onOpen={() => onOpen(c.id)} />
-        ))}
+        {children}
       </div>
     </div>
   );
@@ -96,15 +164,24 @@ function DroppableColumn({ id, label, color, cards, onOpen }: { id: string; labe
 export default function CasesKanban() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return (localStorage.getItem('kanban-view-mode') as ViewMode) || 'projects';
+  });
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tree, setTree] = useState<DepartmentNode[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null);
   const [projects, setProjects] = useState<ProjectCard[]>([]);
+  const [cases, setCases] = useState<CaseCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCard, setActiveCard] = useState<ProjectCard | null>(null);
+  const [activeProject, setActiveProject] = useState<ProjectCard | null>(null);
+  const [activeCase, setActiveCase] = useState<CaseCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  useEffect(() => {
+    localStorage.setItem('kanban-view-mode', viewMode);
+  }, [viewMode]);
 
   const fetchDepartments = useCallback(async () => {
     const { data } = await supabase.from('departments').select('*').order('sort_order');
@@ -131,72 +208,127 @@ export default function CasesKanban() {
     }
 
     setProjects(list.map(p => ({ ...p, case_count: caseCounts[p.id] || 0, member_count: memberCounts[p.id] || 0 })));
-    setLoading(false);
+  }, []);
+
+  const fetchCases = useCallback(async () => {
+    const { data } = await supabase
+      .from('cases')
+      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_at')
+      .order('created_at', { ascending: true });
+    const list = (data || []) as any[];
+
+    const assigneeIds: string[] = Array.from(new Set(list.map(c => c.assignee_id).filter(Boolean) as string[]));
+    const shortCodes: Record<string, string> = {};
+    if (assigneeIds.length > 0) {
+      const profsRes: any = await (supabase as any).from('profiles')
+        .select('user_id, short_code')
+        .in('user_id', assigneeIds);
+      const profs = (profsRes?.data || []) as any[];
+      profs.forEach((p: any) => { shortCodes[p.user_id] = p.short_code; });
+    }
+
+    setCases(list.map(c => ({
+      id: c.id,
+      case_no: c.case_no,
+      project_name: c.project_name,
+      status: c.status,
+      department_id: c.department_id,
+      due_at: c.due_at,
+      assignee_short_code: c.assignee_id ? shortCodes[c.assignee_id] : undefined,
+      created_at: c.created_at,
+    })));
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     fetchDepartments();
-    fetchProjects();
-    const ch = supabase.channel('kanban-projects').on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchProjects()).subscribe();
+    Promise.all([fetchProjects(), fetchCases()]).finally(() => setLoading(false));
+    const ch = supabase
+      .channel('kanban-data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchProjects())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases())
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
 
   // Scope by selected department (incl. children)
-  const scoped = selectedDeptId
-    ? projects.filter(p => {
-        const childIds = departments.filter(d => d.parent_id === selectedDeptId).map(d => d.id);
-        return p.department_id === selectedDeptId || childIds.includes(p.department_id || '');
-      })
-    : projects;
+  const scopeByDept = <T extends { department_id: string | null }>(arr: T[]) =>
+    selectedDeptId
+      ? arr.filter(x => {
+          const childIds = departments.filter(d => d.parent_id === selectedDeptId).map(d => d.id);
+          return x.department_id === selectedDeptId || childIds.includes(x.department_id || '');
+        })
+      : arr;
 
-  const filtered = searchQuery
-    ? scoped.filter(p => {
-        const q = searchQuery.toLowerCase();
-        return p.name.toLowerCase().includes(q) || (p.project_number || '').toLowerCase().includes(q);
-      })
-    : scoped;
+  const q = searchQuery.toLowerCase();
 
-  const columns = PROJECT_STATUSES.map(s => ({
-    ...s,
-    cards: filtered
+  const projectColumns = PROJECT_STATUSES.map(s => {
+    const filtered = scopeByDept(projects)
+      .filter(p => !searchQuery || p.name.toLowerCase().includes(q) || (p.project_number || '').toLowerCase().includes(q))
       .filter(p => p.status === s.id)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
-  }));
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    return { ...s, cards: filtered };
+  });
+
+  const caseColumns = CASE_STATUSES.map(s => {
+    const filtered = scopeByDept(cases)
+      .filter(c => !searchQuery || c.project_name.toLowerCase().includes(q) || c.case_no.toLowerCase().includes(q))
+      .filter(c => c.status === s.id)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    return { ...s, cards: filtered };
+  });
 
   const handleDragStart = (e: DragStartEvent) => {
-    setActiveCard(e.active.data.current?.card || null);
+    const data = e.active.data.current as any;
+    if (data?.kind === 'project') setActiveProject(data.card);
+    else if (data?.kind === 'case') setActiveCase(data.card);
   };
 
   const handleDragEnd = async (e: DragEndEvent) => {
-    setActiveCard(null);
-    const { active, over } = e;
-    if (!over || !active) return;
-    const card = (active.data.current as any)?.card as ProjectCard;
-    if (!card) return;
+    const data = e.active.data.current as any;
+    setActiveProject(null);
+    setActiveCase(null);
+    const { over } = e;
+    if (!over) return;
     const targetStatus = over.id as string;
-    if (card.status === targetStatus) return;
 
-    const { error } = await supabase
-      .from('projects')
-      .update({ status: targetStatus, updated_at: new Date().toISOString() })
-      .eq('id', card.id);
-    if (error) { toast.error(error.message); return; }
-    if (user?.id) {
-      await supabase.from('project_activity').insert({
-        project_id: card.id,
-        action: 'STATUS_CHANGE',
-        actor_id: user.id,
-        field: 'status',
-        old_value: card.status,
-        new_value: targetStatus,
-      });
+    if (data?.kind === 'project') {
+      const card = data.card as ProjectCard;
+      if (card.status === targetStatus) return;
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: targetStatus, updated_at: new Date().toISOString() })
+        .eq('id', card.id);
+      if (error) { toast.error(error.message); return; }
+      if (user?.id) {
+        await supabase.from('project_activity').insert({
+          project_id: card.id,
+          action: 'STATUS_CHANGE',
+          actor_id: user.id,
+          field: 'status',
+          old_value: card.status,
+          new_value: targetStatus,
+        });
+      }
+      const lbl = PROJECT_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
+      toast.success(`Status auf "${lbl}" geändert`);
+      fetchProjects();
+    } else if (data?.kind === 'case') {
+      const card = data.card as CaseCard;
+      if (card.status === targetStatus) return;
+      const { error } = await supabase
+        .from('cases')
+        .update({ status: targetStatus as Enums<'case_status'>, updated_at: new Date().toISOString() })
+        .eq('id', card.id);
+      if (error) { toast.error(error.message); return; }
+      const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
+      toast.success(`Status auf "${lbl}" geändert`);
+      fetchCases();
     }
-    const lbl = PROJECT_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
-    toast.success(`Status auf "${lbl}" geändert`);
-    fetchProjects();
   };
 
   const selectedDept = departments.find(d => d.id === selectedDeptId);
+  const isProjects = viewMode === 'projects';
 
   return (
     <AppLayout>
@@ -225,16 +357,31 @@ export default function CasesKanban() {
         {/* Main */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Toolbar */}
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-card/50 shrink-0">
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card/50 shrink-0">
             <h2 className="text-sm font-semibold text-foreground truncate">
-              {selectedDept?.name || 'Alle Projekte'}
+              {selectedDept?.name || (isProjects ? 'Alle Projekte' : 'Alle Vorgänge')}
             </h2>
-            <span className="text-[10px] text-muted-foreground">Spalten = Projekt-Status</span>
+
+            <ToggleGroup
+              type="single"
+              size="sm"
+              value={viewMode}
+              onValueChange={(v) => { if (v) setViewMode(v as ViewMode); }}
+              className="ml-2"
+            >
+              <ToggleGroupItem value="projects" className="h-7 px-2.5 text-[11px] data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                Übergreifende Vorgänge
+              </ToggleGroupItem>
+              <ToggleGroupItem value="cases" className="h-7 px-2.5 text-[11px] data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                Einzelne Vorgänge
+              </ToggleGroupItem>
+            </ToggleGroup>
+
             <div className="flex-1" />
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
-                placeholder="Projekt suchen…"
+                placeholder={isProjects ? 'Projekt suchen…' : 'Vorgang suchen…'}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="h-7 text-xs pl-7 w-48"
@@ -249,19 +396,25 @@ export default function CasesKanban() {
             ) : (
               <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex gap-3 h-full">
-                  {columns.map(col => (
-                    <DroppableColumn
-                      key={col.id}
-                      id={col.id}
-                      label={col.label}
-                      color={col.color}
-                      cards={col.cards}
-                      onOpen={(id) => navigate(`/projects/${id}`)}
-                    />
-                  ))}
+                  {isProjects
+                    ? projectColumns.map(col => (
+                        <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length}>
+                          {col.cards.map(c => (
+                            <DraggableProject key={c.id} card={c} onOpen={() => navigate(`/projects/${c.id}`)} />
+                          ))}
+                        </DroppableColumn>
+                      ))
+                    : caseColumns.map(col => (
+                        <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length}>
+                          {col.cards.map(c => (
+                            <DraggableCase key={c.id} card={c} onOpen={() => navigate(`/cases/${c.id}`)} />
+                          ))}
+                        </DroppableColumn>
+                      ))}
                 </div>
                 <DragOverlay>
-                  {activeCard && <ProjectKanbanCard project={activeCard} isDragging />}
+                  {activeProject && <ProjectKanbanCard project={activeProject} isDragging />}
+                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging />}
                 </DragOverlay>
               </DndContext>
             )}
