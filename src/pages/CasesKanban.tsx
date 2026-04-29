@@ -158,7 +158,9 @@ export default function CasesKanban() {
 
   const columns = PROJECT_STATUSES.map(s => ({
     ...s,
-    cards: filtered.filter(p => p.status === s.id),
+    cards: filtered
+      .filter(p => p.status === s.id)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
   }));
 
   const handleDragStart = (e: DragStartEvent) => {
