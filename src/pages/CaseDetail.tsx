@@ -11,13 +11,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Building2 } from 'lucide-react';
+import { ArrowLeft, Building2, UserCheck } from 'lucide-react';
 import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
 
 type CaseWithRels = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
@@ -31,6 +32,7 @@ export default function CaseDetail() {
   const { user, isAdmin, isViewer } = useAuth();
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
+  const [profiles, setProfiles] = useState<ProfileOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -52,6 +54,8 @@ export default function CaseDetail() {
   useEffect(() => {
     supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
       .then(r => setDepartments((r.data || []) as DeptOption[]));
+    supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name')
+      .then(r => setProfiles((r.data || []) as ProfileOption[]));
   }, []);
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
@@ -86,6 +90,43 @@ export default function CaseDetail() {
     });
 
     toast.success(`Abteilung geändert: ${newDeptName}`);
+    refresh();
+  };
+
+  const assignCase = async (newAssigneeId: string) => {
+    if (!c || !user) return;
+    const resolvedId = newAssigneeId === '_none' ? null : newAssigneeId;
+    const oldAssignee = c.assignee?.short_code || 'Niemand';
+    const newAssignee = profiles.find(p => p.id === resolvedId);
+    const newAssigneeName = newAssignee?.short_code || 'Niemand';
+
+    const { error } = await supabase.from('cases').update({
+      assignee_id: resolvedId,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: resolvedId ? 'ASSIGN' : 'UNASSIGN',
+      field: 'assignee_id',
+      old_value: oldAssignee,
+      new_value: newAssigneeName,
+      actor_id: user.id,
+    });
+
+    if (resolvedId && resolvedId !== user.id) {
+      await supabase.from('notifications').insert({
+        user_id: resolvedId,
+        type: 'assignment',
+        title: `Vorgang zugewiesen: ${c.case_no}`,
+        body: c.project_name,
+        href: `/cases/${c.id}`,
+      });
+    }
+
+    toast.success(resolvedId ? `Zugewiesen an ${newAssigneeName}` : 'Zuweisung entfernt');
     refresh();
   };
 
@@ -217,6 +258,68 @@ export default function CaseDetail() {
                     {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {/* Assign to user */}
+            {!isViewer && !isTerminalStatus(c.status) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bearbeiter zuweisen</h3>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    Aktuell: <span className="text-foreground font-medium">{c.assignee ? `${c.assignee.short_code} – ${c.assignee.display_name}` : 'Niemand'}</span>
+                  </div>
+                  <Select value={c.assignee_id || '_none'} onValueChange={assignCase}>
+                    <SelectTrigger className="w-[240px] h-8 text-xs"><SelectValue placeholder="Mitarbeiter wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Niemand – freigeben</SelectItem>
+                      {(() => {
+                        const deptId = c.department_id;
+                        const deptIds = new Set<string>();
+                        if (deptId) {
+                          deptIds.add(deptId);
+                          departments.filter(d => d.parent_id === deptId).forEach(d => deptIds.add(d.id));
+                          const parent = departments.find(d => d.id === deptId);
+                          if (parent?.parent_id) deptIds.add(parent.parent_id);
+                        }
+                        const inDept = deptId ? profiles.filter(p => p.department_id && deptIds.has(p.department_id)) : [];
+                        const others = profiles.filter(p => !inDept.includes(p));
+                        return (
+                          <>
+                            {inDept.length > 0 && (
+                              <>
+                                <div className="px-2 py-1 text-[10px] font-medium text-muted-foreground uppercase">Abteilung</div>
+                                {inDept.map(p => (
+                                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                                    <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                            {others.length > 0 && (
+                              <>
+                                <div className="px-2 py-1 text-[10px] font-medium text-muted-foreground uppercase">{inDept.length > 0 ? 'Andere' : 'Alle'}</div>
+                                {others.map(p => (
+                                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                                    <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </SelectContent>
+                  </Select>
+                  {user && c.assignee_id !== user.id && (
+                    <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => assignCase(user.id)}>
+                      Mir zuweisen
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
 
