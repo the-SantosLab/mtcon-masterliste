@@ -245,6 +245,15 @@ export default function ProjectDetail() {
     if (data) setProject(data as Project);
   };
 
+  const reloadCases = async () => {
+    if (!id) return;
+    const { data } = await supabase.from('cases')
+      .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .eq('project_id', id)
+      .order('created_at', { ascending: false });
+    setCases((data || []) as CaseRow[]);
+  };
+
   useEffect(() => {
     if (!id) return;
     Promise.all([
