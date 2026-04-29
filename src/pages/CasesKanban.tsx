@@ -1,74 +1,91 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { STATUS_LABELS, STATUS_DOT_COLORS, buildTree } from '@/lib/case-utils';
+import { buildTree } from '@/lib/case-utils';
 import type { Department, DepartmentNode } from '@/lib/case-utils';
-import type { Tables, Enums } from '@/integrations/supabase/types';
-import { Constants } from '@/integrations/supabase/types';
 import { DepartmentTreeView } from '@/components/DepartmentTreeView';
-import { CreateCaseFromDeptDialog } from '@/components/CreateCaseFromDeptDialog';
-import { CaseKanbanCard } from '@/components/CaseKanbanCard';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Plus, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, FolderKanban, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type CaseStatus = Enums<'case_status'>;
-type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
-
-interface CardData {
+interface ProjectRow {
   id: string;
-  case_no: string;
-  project_name: string;
+  name: string;
+  project_number: string | null;
   status: string;
-  due_at: string | null;
   department_id: string | null;
-  assignee_short_code?: string;
+  description: string | null;
+  updated_at: string;
 }
 
-const KANBAN_STATUSES: CaseStatus[] = [
-  'nicht_begonnen',
-  'in_planung',
-  'in_arbeit',
-  'in_verzug',
-  'abgeschlossen',
+interface ProjectCard extends ProjectRow {
+  case_count: number;
+  member_count: number;
+}
+
+const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
+  { id: 'active', label: 'Aktiv', color: 'bg-[hsl(var(--status-working))]' },
+  { id: 'on_hold', label: 'Pausiert', color: 'bg-[hsl(var(--status-planning))]' },
+  { id: 'completed', label: 'Abgeschlossen', color: 'bg-[hsl(var(--status-done))]' },
+  { id: 'archived', label: 'Archiviert', color: 'bg-[hsl(var(--status-archive))]' },
 ];
 
-function DraggableCase({ card }: { card: CardData }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card } });
+function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCard; onOpen?: () => void; isDragging?: boolean }) {
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
-      <CaseKanbanCard caseItem={card} isDragging={isDragging} />
+    <div
+      onClick={onOpen}
+      className={cn(
+        'group rounded-md border border-border bg-card p-2.5 cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',
+        isDragging && 'opacity-50',
+      )}
+    >
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <span className="text-[10px] font-mono text-muted-foreground">{project.project_number || '—'}</span>
+      </div>
+      <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{project.name}</p>
+      <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1"><FolderKanban className="h-2.5 w-2.5" />{project.case_count}</span>
+        <span className="inline-flex items-center gap-1"><Users className="h-2.5 w-2.5" />{project.member_count}</span>
+      </div>
     </div>
   );
 }
 
-function DroppableColumn({ id, label, cards, color }: { id: string; label: string; cards: CardData[]; color?: string }) {
+function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card } });
+  return (
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <ProjectKanbanCard project={card} onOpen={onOpen} isDragging={isDragging} />
+    </div>
+  );
+}
+
+function DroppableColumn({ id, label, color, cards, onOpen }: { id: string; label: string; color: string; cards: ProjectCard[]; onOpen: (id: string) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'flex-1 min-w-[220px] max-w-[320px] rounded-lg border border-border bg-muted/30 flex flex-col',
+        'flex-1 min-w-[240px] max-w-[340px] rounded-lg border border-border bg-muted/30 flex flex-col',
         isOver && 'ring-2 ring-primary/30 bg-primary/5',
       )}
     >
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border">
-        {color && <span className={cn('h-2 w-2 rounded-full', color)} />}
+        <span className={cn('h-2 w-2 rounded-full', color)} />
         <span className="text-xs font-medium text-foreground">{label}</span>
         <span className="text-[10px] font-mono text-muted-foreground ml-auto">{cards.length}</span>
       </div>
       <div className="flex-1 p-2 space-y-2 overflow-y-auto min-h-[200px]">
         {cards.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-8">Keine Vorgänge</p>
+          <p className="text-[10px] text-muted-foreground text-center py-8">Keine Projekte</p>
         )}
         {cards.map(c => (
-          <DraggableCase key={c.id} card={c} />
+          <DraggableProject key={c.id} card={c} onOpen={() => onOpen(c.id)} />
         ))}
       </div>
     </div>
@@ -76,17 +93,15 @@ function DroppableColumn({ id, label, cards, color }: { id: string; label: strin
 }
 
 export default function CasesKanban() {
-  const { user, isAdmin, isViewer } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tree, setTree] = useState<DepartmentNode[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null);
-  const [cases, setCases] = useState<CaseRow[]>([]);
+  const [projects, setProjects] = useState<ProjectCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [activeCard, setActiveCard] = useState<CardData | null>(null);
+  const [activeCard, setActiveCard] = useState<ProjectCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [profiles, setProfiles] = useState<Tables<'users_profile'>[]>([]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -95,86 +110,55 @@ export default function CasesKanban() {
     const depts = (data || []) as Department[];
     setDepartments(depts);
     setTree(buildTree(depts));
-    if (!selectedDeptId && depts.length > 0) {
-      const topLevel = depts.find(d => !d.parent_id);
-      if (topLevel) setSelectedDeptId(topLevel.id);
-    }
-  }, [selectedDeptId]);
+  }, []);
 
-  const fetchCases = useCallback(async () => {
-    const { data } = await supabase
-      .from('cases')
-      .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
-      .order('created_at', { ascending: false });
-    setCases((data as CaseRow[]) || []);
+  const fetchProjects = useCallback(async () => {
+    const { data: projData } = await supabase
+      .from('projects')
+      .select('id, name, project_number, status, department_id, description, updated_at')
+      .order('updated_at', { ascending: false });
+    const list = (projData || []) as ProjectRow[];
+
+    const ids = list.map(p => p.id);
+    let caseCounts: Record<string, number> = {};
+    let memberCounts: Record<string, number> = {};
+    if (ids.length > 0) {
+      const { data: cs } = await supabase.from('cases').select('project_id').in('project_id', ids);
+      (cs || []).forEach((c: any) => { if (c.project_id) caseCounts[c.project_id] = (caseCounts[c.project_id] || 0) + 1; });
+      const { data: ms } = await supabase.from('project_members').select('project_id').in('project_id', ids);
+      (ms || []).forEach((m: any) => { memberCounts[m.project_id] = (memberCounts[m.project_id] || 0) + 1; });
+    }
+
+    setProjects(list.map(p => ({ ...p, case_count: caseCounts[p.id] || 0, member_count: memberCounts[p.id] || 0 })));
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchDepartments();
-    fetchCases();
-    supabase.from('users_profile').select('*').then(r => setProfiles((r.data || []) as any[]));
-    const ch = supabase.channel('kanban-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
+    fetchProjects();
+    const ch = supabase.channel('kanban-projects').on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchProjects()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  const selectedDept = departments.find(d => d.id === selectedDeptId);
-  const childDepts = departments.filter(d => d.parent_id === selectedDeptId);
-  const hasChildren = childDepts.length > 0;
-
-  // Filter cases to selected department scope
-  const scopedCases = selectedDeptId
-    ? cases.filter(c => {
+  // Scope by selected department (incl. children)
+  const scoped = selectedDeptId
+    ? projects.filter(p => {
         const childIds = departments.filter(d => d.parent_id === selectedDeptId).map(d => d.id);
-        return c.department_id === selectedDeptId || childIds.includes(c.department_id || '');
+        return p.department_id === selectedDeptId || childIds.includes(p.department_id || '');
       })
-    : cases;
+    : projects;
 
-  // Apply search/filter
-  let filtered = scopedCases;
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    filtered = filtered.filter(c =>
-      c.case_no.toLowerCase().includes(q) ||
-      c.project_name.toLowerCase().includes(q) ||
-      (c.client_name || '').toLowerCase().includes(q)
-    );
-  }
-  if (assigneeFilter !== 'all') {
-    filtered = filtered.filter(c => c.assignee_id === assigneeFilter);
-  }
+  const filtered = searchQuery
+    ? scoped.filter(p => {
+        const q = searchQuery.toLowerCase();
+        return p.name.toLowerCase().includes(q) || (p.project_number || '').toLowerCase().includes(q);
+      })
+    : scoped;
 
-  // Build cards
-  const toCard = (c: CaseRow): CardData => ({
-    id: c.id,
-    case_no: c.case_no,
-    project_name: c.project_name,
-    status: c.status,
-    due_at: c.due_at,
-    department_id: c.department_id,
-    assignee_short_code: c.assignee?.short_code,
-  });
-
-  // Build columns
-  let columns: { id: string; label: string; cards: CardData[]; color?: string }[] = [];
-  if (hasChildren && selectedDeptId) {
-    columns = childDepts.map(d => ({
-      id: d.id,
-      label: d.name,
-      cards: filtered.filter(c => c.department_id === d.id).map(toCard),
-    }));
-    const parentCards = filtered.filter(c => c.department_id === selectedDeptId).map(toCard);
-    if (parentCards.length > 0) {
-      columns.unshift({ id: selectedDeptId, label: selectedDept?.name || 'Direkt', cards: parentCards });
-    }
-  } else {
-    columns = KANBAN_STATUSES.map(s => ({
-      id: s,
-      label: STATUS_LABELS[s],
-      cards: filtered.filter(c => c.status === s).map(toCard),
-      color: STATUS_DOT_COLORS[s],
-    }));
-  }
+  const columns = PROJECT_STATUSES.map(s => ({
+    ...s,
+    cards: filtered.filter(p => p.status === s.id),
+  }));
 
   const handleDragStart = (e: DragStartEvent) => {
     setActiveCard(e.active.data.current?.card || null);
@@ -184,37 +168,32 @@ export default function CasesKanban() {
     setActiveCard(null);
     const { active, over } = e;
     if (!over || !active) return;
-    const card = (active.data.current as any)?.card as CardData;
+    const card = (active.data.current as any)?.card as ProjectCard;
     if (!card) return;
-    const targetId = over.id as string;
+    const targetStatus = over.id as string;
+    if (card.status === targetStatus) return;
 
-    const now = new Date().toISOString();
-    if (hasChildren) {
-      if (card.department_id === targetId) return;
-      const { error } = await supabase
-        .from('cases')
-        .update({ department_id: targetId, status: 'nicht_begonnen' as const, assignee_id: null, started_at: null, last_changed_by: user?.id, last_changed_at: now })
-        .eq('id', card.id);
-      if (error) { toast.error(error.message); return; }
-      if (user?.id) {
-        await supabase.from('case_activity').insert({ case_id: card.id, action: 'DEPT_MOVE', actor_id: user.id, field: 'department_id', new_value: targetId });
-      }
-      const targetDept = departments.find(d => d.id === targetId);
-      toast.success(`Vorgang nach "${targetDept?.name}" verschoben`);
-    } else {
-      if (card.status === targetId) return;
-      const { error } = await supabase
-        .from('cases')
-        .update({ status: targetId as CaseStatus, last_changed_by: user?.id, last_changed_at: now })
-        .eq('id', card.id);
-      if (error) { toast.error(error.message); return; }
-      if (user?.id) {
-        await supabase.from('case_activity').insert({ case_id: card.id, action: 'STATUS_CHANGE', actor_id: user.id, field: 'status', new_value: targetId });
-      }
-      toast.success(`Status auf "${STATUS_LABELS[targetId as CaseStatus]}" geändert`);
+    const { error } = await supabase
+      .from('projects')
+      .update({ status: targetStatus, updated_at: new Date().toISOString() })
+      .eq('id', card.id);
+    if (error) { toast.error(error.message); return; }
+    if (user?.id) {
+      await supabase.from('project_activity').insert({
+        project_id: card.id,
+        action: 'STATUS_CHANGE',
+        actor_id: user.id,
+        field: 'status',
+        old_value: card.status,
+        new_value: targetStatus,
+      });
     }
-    fetchCases();
+    const lbl = PROJECT_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
+    toast.success(`Status auf "${lbl}" geändert`);
+    fetchProjects();
   };
+
+  const selectedDept = departments.find(d => d.id === selectedDeptId);
 
   return (
     <AppLayout>
@@ -223,6 +202,14 @@ export default function CasesKanban() {
         <div className="w-56 shrink-0 border-r border-border bg-card/50 overflow-y-auto p-2">
           <div className="flex items-center justify-between px-2 py-1.5 mb-1">
             <span className="text-xs font-semibold text-foreground">Abteilungen</span>
+            {selectedDeptId && (
+              <button
+                onClick={() => setSelectedDeptId(null)}
+                className="text-[10px] text-muted-foreground hover:text-foreground"
+              >
+                Alle
+              </button>
+            )}
           </div>
           <DepartmentTreeView
             nodes={tree}
@@ -236,61 +223,48 @@ export default function CasesKanban() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Toolbar */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-card/50 shrink-0">
-            <h2 className="text-sm font-semibold text-foreground truncate">{selectedDept?.name || 'Kanban'}</h2>
-            <span className="text-[10px] text-muted-foreground">
-              {hasChildren ? 'Spalten = Teilbereiche' : 'Spalten = Status'}
-            </span>
+            <h2 className="text-sm font-semibold text-foreground truncate">
+              {selectedDept?.name || 'Alle Projekte'}
+            </h2>
+            <span className="text-[10px] text-muted-foreground">Spalten = Projekt-Status</span>
             <div className="flex-1" />
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
-                placeholder="Suche…"
+                placeholder="Projekt suchen…"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="h-7 text-xs pl-7 w-40"
+                className="h-7 text-xs pl-7 w-48"
               />
             </div>
-            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-              <SelectTrigger className="h-7 text-xs w-28"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs">Alle</SelectItem>
-                {profiles.map(p => <SelectItem key={p.id} value={p.id} className="text-xs">{p.short_code}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button size="sm" className="h-7 text-xs gap-1" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-3 w-3" />Vorgang
-            </Button>
           </div>
 
           {/* Kanban */}
           <div className="flex-1 overflow-x-auto p-4">
             {loading ? (
               <p className="text-xs text-muted-foreground text-center py-12">Laden…</p>
-            ) : !selectedDeptId ? (
-              <p className="text-xs text-muted-foreground text-center py-12">Wähle eine Abteilung</p>
             ) : (
               <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex gap-3 h-full">
                   {columns.map(col => (
-                    <DroppableColumn key={col.id} id={col.id} label={col.label} cards={col.cards} color={col.color} />
+                    <DroppableColumn
+                      key={col.id}
+                      id={col.id}
+                      label={col.label}
+                      color={col.color}
+                      cards={col.cards}
+                      onOpen={(id) => navigate(`/projects/${id}`)}
+                    />
                   ))}
                 </div>
                 <DragOverlay>
-                  {activeCard && <CaseKanbanCard caseItem={activeCard} isDragging />}
+                  {activeCard && <ProjectKanbanCard project={activeCard} isDragging />}
                 </DragOverlay>
               </DndContext>
             )}
           </div>
         </div>
       </div>
-
-      <CreateCaseFromDeptDialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        departmentId={selectedDeptId || undefined}
-        departments={departments}
-        onCreated={fetchCases}
-      />
     </AppLayout>
   );
 }
