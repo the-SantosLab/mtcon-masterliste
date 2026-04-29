@@ -97,6 +97,33 @@ export default function CaseDetail() {
     refresh();
   };
 
+  const changeProject = async (newProjectId: string) => {
+    if (!c || !user) return;
+    const resolvedId = newProjectId === '_none' ? null : newProjectId;
+    const oldProjectName = c.project ? `${c.project.project_number || ''} ${c.project.name}`.trim() : 'Keines';
+    const newProject = projectOptions.find(p => p.id === resolvedId);
+    const newProjectName = newProject ? `${newProject.project_number || ''} ${newProject.name}`.trim() : 'Keines';
+
+    const { error } = await supabase.from('cases').update({
+      project_id: resolvedId,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: 'PROJECT_MOVE',
+      field: 'project_id',
+      old_value: oldProjectName,
+      new_value: newProjectName,
+      actor_id: user.id,
+    });
+
+    toast.success(`Projekt geändert: ${newProjectName}`);
+    refresh();
+  };
+
   const assignCase = async (newAssigneeId: string) => {
     if (!c || !user) return;
     const resolvedId = newAssigneeId === '_none' ? null : newAssigneeId;
