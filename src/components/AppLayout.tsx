@@ -34,7 +34,7 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
   
-  { href: '/projects', label: 'Projekte', icon: FolderKanban },
+  { href: '/projects', label: 'Abteilungsübergreifende Vorgänge', icon: FolderKanban },
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
