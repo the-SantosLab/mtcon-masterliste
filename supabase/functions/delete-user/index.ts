@@ -53,8 +53,28 @@ Deno.serve(async (req) => {
   await supabaseAdmin.from('user_preferences').delete().eq('user_id', user_id);
   await supabaseAdmin.from('project_members').delete().eq('user_id', user_id);
 
-  // Unassign cases
+  // Null out FK references to this user across all tables
   await supabaseAdmin.from('cases').update({ assignee_id: null }).eq('assignee_id', user_id);
+  await supabaseAdmin.from('cases').update({ created_by: null }).eq('created_by', user_id);
+  await supabaseAdmin.from('cases').update({ closed_by: null }).eq('closed_by', user_id);
+  await supabaseAdmin.from('cases').update({ last_changed_by: null }).eq('last_changed_by', user_id);
+  await supabaseAdmin.from('cases').update({ due_date_corrected_by: null }).eq('due_date_corrected_by', user_id);
+  await supabaseAdmin.from('cases').update({ secondary_check_by: null }).eq('secondary_check_by', user_id);
+
+  await supabaseAdmin.from('case_tasks').update({ assigned_to: null }).eq('assigned_to', user_id);
+  await supabaseAdmin.from('case_tasks').update({ completed_by: null }).eq('completed_by', user_id);
+  await supabaseAdmin.from('case_tasks').update({ created_by: null as any }).eq('created_by', user_id);
+
+  await supabaseAdmin.from('projects').update({ owner_id: null }).eq('owner_id', user_id);
+  await supabaseAdmin.from('projects').update({ created_by: null as any }).eq('created_by', user_id);
+
+  await supabaseAdmin.from('departments').update({ manager_user_id: null }).eq('manager_user_id', user_id);
+  await supabaseAdmin.from('users_profile').update({ manager_id: null }).eq('manager_id', user_id);
+  await supabaseAdmin.from('support_tickets').update({ assigned_to: null }).eq('assigned_to', user_id);
+
+  // Activity log entries reference the actor — delete them since actor_id is NOT NULL
+  await supabaseAdmin.from('case_activity').delete().eq('actor_id', user_id);
+  await supabaseAdmin.from('project_activity').delete().eq('actor_id', user_id);
 
   // Delete profile
   const { error: profileErr } = await supabaseAdmin.from('users_profile').delete().eq('id', user_id);
