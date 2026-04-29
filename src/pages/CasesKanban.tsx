@@ -116,8 +116,8 @@ export default function CasesKanban() {
   const fetchProjects = useCallback(async () => {
     const { data: projData } = await supabase
       .from('projects')
-      .select('id, name, project_number, status, department_id, description, updated_at')
-      .order('updated_at', { ascending: false });
+      .select('id, name, project_number, status, department_id, description, updated_at, created_at')
+      .order('created_at', { ascending: true });
     const list = (projData || []) as ProjectRow[];
 
     const ids = list.map(p => p.id);
