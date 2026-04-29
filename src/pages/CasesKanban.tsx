@@ -217,14 +217,14 @@ export default function CasesKanban() {
       .order('created_at', { ascending: true });
     const list = (data || []) as any[];
 
-    const assigneeIds = Array.from(new Set(list.map(c => c.assignee_id).filter(Boolean)));
-    let shortCodes: Record<string, string> = {};
+    const assigneeIds: string[] = Array.from(new Set(list.map(c => c.assignee_id).filter(Boolean) as string[]));
+    const shortCodes: Record<string, string> = {};
     if (assigneeIds.length > 0) {
-      const { data: profs } = await supabase
-        .from('profiles')
+      const profsRes: any = await (supabase.from('profiles') as any)
         .select('user_id, short_code')
         .in('user_id', assigneeIds);
-      (profs || []).forEach((p: any) => { shortCodes[p.user_id] = p.short_code; });
+      const profs = (profsRes?.data || []) as any[];
+      profs.forEach((p: any) => { shortCodes[p.user_id] = p.short_code; });
     }
 
     setCases(list.map(c => ({
