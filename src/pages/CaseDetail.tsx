@@ -54,6 +54,8 @@ export default function CaseDetail() {
   useEffect(() => {
     supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
       .then(r => setDepartments((r.data || []) as DeptOption[]));
+    supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name')
+      .then(r => setProfiles((r.data || []) as ProfileOption[]));
   }, []);
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
