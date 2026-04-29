@@ -484,14 +484,16 @@ export default function ProjectDetail() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Verknüpfte Vorgänge ({cases.length})</h3>
-                <Link to="/cases" className="text-[11px] text-primary hover:underline">Alle anzeigen →</Link>
+                <button onClick={() => setCreateOpen(true)} className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                  <Plus className="h-3 w-3" />Vorgang hinzufügen
+                </button>
               </div>
               <div className="rounded-md border border-border bg-card overflow-hidden">
                 {cases.length === 0 ? (
                   <div className="py-10 text-center">
                     <XCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                     <p className="text-xs text-muted-foreground">Keine Vorgänge verknüpft</p>
-                    <Link to="/cases" className="text-[11px] text-primary hover:underline mt-1 inline-block">Vorgang anlegen</Link>
+                    <button onClick={() => setCreateOpen(true)} className="text-[11px] text-primary hover:underline mt-1 inline-block">Vorgang anlegen</button>
                   </div>
                 ) : (
                   <table className="w-full">
