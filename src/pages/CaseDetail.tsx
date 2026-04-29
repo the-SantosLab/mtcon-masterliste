@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
+interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
 
 type CaseWithRels = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
