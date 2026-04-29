@@ -14,8 +14,10 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
   CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
-  Pencil, Check, X, Clock, Activity,
+  Pencil, Check, X, Clock, Activity, Plus,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
