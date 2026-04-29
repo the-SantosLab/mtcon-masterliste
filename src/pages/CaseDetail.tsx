@@ -93,6 +93,43 @@ export default function CaseDetail() {
     refresh();
   };
 
+  const assignCase = async (newAssigneeId: string) => {
+    if (!c || !user) return;
+    const resolvedId = newAssigneeId === '_none' ? null : newAssigneeId;
+    const oldAssignee = c.assignee?.short_code || 'Niemand';
+    const newAssignee = profiles.find(p => p.id === resolvedId);
+    const newAssigneeName = newAssignee?.short_code || 'Niemand';
+
+    const { error } = await supabase.from('cases').update({
+      assignee_id: resolvedId,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: resolvedId ? 'ASSIGN' : 'UNASSIGN',
+      field: 'assignee_id',
+      old_value: oldAssignee,
+      new_value: newAssigneeName,
+      actor_id: user.id,
+    });
+
+    if (resolvedId && resolvedId !== user.id) {
+      await supabase.from('notifications').insert({
+        user_id: resolvedId,
+        type: 'assignment',
+        title: `Vorgang zugewiesen: ${c.case_no}`,
+        body: c.project_name,
+        href: `/cases/${c.id}`,
+      });
+    }
+
+    toast.success(resolvedId ? `Zugewiesen an ${newAssigneeName}` : 'Zuweisung entfernt');
+    refresh();
+  };
+
 
   const changeStatus = async (newStatus: string) => {
     if (!c || !user) return;
