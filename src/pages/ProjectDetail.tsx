@@ -365,11 +365,35 @@ export default function ProjectDetail() {
               <span>Erstellt {format(new Date(project.created_at), 'dd.MM.yyyy')}</span>
             </div>
           </div>
-          <Link to={`/projects/${project.id}/files`}>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-              <FolderOpen className="h-3.5 w-3.5" />Dateiablage
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-8 text-xs gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />Vorgang hinzufügen
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-sm font-semibold">
+                    Neuen Vorgang anlegen
+                    <span className="block text-[11px] font-normal text-muted-foreground mt-0.5">
+                      Verknüpft mit {project.project_number} – {project.name}
+                    </span>
+                  </DialogTitle>
+                </DialogHeader>
+                <CreateCaseForm
+                  userId={user?.id || ''}
+                  defaultProjectId={project.id}
+                  onCreated={() => { setCreateOpen(false); reloadCases(); }}
+                />
+              </DialogContent>
+            </Dialog>
+            <Link to={`/projects/${project.id}/files`}>
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                <FolderOpen className="h-3.5 w-3.5" />Dateiablage
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* KPI Stats */}
