@@ -237,6 +237,7 @@ export default function ProjectDetail() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const loadProject = async () => {
     if (!id) return;
