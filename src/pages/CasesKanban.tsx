@@ -21,6 +21,7 @@ interface ProjectRow {
   department_id: string | null;
   description: string | null;
   updated_at: string;
+  created_at: string;
 }
 
 interface ProjectCard extends ProjectRow {
