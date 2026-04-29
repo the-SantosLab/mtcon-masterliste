@@ -17,7 +17,7 @@ export type Database = {
       case_activity: {
         Row: {
           action: string
-          actor_id: string
+          actor_id: string | null
           case_id: string
           created_at: string
           field: string | null
@@ -28,7 +28,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          actor_id: string
+          actor_id?: string | null
           case_id: string
           created_at?: string
           field?: string | null
@@ -39,7 +39,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          actor_id?: string
+          actor_id?: string | null
           case_id?: string
           created_at?: string
           field?: string | null
@@ -73,7 +73,7 @@ export type Database = {
           completed_at: string | null
           completed_by: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           department_id: string | null
           description: string | null
           id: string
@@ -88,7 +88,7 @@ export type Database = {
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           department_id?: string | null
           description?: string | null
           id?: string
@@ -103,7 +103,7 @@ export type Database = {
           completed_at?: string | null
           completed_by?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           department_id?: string | null
           description?: string | null
           id?: string
@@ -159,7 +159,7 @@ export type Database = {
           closed_by: string | null
           completed_at: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           customer_no: string | null
           department_id: string | null
           due_at: string | null
@@ -194,7 +194,7 @@ export type Database = {
           closed_by?: string | null
           completed_at?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           customer_no?: string | null
           department_id?: string | null
           due_at?: string | null
@@ -229,7 +229,7 @@ export type Database = {
           closed_by?: string | null
           completed_at?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           customer_no?: string | null
           department_id?: string | null
           due_at?: string | null
@@ -534,7 +534,7 @@ export type Database = {
       project_activity: {
         Row: {
           action: string
-          actor_id: string
+          actor_id: string | null
           created_at: string
           field: string | null
           id: string
@@ -545,7 +545,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          actor_id: string
+          actor_id?: string | null
           created_at?: string
           field?: string | null
           id?: string
@@ -556,7 +556,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          actor_id?: string
+          actor_id?: string | null
           created_at?: string
           field?: string | null
           id?: string
@@ -669,7 +669,7 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
-          created_by: string
+          created_by: string | null
           department_id: string | null
           description: string | null
           id: string
@@ -683,7 +683,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by: string
+          created_by?: string | null
           department_id?: string | null
           description?: string | null
           id?: string
@@ -697,7 +697,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           department_id?: string | null
           description?: string | null
           id?: string
