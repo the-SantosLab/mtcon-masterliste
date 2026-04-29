@@ -202,7 +202,7 @@ export default function ProjectsList() {
                 <tr>
                   <td colSpan={7} className={cn(cellCls, 'py-12 text-center')}>
                     <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                    <p className="text-muted-foreground">Keine Projekte gefunden</p>
+                    <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
                   </td>
                 </tr>
               ) : filtered.map(p => (
