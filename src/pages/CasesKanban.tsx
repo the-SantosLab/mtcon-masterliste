@@ -220,7 +220,7 @@ export default function CasesKanban() {
     const assigneeIds: string[] = Array.from(new Set(list.map(c => c.assignee_id).filter(Boolean) as string[]));
     const shortCodes: Record<string, string> = {};
     if (assigneeIds.length > 0) {
-      const profsRes: any = await (supabase.from('profiles') as any)
+      const profsRes: any = await (supabase as any).from('profiles')
         .select('user_id, short_code')
         .in('user_id', assigneeIds);
       const profs = (profsRes?.data || []) as any[];
