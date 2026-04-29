@@ -20,6 +20,7 @@ interface Profile { id: string; display_name: string; short_code: string; depart
 interface CreateCaseFormProps {
   userId: string;
   onCreated: () => void;
+  defaultProjectId?: string;
 }
 
 const STEPS = [
