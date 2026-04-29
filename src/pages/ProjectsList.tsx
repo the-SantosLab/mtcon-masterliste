@@ -154,8 +154,8 @@ export default function ProjectsList() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Projekte</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Alle Projekte und Dateiablagen</p>
+            <h1 className="text-lg font-semibold text-foreground">Abteilungsübergreifende Vorgänge</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Alle abteilungsübergreifenden Vorgänge und Dateiablagen</p>
           </div>
           {!isViewer && (
             <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 text-xs gap-1.5">
