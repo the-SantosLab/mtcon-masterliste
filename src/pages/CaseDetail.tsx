@@ -388,6 +388,37 @@ export default function CaseDetail() {
               </div>
             )}
 
+            {/* Project move */}
+            {!isViewer && !isTerminalStatus(c.status) && (
+              <div className="rounded-md border border-border bg-card p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <FolderKanban className="h-3.5 w-3.5 text-muted-foreground" />
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Projekt verschieben</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground">
+                    Aktuell: <span className="text-foreground font-medium">
+                      {c.project ? `${c.project.project_number || ''} ${c.project.name}`.trim() : 'Keines'}
+                    </span>
+                  </div>
+                  <Select value={c.project_id || '_none'} onValueChange={changeProject}>
+                    <SelectTrigger className="w-[280px] h-8 text-xs"><SelectValue placeholder="Projekt wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Kein Projekt</SelectItem>
+                      {projectOptions
+                        .filter(p => p.status !== 'archived' || p.id === c.project_id)
+                        .map(p => (
+                          <SelectItem key={p.id} value={p.id} className="text-xs">
+                            {p.project_number && <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>}
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             {/* Tasks checklist */}
             <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
 
