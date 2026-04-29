@@ -188,6 +188,7 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
       project_name: form.project_name,
       project_id: form.project_id || null,
       department_id: finalDeptId,
+      assignee_id: form.assignee_id || null,
       customer_no: form.customer_no || null,
       client_name: form.client_name || null,
       internal_area_code: form.internal_area_code || null,
