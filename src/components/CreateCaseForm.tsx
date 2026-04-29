@@ -133,6 +133,7 @@ export function CreateCaseForm({ userId, onCreated }: CreateCaseFormProps) {
   const handleDeptChange = (v: string) => {
     set('department_id', v === '_none' ? '' : v);
     set('team_id', '');
+    set('assignee_id', '');
   };
 
   const handleProjectChange = (projectId: string) => {
