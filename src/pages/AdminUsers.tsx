@@ -166,18 +166,32 @@ export default function AdminUsers() {
 
   const saveEdit = async () => {
     if (!editing) return;
+
+    // Schutz: Hauptadmin (Igor Petreski) darf nicht herabgestuft oder deaktiviert werden
+    const PROTECTED_ADMIN_ID = '6da81b97-5ab7-4601-9130-8ebbb4a70e3e';
+    let effectiveRole = newRole;
+    let effectiveActive = newActive;
+    if (editing.id === PROTECTED_ADMIN_ID) {
+      if (effectiveRole !== 'admin' || !effectiveActive) {
+        toast.error('Dieser Hauptadministrator kann nicht herabgestuft oder deaktiviert werden.');
+        effectiveRole = 'admin';
+        effectiveActive = true;
+      }
+    }
+
     const { error: profileErr } = await supabase.from('users_profile').update({
-      active: newActive,
+      active: effectiveActive,
       department_id: newDeptId || null,
       display_name: newDisplayName,
       short_code: newShortCode,
+      is_admin: effectiveRole === 'admin',
     } as any).eq('id', editing.id);
     if (profileErr) { toast.error('Profil-Update fehlgeschlagen: ' + profileErr.message); return; }
 
     // Delete all existing roles for this user, then insert the new one
     const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', editing.id);
     if (delErr) { toast.error('Rolle konnte nicht aktualisiert werden: ' + delErr.message); return; }
-    const { error: insErr } = await supabase.from('user_roles').insert({ user_id: editing.id, role: newRole as Enums<'app_role'> });
+    const { error: insErr } = await supabase.from('user_roles').insert({ user_id: editing.id, role: effectiveRole as Enums<'app_role'> });
     if (insErr) { toast.error('Rolle konnte nicht gesetzt werden: ' + insErr.message); return; }
 
     toast.success('Benutzer aktualisiert');
