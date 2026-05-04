@@ -41,20 +41,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let profileData: any = profileRes.data ?? null;
     let roleData: AppRole | null = roleRes.data?.role ?? null;
 
-    // Self-heal: protected main admin must always be admin + active
-    if (userId === PROTECTED_ADMIN_ID) {
-      const needsProfileFix = !profileData || profileData.is_admin !== true || profileData.active !== true;
-      const needsRoleFix = roleData !== 'admin';
-
-      if (needsProfileFix) {
-        await supabase.from('users_profile').update({ is_admin: true, active: true }).eq('id', userId);
-        const { data: fresh } = await supabase.from('users_profile').select('id, active, created_at, department_id, display_name, is_admin, is_manager, manager_id, short_code, updated_at').eq('id', userId).single();
-        if (fresh) profileData = fresh;
-      }
-      if (needsRoleFix) {
-        await supabase.from('user_roles').upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id,role' });
-        roleData = 'admin';
-      }
+    // Self-heal: protected main admin must always have admin role.
+    // Note: is_admin flag in users_profile is no longer used by check_is_admin();
+    // user_roles is the source of truth, and only admins can write to it.
+    if (userId === PROTECTED_ADMIN_ID && roleData !== 'admin') {
+      const { error: roleErr } = await supabase
+        .from('user_roles')
+        .upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id,role' });
+      if (!roleErr) roleData = 'admin';
     }
 
     if (profileData) setProfile(profileData);

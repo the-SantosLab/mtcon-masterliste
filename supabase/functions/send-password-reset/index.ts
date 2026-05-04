@@ -23,6 +23,25 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
+  // Rate limit: 1 request per email per 5 minutes (uses counters table as a tiny store)
+  const normalizedEmail = String(email).trim().toLowerCase().slice(0, 254);
+  const rateKey = `pwreset:${normalizedEmail}`;
+  const { data: existing } = await supabaseAdmin
+    .from('counters')
+    .select('value, key')
+    .eq('key', rateKey)
+    .maybeSingle();
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (existing && nowSec - (existing.value as number) < 300) {
+    // Don't reveal abuse — return generic success
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  await supabaseAdmin
+    .from('counters')
+    .upsert({ key: rateKey, value: nowSec }, { onConflict: 'key' });
+
   // Generate the recovery link via admin API
   // redirectTo must be the published app URL so Supabase redirects correctly
   const finalRedirectTo = redirectTo || 'https://mtcon.kscommand.com/reset-password';
