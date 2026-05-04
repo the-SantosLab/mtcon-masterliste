@@ -30,13 +30,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const PROTECTED_ADMIN_ID = '6da81b97-5ab7-4601-9130-8ebbb4a70e3e';
+
   const fetchProfileAndRole = async (userId: string) => {
     const [profileRes, roleRes] = await Promise.all([
       supabase.from('users_profile').select('id, active, created_at, department_id, display_name, is_admin, is_manager, manager_id, short_code, updated_at').eq('id', userId).single(),
       supabase.from('user_roles').select('role').eq('user_id', userId).limit(1).single(),
     ]);
-    if (profileRes.data) setProfile(profileRes.data as any);
-    if (roleRes.data) setRole(roleRes.data.role);
+
+    let profileData: any = profileRes.data ?? null;
+    let roleData: AppRole | null = roleRes.data?.role ?? null;
+
+    // Self-heal: protected main admin must always be admin + active
+    if (userId === PROTECTED_ADMIN_ID) {
+      const needsProfileFix = !profileData || profileData.is_admin !== true || profileData.active !== true;
+      const needsRoleFix = roleData !== 'admin';
+
+      if (needsProfileFix) {
+        await supabase.from('users_profile').update({ is_admin: true, active: true }).eq('id', userId);
+        const { data: fresh } = await supabase.from('users_profile').select('id, active, created_at, department_id, display_name, is_admin, is_manager, manager_id, short_code, updated_at').eq('id', userId).single();
+        if (fresh) profileData = fresh;
+      }
+      if (needsRoleFix) {
+        await supabase.from('user_roles').upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id,role' });
+        roleData = 'admin';
+      }
+    }
+
+    if (profileData) setProfile(profileData);
+    setRole(roleData);
   };
 
   useEffect(() => {
