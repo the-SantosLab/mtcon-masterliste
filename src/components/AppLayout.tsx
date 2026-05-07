@@ -194,6 +194,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="gap-2 text-xs cursor-pointer">
+                <Link to="/profile"><Users className="h-3.5 w-3.5" />Mein Profil</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setPwDialogOpen(true)}
                 className="gap-2 text-xs cursor-pointer"
