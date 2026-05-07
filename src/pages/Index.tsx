@@ -104,9 +104,11 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="space-y-6 max-w-6xl">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Dashboard</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Übersicht aller Vorgänge</p>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">{greeting}{firstName ? `, ${firstName}` : ''}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">{timeString}</p>
+          </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <KPICard title="Offen" value={openCount} icon={ClipboardList} active={activeFilter === 'open'} onClick={() => toggleFilter('open')} />
