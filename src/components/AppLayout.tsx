@@ -167,7 +167,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <img
               src={mtconErpLabel}
               alt="MTCON goes ERP"
-              className="w-full max-w-[140px] h-auto opacity-80 rounded-md mix-blend-screen"
+              className="w-full max-w-[140px] h-auto opacity-90"
             />
           </div>
         )}
