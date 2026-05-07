@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { isMasterUser } from '@/lib/master-users';
 
 interface Subtask {
   id: string;
@@ -286,6 +287,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
           tasks.map(task => {
             const isExpanded = expandedId === task.id;
             const st = STATUS_MAP[task.status] || STATUS_MAP.open;
+            const canEditTask = isMasterUser(userId) || task.created_by === userId;
             return (
               <div key={task.id} className="rounded-md border border-border/50 overflow-hidden">
                 <div
@@ -312,7 +314,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                   <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                 </div>
 
-                {isExpanded && canEdit && (
+                {isExpanded && canEditTask && (
                   <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50 bg-muted/20">
                     <div className="grid grid-cols-3 gap-2">
                       <div className="space-y-1">

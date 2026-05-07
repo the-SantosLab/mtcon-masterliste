@@ -43,6 +43,8 @@ interface CaseCard {
   due_at: string | null;
   assignee_short_code?: string;
   created_at: string;
+  subtasks_done: number;
+  subtasks_total: number;
 }
 
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
@@ -100,6 +102,28 @@ function CaseKanbanCardInner({ c, onOpen, isDragging }: { c: CaseCard; onOpen?: 
         />
       </div>
       <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
+      {c.subtasks_total > 0 && (
+        <div className="flex items-center gap-0.5 mb-2">
+          {Array.from({ length: Math.min(c.subtasks_total, 10) }).map((_, i) => {
+            const isDone = i < c.subtasks_done;
+            return (
+              <span
+                key={i}
+                className={cn(
+                  'h-1.5 flex-1 max-w-[10px] rounded-sm',
+                  isDone ? 'bg-[hsl(var(--status-done))]' : 'bg-destructive/70',
+                )}
+              />
+            );
+          })}
+          {c.subtasks_total > 10 && (
+            <span className="text-[9px] font-mono text-muted-foreground ml-1">+{c.subtasks_total - 10}</span>
+          )}
+          <span className="text-[9px] font-mono text-muted-foreground ml-auto">
+            {c.subtasks_done}/{c.subtasks_total}
+          </span>
+        </div>
+      )}
       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
         {c.due_at && (
           <span className="inline-flex items-center gap-0.5">
@@ -227,6 +251,20 @@ export default function CasesKanban() {
       profs.forEach((p: any) => { shortCodes[p.user_id] = p.short_code; });
     }
 
+    const caseIds = list.map(c => c.id);
+    const subDone: Record<string, number> = {};
+    const subTotal: Record<string, number> = {};
+    if (caseIds.length > 0) {
+      const { data: subs } = await supabase
+        .from('case_tasks')
+        .select('case_id, status')
+        .in('case_id', caseIds);
+      (subs || []).forEach((t: any) => {
+        subTotal[t.case_id] = (subTotal[t.case_id] || 0) + 1;
+        if (t.status === 'done') subDone[t.case_id] = (subDone[t.case_id] || 0) + 1;
+      });
+    }
+
     setCases(list.map(c => ({
       id: c.id,
       case_no: c.case_no,
@@ -236,6 +274,8 @@ export default function CasesKanban() {
       due_at: c.due_at,
       assignee_short_code: c.assignee_id ? shortCodes[c.assignee_id] : undefined,
       created_at: c.created_at,
+      subtasks_done: subDone[c.id] || 0,
+      subtasks_total: subTotal[c.id] || 0,
     })));
   }, []);
 
@@ -247,6 +287,7 @@ export default function CasesKanban() {
       .channel('kanban-data')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchProjects())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, () => fetchCases())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
