@@ -191,6 +191,8 @@ export default function AdminUsers() {
     setNewDeptId((u as any).department_id || '');
     setNewDisplayName(u.display_name);
     setNewShortCode(u.short_code);
+    setNewAvatarUrl((u as any).avatar_url || '');
+    fetchAvatars();
   };
 
   const saveEdit = async () => {
