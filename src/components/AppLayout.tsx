@@ -11,7 +11,7 @@ import {
   FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package,
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
-import mtconErpLabel from '@/assets/mtcon-erp-label.jpg';
+import mtconErpLabel from '@/assets/mtcon-erp-label.png';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,7 +167,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <img
               src={mtconErpLabel}
               alt="MTCON goes ERP"
-              className="w-full max-w-[140px] h-auto opacity-80 rounded-md mix-blend-screen"
+              className="w-full max-w-[140px] h-auto opacity-90"
             />
           </div>
         )}
