@@ -110,6 +110,39 @@ export type Database = {
           },
         ]
       }
+      case_notes: {
+        Row: {
+          author_id: string
+          body: string
+          case_id: string
+          created_at: string
+          edited_at: string | null
+          edited_by: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          case_id: string
+          created_at?: string
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          case_id?: string
+          created_at?: string
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       case_tasks: {
         Row: {
           assigned_to: string | null
