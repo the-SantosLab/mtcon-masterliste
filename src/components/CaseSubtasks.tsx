@@ -227,6 +227,14 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
     fetchTasks();
   };
 
+  const updateTitle = async (taskId: string, title: string) => {
+    const t = title.trim();
+    if (!t) return;
+    const { error } = await supabase.from('case_tasks').update({ title: t } as any).eq('id', taskId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    fetchTasks();
+  };
+
   const deleteTask = async (taskId: string) => {
     await supabase.from('case_tasks').delete().eq('id', taskId);
     fetchTasks();
