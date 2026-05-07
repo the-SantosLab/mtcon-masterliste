@@ -48,6 +48,29 @@ export const ACTION_LABELS: Record<string, string> = {
   COMMENT: 'Kommentar',
   CLOSE: 'Abgeschlossen',
   CREATE: 'Erstellt',
+  updated: 'Bearbeitet',
+  deleted: 'Gelöscht',
+  task_created: 'Unteraufgabe angelegt',
+  task_updated: 'Unteraufgabe geändert',
+  task_deleted: 'Unteraufgabe gelöscht',
+  auto_forward: 'Automatisch weitergeleitet',
+};
+
+export const FIELD_LABELS: Record<string, string> = {
+  due_at: 'Fälligkeit',
+  project_name: 'Projektname',
+  note: 'Notiz',
+  estimated_hours: 'Geschätzte Stunden',
+  client_name: 'Kunde',
+  customer_no: 'Kunden-Nr.',
+  project_article_no: 'Artikel-Nr.',
+  quantity: 'Menge',
+  sop: 'SOP',
+  received_at: 'Eingangsdatum',
+  status: 'Status',
+  department_id: 'Abteilung',
+  assigned_to: 'Zuständig',
+  title: 'Titel',
 };
 
 export const isTerminalStatus = (status: CaseStatus) =>
