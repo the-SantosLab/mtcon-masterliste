@@ -449,6 +449,32 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
           </Button>
         </div>
       )}
+
+      <Dialog open={!!completingTask} onOpenChange={(o) => { if (!o) { setCompletingTask(null); setCompletionNote(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Unteraufgabe abschließen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">{completingTask?.title}</p>
+            <label className="text-xs font-medium text-foreground">Was wurde gemacht?</label>
+            <Textarea
+              value={completionNote}
+              onChange={e => setCompletionNote(e.target.value)}
+              placeholder="Beschreibe kurz die durchgeführte Arbeit…"
+              className="text-xs min-h-[100px]"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => { setCompletingTask(null); setCompletionNote(''); }} className="h-8 text-xs">Abbrechen</Button>
+            <Button size="sm" onClick={confirmCompletion} disabled={savingCompletion || !completionNote.trim()} className="h-8 text-xs">
+              {savingCompletion ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+              Erledigt markieren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
