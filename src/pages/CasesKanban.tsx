@@ -270,7 +270,7 @@ export default function CasesKanban() {
       if (!isAdmin) {
         const allowed = new Set<string>();
         (perms || []).forEach((p: any) => allowed.add(p.department_id));
-        depts.forEach(d => { if (d.owner_id === user.id) allowed.add(d.id); });
+        depts.forEach((d: any) => { if (d.owner_id === user.id) allowed.add(d.id); });
         // Include ancestors so the tree stays connected
         const byId = new Map(depts.map(d => [d.id, d]));
         const withAncestors = new Set(allowed);
