@@ -46,6 +46,9 @@ interface CaseCard {
   project_name: string;
   status: string;
   department_id: string | null;
+  effective_department_id: string | null;
+  is_dept_fallback: boolean;
+  created_by: string | null;
   due_at: string | null;
   assignee_short_code?: string;
   created_at: string;
