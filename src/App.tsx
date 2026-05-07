@@ -74,6 +74,7 @@ function AuthenticatedApp() {
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />
         <Route path="/admin/workflows" element={<ProtectedRoute><AdminWorkflows /></ProtectedRoute>} />
         <Route path="/admin/backups" element={<ProtectedRoute><AdminBackups /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>
