@@ -103,19 +103,49 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   };
 
   const updateTaskStatus = async (task: Subtask, newStatus: string) => {
-    const completed = newStatus === 'done';
+    if (newStatus === 'done') {
+      setCompletingTask(task);
+      setCompletionNote('');
+      return;
+    }
     const { error } = await supabase.from('case_tasks').update({
       status: newStatus,
-      completed,
-      completed_at: completed ? new Date().toISOString() : null,
-      completed_by: completed ? userId : null,
+      completed: false,
+      completed_at: null,
+      completed_by: null,
     } as any).eq('id', task.id);
     if (error) { toast.error('Fehler'); return; }
+    fetchTasks();
+  };
 
-    // Auto-forward: if done, check next subtask and move main case
-    if (completed) {
-      await autoForward(task);
-    }
+  const confirmCompletion = async () => {
+    if (!completingTask) return;
+    const note = completionNote.trim();
+    if (!note) { toast.error('Bitte beschreibe, was gemacht wurde'); return; }
+    setSavingCompletion(true);
+    const task = completingTask;
+    const { error } = await supabase.from('case_tasks').update({
+      status: 'done',
+      completed: true,
+      completed_at: new Date().toISOString(),
+      completed_by: userId,
+    } as any).eq('id', task.id);
+    if (error) { toast.error('Fehler'); setSavingCompletion(false); return; }
+
+    await supabase.from('case_activity').insert({
+      case_id: caseId,
+      task_id: task.id,
+      action: 'task_completed',
+      actor_id: userId,
+      field: 'completion_note',
+      new_value: note,
+      message: `Unteraufgabe „${task.title}" erledigt: ${note}`,
+    } as any);
+
+    await autoForward(task);
+    setCompletingTask(null);
+    setCompletionNote('');
+    setSavingCompletion(false);
     fetchTasks();
   };
 
