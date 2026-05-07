@@ -165,6 +165,37 @@ export default function AdminDepartments() {
           )}
         </div>
 
+        {/* Team-Übersicht je Abteilung */}
+        {!loading && departments.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams</h2>
+            {departments.map(d => {
+              const members = profiles.filter(p => p.department_id === d.id);
+              if (members.length === 0) return null;
+              return (
+                <div key={d.id} className="rounded-md border border-border bg-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <h3 className="text-sm font-medium text-foreground">{d.name}</h3>
+                    <span className="text-[11px] text-muted-foreground">({members.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {members.map(m => (
+                      <div key={m.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors">
+                        <UserAvatar user={m as any} size="lg" tooltip={false} />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{m.display_name}</p>
+                          <p className="text-[11px] font-mono text-muted-foreground">{m.short_code}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Create Dialog */}
         <Dialog open={creating} onOpenChange={o => !o && setCreating(false)}>
           <DialogContent>
