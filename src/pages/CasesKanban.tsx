@@ -160,27 +160,50 @@ function DraggableCase({ card, onOpen }: { card: CaseCard; onOpen: () => void })
   );
 }
 
-function DroppableColumn({ id, label, color, count, children }: { id: string; label: string; color: string; count: number; children: React.ReactNode }) {
+function DroppableColumn({ id, label, color, count, collapsed, onToggle, children }: { id: string; label: string; color: string; count: number; collapsed: boolean; onToggle: () => void; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'flex-1 min-w-[240px] max-w-[340px] rounded-lg border border-border bg-muted/30 flex flex-col',
+        'rounded-lg border border-border bg-muted/30 flex flex-col transition-all',
+        collapsed ? 'w-10 min-w-[40px] max-w-[40px]' : 'flex-1 min-w-[240px] max-w-[340px]',
         isOver && 'ring-2 ring-primary/30 bg-primary/5',
       )}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border">
-        <span className={cn('h-2 w-2 rounded-full', color)} />
-        <span className="text-xs font-medium text-foreground">{label}</span>
-        <span className="text-[10px] font-mono text-muted-foreground ml-auto">{count}</span>
-      </div>
-      <div className="flex-1 p-2 space-y-2 overflow-y-auto min-h-[200px]">
-        {count === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-8">Keine Einträge</p>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={cn(
+          'flex items-center gap-2 border-b border-border hover:bg-muted/50 transition-colors w-full',
+          collapsed ? 'flex-col py-2 px-1 h-full border-b-0' : 'px-3 py-2.5',
         )}
-        {children}
-      </div>
+      >
+        {collapsed ? (
+          <>
+            <ChevronRight className="h-3 w-3 text-muted-foreground" />
+            <span className={cn('h-2 w-2 rounded-full', color)} />
+            <span className="text-[10px] font-mono text-muted-foreground" style={{ writingMode: 'vertical-rl' }}>
+              {label} · {count}
+            </span>
+          </>
+        ) : (
+          <>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            <span className={cn('h-2 w-2 rounded-full', color)} />
+            <span className="text-xs font-medium text-foreground">{label}</span>
+            <span className="text-[10px] font-mono text-muted-foreground ml-auto">{count}</span>
+          </>
+        )}
+      </button>
+      {!collapsed && (
+        <div className="flex-1 p-2 space-y-2 overflow-y-auto min-h-[200px]">
+          {count === 0 && (
+            <p className="text-[10px] text-muted-foreground text-center py-8">Keine Einträge</p>
+          )}
+          {children}
+        </div>
+      )}
     </div>
   );
 }
