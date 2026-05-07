@@ -537,6 +537,31 @@ export default function CasesKanban() {
             </ToggleGroup>
 
             <div className="flex-1" />
+
+            {isAdmin && !isProjects && (
+              selectMode ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground">{selectedCaseIds.size} ausgewählt</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 text-[11px] gap-1"
+                    disabled={selectedCaseIds.size === 0}
+                    onClick={() => setConfirmBulkDelete(true)}
+                  >
+                    <Trash2 className="h-3 w-3" />Löschen
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" onClick={exitSelectMode}>
+                    <X className="h-3 w-3" />Abbrechen
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" onClick={() => setSelectMode(true)}>
+                  <CheckSquare className="h-3 w-3" />Auswählen
+                </Button>
+              )
+            )}
+
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
@@ -547,6 +572,22 @@ export default function CasesKanban() {
               />
             </div>
           </div>
+
+          <AlertDialog open={confirmBulkDelete} onOpenChange={setConfirmBulkDelete}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{selectedCaseIds.size} Vorgänge endgültig löschen?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Die ausgewählten Vorgänge inkl. zugehöriger Aktivitäten, Notizen und Unteraufgaben
+                  werden unwiderruflich gelöscht.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogAction onClick={bulkDeleteCases}>Endgültig löschen</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {/* Kanban */}
           <div className="flex-1 overflow-x-auto p-4">
