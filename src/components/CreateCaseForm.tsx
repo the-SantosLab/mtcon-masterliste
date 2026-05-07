@@ -510,7 +510,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                                 onClick={() => selectProductOrCreate(productSearch.trim())}
                                 className="text-primary hover:underline"
                               >
-                                „{productSearch.trim()}" als neues Produkt erstellen
+                                {userIsAdmin ? `„${productSearch.trim()}" als neues Produkt erstellen` : `„${productSearch.trim()}" als Produktvorschlag einreichen`}
                               </button>
                             ) : 'Kein Produkt gefunden'}
                           </CommandEmpty>
