@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { isMasterUser } from '@/lib/master-users';
 
 interface Subtask {
   id: string;
