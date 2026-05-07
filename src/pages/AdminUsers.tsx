@@ -477,6 +477,8 @@ export default function AdminUsers() {
                   </div>
                 </div>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Rolle</Label>
                 <Select value={newRole} onValueChange={setNewRole}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
