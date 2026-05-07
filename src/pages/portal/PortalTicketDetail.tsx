@@ -68,7 +68,7 @@ export default function PortalTicketDetail() {
     try {
       const attachmentPaths: string[] = [];
       for (const file of files) {
-        const path = `tickets/${id}/${Date.now()}_${file.name}`;
+        const path = `tickets/${id}/${Date.now()}_${sanitizeFileName(file.name)}`;
         const { error } = await supabase.storage.from('support-attachments').upload(path, file);
         if (!error) attachmentPaths.push(path);
       }
