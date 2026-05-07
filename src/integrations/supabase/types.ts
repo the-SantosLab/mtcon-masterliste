@@ -356,6 +356,33 @@ export type Database = {
         }
         Relationships: []
       }
+      department_permissions: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          permission: Database["public"]["Enums"]["dept_permission"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          permission?: Database["public"]["Enums"]["dept_permission"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          permission?: Database["public"]["Enums"]["dept_permission"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           code: string | null
@@ -1063,6 +1090,7 @@ export type Database = {
         | "blocked"
         | "verworfen"
         | "archiv"
+      dept_permission: "none" | "read" | "write"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -1209,6 +1237,7 @@ export const Constants = {
         "verworfen",
         "archiv",
       ],
+      dept_permission: ["none", "read", "write"],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
         "open",
