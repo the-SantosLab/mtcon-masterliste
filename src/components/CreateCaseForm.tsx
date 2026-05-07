@@ -633,6 +633,48 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={suggestProductOpen} onOpenChange={setSuggestProductOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Produkt vorschlagen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Das Produkt existiert noch nicht in den Stammdaten. Reiche einen Vorschlag ein – ein Admin prüft und legt es bei Genehmigung an.
+            </p>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Produktname *</Label>
+              <Input value={suggestForm.product_name} onChange={e => setSuggestForm(f => ({ ...f, product_name: e.target.value }))} className="h-8 text-xs" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Artikelnummer</Label>
+                <Input value={suggestForm.article_number} onChange={e => setSuggestForm(f => ({ ...f, article_number: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Kategorie *</Label>
+                <Input value={suggestForm.category} onChange={e => setSuggestForm(f => ({ ...f, category: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Steckverbinder" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+              <Textarea value={suggestForm.description} onChange={e => setSuggestForm(f => ({ ...f, description: e.target.value }))} className="text-xs min-h-[60px]" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Begründung *</Label>
+              <Textarea value={suggestForm.request_reason} onChange={e => setSuggestForm(f => ({ ...f, request_reason: e.target.value }))} className="text-xs min-h-[60px]" placeholder="Warum wird dieses Produkt benötigt?" />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSuggestProductOpen(false)}>Abbrechen</Button>
+              <Button size="sm" className="h-8 text-xs" onClick={submitProductSuggestion} disabled={suggestSaving}>
+                {suggestSaving ? 'Wird gesendet…' : 'Vorschlag einreichen'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
+
   );
 }
