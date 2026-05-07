@@ -102,6 +102,28 @@ function CaseKanbanCardInner({ c, onOpen, isDragging }: { c: CaseCard; onOpen?: 
         />
       </div>
       <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
+      {c.subtasks_total > 0 && (
+        <div className="flex items-center gap-0.5 mb-2">
+          {Array.from({ length: Math.min(c.subtasks_total, 10) }).map((_, i) => {
+            const isDone = i < c.subtasks_done;
+            return (
+              <span
+                key={i}
+                className={cn(
+                  'h-1.5 flex-1 max-w-[10px] rounded-sm',
+                  isDone ? 'bg-[hsl(var(--status-done))]' : 'bg-destructive/70',
+                )}
+              />
+            );
+          })}
+          {c.subtasks_total > 10 && (
+            <span className="text-[9px] font-mono text-muted-foreground ml-1">+{c.subtasks_total - 10}</span>
+          )}
+          <span className="text-[9px] font-mono text-muted-foreground ml-auto">
+            {c.subtasks_done}/{c.subtasks_total}
+          </span>
+        </div>
+      )}
       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
         {c.due_at && (
           <span className="inline-flex items-center gap-0.5">
