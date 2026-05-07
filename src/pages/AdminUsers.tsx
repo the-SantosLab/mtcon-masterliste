@@ -271,17 +271,26 @@ export default function AdminUsers() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-4xl">
+      <div className="space-y-4 max-w-6xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Mitarbeiter</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Benutzer, Rollen und Abteilungen verwalten</p>
+            <h1 className="text-lg font-semibold text-foreground">Team & Berechtigungen</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Mitarbeiter, Rollen, Abteilungen und Zugriffsrechte verwalten</p>
           </div>
           <Button onClick={() => setCreateOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
             <UserPlus className="h-3.5 w-3.5" />
             Neuer Mitarbeiter
           </Button>
         </div>
+
+        <Tabs defaultValue="users" className="space-y-4">
+          <TabsList className="h-8">
+            <TabsTrigger value="users" className="text-xs h-6">Mitarbeiter</TabsTrigger>
+            <TabsTrigger value="import" className="text-xs h-6">CSV-Import</TabsTrigger>
+            <TabsTrigger value="matrix" className="text-xs h-6">Rechtematrix</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-4 mt-0">
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
