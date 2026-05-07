@@ -11,7 +11,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Building2, UserCheck, FolderKanban } from 'lucide-react';
+import { ArrowLeft, Building2, UserCheck, FolderKanban, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +42,15 @@ export default function CaseDetail() {
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const navigate = useNavigate();
+
+  const deleteCase = async () => {
+    if (!c) return;
+    const { error } = await supabase.from('cases').delete().eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success(`Vorgang ${c.case_no} gelöscht`);
+    navigate('/cases');
+  };
 
   const fetchCase = async () => {
     if (!id) return;
@@ -227,8 +241,31 @@ export default function CaseDetail() {
             {canEdit && !isTerminalStatus(c.status) && (
               <Button variant="outline" size="sm" onClick={() => completeCase(c.id)} className="h-8 text-xs">Abschließen</Button>
             )}
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="h-8 text-xs gap-1.5">
+                    <Trash2 className="h-3.5 w-3.5" />Löschen
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Vorgang endgültig löschen?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Vorgang {c.case_no} wird unwiderruflich gelöscht. Verknüpfte Aktivitäten,
+                      Notizen und Unteraufgaben gehen verloren. Anhänge im Speicher bleiben bestehen.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                    <AlertDialogAction onClick={deleteCase}>Endgültig löschen</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
+
 
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">
