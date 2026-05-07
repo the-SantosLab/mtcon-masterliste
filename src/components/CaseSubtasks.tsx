@@ -324,6 +324,15 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
 
                 {isExpanded && canEditTask && (
                   <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50 bg-muted/20">
+                    <div className="space-y-1">
+                      <p className="text-[10px] text-muted-foreground">Titel</p>
+                      <Input
+                        defaultValue={task.title}
+                        className="h-7 text-xs"
+                        onBlur={e => { if (e.target.value.trim() && e.target.value !== task.title) updateTitle(task.id, e.target.value); }}
+                        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      />
+                    </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="space-y-1">
                         <p className="text-[10px] text-muted-foreground">Status</p>
