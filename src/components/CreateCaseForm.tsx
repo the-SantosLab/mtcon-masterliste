@@ -105,8 +105,16 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     });
   }, [defaultProjectId, userId]);
 
-  const topLevel = departments.filter(d => !d.parent_id);
-  const teams = departments.filter(d => d.parent_id === form.department_id);
+  const topLevel = useMemo(() => {
+    const all = departments.filter(d => !d.parent_id);
+    if (!writableDeptIds) return all;
+    return all.filter(d => writableDeptIds.has(d.id) || departments.some(c => c.parent_id === d.id && writableDeptIds.has(c.id)));
+  }, [departments, writableDeptIds]);
+  const teams = useMemo(() => {
+    const all = departments.filter(d => d.parent_id === form.department_id);
+    if (!writableDeptIds) return all;
+    return all.filter(d => writableDeptIds.has(d.id));
+  }, [departments, form.department_id, writableDeptIds]);
   const effectiveDeptId = form.team_id || form.department_id;
 
   const deptProfiles = useMemo(() => {
