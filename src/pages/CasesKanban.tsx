@@ -478,14 +478,14 @@ export default function CasesKanban() {
                 <div className="flex gap-3 h-full">
                   {isProjects
                     ? projectColumns.map(col => (
-                        <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length}>
+                        <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length} collapsed={!!collapsedCols[col.id]} onToggle={() => toggleCol(col.id)}>
                           {col.cards.map(c => (
                             <DraggableProject key={c.id} card={c} onOpen={() => navigate(`/projects/${c.id}`)} />
                           ))}
                         </DroppableColumn>
                       ))
                     : caseColumns.map(col => (
-                        <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length}>
+                        <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length} collapsed={!!collapsedCols[col.id]} onToggle={() => toggleCol(col.id)}>
                           {col.cards.map(c => (
                             <DraggableCase key={c.id} card={c} onOpen={() => navigate(`/cases/${c.id}`)} />
                           ))}
