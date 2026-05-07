@@ -10,12 +10,13 @@ interface Props {
   onCreateCase?: (departmentId: string) => void;
   showCounts?: boolean;
   compact?: boolean;
+  defaultCollapsed?: boolean;
 }
 
 function TreeNode({
-  node, depth, selectedId, onSelect, onCreateCase, showCounts, compact,
+  node, depth, selectedId, onSelect, onCreateCase, showCounts, compact, defaultCollapsed,
 }: { node: DepartmentNode; depth: number } & Omit<Props, 'nodes'>) {
-  const [open, setOpen] = useState(depth === 0);
+  const [open, setOpen] = useState(defaultCollapsed ? false : depth === 0);
   const hasChildren = node.children.length > 0;
   const isSelected = selectedId === node.id;
 
@@ -83,6 +84,7 @@ function TreeNode({
               onCreateCase={onCreateCase}
               showCounts={showCounts}
               compact={compact}
+              defaultCollapsed={defaultCollapsed}
             />
           ))}
         </div>
@@ -91,7 +93,7 @@ function TreeNode({
   );
 }
 
-export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, showCounts, compact }: Props) {
+export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, showCounts, compact, defaultCollapsed }: Props) {
   if (nodes.length === 0) {
     return <p className="text-xs text-muted-foreground p-4">Keine Abteilungen vorhanden</p>;
   }
@@ -107,6 +109,7 @@ export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, 
           onCreateCase={onCreateCase}
           showCounts={showCounts}
           compact={compact}
+          defaultCollapsed={defaultCollapsed}
         />
       ))}
     </div>

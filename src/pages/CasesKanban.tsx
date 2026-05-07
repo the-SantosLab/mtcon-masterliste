@@ -431,6 +431,7 @@ export default function CasesKanban() {
             selectedId={selectedDeptId}
             onSelect={setSelectedDeptId}
             compact
+            defaultCollapsed
           />
         </div>
 
