@@ -162,6 +162,16 @@ export function AppLayout({ children }: AppLayoutProps) {
           )}
         </nav>
 
+        {isDark && (
+          <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-center">
+            <img
+              src={mtconErpLabel}
+              alt="MTCON goes ERP"
+              className="w-full max-w-[140px] h-auto opacity-80 rounded-md mix-blend-screen"
+            />
+          </div>
+        )}
+
         <div className="border-t border-sidebar-border px-3 py-3 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
