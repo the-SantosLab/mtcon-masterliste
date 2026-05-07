@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { Pencil, Plus, Building2 } from 'lucide-react';
+import { UserAvatar } from '@/components/UserAvatar';
 
 interface Department {
   id: string;
