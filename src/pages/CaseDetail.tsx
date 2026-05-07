@@ -265,8 +265,7 @@ export default function CaseDetail() {
             )}
           </div>
         </div>
-          </div>
-        </div>
+
 
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">
