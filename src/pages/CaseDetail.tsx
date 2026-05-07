@@ -241,6 +241,30 @@ export default function CaseDetail() {
             {canEdit && !isTerminalStatus(c.status) && (
               <Button variant="outline" size="sm" onClick={() => completeCase(c.id)} className="h-8 text-xs">Abschließen</Button>
             )}
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="h-8 text-xs gap-1.5">
+                    <Trash2 className="h-3.5 w-3.5" />Löschen
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Vorgang endgültig löschen?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Vorgang {c.case_no} wird unwiderruflich gelöscht. Verknüpfte Aktivitäten,
+                      Notizen und Unteraufgaben gehen verloren. Anhänge im Speicher bleiben bestehen.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                    <AlertDialogAction onClick={deleteCase}>Endgültig löschen</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        </div>
           </div>
         </div>
 
