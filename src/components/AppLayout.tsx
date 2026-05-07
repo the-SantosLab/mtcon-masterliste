@@ -35,7 +35,6 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge Abteilungsübergreifen', icon: FolderKanban },
-  { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
@@ -44,6 +43,7 @@ const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
+  { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
 ];

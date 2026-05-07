@@ -60,6 +60,11 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+  const [suggestProductOpen, setSuggestProductOpen] = useState(false);
+  const [suggestForm, setSuggestForm] = useState({ product_name: '', article_number: '', category: '', description: '', request_reason: '' });
+  const [suggestSaving, setSuggestSaving] = useState(false);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -84,6 +89,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       setProfiles((prof.data || []) as Profile[]);
 
       const isAdmin = (roles.data || []).some((r: any) => r.role === 'admin');
+      setUserIsAdmin(isAdmin);
       if (isAdmin) {
         setWritableDeptIds(new Set(deptData.map(d => d.id)));
       } else {
@@ -199,15 +205,42 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     const existing = products.find(p => p.code === value);
     if (existing) {
       set('product_code', existing.code);
-    } else {
+      setProductOpen(false);
+      return;
+    }
+    if (userIsAdmin) {
       const code = value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 20) || value;
       const { data, error } = await supabase.from('products').insert({ code, name: value }).select().single();
       if (error) { toast.error('Fehler: ' + error.message); return; }
       setProducts(prev => [...prev, data]);
       set('product_code', data.code);
       toast.success('Produkt erstellt');
+      setProductOpen(false);
+    } else {
+      // Mitarbeiter: Vorschlag öffnen
+      setSuggestForm({ product_name: value, article_number: '', category: '', description: '', request_reason: '' });
+      setProductOpen(false);
+      setSuggestProductOpen(true);
     }
-    setProductOpen(false);
+  };
+
+  const submitProductSuggestion = async () => {
+    if (!suggestForm.product_name.trim()) { toast.error('Produktname ist Pflicht'); return; }
+    if (!suggestForm.category.trim()) { toast.error('Kategorie ist Pflicht'); return; }
+    if (!suggestForm.request_reason.trim()) { toast.error('Begründung ist Pflicht'); return; }
+    setSuggestSaving(true);
+    const { error } = await supabase.from('product_requests').insert({
+      product_name: suggestForm.product_name.trim(),
+      article_number: suggestForm.article_number.trim() || null,
+      category: suggestForm.category.trim(),
+      description: suggestForm.description.trim() || null,
+      request_reason: suggestForm.request_reason.trim(),
+      requested_by: userId,
+    });
+    setSuggestSaving(false);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Produktvorschlag eingereicht – ein Admin prüft ihn.');
+    setSuggestProductOpen(false);
   };
 
   const submit = async () => {
@@ -477,7 +510,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                                 onClick={() => selectProductOrCreate(productSearch.trim())}
                                 className="text-primary hover:underline"
                               >
-                                „{productSearch.trim()}" als neues Produkt erstellen
+                                {userIsAdmin ? `„${productSearch.trim()}" als neues Produkt erstellen` : `„${productSearch.trim()}" als Produktvorschlag einreichen`}
                               </button>
                             ) : 'Kein Produkt gefunden'}
                           </CommandEmpty>
@@ -600,6 +633,48 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={suggestProductOpen} onOpenChange={setSuggestProductOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Produkt vorschlagen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Das Produkt existiert noch nicht in den Stammdaten. Reiche einen Vorschlag ein – ein Admin prüft und legt es bei Genehmigung an.
+            </p>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Produktname *</Label>
+              <Input value={suggestForm.product_name} onChange={e => setSuggestForm(f => ({ ...f, product_name: e.target.value }))} className="h-8 text-xs" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Artikelnummer</Label>
+                <Input value={suggestForm.article_number} onChange={e => setSuggestForm(f => ({ ...f, article_number: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Kategorie *</Label>
+                <Input value={suggestForm.category} onChange={e => setSuggestForm(f => ({ ...f, category: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Steckverbinder" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+              <Textarea value={suggestForm.description} onChange={e => setSuggestForm(f => ({ ...f, description: e.target.value }))} className="text-xs min-h-[60px]" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Begründung *</Label>
+              <Textarea value={suggestForm.request_reason} onChange={e => setSuggestForm(f => ({ ...f, request_reason: e.target.value }))} className="text-xs min-h-[60px]" placeholder="Warum wird dieses Produkt benötigt?" />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSuggestProductOpen(false)}>Abbrechen</Button>
+              <Button size="sm" className="h-8 text-xs" onClick={submitProductSuggestion} disabled={suggestSaving}>
+                {suggestSaving ? 'Wird gesendet…' : 'Vorschlag einreichen'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
+
   );
 }
