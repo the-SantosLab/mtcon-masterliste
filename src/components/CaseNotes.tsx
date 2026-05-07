@@ -35,12 +35,23 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
   const [editText, setEditText] = useState('');
 
   const fetchNotes = async () => {
-    const { data } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from('case_notes')
-      .select('*, author:users_profile!case_notes_author_id_fkey(display_name, short_code)')
+      .select('*')
       .eq('case_id', caseId)
       .order('created_at', { ascending: false });
-    setNotes((data as NoteRow[]) || []);
+    if (error) { console.error('case_notes load error', error); setLoading(false); return; }
+    const rows = (data || []) as NoteRow[];
+    const authorIds = Array.from(new Set(rows.map(r => r.author_id).filter(Boolean)));
+    const authorMap: Record<string, { display_name: string; short_code: string }> = {};
+    if (authorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('users_profile')
+        .select('id, display_name, short_code')
+        .in('id', authorIds);
+      (profs || []).forEach((p: any) => { authorMap[p.id] = { display_name: p.display_name, short_code: p.short_code }; });
+    }
+    setNotes(rows.map(r => ({ ...r, author: authorMap[r.author_id] || null })));
     setLoading(false);
   };
 
