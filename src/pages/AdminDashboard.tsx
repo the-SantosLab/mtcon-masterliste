@@ -15,6 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/UserAvatar';
 import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
