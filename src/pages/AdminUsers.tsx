@@ -452,7 +452,31 @@ export default function AdminUsers() {
                 <Input value={newShortCode} onChange={e => setNewShortCode(e.target.value)} className="h-8 text-xs font-mono" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Rolle</Label>
+                <Label className="text-xs text-muted-foreground">Profilbild</Label>
+                <div className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-3">
+                  <UserAvatar
+                    user={{ id: editing?.id, display_name: newDisplayName, short_code: newShortCode, avatar_url: newAvatarUrl }}
+                    size="lg"
+                    tooltip={false}
+                  />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {newAvatarUrl ? newAvatarUrl.split('/').pop() : 'Kein Bild zugewiesen'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" className="h-7 text-[11px] gap-1.5" onClick={() => { setAvatarPickerOpen(true); fetchAvatars(); }}>
+                        <ImageIcon className="h-3 w-3" />
+                        Bild auswählen
+                      </Button>
+                      {newAvatarUrl && (
+                        <Button type="button" variant="ghost" size="sm" className="h-7 text-[11px] text-muted-foreground" onClick={() => setNewAvatarUrl('')}>
+                          Entfernen
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
                 <Select value={newRole} onValueChange={setNewRole}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
