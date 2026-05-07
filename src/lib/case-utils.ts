@@ -54,6 +54,9 @@ export const ACTION_LABELS: Record<string, string> = {
   task_updated: 'Unteraufgabe geändert',
   task_deleted: 'Unteraufgabe gelöscht',
   auto_forward: 'Automatisch weitergeleitet',
+  note_created: 'Notiz hinzugefügt',
+  note_updated: 'Notiz bearbeitet',
+  note_deleted: 'Notiz gelöscht',
 };
 
 export const FIELD_LABELS: Record<string, string> = {

@@ -89,6 +89,12 @@ export function ActivityTimeline({ caseId, refreshKey }: ActivityTimelineProps) 
             </div>
             {a.action === 'COMMENT' ? (
               <p className="text-xs text-foreground mt-1 whitespace-pre-wrap leading-relaxed">{a.message}</p>
+            ) : a.action === 'note_created' ? (
+              <p className="text-[11px] text-muted-foreground">Notiz hinzugefügt{a.new_value && <span className="text-foreground"> · „{a.new_value}“</span>}</p>
+            ) : a.action === 'note_updated' ? (
+              <p className="text-[11px] text-muted-foreground">Notiz bearbeitet{a.old_value && a.new_value && <span> · „{a.old_value}“ → „{a.new_value}“</span>}</p>
+            ) : a.action === 'note_deleted' ? (
+              <p className="text-[11px] text-muted-foreground">Notiz gelöscht{a.old_value && <span> · „{a.old_value}“</span>}</p>
             ) : a.action === 'DEPT_MOVE' ? (
               <p className="text-[11px] text-muted-foreground">
                 Abteilung geändert
