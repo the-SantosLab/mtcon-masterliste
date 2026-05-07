@@ -36,7 +36,7 @@ export default function PortalCreateTicket() {
       if (error) throw error;
 
       for (const file of files) {
-        const path = `tickets/${ticket.id}/${Date.now()}_${file.name}`;
+        const path = `tickets/${ticket.id}/${Date.now()}_${sanitizeFileName(file.name)}`;
         await supabase.storage.from('support-attachments').upload(path, file);
       }
 
