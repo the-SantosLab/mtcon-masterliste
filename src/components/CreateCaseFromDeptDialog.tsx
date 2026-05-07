@@ -35,14 +35,34 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [saving, setSaving] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [writableDeptIds, setWritableDeptIds] = useState<Set<string> | null>(null);
 
   useEffect(() => {
     if (open) {
       setDeptId(departmentId || '');
       supabase.from('users_profile').select('id, display_name, short_code').eq('active', true).order('display_name')
         .then(({ data }) => setProfiles((data || []) as Profile[]));
+      if (user?.id) {
+        Promise.all([
+          supabase.from('user_roles').select('role').eq('user_id', user.id),
+          supabase.from('department_permissions').select('department_id, permission').eq('user_id', user.id),
+        ]).then(([roles, perms]) => {
+          const isAdmin = (roles.data || []).some((r: any) => r.role === 'admin');
+          if (isAdmin) {
+            setWritableDeptIds(new Set(departments.map(d => d.id)));
+          } else {
+            const writePerms = new Set((perms.data || []).filter((p: any) => p.permission === 'write').map((p: any) => p.department_id));
+            const allowed = new Set<string>();
+            for (const d of departments as any[]) {
+              if (d.owner_id === user.id) allowed.add(d.id);
+              else if (!d.owner_id && writePerms.has(d.id)) allowed.add(d.id);
+            }
+            setWritableDeptIds(allowed);
+          }
+        });
+      }
     }
-  }, [open, departmentId]);
+  }, [open, departmentId, user?.id, departments]);
 
   const handleSave = async () => {
     if (!projectName.trim()) return toast.error('Titel ist erforderlich');
