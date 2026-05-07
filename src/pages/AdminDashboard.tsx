@@ -15,12 +15,13 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/UserAvatar';
 import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
   assignee_id: string | null; due_at: string | null; created_at: string;
-  assignee: { short_code: string; display_name: string } | null;
+  assignee: { id?: string; short_code: string; display_name: string; avatar_url?: string | null } | null;
 }
 
 interface ProjectRow { id: string; name: string; project_number: string; status: string; created_at: string; }
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     const [casesRes, projectsRes, usersRes] = await Promise.all([
       supabase.from('cases')
-        .select('id, case_no, project_name, status, assignee_id, due_at, created_at, assignee:users_profile!cases_assignee_id_fkey(short_code, display_name)')
+        .select('id, case_no, project_name, status, assignee_id, due_at, created_at, assignee:users_profile!cases_assignee_id_fkey(id, short_code, display_name, avatar_url)')
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name, project_number, status, created_at'),
       supabase.from('users_profile').select('id', { count: 'exact', head: true }).eq('active', true),
@@ -330,9 +331,12 @@ export default function AdminDashboard() {
                       <p className="text-xs text-foreground truncate">{c.project_name}</p>
                       <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[11px] text-muted-foreground">{c.assignee?.short_code ?? '–'}</p>
-                      <p className="text-[10px] text-[hsl(var(--status-overdue))] tabular-nums">{formatDate(c.due_at)}</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {c.assignee && <UserAvatar user={c.assignee as any} size="md" />}
+                      <div className="text-right">
+                        <p className="text-[11px] text-muted-foreground">{c.assignee?.short_code ?? '–'}</p>
+                        <p className="text-[10px] text-[hsl(var(--status-overdue))] tabular-nums">{formatDate(c.due_at)}</p>
+                      </div>
                     </div>
                   </Link>
                 ))}

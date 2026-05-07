@@ -12,10 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound } from 'lucide-react';
+import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound, ImageIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
 import { PermissionMatrix } from '@/components/PermissionMatrix';
+import { UserAvatar } from '@/components/UserAvatar';
+import { cn } from '@/lib/utils';
 
 type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
@@ -41,6 +43,31 @@ export default function AdminUsers() {
   const [newDeptId, setNewDeptId] = useState<string>('');
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newShortCode, setNewShortCode] = useState('');
+  const [newAvatarUrl, setNewAvatarUrl] = useState<string>('');
+
+  // Available avatars from storage bucket
+  const [avatarOptions, setAvatarOptions] = useState<{ name: string; url: string }[]>([]);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [loadingAvatars, setLoadingAvatars] = useState(false);
+
+  const fetchAvatars = async () => {
+    setLoadingAvatars(true);
+    try {
+      const { data, error } = await supabase.storage.from('avatars').list('', { limit: 200, sortBy: { column: 'name', order: 'asc' } });
+      if (error) throw error;
+      const items = (data || [])
+        .filter((f: any) => f.name && !f.name.endsWith('/') && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
+        .map((f: any) => {
+          const { data: pub } = supabase.storage.from('avatars').getPublicUrl(f.name);
+          return { name: f.name, url: pub.publicUrl };
+        });
+      setAvatarOptions(items);
+    } catch (err: any) {
+      toast.error('Avatare konnten nicht geladen werden: ' + err.message);
+    } finally {
+      setLoadingAvatars(false);
+    }
+  };
 
   // Search state
   const [search, setSearch] = useState('');
@@ -165,6 +192,8 @@ export default function AdminUsers() {
     setNewDeptId((u as any).department_id || '');
     setNewDisplayName(u.display_name);
     setNewShortCode(u.short_code);
+    setNewAvatarUrl((u as any).avatar_url || '');
+    fetchAvatars();
   };
 
   const saveEdit = async () => {
@@ -188,6 +217,7 @@ export default function AdminUsers() {
       display_name: newDisplayName,
       short_code: newShortCode,
       is_admin: effectiveRole === 'admin',
+      avatar_url: newAvatarUrl || null,
     } as any).eq('id', editing.id);
     if (profileErr) { toast.error('Profil-Update fehlgeschlagen: ' + profileErr.message); return; }
 
@@ -314,6 +344,7 @@ export default function AdminUsers() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground w-12">Bild</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Rolle</th>
@@ -324,9 +355,12 @@ export default function AdminUsers() {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={6} className="p-4 text-center text-muted-foreground text-xs">Laden…</td></tr>
+                <tr><td colSpan={7} className="p-4 text-center text-muted-foreground text-xs">Laden…</td></tr>
               ) : filteredUsers.map(u => (
                 <tr key={u.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="px-4 py-1.5">
+                    <UserAvatar user={u as any} size="sm" tooltip={false} />
+                  </td>
                   <td className="px-4 py-2.5 text-foreground text-sm">{u.display_name}</td>
                   <td className="px-4 py-2.5 font-mono text-muted-foreground">{u.short_code}</td>
                   <td className="px-4 py-2.5 capitalize text-muted-foreground">{u.role || '–'}</td>
@@ -417,6 +451,32 @@ export default function AdminUsers() {
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Kürzel</Label>
                 <Input value={newShortCode} onChange={e => setNewShortCode(e.target.value)} className="h-8 text-xs font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Profilbild</Label>
+                <div className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-3">
+                  <UserAvatar
+                    user={{ id: editing?.id, display_name: newDisplayName, short_code: newShortCode, avatar_url: newAvatarUrl }}
+                    size="lg"
+                    tooltip={false}
+                  />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {newAvatarUrl ? newAvatarUrl.split('/').pop() : 'Kein Bild zugewiesen'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" className="h-7 text-[11px] gap-1.5" onClick={() => { setAvatarPickerOpen(true); fetchAvatars(); }}>
+                        <ImageIcon className="h-3 w-3" />
+                        Bild auswählen
+                      </Button>
+                      {newAvatarUrl && (
+                        <Button type="button" variant="ghost" size="sm" className="h-7 text-[11px] text-muted-foreground" onClick={() => setNewAvatarUrl('')}>
+                          Entfernen
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Rolle</Label>
@@ -608,6 +668,45 @@ export default function AdminUsers() {
                 {resetPwLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Speichern…</> : 'Passwort speichern'}
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Avatar picker */}
+        <Dialog open={avatarPickerOpen} onOpenChange={setAvatarPickerOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">Profilbild auswählen</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Bilder aus dem <span className="font-mono">avatars</span>-Speicher. Hochgeladen werden Bilder direkt im Backend.
+              </DialogDescription>
+            </DialogHeader>
+            {loadingAvatars ? (
+              <div className="py-12 text-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Laden…</div>
+            ) : avatarOptions.length === 0 ? (
+              <div className="py-10 text-center text-xs text-muted-foreground">Keine Bilder im Bucket gefunden.</div>
+            ) : (
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                {avatarOptions.map(img => {
+                  const selected = newAvatarUrl === img.url;
+                  return (
+                    <button
+                      key={img.name}
+                      type="button"
+                      onClick={() => { setNewAvatarUrl(img.url); setAvatarPickerOpen(false); }}
+                      className={cn(
+                        'group relative rounded-md overflow-hidden border bg-muted/40 transition-all',
+                        selected ? 'border-primary ring-2 ring-primary/40' : 'border-border hover:border-primary/40',
+                      )}
+                    >
+                      <img src={img.url} alt={img.name} loading="lazy" className="w-full aspect-square object-cover" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1.5">
+                        <p className="text-[9px] font-mono text-white/90 truncate">{img.name}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

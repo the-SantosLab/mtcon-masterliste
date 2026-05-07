@@ -1104,6 +1104,7 @@ export type Database = {
       users_profile: {
         Row: {
           active: boolean
+          avatar_url: string | null
           created_at: string
           department_id: string | null
           display_name: string
@@ -1116,6 +1117,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          avatar_url?: string | null
           created_at?: string
           department_id?: string | null
           display_name: string
@@ -1128,6 +1130,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          avatar_url?: string | null
           created_at?: string
           department_id?: string | null
           display_name?: string

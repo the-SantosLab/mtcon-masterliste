@@ -24,6 +24,7 @@ import AdminWorkflows from "./pages/AdminWorkflows";
 import AdminBackups from "./pages/AdminBackups";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
@@ -73,6 +74,7 @@ function AuthenticatedApp() {
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />
         <Route path="/admin/workflows" element={<ProtectedRoute><AdminWorkflows /></ProtectedRoute>} />
         <Route path="/admin/backups" element={<ProtectedRoute><AdminBackups /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>
