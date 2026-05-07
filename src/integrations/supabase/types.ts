@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      backups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          note: string | null
+          rows_count: number | null
+          size_bytes: number | null
+          status: string
+          storage_path: string
+          tables_count: number | null
+          trigger: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          note?: string | null
+          rows_count?: number | null
+          size_bytes?: number | null
+          status?: string
+          storage_path: string
+          tables_count?: number | null
+          trigger: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          note?: string | null
+          rows_count?: number | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string
+          tables_count?: number | null
+          trigger?: string
+        }
+        Relationships: []
+      }
       case_activity: {
         Row: {
           action: string
