@@ -343,6 +343,7 @@ export default function AdminUsers() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground w-12">Bild</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Rolle</th>
@@ -353,9 +354,12 @@ export default function AdminUsers() {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={6} className="p-4 text-center text-muted-foreground text-xs">Laden…</td></tr>
+                <tr><td colSpan={7} className="p-4 text-center text-muted-foreground text-xs">Laden…</td></tr>
               ) : filteredUsers.map(u => (
                 <tr key={u.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="px-4 py-1.5">
+                    <UserAvatar user={u as any} size="sm" tooltip={false} />
+                  </td>
                   <td className="px-4 py-2.5 text-foreground text-sm">{u.display_name}</td>
                   <td className="px-4 py-2.5 font-mono text-muted-foreground">{u.short_code}</td>
                   <td className="px-4 py-2.5 capitalize text-muted-foreground">{u.role || '–'}</td>
