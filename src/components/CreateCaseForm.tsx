@@ -46,6 +46,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [writableDeptIds, setWritableDeptIds] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [customerSearch, setCustomerSearch] = useState('');
@@ -68,17 +69,33 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       supabase.from('products').select('*').order('name'),
       supabase.from('internal_areas').select('*').order('name'),
       supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false }),
-      supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order'),
+      supabase.from('departments').select('id, name, code, parent_id, owner_id, is_active').eq('is_active', true).order('sort_order'),
       supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name'),
-    ]).then(([cust, prod, ar, proj, dept, prof]) => {
+      supabase.from('user_roles').select('role').eq('user_id', userId),
+      supabase.from('department_permissions').select('department_id, permission').eq('user_id', userId),
+    ]).then(([cust, prod, ar, proj, dept, prof, roles, perms]) => {
       setCustomers(cust.data || []);
       setProducts(prod.data || []);
       setAreas(ar.data || []);
       const projectsData = (proj.data || []) as ProjectOption[];
       setProjects(projectsData);
-      setDepartments((dept.data || []) as DeptOption[]);
+      const deptData = (dept.data || []) as (DeptOption & { owner_id: string | null })[];
+      setDepartments(deptData);
       setProfiles((prof.data || []) as Profile[]);
-      // Vorausgefüllter Projektname, wenn defaultProjectId gesetzt ist
+
+      const isAdmin = (roles.data || []).some((r: any) => r.role === 'admin');
+      if (isAdmin) {
+        setWritableDeptIds(new Set(deptData.map(d => d.id)));
+      } else {
+        const writePerms = new Set((perms.data || []).filter((p: any) => p.permission === 'write').map((p: any) => p.department_id));
+        const allowed = new Set<string>();
+        for (const d of deptData) {
+          if (d.owner_id === userId) allowed.add(d.id);
+          else if (!d.owner_id && writePerms.has(d.id)) allowed.add(d.id);
+        }
+        setWritableDeptIds(allowed);
+      }
+
       if (defaultProjectId) {
         const preset = projectsData.find(p => p.id === defaultProjectId);
         if (preset) {
@@ -86,10 +103,18 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         }
       }
     });
-  }, [defaultProjectId]);
+  }, [defaultProjectId, userId]);
 
-  const topLevel = departments.filter(d => !d.parent_id);
-  const teams = departments.filter(d => d.parent_id === form.department_id);
+  const topLevel = useMemo(() => {
+    const all = departments.filter(d => !d.parent_id);
+    if (!writableDeptIds) return all;
+    return all.filter(d => writableDeptIds.has(d.id) || departments.some(c => c.parent_id === d.id && writableDeptIds.has(c.id)));
+  }, [departments, writableDeptIds]);
+  const teams = useMemo(() => {
+    const all = departments.filter(d => d.parent_id === form.department_id);
+    if (!writableDeptIds) return all;
+    return all.filter(d => writableDeptIds.has(d.id));
+  }, [departments, form.department_id, writableDeptIds]);
   const effectiveDeptId = form.team_id || form.department_id;
 
   const deptProfiles = useMemo(() => {
