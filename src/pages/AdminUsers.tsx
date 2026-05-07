@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
 import { PermissionMatrix } from '@/components/PermissionMatrix';
 import { UserAvatar } from '@/components/UserAvatar';
+import { cn } from '@/lib/utils';
 
 type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
