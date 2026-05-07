@@ -23,6 +23,8 @@ interface Profile {
   id: string;
   display_name: string;
   short_code: string;
+  avatar_url?: string | null;
+  department_id?: string | null;
 }
 
 export default function AdminDepartments() {
