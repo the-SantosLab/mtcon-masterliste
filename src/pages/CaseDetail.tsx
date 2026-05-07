@@ -42,6 +42,15 @@ export default function CaseDetail() {
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const navigate = useNavigate();
+
+  const deleteCase = async () => {
+    if (!c) return;
+    const { error } = await supabase.from('cases').delete().eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success(`Vorgang ${c.case_no} gelöscht`);
+    navigate('/cases');
+  };
 
   const fetchCase = async () => {
     if (!id) return;
