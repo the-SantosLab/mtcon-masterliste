@@ -158,7 +158,7 @@ export default function ProjectFiles() {
     if (!activeFolder || !e.target.files?.length) return;
     setUploading(true);
     const file = e.target.files[0];
-    const filePath = `${activeFolder.path}${file.name}`;
+    const filePath = `${activeFolder.path}${sanitizeFileName(file.name)}`;
     const { error } = await supabase.storage
       .from('project-files')
       .upload(filePath, file, { upsert: true });
