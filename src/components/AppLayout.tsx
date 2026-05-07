@@ -11,7 +11,7 @@ import {
   FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package,
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
-import mtconErpLabel from '@/assets/mtcon-erp-label.jpg';
+import mtconErpLabel from '@/assets/mtcon-erp-label.png';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
