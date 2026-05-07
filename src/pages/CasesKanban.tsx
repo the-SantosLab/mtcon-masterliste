@@ -617,6 +617,7 @@ export default function CasesKanban() {
                               selectable={selectMode}
                               selected={selectedCaseIds.has(c.id)}
                               onToggleSelect={() => toggleCaseSelected(c.id)}
+                              bulkIds={Array.from(selectedCaseIds)}
                             />
                           ))}
                         </DroppableColumn>
