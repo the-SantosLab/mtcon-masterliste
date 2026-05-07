@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
+import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept } from '@/lib/case-utils';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { Search, Plus, UserCheck } from 'lucide-react';
