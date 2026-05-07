@@ -42,6 +42,31 @@ export default function AdminUsers() {
   const [newDeptId, setNewDeptId] = useState<string>('');
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newShortCode, setNewShortCode] = useState('');
+  const [newAvatarUrl, setNewAvatarUrl] = useState<string>('');
+
+  // Available avatars from storage bucket
+  const [avatarOptions, setAvatarOptions] = useState<{ name: string; url: string }[]>([]);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [loadingAvatars, setLoadingAvatars] = useState(false);
+
+  const fetchAvatars = async () => {
+    setLoadingAvatars(true);
+    try {
+      const { data, error } = await supabase.storage.from('avatars').list('', { limit: 200, sortBy: { column: 'name', order: 'asc' } });
+      if (error) throw error;
+      const items = (data || [])
+        .filter((f: any) => f.name && !f.name.endsWith('/') && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
+        .map((f: any) => {
+          const { data: pub } = supabase.storage.from('avatars').getPublicUrl(f.name);
+          return { name: f.name, url: pub.publicUrl };
+        });
+      setAvatarOptions(items);
+    } catch (err: any) {
+      toast.error('Avatare konnten nicht geladen werden: ' + err.message);
+    } finally {
+      setLoadingAvatars(false);
+    }
+  };
 
   // Search state
   const [search, setSearch] = useState('');
