@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 import mtconErpLabel from '@/assets/mtcon-erp-label.png';
+import mtconErpLabelLight from '@/assets/mtcon-erp-label-light.png';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
