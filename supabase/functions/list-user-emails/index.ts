@@ -11,32 +11,37 @@ Deno.serve(async (req) => {
   }
 
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
   }
+  const token = authHeader.replace('Bearer ', '');
 
+  // Validate JWT via anon client + getClaims (signing-keys system).
+  const supabaseAuth = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+  );
+  const { data: claimsData, error: claimsErr } = await supabaseAuth.auth.getClaims(token);
+  if (claimsErr || !claimsData?.claims?.sub) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+  }
+  const userId = claimsData.claims.sub as string;
+
+  // Admin client for role check + listUsers.
   const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(
-    authHeader.replace('Bearer ', '')
-  );
-  if (userError || !user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
-  }
-
   const { data: roleData } = await supabaseAdmin
     .from('user_roles')
     .select('role')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .in('role', ['admin', 'staff']);
   if (!roleData || roleData.length === 0) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: corsHeaders });
   }
 
-  // Fetch all auth users and return id->email map
   const emails: Record<string, string> = {};
   let page = 1;
   const perPage = 1000;
