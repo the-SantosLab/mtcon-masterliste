@@ -669,6 +669,45 @@ export default function AdminUsers() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Avatar picker */}
+        <Dialog open={avatarPickerOpen} onOpenChange={setAvatarPickerOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">Profilbild auswählen</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Bilder aus dem <span className="font-mono">avatars</span>-Speicher. Hochgeladen werden Bilder direkt im Backend.
+              </DialogDescription>
+            </DialogHeader>
+            {loadingAvatars ? (
+              <div className="py-12 text-center text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Laden…</div>
+            ) : avatarOptions.length === 0 ? (
+              <div className="py-10 text-center text-xs text-muted-foreground">Keine Bilder im Bucket gefunden.</div>
+            ) : (
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                {avatarOptions.map(img => {
+                  const selected = newAvatarUrl === img.url;
+                  return (
+                    <button
+                      key={img.name}
+                      type="button"
+                      onClick={() => { setNewAvatarUrl(img.url); setAvatarPickerOpen(false); }}
+                      className={cn(
+                        'group relative rounded-md overflow-hidden border bg-muted/40 transition-all',
+                        selected ? 'border-primary ring-2 ring-primary/40' : 'border-border hover:border-primary/40',
+                      )}
+                    >
+                      <img src={img.url} alt={img.name} loading="lazy" className="w-full aspect-square object-cover" />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1.5">
+                        <p className="text-[9px] font-mono text-white/90 truncate">{img.name}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
