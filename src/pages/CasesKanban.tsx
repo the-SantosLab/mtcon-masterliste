@@ -287,6 +287,7 @@ export default function CasesKanban() {
       .channel('kanban-data')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchProjects())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, () => fetchCases())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
