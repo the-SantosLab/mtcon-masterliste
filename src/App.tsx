@@ -24,6 +24,7 @@ import AdminWorkflows from "./pages/AdminWorkflows";
 import AdminBackups from "./pages/AdminBackups";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
