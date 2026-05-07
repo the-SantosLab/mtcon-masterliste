@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Link as RouterLink } from 'react-router-dom';
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
