@@ -405,6 +405,7 @@ export default function Documentation() {
             <Tip>
               Der Vorschlags-Workflow ist modular angelegt und wird später für weitere Stammdaten-Typen (z. B. Lieferanten, Kunden) wiederverwendet.
             </Tip>
+            <Tip>
               Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
               Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
             </Tip>
