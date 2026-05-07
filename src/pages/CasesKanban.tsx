@@ -473,14 +473,16 @@ export default function CasesKanban() {
       fetchProjects();
     } else if (data?.kind === 'case') {
       const card = data.card as CaseCard;
-      if (card.status === targetStatus) return;
+      const bulkIds: string[] | undefined = data.bulkIds;
+      const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
       const { error } = await supabase
         .from('cases')
         .update({ status: targetStatus as Enums<'case_status'>, last_changed_at: new Date().toISOString(), last_changed_by: user?.id ?? null })
-        .eq('id', card.id);
+        .in('id', ids);
       if (error) { toast.error(error.message); return; }
       const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
-      toast.success(`Status auf "${lbl}" geändert`);
+      toast.success(ids.length > 1 ? `${ids.length} Vorgänge auf "${lbl}" verschoben` : `Status auf "${lbl}" geändert`);
+      if (ids.length > 1) exitSelectMode();
       fetchCases();
     }
   };
