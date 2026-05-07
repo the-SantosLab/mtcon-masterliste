@@ -337,8 +337,25 @@ export default function Documentation() {
                 ['Abschließen', 'Zugewiesener User / Admin', 'Vorgang ist nicht abgeschlossen'],
                 ['Status ändern', 'Zugewiesener User / Admin', 'Im Vorgang-Detail, über Dropdown'],
                 ['Abteilung verschieben', 'Staff / Admin', 'Setzt Status auf „Nicht begonnen", entfernt Bearbeiter und Startzeitpunkt — Vorgang ist wieder abholbereit'],
+                ['Vorgang löschen', 'Admin', 'Im Vorgang-Detail über das Aktionen-Menü — entfernt Vorgang inkl. Unteraufgaben, Notizen und Aktivitäts-Log transaktional'],
+                ['Mehrfach-Auswahl', 'Admin', 'Im Kanban-Board: mehrere Karten markieren und gemeinsam verschieben (Drag) oder löschen'],
               ]}
             />
+
+            <SubHeading>Vorgänge löschen (Admin)</SubHeading>
+            <p>
+              Administratoren können Vorgänge dauerhaft löschen — zum Beispiel im Archiv oder direkt aus dem Kanban-Board.
+              Beim Löschen werden zugehörige Unteraufgaben, Notizen und Aktivitäts-Einträge transaktional mitentfernt,
+              sodass keine Waisen-Datensätze zurückbleiben.
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Einzeln löschen" value="Im Vorgang-Detail über das Aktionen-Menü → ‚Löschen' (mit Bestätigungsdialog)" color="danger" />
+              <Rule label="Mehrfach-Auswahl im Kanban" value="Auswahlmodus aktivieren → Karten markieren → ‚Auswahl löschen' (Admin)" color="danger" />
+              <Rule label="Mehrfach verschieben" value="Markierte Karten gemeinsam per Drag in eine andere Spalte ziehen — alle ausgewählten Vorgänge werden gemeinsam aktualisiert" color="success" />
+            </div>
+            <Warning>
+              Das Löschen kann nicht rückgängig gemacht werden. Für vollständige Sicherungen siehe Admin → Backups.
+            </Warning>
 
             <SubHeading>Vorgang erstellen</SubHeading>
             <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Die Vorgangsnummer wird automatisch vergeben.</p>
@@ -359,16 +376,35 @@ export default function Documentation() {
 
             <SubHeading>Inline-Erstellung von Kunden & Produkten</SubHeading>
             <p>
-              Beim Erstellen eines Vorgangs können <strong className="text-foreground">neue Kunden</strong> und 
-              <strong className="text-foreground"> neue Produkte</strong> direkt im Formular angelegt werden, 
-              ohne vorher in die Stammdatenverwaltung wechseln zu müssen.
+              Beim Erstellen eines Vorgangs können <strong className="text-foreground">neue Kunden</strong> direkt im Formular angelegt werden,
+              ohne vorher in die Stammdatenverwaltung wechseln zu müssen. Für neue Produkte gilt eine rollenabhängige Logik:
             </p>
             <div className="space-y-1 mt-1">
               <Rule label="Kunde" value="Dropdown mit Autocomplete — Option ‚Neuen Kunden erstellen' fügt sofort einen neuen Eintrag in die Kunden-Tabelle ein" color="success" />
-              <Rule label="Produkt" value="Freitext-Eingabe mit Vorschlägen — bei neuem Produkt wird es automatisch in der Produkttabelle gespeichert" color="success" />
+              <Rule label="Produkt (Admin)" value="Admins legen neue Produkte direkt in der Produkttabelle (Stammdaten) an" color="success" />
+              <Rule label="Produkt (Mitarbeiter)" value="Mitarbeiter reichen neue Produkte als Produktvorschlag ein — Admin prüft und übernimmt sie nach Freigabe in die Stammdaten" color="success" />
               <Rule label="Häufige Kunden" value="System merkt sich häufig verwendete Kunden und zeigt sie priorisiert" color="success" />
             </div>
 
+            <SubHeading>Produktvorschläge (Mitarbeiter → Admin)</SubHeading>
+            <p>
+              Damit Stammdaten konsistent bleiben, dürfen nur Admins direkt neue Produkte anlegen.
+              Mitarbeiter können während der Vorgangserstellung einen <strong className="text-foreground">Produktvorschlag</strong> einreichen,
+              der in einer separaten Anfrage-Tabelle landet und vom Admin geprüft wird. Der Eintrag erscheint nur kontextbezogen im Vorgangsformular — nicht in der Sidebar.
+            </p>
+            <Table
+              headers={['Schritt', 'Wer', 'Aktion']}
+              rows={[
+                ['Vorschlag einreichen', 'Mitarbeiter', 'Im Vorgangsformular: Button "als Produktvorschlag einreichen" mit Name, Artikelnr., Kategorie, Beschreibung und Begründung'],
+                ['Status', 'System', 'Vorschlag startet als "ausstehend" und benachrichtigt Admins'],
+                ['Prüfung & Bearbeitung', 'Admin', 'Felder können vor der Freigabe noch korrigiert werden (z. B. Tippfehler)'],
+                ['Freigabe', 'Admin', 'Beim Genehmigen wird automatisch ein neuer Datensatz in der Produkttabelle (Stammdaten) angelegt'],
+                ['Ablehnung', 'Admin', 'Mit Begründung — Antragsteller wird benachrichtigt'],
+              ]}
+            />
+            <Tip>
+              Der Vorschlags-Workflow ist modular angelegt und wird später für weitere Stammdaten-Typen (z. B. Lieferanten, Kunden) wiederverwendet.
+            </Tip>
             <Tip>
               Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
               Bei Abteilungswahl mit Unter-Abteilungen (Teams) kann auch das Team ausgewählt werden.
