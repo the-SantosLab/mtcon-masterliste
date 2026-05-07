@@ -31,9 +31,8 @@ Deno.serve(async (req) => {
     .from('user_roles')
     .select('role')
     .eq('user_id', user.id)
-    .eq('role', 'admin')
-    .maybeSingle();
-  if (!roleData) {
+    .in('role', ['admin', 'staff']);
+  if (!roleData || roleData.length === 0) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: corsHeaders });
   }
 
