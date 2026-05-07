@@ -216,6 +216,7 @@ export default function AdminUsers() {
       display_name: newDisplayName,
       short_code: newShortCode,
       is_admin: effectiveRole === 'admin',
+      avatar_url: newAvatarUrl || null,
     } as any).eq('id', editing.id);
     if (profileErr) { toast.error('Profil-Update fehlgeschlagen: ' + profileErr.message); return; }
 
