@@ -1054,10 +1054,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_read_dept: {
+        Args: { p_dept_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      can_write_dept: {
+        Args: { p_dept_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      case_department: { Args: { p_case_id: string }; Returns: string }
       case_dept_owner: { Args: { p_case_id: string }; Returns: string }
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
+      dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      has_dept_read: {
+        Args: { p_dept_id: string; p_uid: string }
+        Returns: boolean
+      }
+      has_dept_write: {
+        Args: { p_dept_id: string; p_uid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
