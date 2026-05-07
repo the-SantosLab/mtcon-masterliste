@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup,
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 import { cn } from '@/lib/utils';
@@ -44,6 +44,7 @@ const adminItems = [
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
+  { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
