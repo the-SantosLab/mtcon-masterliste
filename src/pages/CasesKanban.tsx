@@ -357,18 +357,25 @@ export default function CasesKanban() {
   const fetchCases = useCallback(async () => {
     const { data } = await supabase
       .from('cases')
-      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_at')
+      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at')
       .order('created_at', { ascending: true });
     const list = (data || []) as any[];
 
-    const assigneeIds: string[] = Array.from(new Set(list.map(c => c.assignee_id).filter(Boolean) as string[]));
+    const userIds: string[] = Array.from(new Set([
+      ...list.map(c => c.assignee_id).filter(Boolean),
+      ...list.map(c => c.created_by).filter(Boolean),
+    ] as string[]));
     const shortCodes: Record<string, string> = {};
-    if (assigneeIds.length > 0) {
-      const profsRes: any = await (supabase as any).from('profiles')
-        .select('user_id, short_code')
-        .in('user_id', assigneeIds);
-      const profs = (profsRes?.data || []) as any[];
-      profs.forEach((p: any) => { shortCodes[p.user_id] = p.short_code; });
+    const creatorDept: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('users_profile')
+        .select('id, short_code, department_id')
+        .in('id', userIds);
+      (profs || []).forEach((p: any) => {
+        shortCodes[p.id] = p.short_code;
+        creatorDept[p.id] = p.department_id;
+      });
     }
 
     const caseIds = list.map(c => c.id);
@@ -385,18 +392,24 @@ export default function CasesKanban() {
       });
     }
 
-    setCases(list.map(c => ({
-      id: c.id,
-      case_no: c.case_no,
-      project_name: c.project_name,
-      status: c.status,
-      department_id: c.department_id,
-      due_at: c.due_at,
-      assignee_short_code: c.assignee_id ? shortCodes[c.assignee_id] : undefined,
-      created_at: c.created_at,
-      subtasks_done: subDone[c.id] || 0,
-      subtasks_total: subTotal[c.id] || 0,
-    })));
+    setCases(list.map(c => {
+      const fallback = !c.department_id && c.created_by ? creatorDept[c.created_by] ?? null : null;
+      return {
+        id: c.id,
+        case_no: c.case_no,
+        project_name: c.project_name,
+        status: c.status,
+        department_id: c.department_id,
+        effective_department_id: c.department_id ?? fallback,
+        is_dept_fallback: !c.department_id && !!fallback,
+        created_by: c.created_by ?? null,
+        due_at: c.due_at,
+        assignee_short_code: c.assignee_id ? shortCodes[c.assignee_id] : undefined,
+        created_at: c.created_at,
+        subtasks_done: subDone[c.id] || 0,
+        subtasks_total: subTotal[c.id] || 0,
+      };
+    }));
   }, []);
 
   useEffect(() => {
