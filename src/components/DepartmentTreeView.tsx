@@ -84,6 +84,7 @@ function TreeNode({
               onCreateCase={onCreateCase}
               showCounts={showCounts}
               compact={compact}
+              defaultCollapsed={defaultCollapsed}
             />
           ))}
         </div>
@@ -92,7 +93,7 @@ function TreeNode({
   );
 }
 
-export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, showCounts, compact }: Props) {
+export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, showCounts, compact, defaultCollapsed }: Props) {
   if (nodes.length === 0) {
     return <p className="text-xs text-muted-foreground p-4">Keine Abteilungen vorhanden</p>;
   }
@@ -108,6 +109,7 @@ export function DepartmentTreeView({ nodes, selectedId, onSelect, onCreateCase, 
           onCreateCase={onCreateCase}
           showCounts={showCounts}
           compact={compact}
+          defaultCollapsed={defaultCollapsed}
         />
       ))}
     </div>
