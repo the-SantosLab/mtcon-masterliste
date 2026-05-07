@@ -165,11 +165,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2.5 w-full rounded px-1 py-1 hover:bg-sidebar-accent/60 transition-colors">
-                <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-medium text-muted-foreground">
-                    {profile?.short_code?.substring(0, 2).toUpperCase() || '??'}
-                  </span>
-                </div>
+                <UserAvatar
+                  user={profile ? { id: profile.id, display_name: profile.display_name, short_code: profile.short_code, avatar_url: (profile as any).avatar_url } : null}
+                  size="md"
+                  tooltip={false}
+                />
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-medium text-foreground truncate leading-tight">{profile?.display_name || '–'}</p>
                   <p className="text-[10px] text-muted-foreground capitalize">{role || '–'}</p>
