@@ -229,6 +229,20 @@ export default function CasesKanban() {
       profs.forEach((p: any) => { shortCodes[p.user_id] = p.short_code; });
     }
 
+    const caseIds = list.map(c => c.id);
+    const subDone: Record<string, number> = {};
+    const subTotal: Record<string, number> = {};
+    if (caseIds.length > 0) {
+      const { data: subs } = await supabase
+        .from('case_tasks')
+        .select('case_id, status')
+        .in('case_id', caseIds);
+      (subs || []).forEach((t: any) => {
+        subTotal[t.case_id] = (subTotal[t.case_id] || 0) + 1;
+        if (t.status === 'done') subDone[t.case_id] = (subDone[t.case_id] || 0) + 1;
+      });
+    }
+
     setCases(list.map(c => ({
       id: c.id,
       case_no: c.case_no,
@@ -238,6 +252,8 @@ export default function CasesKanban() {
       due_at: c.due_at,
       assignee_short_code: c.assignee_id ? shortCodes[c.assignee_id] : undefined,
       created_at: c.created_at,
+      subtasks_done: subDone[c.id] || 0,
+      subtasks_total: subTotal[c.id] || 0,
     })));
   }, []);
 
