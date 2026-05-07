@@ -60,6 +60,11 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+  const [suggestProductOpen, setSuggestProductOpen] = useState(false);
+  const [suggestForm, setSuggestForm] = useState({ product_name: '', article_number: '', category: '', description: '', request_reason: '' });
+  const [suggestSaving, setSuggestSaving] = useState(false);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
