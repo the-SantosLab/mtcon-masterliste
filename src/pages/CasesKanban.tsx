@@ -183,7 +183,7 @@ function DroppableColumn({ id, label, color, count, collapsed, onToggle, childre
           <>
             <ChevronRight className="h-3 w-3 text-muted-foreground" />
             <span className={cn('h-2 w-2 rounded-full', color)} />
-            <span className="text-[10px] font-mono text-muted-foreground" style={{ writingMode: 'vertical-rl' }}>
+            <span className="text-[10px] font-mono text-muted-foreground" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
               {label} · {count}
             </span>
           </>
