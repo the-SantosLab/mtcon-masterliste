@@ -390,7 +390,7 @@ export function CsvImport() {
         sop: row.sop,
         project_duration: row.project_duration,
         due_at: row.due_at,
-        received_at: row.received_at,
+        received_at: row.received_at || new Date().toISOString().slice(0, 10),
         completed_at: row.completed_at ? new Date(row.completed_at).toISOString() : null,
         created_by: user.id,
         last_changed_by: user.id,
