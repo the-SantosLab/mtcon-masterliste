@@ -607,7 +607,15 @@ export default function CasesKanban() {
                     : caseColumns.map(col => (
                         <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length} collapsed={!!collapsedCols[col.id]} onToggle={() => toggleCol(col.id)}>
                           {col.cards.map(c => (
-                            <DraggableCase key={c.id} card={c} onOpen={() => navigate(`/cases/${c.id}`)} departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined} />
+                            <DraggableCase
+                              key={c.id}
+                              card={c}
+                              onOpen={() => navigate(`/cases/${c.id}`)}
+                              departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined}
+                              selectable={selectMode}
+                              selected={selectedCaseIds.has(c.id)}
+                              onToggleSelect={() => toggleCaseSelected(c.id)}
+                            />
                           ))}
                         </DroppableColumn>
                       ))}
