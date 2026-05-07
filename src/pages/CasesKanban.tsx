@@ -10,7 +10,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, u
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Search, FolderKanban, Users, Calendar, User as UserIcon } from 'lucide-react';
+import { Search, FolderKanban, Users, Calendar, User as UserIcon, ChevronDown, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { format } from 'date-fns';
