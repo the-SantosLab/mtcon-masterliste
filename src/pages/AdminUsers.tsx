@@ -202,7 +202,7 @@ export default function AdminUsers() {
       if (insErr) { toast.error('Rolle konnte nicht gesetzt werden: ' + insErr.message); return; }
     }
     const { error: delErr } = await supabase.from('user_roles')
-      .delete().eq('user_id', editing.id).neq('role', effectiveRole);
+      .delete().eq('user_id', editing.id).neq('role', effectiveRole as Enums<'app_role'>);
     if (delErr) { toast.error('Alte Rolle konnte nicht entfernt werden: ' + delErr.message); return; }
 
     toast.success('Benutzer aktualisiert');
