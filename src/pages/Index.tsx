@@ -24,11 +24,17 @@ const FILTER_LABELS: Record<FilterKey, string> = {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchCases = async () => {
     const { data } = await supabase
@@ -44,6 +50,11 @@ export default function Dashboard() {
     const ch = supabase.channel('dash-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
+  const firstName = profile?.display_name?.split(' ')[0] ?? '';
+  const timeString = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
   const today = new Date().toISOString().split('T')[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
