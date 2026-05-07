@@ -21,6 +21,7 @@ export function PermissionMatrix() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [depts, setDepts] = useState<DeptRow[]>([]);
   const [perms, setPerms] = useState<Map<string, Permission>>(new Map());
+  const [emails, setEmails] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
@@ -28,17 +29,20 @@ export function PermissionMatrix() {
   const key = (u: string, d: string) => `${u}::${d}`;
 
   const load = async () => {
-    const [u, d, p] = await Promise.all([
+    const [u, d, p, eRes] = await Promise.all([
       supabase.from('users_profile').select('id, display_name, short_code').eq('active', true).order('display_name'),
       supabase.from('departments').select('id, name, code, owner_id').eq('is_active', true).order('sort_order').order('name'),
       supabase.from('department_permissions').select('user_id, department_id, permission'),
+      supabase.functions.invoke('list-user-emails', { method: 'GET' }),
     ]);
     setUsers((u.data || []) as UserRow[]);
-    // Hide private (owner-bound) departments from the matrix
     setDepts(((d.data || []) as DeptRow[]).filter(x => !x.owner_id));
     const map = new Map<string, Permission>();
     (p.data || []).forEach((r: any) => map.set(key(r.user_id, r.department_id), r.permission));
     setPerms(map);
+    if (!eRes.error && eRes.data) {
+      setEmails(eRes.data as Record<string, string>);
+    }
     setLoading(false);
   };
 
@@ -81,7 +85,8 @@ export function PermissionMatrix() {
   const filteredUsers = users.filter(u => {
     if (!search) return true;
     const q = search.toLowerCase();
-    return u.display_name.toLowerCase().includes(q) || u.short_code.toLowerCase().includes(q);
+    const email = (emails[u.id] || '').toLowerCase();
+    return u.display_name.toLowerCase().includes(q) || u.short_code.toLowerCase().includes(q) || email.includes(q);
   });
 
   if (loading) return <p className="text-xs text-muted-foreground p-4">Laden…</p>;
@@ -112,7 +117,7 @@ export function PermissionMatrix() {
         <table className="text-xs border-collapse">
           <thead className="bg-muted/50 sticky top-0 z-10">
             <tr>
-              <th className="text-left font-medium text-muted-foreground px-3 py-2 sticky left-0 bg-muted/80 backdrop-blur z-20 min-w-[200px]">
+              <th className="text-left font-medium text-muted-foreground px-3 py-2 sticky left-0 bg-muted/80 backdrop-blur z-20 min-w-[220px]">
                 Mitarbeiter
               </th>
               {depts.map(d => (
@@ -129,9 +134,12 @@ export function PermissionMatrix() {
             {filteredUsers.map(u => (
               <tr key={u.id} className="border-t border-border hover:bg-muted/20">
                 <td className="px-3 py-1.5 sticky left-0 bg-card z-10 border-r border-border">
-                  <div className="flex flex-col">
+                  <div className="flex flex-col gap-0.5">
                     <span className="text-foreground font-medium">{u.display_name}</span>
                     <span className="text-[9px] font-mono text-muted-foreground">{u.short_code}</span>
+                    {emails[u.id] && (
+                      <span className="text-[9px] text-muted-foreground truncate max-w-[180px]">{emails[u.id]}</span>
+                    )}
                   </div>
                 </td>
                 {depts.map(d => {
