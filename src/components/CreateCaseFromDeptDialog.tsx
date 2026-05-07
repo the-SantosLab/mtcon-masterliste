@@ -118,7 +118,7 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
               <Select value={deptId} onValueChange={setDeptId}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen…" /></SelectTrigger>
                 <SelectContent>
-                  {departments.filter(d => d.is_active !== false).map(d => (
+                  {departments.filter(d => d.is_active !== false && (!writableDeptIds || writableDeptIds.has(d.id))).map(d => (
                     <SelectItem key={d.id} value={d.id} className="text-xs">
                       {d.parent_id ? '  ' : ''}{d.name}
                     </SelectItem>
