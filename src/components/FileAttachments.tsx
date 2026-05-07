@@ -40,7 +40,7 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
     setUploading(true);
     try {
       for (const file of Array.from(e.target.files)) {
-        const path = `${folder}/${Date.now()}_${file.name}`;
+        const path = `${folder}/${Date.now()}_${sanitizeFileName(file.name)}`;
         const { error } = await supabase.storage.from(bucket).upload(path, file);
         if (error) throw error;
       }
