@@ -314,7 +314,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                   <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                 </div>
 
-                {isExpanded && canEdit && (
+                {isExpanded && canEditTask && (
                   <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50 bg-muted/20">
                     <div className="grid grid-cols-3 gap-2">
                       <div className="space-y-1">
