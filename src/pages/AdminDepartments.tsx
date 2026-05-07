@@ -86,7 +86,7 @@ export default function AdminDepartments() {
 
   const managerName = (id: string | null) => profiles.find(p => p.id === id)?.display_name || '–';
 
-  const FormContent = () => (
+  const formContent = (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
