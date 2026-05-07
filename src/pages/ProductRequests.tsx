@@ -84,7 +84,7 @@ export default function ProductRequests() {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) { console.error(error); setLoading(false); return; }
-    const list = (data || []) as ProductRequest[];
+    const list = ((data || []) as unknown) as ProductRequest[];
     setRequests(list);
     const ids = Array.from(new Set([
       ...list.map(r => r.requested_by),
