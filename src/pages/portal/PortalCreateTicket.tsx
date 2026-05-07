@@ -5,6 +5,7 @@ import { usePortalAuth } from '@/contexts/PortalAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, Paperclip, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { sanitizeFileName } from '@/lib/utils';
 
 export default function PortalCreateTicket() {
   const { customer } = usePortalAuth();
