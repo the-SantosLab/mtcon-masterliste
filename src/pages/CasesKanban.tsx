@@ -259,6 +259,26 @@ export default function CasesKanban() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
     return next;
   });
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedCaseIds, setSelectedCaseIds] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const toggleCaseSelected = (id: string) => setSelectedCaseIds(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const exitSelectMode = () => { setSelectMode(false); setSelectedCaseIds(new Set()); };
+
+  const bulkDeleteCases = async () => {
+    const ids = Array.from(selectedCaseIds);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('cases').delete().in('id', ids);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success(`${ids.length} Vorgänge gelöscht`);
+    setConfirmBulkDelete(false);
+    exitSelectMode();
+    fetchCases();
+  };
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tree, setTree] = useState<DepartmentNode[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null);
