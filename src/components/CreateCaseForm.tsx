@@ -199,7 +199,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       internal_area_code: form.internal_area_code || null,
       product_code: form.product_code || null,
       project_article_no: form.project_article_no || null,
-      received_at: form.received_at || null,
+      received_at: form.received_at || new Date().toISOString().slice(0, 10),
       due_at: form.due_at || null,
       note: form.note || null,
       estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : null,
