@@ -89,6 +89,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       setProfiles((prof.data || []) as Profile[]);
 
       const isAdmin = (roles.data || []).some((r: any) => r.role === 'admin');
+      setUserIsAdmin(isAdmin);
       if (isAdmin) {
         setWritableDeptIds(new Set(deptData.map(d => d.id)));
       } else {
