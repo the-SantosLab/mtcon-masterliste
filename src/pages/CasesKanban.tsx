@@ -425,12 +425,14 @@ export default function CasesKanban() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  // Scope by selected department (incl. children)
-  const scopeByDept = <T extends { department_id: string | null }>(arr: T[]) =>
+  // Scope by selected department (incl. children).
+  // For cases we use effective_department_id to honor the silent fallback to creator's dept.
+  const scopeByDept = <T extends { department_id: string | null; effective_department_id?: string | null }>(arr: T[]) =>
     selectedDeptId
       ? arr.filter(x => {
           const childIds = departments.filter(d => d.parent_id === selectedDeptId).map(d => d.id);
-          return x.department_id === selectedDeptId || childIds.includes(x.department_id || '');
+          const id = x.effective_department_id !== undefined ? x.effective_department_id : x.department_id;
+          return id === selectedDeptId || childIds.includes(id || '');
         })
       : arr;
 
