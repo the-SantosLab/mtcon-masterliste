@@ -43,6 +43,8 @@ interface CaseCard {
   due_at: string | null;
   assignee_short_code?: string;
   created_at: string;
+  subtasks_done: number;
+  subtasks_total: number;
 }
 
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
