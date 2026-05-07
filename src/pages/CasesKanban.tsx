@@ -214,6 +214,22 @@ export default function CasesKanban() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     return (localStorage.getItem('kanban-view-mode') as ViewMode) || 'projects';
   });
+  const STORAGE_KEY = 'kanban-collapsed-cols';
+  const [collapsedCols, setCollapsedCols] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    // Default: ALL columns collapsed
+    const all: Record<string, boolean> = {};
+    [...PROJECT_STATUSES, ...CASE_STATUSES].forEach(s => { all[s.id] = true; });
+    return all;
+  });
+  const toggleCol = (id: string) => setCollapsedCols(prev => {
+    const next = { ...prev, [id]: !prev[id] };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  });
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tree, setTree] = useState<DepartmentNode[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null);
