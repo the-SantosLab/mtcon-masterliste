@@ -378,6 +378,18 @@ export default function AdminUsers() {
             </div>
           ))}
         </div>
+          </TabsContent>
+
+          <TabsContent value="import" className="mt-0">
+            <div className="rounded-md border border-border bg-card p-4">
+              <UserCsvImport departments={departments} onDone={fetchUsers} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="matrix" className="mt-0">
+            <PermissionMatrix />
+          </TabsContent>
+        </Tabs>
 
         {/* Edit dialog */}
         <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
