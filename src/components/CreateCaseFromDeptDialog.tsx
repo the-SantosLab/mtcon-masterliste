@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, Paperclip, X } from 'lucide-react';
 import type { Department } from '@/lib/case-utils';
+import { sanitizeFileName } from '@/lib/utils';
 
 interface Props {
   open: boolean;
