@@ -2,6 +2,38 @@ import type { Enums } from '@/integrations/supabase/types';
 
 type CaseStatus = Enums<'case_status'>;
 
+/**
+ * Smart Department Fallback (Mario-Logik):
+ * - department_id explizit gesetzt → diese Abteilung
+ * - department_id NULL → Abteilung des Erstellers (silent fallback, NICHT in DB schreiben)
+ * - Ersteller ohne Abteilung → bleibt "Keine Abteilung"
+ *
+ * Reine Query-Time-Ableitung. Niemals zurückschreiben.
+ */
+export type DeptResolverItem = { department_id: string | null; created_by?: string | null };
+
+export function resolveEffectiveDeptId(
+  item: DeptResolverItem,
+  creatorDeptMap: Record<string, string | null | undefined>,
+): { effectiveId: string | null; isFallback: boolean } {
+  if (item.department_id) return { effectiveId: item.department_id, isFallback: false };
+  const fallback = item.created_by ? creatorDeptMap[item.created_by] ?? null : null;
+  return { effectiveId: fallback, isFallback: !!fallback };
+}
+
+/** Prüft, ob ein Vorgang in einer Abteilungs-Auswahl (inkl. Kinder) erscheint, mit Fallback. */
+export function caseMatchesDept(
+  item: DeptResolverItem,
+  selectedDeptId: string,
+  childIds: string[],
+  creatorDeptMap: Record<string, string | null | undefined>,
+): boolean {
+  const { effectiveId } = resolveEffectiveDeptId(item, creatorDeptMap);
+  if (!effectiveId) return false;
+  return effectiveId === selectedDeptId || childIds.includes(effectiveId);
+}
+
+
 export const STATUS_LABELS: Record<CaseStatus, string> = {
   nicht_begonnen: 'Nicht begonnen',
   in_planung: 'In Planung',
