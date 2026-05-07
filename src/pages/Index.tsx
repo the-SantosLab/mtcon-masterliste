@@ -106,9 +106,12 @@ export default function Dashboard() {
     <AppLayout>
       <div className="space-y-6 max-w-6xl">
         <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">{greeting}{firstName ? `, ${firstName}` : ''}</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{timeString}</p>
+          <div className="flex items-center gap-3">
+            <UserAvatar user={profile} size="lg" tooltip={false} />
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">{greeting}{firstName ? `, ${firstName}` : ''}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">{timeString}</p>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
