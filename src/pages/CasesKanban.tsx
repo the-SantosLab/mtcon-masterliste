@@ -178,12 +178,12 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void }) {
+function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[] }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: card.id, data: { card, kind: 'case' }, disabled: selectable,
+    id: card.id, data: { card, kind: 'case', bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
   });
   return (
-    <div ref={setNodeRef} {...(selectable ? {} : listeners)} {...(selectable ? {} : attributes)}>
+    <div ref={setNodeRef} {...listeners} {...attributes}>
       <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
     </div>
   );
