@@ -40,7 +40,7 @@ export default function AdminDepartments() {
   const fetchAll = async () => {
     const [deptRes, profRes] = await Promise.all([
       supabase.from('departments').select('*').order('name'),
-      supabase.from('users_profile').select('id, display_name, short_code').eq('active', true).order('display_name'),
+      supabase.from('users_profile').select('id, display_name, short_code, avatar_url, department_id').eq('active', true).order('display_name'),
     ]);
     setDepartments(deptRes.data || []);
     setProfiles((profRes.data || []) as Profile[]);
