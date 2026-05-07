@@ -178,12 +178,12 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void }) {
+function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[] }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: card.id, data: { card, kind: 'case' }, disabled: selectable,
+    id: card.id, data: { card, kind: 'case', bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
   });
   return (
-    <div ref={setNodeRef} {...(selectable ? {} : listeners)} {...(selectable ? {} : attributes)}>
+    <div ref={setNodeRef} {...listeners} {...attributes}>
       <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
     </div>
   );
@@ -473,14 +473,16 @@ export default function CasesKanban() {
       fetchProjects();
     } else if (data?.kind === 'case') {
       const card = data.card as CaseCard;
-      if (card.status === targetStatus) return;
+      const bulkIds: string[] | undefined = data.bulkIds;
+      const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
       const { error } = await supabase
         .from('cases')
         .update({ status: targetStatus as Enums<'case_status'>, last_changed_at: new Date().toISOString(), last_changed_by: user?.id ?? null })
-        .eq('id', card.id);
+        .in('id', ids);
       if (error) { toast.error(error.message); return; }
       const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
-      toast.success(`Status auf "${lbl}" geändert`);
+      toast.success(ids.length > 1 ? `${ids.length} Vorgänge auf "${lbl}" verschoben` : `Status auf "${lbl}" geändert`);
+      if (ids.length > 1) exitSelectMode();
       fetchCases();
     }
   };
@@ -615,6 +617,7 @@ export default function CasesKanban() {
                               selectable={selectMode}
                               selected={selectedCaseIds.has(c.id)}
                               onToggleSelect={() => toggleCaseSelected(c.id)}
+                              bulkIds={Array.from(selectedCaseIds)}
                             />
                           ))}
                         </DroppableColumn>
