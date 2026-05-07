@@ -191,11 +191,19 @@ export default function AdminUsers() {
     } as any).eq('id', editing.id);
     if (profileErr) { toast.error('Profil-Update fehlgeschlagen: ' + profileErr.message); return; }
 
-    // Delete all existing roles for this user, then insert the new one
-    const { error: delErr } = await supabase.from('user_roles').delete().eq('user_id', editing.id);
-    if (delErr) { toast.error('Rolle konnte nicht aktualisiert werden: ' + delErr.message); return; }
-    const { error: insErr } = await supabase.from('user_roles').insert({ user_id: editing.id, role: effectiveRole as Enums<'app_role'> });
-    if (insErr) { toast.error('Rolle konnte nicht gesetzt werden: ' + insErr.message); return; }
+    // Insert-first / delete-after, damit ein Admin, der sich selbst bearbeitet,
+    // seine Admin-Rolle nicht zwischenzeitlich verliert (sonst RLS-Verstoß).
+    const { data: existingRoles } = await supabase
+      .from('user_roles').select('role').eq('user_id', editing.id);
+    const hasTarget = (existingRoles || []).some(r => r.role === effectiveRole);
+    if (!hasTarget) {
+      const { error: insErr } = await supabase.from('user_roles')
+        .insert({ user_id: editing.id, role: effectiveRole as Enums<'app_role'> });
+      if (insErr) { toast.error('Rolle konnte nicht gesetzt werden: ' + insErr.message); return; }
+    }
+    const { error: delErr } = await supabase.from('user_roles')
+      .delete().eq('user_id', editing.id).neq('role', effectiveRole);
+    if (delErr) { toast.error('Alte Rolle konnte nicht entfernt werden: ' + delErr.message); return; }
 
     toast.success('Benutzer aktualisiert');
     setEditing(null);
