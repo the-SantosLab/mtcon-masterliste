@@ -256,9 +256,38 @@ export default function CasesKanban() {
   const fetchDepartments = useCallback(async () => {
     const { data } = await supabase.from('departments').select('*').order('sort_order');
     const depts = (data || []) as Department[];
-    setDepartments(depts);
-    setTree(buildTree(depts));
-  }, []);
+
+    let visible = depts;
+    if (user?.id) {
+      const [{ data: roles }, { data: perms }] = await Promise.all([
+        supabase.from('user_roles').select('role').eq('user_id', user.id),
+        supabase.from('department_permissions')
+          .select('department_id, permission')
+          .eq('user_id', user.id)
+          .in('permission', ['read', 'write']),
+      ]);
+      const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
+      if (!isAdmin) {
+        const allowed = new Set<string>();
+        (perms || []).forEach((p: any) => allowed.add(p.department_id));
+        depts.forEach((d: any) => { if (d.owner_id === user.id) allowed.add(d.id); });
+        // Include ancestors so the tree stays connected
+        const byId = new Map(depts.map(d => [d.id, d]));
+        const withAncestors = new Set(allowed);
+        allowed.forEach(id => {
+          let cur = byId.get(id);
+          while (cur?.parent_id) {
+            withAncestors.add(cur.parent_id);
+            cur = byId.get(cur.parent_id);
+          }
+        });
+        visible = depts.filter(d => withAncestors.has(d.id));
+      }
+    }
+
+    setDepartments(visible);
+    setTree(buildTree(visible));
+  }, [user?.id]);
 
   const fetchProjects = useCallback(async () => {
     const { data: projData } = await supabase
