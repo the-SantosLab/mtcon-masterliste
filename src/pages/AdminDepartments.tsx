@@ -166,7 +166,7 @@ export default function AdminDepartments() {
         <Dialog open={creating} onOpenChange={o => !o && setCreating(false)}>
           <DialogContent>
             <DialogHeader><DialogTitle className="text-sm font-semibold">Neue Abteilung</DialogTitle></DialogHeader>
-            <FormContent />
+            {formContent}
             <Button onClick={saveCreate} className="w-full h-8 text-xs mt-2">Anlegen</Button>
           </DialogContent>
         </Dialog>
@@ -175,7 +175,7 @@ export default function AdminDepartments() {
         <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
           <DialogContent>
             <DialogHeader><DialogTitle className="text-sm font-semibold">{editing?.name} bearbeiten</DialogTitle></DialogHeader>
-            <FormContent />
+            {formContent}
             <Button onClick={saveEdit} className="w-full h-8 text-xs mt-2">Speichern</Button>
           </DialogContent>
         </Dialog>
