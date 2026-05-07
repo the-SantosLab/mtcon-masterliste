@@ -95,17 +95,17 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName }: { c: Cas
         isDragging && 'opacity-50',
       )}
     >
-      <div className="flex items-center justify-between gap-2 mb-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-[10px] font-mono text-muted-foreground shrink-0">{c.case_no}</span>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
           {departmentName && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border truncate max-w-[120px]">
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border truncate max-w-[140px] w-fit">
               {departmentName}
             </span>
           )}
         </div>
         <span
-          className={cn('h-1.5 w-1.5 rounded-full shrink-0', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
+          className={cn('h-1.5 w-1.5 rounded-full shrink-0 mt-1', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
         />
       </div>
       <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
