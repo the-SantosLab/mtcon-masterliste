@@ -364,6 +364,7 @@ export type Database = {
           is_active: boolean
           manager_user_id: string | null
           name: string
+          owner_id: string | null
           parent_id: string | null
           sort_order: number
         }
@@ -374,6 +375,7 @@ export type Database = {
           is_active?: boolean
           manager_user_id?: string | null
           name: string
+          owner_id?: string | null
           parent_id?: string | null
           sort_order?: number
         }
@@ -384,6 +386,7 @@ export type Database = {
           is_active?: boolean
           manager_user_id?: string | null
           name?: string
+          owner_id?: string | null
           parent_id?: string | null
           sort_order?: number
         }
@@ -1024,8 +1027,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      case_dept_owner: { Args: { p_case_id: string }; Returns: string }
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
+      dept_owner: { Args: { p_dept_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
