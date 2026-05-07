@@ -92,23 +92,37 @@ function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCa
   );
 }
 
-function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string }) {
+function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable, selected, onToggleSelect }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void }) {
   return (
     <div
-      onClick={onOpen}
+      onClick={(e) => {
+        if (selectable) { e.stopPropagation(); onToggleSelect?.(); return; }
+        onOpen?.();
+      }}
       className={cn(
-        'rounded-md border border-border bg-card p-2.5 cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',
+        'rounded-md border bg-card p-2.5 cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-colors',
+        selected ? 'border-primary ring-1 ring-primary/40' : 'border-border',
         isDragging && 'opacity-50',
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
-        <div className="flex flex-col gap-1 min-w-0">
-          <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
-          {departmentName && (
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border truncate max-w-[140px] w-fit">
-              {departmentName}
-            </span>
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          {selectable && (
+            <Checkbox
+              checked={!!selected}
+              onCheckedChange={() => onToggleSelect?.()}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-0.5 h-3.5 w-3.5"
+            />
           )}
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+            {departmentName && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border truncate max-w-[140px] w-fit">
+                {departmentName}
+              </span>
+            )}
+          </div>
         </div>
         <span
           className={cn('h-1.5 w-1.5 rounded-full shrink-0 mt-1', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
@@ -164,11 +178,13 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DraggableCase({ card, onOpen, departmentName }: { card: CaseCard; onOpen: () => void; departmentName?: string }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card, kind: 'case' } });
+function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: card.id, data: { card, kind: 'case' }, disabled: selectable,
+  });
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
-      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} />
+    <div ref={setNodeRef} {...(selectable ? {} : listeners)} {...(selectable ? {} : attributes)}>
+      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
     </div>
   );
 }
