@@ -46,6 +46,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [writableDeptIds, setWritableDeptIds] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [customerSearch, setCustomerSearch] = useState('');
