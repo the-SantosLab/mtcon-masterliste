@@ -21,7 +21,7 @@ import { subDays, startOfQuarter, parseISO } from 'date-fns';
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
   assignee_id: string | null; due_at: string | null; created_at: string;
-  assignee: { short_code: string; display_name: string } | null;
+  assignee: { id?: string; short_code: string; display_name: string; avatar_url?: string | null } | null;
 }
 
 interface ProjectRow { id: string; name: string; project_number: string; status: string; created_at: string; }
