@@ -86,7 +86,7 @@ function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCa
   );
 }
 
-function CaseKanbanCardInner({ c, onOpen, isDragging }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean }) {
+function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string }) {
   return (
     <div
       onClick={onOpen}
@@ -95,10 +95,17 @@ function CaseKanbanCardInner({ c, onOpen, isDragging }: { c: CaseCard; onOpen?: 
         isDragging && 'opacity-50',
       )}
     >
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-[10px] font-mono text-muted-foreground shrink-0">{c.case_no}</span>
+          {departmentName && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border truncate max-w-[120px]">
+              {departmentName}
+            </span>
+          )}
+        </div>
         <span
-          className={cn('h-1.5 w-1.5 rounded-full shrink-0 mt-1', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
+          className={cn('h-1.5 w-1.5 rounded-full shrink-0', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
         />
       </div>
       <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
@@ -151,11 +158,11 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DraggableCase({ card, onOpen }: { card: CaseCard; onOpen: () => void }) {
+function DraggableCase({ card, onOpen, departmentName }: { card: CaseCard; onOpen: () => void; departmentName?: string }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: card.id, data: { card, kind: 'case' } });
   return (
     <div ref={setNodeRef} {...listeners} {...attributes}>
-      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} />
+      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} />
     </div>
   );
 }
@@ -488,14 +495,14 @@ export default function CasesKanban() {
                     : caseColumns.map(col => (
                         <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length} collapsed={!!collapsedCols[col.id]} onToggle={() => toggleCol(col.id)}>
                           {col.cards.map(c => (
-                            <DraggableCase key={c.id} card={c} onOpen={() => navigate(`/cases/${c.id}`)} />
+                            <DraggableCase key={c.id} card={c} onOpen={() => navigate(`/cases/${c.id}`)} departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined} />
                           ))}
                         </DroppableColumn>
                       ))}
                 </div>
                 <DragOverlay>
                   {activeProject && <ProjectKanbanCard project={activeProject} isDragging />}
-                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging />}
+                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging departmentName={!selectedDeptId ? departments.find(d => d.id === activeCase.department_id)?.name : undefined} />}
                 </DragOverlay>
               </DndContext>
             )}
