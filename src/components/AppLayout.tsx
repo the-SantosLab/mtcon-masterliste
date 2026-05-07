@@ -31,10 +31,10 @@ interface AppLayoutProps {
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
-  
-  { href: '/projects', label: 'Abteilungsübergreifende Vorgänge', icon: FolderKanban },
+  { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
+
+  { href: '/projects', label: 'Vorgänge Abteilungsübergreifen', icon: FolderKanban },
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
