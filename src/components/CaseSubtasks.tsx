@@ -287,7 +287,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
           tasks.map(task => {
             const isExpanded = expandedId === task.id;
             const st = STATUS_MAP[task.status] || STATUS_MAP.open;
-            const canEditTask = isMasterUser(userId) || task.created_by === userId;
+            const canEditTask = canEdit;
             return (
               <div key={task.id} className="rounded-md border border-border/50 overflow-hidden">
                 <div
