@@ -12,10 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound } from 'lucide-react';
+import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound, ImageIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
 import { PermissionMatrix } from '@/components/PermissionMatrix';
+import { UserAvatar } from '@/components/UserAvatar';
 
 type ProfileWithRole = Tables<'users_profile'> & {
   role: Enums<'app_role'> | null;
