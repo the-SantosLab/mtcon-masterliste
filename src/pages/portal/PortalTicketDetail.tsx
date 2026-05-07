@@ -8,6 +8,7 @@ import { FileAttachments } from '@/components/FileAttachments';
 import { formatDistanceToNow, format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { sanitizeFileName } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
   open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartend', resolved: 'Gelöst', closed: 'Geschlossen',
@@ -67,7 +68,7 @@ export default function PortalTicketDetail() {
     try {
       const attachmentPaths: string[] = [];
       for (const file of files) {
-        const path = `tickets/${id}/${Date.now()}_${file.name}`;
+        const path = `tickets/${id}/${Date.now()}_${sanitizeFileName(file.name)}`;
         const { error } = await supabase.storage.from('support-attachments').upload(path, file);
         if (!error) attachmentPaths.push(path);
       }

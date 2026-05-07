@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, Paperclip, X } from 'lucide-react';
 import type { Department } from '@/lib/case-utils';
+import { sanitizeFileName } from '@/lib/utils';
 
 interface Props {
   open: boolean;
@@ -83,7 +84,7 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
       // Upload files
       if (files.length > 0 && caseData) {
         for (const file of files) {
-          const path = `cases/${caseData.id}/${Date.now()}_${file.name}`;
+          const path = `cases/${caseData.id}/${Date.now()}_${sanitizeFileName(file.name)}`;
           await supabase.storage.from('case-attachments').upload(path, file);
         }
       }

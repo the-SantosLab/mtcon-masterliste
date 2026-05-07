@@ -5,6 +5,7 @@ import { usePortalAuth } from '@/contexts/PortalAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, ArrowLeft, Paperclip, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { sanitizeFileName } from '@/lib/utils';
 
 export default function PortalCreateTicket() {
   const { customer } = usePortalAuth();
@@ -35,7 +36,7 @@ export default function PortalCreateTicket() {
       if (error) throw error;
 
       for (const file of files) {
-        const path = `tickets/${ticket.id}/${Date.now()}_${file.name}`;
+        const path = `tickets/${ticket.id}/${Date.now()}_${sanitizeFileName(file.name)}`;
         await supabase.storage.from('support-attachments').upload(path, file);
       }
 

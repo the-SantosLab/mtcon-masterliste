@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { sanitizeFileName } from '@/lib/utils';
 import {
   Folder, FolderOpen, FolderPlus, Upload, File, Trash2,
   ChevronRight, ArrowLeft, RefreshCw, Download,
@@ -157,7 +158,7 @@ export default function ProjectFiles() {
     if (!activeFolder || !e.target.files?.length) return;
     setUploading(true);
     const file = e.target.files[0];
-    const filePath = `${activeFolder.path}${file.name}`;
+    const filePath = `${activeFolder.path}${sanitizeFileName(file.name)}`;
     const { error } = await supabase.storage
       .from('project-files')
       .upload(filePath, file, { upsert: true });
