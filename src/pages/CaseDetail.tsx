@@ -401,6 +401,14 @@ export default function CaseDetail() {
                 <div className="flex items-center gap-3">
                   <div className="text-xs text-muted-foreground">
                     Aktuell: <span className="text-foreground font-medium">{c.department?.name || 'Keine'}</span>
+                    {!c.department_id && (() => {
+                      const creator = profiles.find(p => p.id === c.created_by);
+                      const fbDept = creator?.department_id ? departments.find(d => d.id === creator.department_id) : null;
+                      if (fbDept) {
+                        return <span className="ml-2 italic opacity-60" title="Stiller Fallback – nicht gespeichert">(via Ersteller: {fbDept.name})</span>;
+                      }
+                      return null;
+                    })()}
                   </div>
                   <Select value={c.department_id || '_none'} onValueChange={changeDepartment}>
                     <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Abteilung wählen" /></SelectTrigger>
