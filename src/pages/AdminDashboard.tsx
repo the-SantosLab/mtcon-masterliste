@@ -331,9 +331,12 @@ export default function AdminDashboard() {
                       <p className="text-xs text-foreground truncate">{c.project_name}</p>
                       <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[11px] text-muted-foreground">{c.assignee?.short_code ?? '–'}</p>
-                      <p className="text-[10px] text-[hsl(var(--status-overdue))] tabular-nums">{formatDate(c.due_at)}</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {c.assignee && <UserAvatar user={c.assignee as any} size="md" />}
+                      <div className="text-right">
+                        <p className="text-[11px] text-muted-foreground">{c.assignee?.short_code ?? '–'}</p>
+                        <p className="text-[10px] text-[hsl(var(--status-overdue))] tabular-nums">{formatDate(c.due_at)}</p>
+                      </div>
                     </div>
                   </Link>
                 ))}
