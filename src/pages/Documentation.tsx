@@ -337,8 +337,25 @@ export default function Documentation() {
                 ['Abschließen', 'Zugewiesener User / Admin', 'Vorgang ist nicht abgeschlossen'],
                 ['Status ändern', 'Zugewiesener User / Admin', 'Im Vorgang-Detail, über Dropdown'],
                 ['Abteilung verschieben', 'Staff / Admin', 'Setzt Status auf „Nicht begonnen", entfernt Bearbeiter und Startzeitpunkt — Vorgang ist wieder abholbereit'],
+                ['Vorgang löschen', 'Admin', 'Im Vorgang-Detail über das Aktionen-Menü — entfernt Vorgang inkl. Unteraufgaben, Notizen und Aktivitäts-Log transaktional'],
+                ['Mehrfach-Auswahl', 'Admin', 'Im Kanban-Board: mehrere Karten markieren und gemeinsam verschieben (Drag) oder löschen'],
               ]}
             />
+
+            <SubHeading>Vorgänge löschen (Admin)</SubHeading>
+            <p>
+              Administratoren können Vorgänge dauerhaft löschen — zum Beispiel im Archiv oder direkt aus dem Kanban-Board.
+              Beim Löschen werden zugehörige Unteraufgaben, Notizen und Aktivitäts-Einträge transaktional mitentfernt,
+              sodass keine Waisen-Datensätze zurückbleiben.
+            </p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Einzeln löschen" value="Im Vorgang-Detail über das Aktionen-Menü → ‚Löschen' (mit Bestätigungsdialog)" color="danger" />
+              <Rule label="Mehrfach-Auswahl im Kanban" value="Auswahlmodus aktivieren → Karten markieren → ‚Auswahl löschen' (Admin)" color="danger" />
+              <Rule label="Mehrfach verschieben" value="Markierte Karten gemeinsam per Drag in eine andere Spalte ziehen — alle ausgewählten Vorgänge werden gemeinsam aktualisiert" color="success" />
+            </div>
+            <Warning>
+              Das Löschen kann nicht rückgängig gemacht werden. Für vollständige Sicherungen siehe Admin → Backups.
+            </Warning>
 
             <SubHeading>Vorgang erstellen</SubHeading>
             <p>Über den Button «Neuer Vorgang» in der Vorgangsliste (nur Staff/Admin). Die Vorgangsnummer wird automatisch vergeben.</p>
