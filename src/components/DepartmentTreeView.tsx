@@ -10,12 +10,13 @@ interface Props {
   onCreateCase?: (departmentId: string) => void;
   showCounts?: boolean;
   compact?: boolean;
+  defaultCollapsed?: boolean;
 }
 
 function TreeNode({
-  node, depth, selectedId, onSelect, onCreateCase, showCounts, compact,
+  node, depth, selectedId, onSelect, onCreateCase, showCounts, compact, defaultCollapsed,
 }: { node: DepartmentNode; depth: number } & Omit<Props, 'nodes'>) {
-  const [open, setOpen] = useState(depth === 0);
+  const [open, setOpen] = useState(defaultCollapsed ? false : depth === 0);
   const hasChildren = node.children.length > 0;
   const isSelected = selectedId === node.id;
 
