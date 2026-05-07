@@ -25,6 +25,7 @@ export type Database = {
           message: string | null
           new_value: string | null
           old_value: string | null
+          task_id: string | null
         }
         Insert: {
           action: string
@@ -36,6 +37,7 @@ export type Database = {
           message?: string | null
           new_value?: string | null
           old_value?: string | null
+          task_id?: string | null
         }
         Update: {
           action?: string
@@ -47,6 +49,7 @@ export type Database = {
           message?: string | null
           new_value?: string | null
           old_value?: string | null
+          task_id?: string | null
         }
         Relationships: [
           {
