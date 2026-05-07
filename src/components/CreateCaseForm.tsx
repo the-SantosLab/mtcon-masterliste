@@ -205,15 +205,42 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     const existing = products.find(p => p.code === value);
     if (existing) {
       set('product_code', existing.code);
-    } else {
+      setProductOpen(false);
+      return;
+    }
+    if (userIsAdmin) {
       const code = value.toUpperCase().replace(/[^A-Z0-9-]/g, '').substring(0, 20) || value;
       const { data, error } = await supabase.from('products').insert({ code, name: value }).select().single();
       if (error) { toast.error('Fehler: ' + error.message); return; }
       setProducts(prev => [...prev, data]);
       set('product_code', data.code);
       toast.success('Produkt erstellt');
+      setProductOpen(false);
+    } else {
+      // Mitarbeiter: Vorschlag öffnen
+      setSuggestForm({ product_name: value, article_number: '', category: '', description: '', request_reason: '' });
+      setProductOpen(false);
+      setSuggestProductOpen(true);
     }
-    setProductOpen(false);
+  };
+
+  const submitProductSuggestion = async () => {
+    if (!suggestForm.product_name.trim()) { toast.error('Produktname ist Pflicht'); return; }
+    if (!suggestForm.category.trim()) { toast.error('Kategorie ist Pflicht'); return; }
+    if (!suggestForm.request_reason.trim()) { toast.error('Begründung ist Pflicht'); return; }
+    setSuggestSaving(true);
+    const { error } = await supabase.from('product_requests').insert({
+      product_name: suggestForm.product_name.trim(),
+      article_number: suggestForm.article_number.trim() || null,
+      category: suggestForm.category.trim(),
+      description: suggestForm.description.trim() || null,
+      request_reason: suggestForm.request_reason.trim(),
+      requested_by: userId,
+    });
+    setSuggestSaving(false);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Produktvorschlag eingereicht – ein Admin prüft ihn.');
+    setSuggestProductOpen(false);
   };
 
   const submit = async () => {
