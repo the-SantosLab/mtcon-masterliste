@@ -633,6 +633,57 @@ export type Database = {
           },
         ]
       }
+      product_requests: {
+        Row: {
+          approved_product_id: string | null
+          article_number: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          product_name: string
+          rejection_reason: string | null
+          request_reason: string
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["product_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          approved_product_id?: string | null
+          article_number?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          product_name: string
+          rejection_reason?: string | null
+          request_reason: string
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["product_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          approved_product_id?: string | null
+          article_number?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          product_name?: string
+          rejection_reason?: string | null
+          request_reason?: string
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["product_request_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           code: string
@@ -1199,6 +1250,7 @@ export type Database = {
         | "verworfen"
         | "archiv"
       dept_permission: "none" | "read" | "write"
+      product_request_status: "ausstehend" | "genehmigt" | "abgelehnt"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -1346,6 +1398,7 @@ export const Constants = {
         "archiv",
       ],
       dept_permission: ["none", "read", "write"],
+      product_request_status: ["ausstehend", "genehmigt", "abgelehnt"],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
         "open",
