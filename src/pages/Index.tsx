@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
+import { UserAvatar } from '@/components/UserAvatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/case-utils';
