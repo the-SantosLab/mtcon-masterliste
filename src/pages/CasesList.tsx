@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
+import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept } from '@/lib/case-utils';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { Search, Plus, UserCheck } from 'lucide-react';
@@ -82,6 +82,8 @@ export default function CasesList() {
     });
   };
 
+  const creatorDeptMap = Object.fromEntries(profiles.map(p => [p.id, p.department_id]));
+
   const filtered = cases.filter(c => {
     if (onlyMine && c.assignee_id !== user?.id) return false;
     if (statusFilter !== 'all' && c.status !== statusFilter) return false;
@@ -92,10 +94,12 @@ export default function CasesList() {
       if (projectFilter !== '_none' && c.project_id !== projectFilter) return false;
     }
     if (deptFilter !== 'all') {
-      if (deptFilter === '_none' && c.department_id !== null) return false;
-      if (deptFilter !== '_none') {
+      const { effectiveId } = resolveEffectiveDeptId(c, creatorDeptMap);
+      if (deptFilter === '_none') {
+        if (effectiveId !== null) return false;
+      } else {
         const childIds = departments.filter(d => d.parent_id === deptFilter).map(d => d.id);
-        if (c.department_id !== deptFilter && !childIds.includes(c.department_id || '')) return false;
+        if (!caseMatchesDept(c, deptFilter, childIds, creatorDeptMap)) return false;
       }
     }
     if (search) {
@@ -226,7 +230,18 @@ export default function CasesList() {
                     ) : <span className="text-muted-foreground">–</span>}
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
-                  <td className={cn(cellCls, 'text-muted-foreground')}>{c.department?.name || '–'}</td>
+                  <td className={cn(cellCls, 'text-muted-foreground')}>
+                    {c.department?.name ? (
+                      c.department.name
+                    ) : (() => {
+                      const { effectiveId, isFallback } = resolveEffectiveDeptId(c, creatorDeptMap);
+                      if (isFallback && effectiveId) {
+                        const name = departments.find(d => d.id === effectiveId)?.name;
+                        return <span className="italic opacity-70" title="Zugeordnet über Abteilung des Erstellers">via {name}</span>;
+                      }
+                      return '–';
+                    })()}
+                  </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
                   <td className={cellCls}>
