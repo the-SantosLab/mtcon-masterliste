@@ -434,7 +434,7 @@ export default function CasesKanban() {
       if (card.status === targetStatus) return;
       const { error } = await supabase
         .from('cases')
-        .update({ status: targetStatus as Enums<'case_status'>, updated_at: new Date().toISOString() })
+        .update({ status: targetStatus as Enums<'case_status'>, last_changed_at: new Date().toISOString(), last_changed_by: user?.id ?? null })
         .eq('id', card.id);
       if (error) { toast.error(error.message); return; }
       const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
