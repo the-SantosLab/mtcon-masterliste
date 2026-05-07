@@ -376,15 +376,43 @@ export default function Documentation() {
 
             <SubHeading>Inline-Erstellung von Kunden & Produkten</SubHeading>
             <p>
-              Beim Erstellen eines Vorgangs können <strong className="text-foreground">neue Kunden</strong> und 
-              <strong className="text-foreground"> neue Produkte</strong> direkt im Formular angelegt werden, 
-              ohne vorher in die Stammdatenverwaltung wechseln zu müssen.
+              Beim Erstellen eines Vorgangs können <strong className="text-foreground">neue Kunden</strong> direkt im Formular angelegt werden,
+              ohne vorher in die Stammdatenverwaltung wechseln zu müssen. Für neue Produkte gilt eine rollenabhängige Logik:
             </p>
             <div className="space-y-1 mt-1">
               <Rule label="Kunde" value="Dropdown mit Autocomplete — Option ‚Neuen Kunden erstellen' fügt sofort einen neuen Eintrag in die Kunden-Tabelle ein" color="success" />
-              <Rule label="Produkt" value="Freitext-Eingabe mit Vorschlägen — bei neuem Produkt wird es automatisch in der Produkttabelle gespeichert" color="success" />
+              <Rule label="Produkt (Admin)" value="Admins legen neue Produkte direkt in der Produkttabelle (Stammdaten) an" color="success" />
+              <Rule label="Produkt (Mitarbeiter)" value="Mitarbeiter reichen neue Produkte als Produktvorschlag ein — Admin prüft und übernimmt sie nach Freigabe in die Stammdaten" color="success" />
               <Rule label="Häufige Kunden" value="System merkt sich häufig verwendete Kunden und zeigt sie priorisiert" color="success" />
             </div>
+
+            <SubHeading>Produktvorschläge (Mitarbeiter → Admin)</SubHeading>
+            <p>
+              Damit Stammdaten konsistent bleiben, dürfen nur Admins direkt neue Produkte anlegen.
+              Mitarbeiter können während der Vorgangserstellung einen <strong className="text-foreground">Produktvorschlag</strong> einreichen,
+              der in einer separaten Anfrage-Tabelle landet und vom Admin geprüft wird. Der Eintrag erscheint nur kontextbezogen im Vorgangsformular — nicht in der Sidebar.
+            </p>
+            <Table
+              headers={['Schritt', 'Wer', 'Aktion']}
+              rows={[
+                ['Vorschlag einreichen', 'Mitarbeiter', 'Im Vorgangsformular über ‚als Produktvorschlag einreichen' — mit Name, Artikelnr., Kategorie, Beschreibung und Begründung'],
+                ['Status', 'System', 'Vorschlag startet im Status ‚ausstehend' und benachrichtigt Admins'],
+                ['Prüfung & Bearbeitung', 'Admin', 'Felder können vor der Freigabe noch korrigiert werden (z. B. Tippfehler)'],
+                ['Freigabe', 'Admin', 'Beim Genehmigen wird automatisch ein neuer Datensatz in der Produkttabelle (Stammdaten) angelegt'],
+                ['Ablehnung', 'Admin', 'Mit Begründung — Antragsteller wird benachrichtigt'],
+              ]}
+            />
+            <Tip>
+              Der Vorschlags-Workflow ist modular angelegt und wird später für weitere Stammdaten-Typen (z. B. Lieferanten, Kunden) wiederverwendet.
+            </Tip>
+
+            <SubHeading>Vorgang-Detailseite (/cases/:id)</SubHeading>
+            <p>Zeigt alle Details eines Vorgangs in strukturierter Form:</p>
+            <div className="space-y-1 mt-1">
+              <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
+              <Rule label="Projektinformationen" value="SOP, Menge, Projektdauer — eigener Abschnitt für erweiterte Metadaten" color="success" />
+              <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
+              <Rule label="Status ändern" value="Dropdown zur Statusänderung mit allen 9 Status-Werten" color="success" />
 
             <Tip>
               Auch beim CSV-Import wird die Vorgangsnummer automatisch vergeben — das Feld case_no ist nicht mehr erforderlich.
