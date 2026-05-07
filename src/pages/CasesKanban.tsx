@@ -238,7 +238,7 @@ function DroppableColumn({ id, label, color, count, collapsed, onToggle, childre
 }
 
 export default function CasesKanban() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     return (localStorage.getItem('kanban-view-mode') as ViewMode) || 'projects';
