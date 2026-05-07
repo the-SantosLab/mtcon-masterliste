@@ -230,7 +230,18 @@ export default function CasesList() {
                     ) : <span className="text-muted-foreground">–</span>}
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code || '–'}</td>
-                  <td className={cn(cellCls, 'text-muted-foreground')}>{c.department?.name || '–'}</td>
+                  <td className={cn(cellCls, 'text-muted-foreground')}>
+                    {c.department?.name ? (
+                      c.department.name
+                    ) : (() => {
+                      const { effectiveId, isFallback } = resolveEffectiveDeptId(c, creatorDeptMap);
+                      if (isFallback && effectiveId) {
+                        const name = departments.find(d => d.id === effectiveId)?.name;
+                        return <span className="italic opacity-70" title="Zugeordnet über Abteilung des Erstellers">via {name}</span>;
+                      }
+                      return '–';
+                    })()}
+                  </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
                   <td className={cellCls}>
