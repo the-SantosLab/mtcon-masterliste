@@ -155,11 +155,11 @@ export default function Dashboard() {
 
             {/* Greeting (top) */}
             <div className="absolute top-0 left-0 right-0 p-6 lg:p-8 z-10">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/80">{dateString}</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/70">{dateString}</p>
               <h1 className="mt-2 text-2xl lg:text-3xl font-semibold text-foreground drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
                 {greeting}{firstName ? `, ${firstName}` : ''}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground tabular-nums">{timeString} Uhr</p>
+              <p className="mt-1 text-sm tabular-nums text-foreground/70">{timeString} Uhr</p>
             </div>
 
             {/* KPI cards (bottom overlay) */}
