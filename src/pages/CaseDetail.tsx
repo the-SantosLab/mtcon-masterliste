@@ -84,6 +84,35 @@ export default function CaseDetail() {
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
+  const canEditDueDate = !isViewer && (isAdmin || !!profile?.is_manager);
+  const [dueOpen, setDueOpen] = useState(false);
+
+  const changeDueDate = async (date: Date | undefined) => {
+    if (!c || !user) return;
+    const newIso = date ? format(date, 'yyyy-MM-dd') : null;
+    if (newIso === c.due_at) { setDueOpen(false); return; }
+    const oldVal = c.due_at;
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase.from('cases').update({
+      due_at: newIso,
+      due_date_corrected_by: user.id,
+      due_date_corrected_at: nowIso,
+      last_changed_by: user.id,
+      last_changed_at: nowIso,
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: 'DUE_DATE_CHANGE',
+      field: 'due_at',
+      old_value: oldVal,
+      new_value: newIso,
+      actor_id: user.id,
+    });
+    toast.success(newIso ? 'Endtermin gesetzt' : 'Endtermin entfernt');
+    setDueOpen(false);
+    refresh();
+  };
 
   const changeDepartment = async (newDeptId: string) => {
     if (!c || !user) return;
