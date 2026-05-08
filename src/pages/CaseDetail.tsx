@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
+import { WatchersSection } from '@/components/WatchersSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
@@ -234,6 +235,10 @@ export default function CaseDetail() {
         href: `/cases/${c.id}`,
       })
     ));
+
+    if (newStatus === 'in_arbeit' && old !== 'in_arbeit') {
+      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } }).catch(() => {});
+    }
 
     toast.success('Status geändert');
     refresh();
@@ -531,6 +536,17 @@ export default function CaseDetail() {
                   </Select>
                 </div>
               </div>
+            )}
+
+            {/* Watchers */}
+            {!isViewer && (
+              <WatchersSection
+                caseId={c.id}
+                watchers={(c.watchers as string[] | null) || []}
+                profiles={profiles}
+                canEdit={canEdit && !isTerminalStatus(c.status)}
+                onChange={refresh}
+              />
             )}
 
             {/* Tasks checklist */}

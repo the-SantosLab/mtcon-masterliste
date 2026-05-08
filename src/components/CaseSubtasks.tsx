@@ -143,6 +143,10 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
     } as any);
 
     await autoForward(task);
+
+    // Notify watchers via email (fire-and-forget)
+    supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } }).catch(() => {});
+
     setCompletingTask(null);
     setCompletionNote('');
     setSavingCompletion(false);

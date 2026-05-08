@@ -277,6 +277,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
           visibility: string
+          watchers: string[]
         }
         Insert: {
           assignee_id?: string | null
@@ -312,6 +313,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           visibility?: string
+          watchers?: string[]
         }
         Update: {
           assignee_id?: string | null
@@ -347,6 +349,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           visibility?: string
+          watchers?: string[]
         }
         Relationships: [
           {
@@ -642,6 +645,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications_log: {
+        Row: {
+          id: string
+          recipient_email: string
+          sent_at: string
+          type: string
+          vorgang_id: string | null
+        }
+        Insert: {
+          id?: string
+          recipient_email: string
+          sent_at?: string
+          type: string
+          vorgang_id?: string | null
+        }
+        Update: {
+          id?: string
+          recipient_email?: string
+          sent_at?: string
+          type?: string
+          vorgang_id?: string | null
+        }
+        Relationships: []
       }
       portal_customers: {
         Row: {
