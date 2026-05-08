@@ -235,6 +235,10 @@ export default function CaseDetail() {
       })
     ));
 
+    if (newStatus === 'in_arbeit' && old !== 'in_arbeit') {
+      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } }).catch(() => {});
+    }
+
     toast.success('Status geändert');
     refresh();
   };
