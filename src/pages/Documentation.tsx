@@ -352,9 +352,10 @@ export default function Documentation() {
               <Rule label="Einzeln löschen" value="Im Vorgang-Detail über das Aktionen-Menü → ‚Löschen' (mit Bestätigungsdialog)" color="danger" />
               <Rule label="Mehrfach-Auswahl im Kanban" value="Auswahlmodus aktivieren → Karten markieren → ‚Auswahl löschen' (Admin)" color="danger" />
               <Rule label="Mehrfach verschieben" value="Markierte Karten gemeinsam per Drag in eine andere Spalte ziehen — alle ausgewählten Vorgänge werden gemeinsam aktualisiert" color="success" />
+              <Rule label="Audit-Protokoll" value="Jede Löschung wird automatisch in ‚Verwaltung → Gelöschte Vorgänge' (/admin/deleted-cases) mit Vorgangs-Nr., Projektname, Auftraggeber, Abteilung, Bearbeiter, Status, Zeitpunkt und löschendem Nutzer protokolliert. Nur für Admins sichtbar." color="success" />
             </div>
             <Warning>
-              Das Löschen kann nicht rückgängig gemacht werden. Für vollständige Sicherungen siehe Admin → Backups.
+              Das Löschen des Vorgangs selbst kann nicht rückgängig gemacht werden — die Stammdaten bleiben aber im Audit-Log nachvollziehbar. Für vollständige Sicherungen siehe Admin → Backups.
             </Warning>
 
             <SubHeading>Vorgang erstellen</SubHeading>
@@ -416,6 +417,7 @@ export default function Documentation() {
               <Rule label="Details-Bereich" value="Bearbeiter, Kunde, Auftraggeber, Produkt, Bereich, Artikelnr., Stunden, Ersteller, verknüpftes Projekt" color="success" />
               <Rule label="Projektinformationen" value="SOP, Menge, Projektdauer — eigener Abschnitt für erweiterte Metadaten" color="success" />
               <Rule label="Termine" value="Auftragseingang, Gestartet, Endtermin, Abgeschlossen" color="success" />
+              <Rule label="Endtermin nachträglich setzen / ändern" value="Im Block ‚Termine' per Klick auf das Stift-Symbol am Endtermin (DatePicker). Berechtigt: Admin und Manager. Korrekturen werden mit Akteur und Zeitstempel im Audit-Log vermerkt (Markierung ‚korrigiert')." color="success" />
               <Rule label="Status ändern" value="Dropdown zur Statusänderung mit allen 9 Status-Werten" color="success" />
               <Rule label="Abteilung verschieben" value="Vorgang in eine andere Abteilung verschieben — setzt Status auf ‚Nicht begonnen', entfernt Bearbeiter" color="success" />
               <Rule label="Unteraufgaben" value="Unteraufgaben mit Abteilungszuweisung, Verantwortlichem und Status (Offen/In Arbeit/Erledigt) — mit automatischem Weiterschieben" color="success" />
