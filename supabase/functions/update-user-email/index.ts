@@ -21,7 +21,29 @@ Deno.serve(async (req) => {
 
     const conflict = list.users.find((u: any) => u.email?.toLowerCase() === newEmail.toLowerCase());
     if (conflict && deleteConflicting) {
-      const { error: delErr } = await admin.auth.admin.deleteUser(conflict.id);
+      const cid = conflict.id;
+      await admin.from('notifications').delete().eq('user_id', cid);
+      await admin.from('user_roles').delete().eq('user_id', cid);
+      await admin.from('user_preferences').delete().eq('user_id', cid);
+      await admin.from('project_members').delete().eq('user_id', cid);
+      await admin.from('cases').update({ assignee_id: null }).eq('assignee_id', cid);
+      await admin.from('cases').update({ created_by: null }).eq('created_by', cid);
+      await admin.from('cases').update({ closed_by: null }).eq('closed_by', cid);
+      await admin.from('cases').update({ last_changed_by: null }).eq('last_changed_by', cid);
+      await admin.from('cases').update({ due_date_corrected_by: null }).eq('due_date_corrected_by', cid);
+      await admin.from('cases').update({ secondary_check_by: null }).eq('secondary_check_by', cid);
+      await admin.from('case_tasks').update({ assigned_to: null }).eq('assigned_to', cid);
+      await admin.from('case_tasks').update({ completed_by: null }).eq('completed_by', cid);
+      await admin.from('case_tasks').update({ created_by: null as any }).eq('created_by', cid);
+      await admin.from('projects').update({ owner_id: null }).eq('owner_id', cid);
+      await admin.from('projects').update({ created_by: null as any }).eq('created_by', cid);
+      await admin.from('departments').update({ manager_user_id: null }).eq('manager_user_id', cid);
+      await admin.from('users_profile').update({ manager_id: null }).eq('manager_id', cid);
+      await admin.from('support_tickets').update({ assigned_to: null }).eq('assigned_to', cid);
+      await admin.from('case_activity').delete().eq('actor_id', cid);
+      await admin.from('project_activity').delete().eq('actor_id', cid);
+      await admin.from('users_profile').delete().eq('id', cid);
+      const { error: delErr } = await admin.auth.admin.deleteUser(cid);
       if (delErr) return json({ error: 'Delete conflict failed: ' + delErr.message }, 500);
     } else if (conflict) {
       return json({ error: 'Conflict exists', conflictId: conflict.id }, 409);
