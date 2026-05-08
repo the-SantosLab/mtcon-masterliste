@@ -50,6 +50,7 @@ const adminItems = [
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
+  { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
