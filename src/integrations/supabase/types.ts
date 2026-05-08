@@ -446,6 +446,63 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_cases: {
+        Row: {
+          assignee_id: string | null
+          case_created_at: string | null
+          case_id: string
+          case_no: string | null
+          client_name: string | null
+          created_by: string | null
+          customer_no: string | null
+          deleted_at: string
+          deleted_by: string | null
+          department_id: string | null
+          due_at: string | null
+          id: string
+          project_id: string | null
+          project_name: string | null
+          snapshot: Json | null
+          status: string | null
+        }
+        Insert: {
+          assignee_id?: string | null
+          case_created_at?: string | null
+          case_id: string
+          case_no?: string | null
+          client_name?: string | null
+          created_by?: string | null
+          customer_no?: string | null
+          deleted_at?: string
+          deleted_by?: string | null
+          department_id?: string | null
+          due_at?: string | null
+          id?: string
+          project_id?: string | null
+          project_name?: string | null
+          snapshot?: Json | null
+          status?: string | null
+        }
+        Update: {
+          assignee_id?: string | null
+          case_created_at?: string | null
+          case_id?: string
+          case_no?: string | null
+          client_name?: string | null
+          created_by?: string | null
+          customer_no?: string | null
+          deleted_at?: string
+          deleted_by?: string | null
+          department_id?: string | null
+          due_at?: string | null
+          id?: string
+          project_id?: string | null
+          project_name?: string | null
+          snapshot?: Json | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       department_permissions: {
         Row: {
           created_at: string
