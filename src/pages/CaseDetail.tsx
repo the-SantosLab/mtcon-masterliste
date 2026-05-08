@@ -11,7 +11,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Building2, UserCheck, FolderKanban, Trash2 } from 'lucide-react';
+import { ArrowLeft, Building2, UserCheck, FolderKanban, Trash2, CalendarIcon, Pencil } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -35,7 +39,7 @@ type CaseWithRels = Tables<'cases'> & {
 
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, isViewer } = useAuth();
+  const { user, isAdmin, isViewer, profile } = useAuth();
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
@@ -80,6 +84,35 @@ export default function CaseDetail() {
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
+  const canEditDueDate = !isViewer && (isAdmin || !!profile?.is_manager);
+  const [dueOpen, setDueOpen] = useState(false);
+
+  const changeDueDate = async (date: Date | undefined) => {
+    if (!c || !user) return;
+    const newIso = date ? format(date, 'yyyy-MM-dd') : null;
+    if (newIso === c.due_at) { setDueOpen(false); return; }
+    const oldVal = c.due_at;
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase.from('cases').update({
+      due_at: newIso,
+      due_date_corrected_by: user.id,
+      due_date_corrected_at: nowIso,
+      last_changed_by: user.id,
+      last_changed_at: nowIso,
+    }).eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    await supabase.from('case_activity').insert({
+      case_id: c.id,
+      action: 'DUE_DATE_CHANGE',
+      field: 'due_at',
+      old_value: oldVal,
+      new_value: newIso,
+      actor_id: user.id,
+    });
+    toast.success(newIso ? 'Endtermin gesetzt' : 'Endtermin entfernt');
+    setDueOpen(false);
+    refresh();
+  };
 
   const changeDepartment = async (newDeptId: string) => {
     if (!c || !user) return;
@@ -312,7 +345,43 @@ export default function CaseDetail() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
                 <Field label="Auftragseingang" value={formatDate(c.received_at)} />
                 <Field label="Gestartet" value={formatDateTime(c.started_at)} />
-                <Field label="Endtermin" value={formatDate(c.due_at)} />
+                {canEditDueDate ? (
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                      Endtermin
+                      {c.due_date_corrected_at && <span className="text-[10px] italic opacity-70">(korrigiert)</span>}
+                    </p>
+                    <Popover open={dueOpen} onOpenChange={setDueOpen}>
+                      <PopoverTrigger asChild>
+                        <button className="text-sm text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                          <span>{formatDate(c.due_at) || '–'}</span>
+                          <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={c.due_at ? new Date(c.due_at) : undefined}
+                          onSelect={changeDueDate}
+                          initialFocus
+                          className={cn('p-3 pointer-events-auto')}
+                        />
+                        {c.due_at && (
+                          <div className="border-t border-border p-2">
+                            <button
+                              onClick={() => changeDueDate(undefined)}
+                              className="w-full text-xs text-muted-foreground hover:text-destructive py-1 transition-colors"
+                            >
+                              Endtermin entfernen
+                            </button>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                ) : (
+                  <Field label="Endtermin" value={formatDate(c.due_at)} />
+                )}
                 <Field label="Abgeschlossen" value={formatDateTime(c.completed_at)} />
               </div>
             </div>
