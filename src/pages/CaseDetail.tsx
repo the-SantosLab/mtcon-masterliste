@@ -39,7 +39,7 @@ type CaseWithRels = Tables<'cases'> & {
 
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin, isViewer } = useAuth();
+  const { user, isAdmin, isViewer, profile } = useAuth();
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
