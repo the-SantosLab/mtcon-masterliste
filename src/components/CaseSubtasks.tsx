@@ -72,7 +72,21 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
       .eq('case_id', caseId)
       .order('sort_order')
       .order('created_at');
-    setTasks((data as Subtask[]) || []);
+    const list = (data as Subtask[]) || [];
+    setTasks(list);
+    // Fetch latest completion note per task
+    const { data: acts } = await supabase
+      .from('case_activity')
+      .select('task_id, new_value, created_at')
+      .eq('case_id', caseId)
+      .eq('action', 'task_completed')
+      .eq('field', 'completion_note')
+      .order('created_at', { ascending: false });
+    const map: Record<string, string> = {};
+    (acts || []).forEach((a: any) => {
+      if (a.task_id && !map[a.task_id] && a.new_value) map[a.task_id] = a.new_value;
+    });
+    setCompletionNotes(map);
     setLoading(false);
   };
 
