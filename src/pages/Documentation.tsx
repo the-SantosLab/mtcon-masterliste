@@ -566,7 +566,7 @@ export default function Documentation() {
               <Rule label="Projektnummer" value="PRJ-YYYY-nnnn wird atomar vergeben" color="success" />
               <Rule label="Projektcode" value="Wird aus den ersten 6 Zeichen des Namens abgeleitet" color="success" />
               <Rule label="Team-Mitglied" value="Ersteller wird automatisch als Projektleiter hinzugefügt" color="success" />
-              <Rule label="6 Standard-Ordner" value="01_Admin, 02_Briefing, 03_Kalkulation, 04_Assets, 05_Delivery, 99_Archiv" color="success" />
+              <Rule label="6 Standard-Ordner" value="01_Verwaltung, 02_Briefing, 03_Kalkulation, 04_Dateien, 05_Lieferung, 99_Archiv" color="success" />
             </div>
 
             <SubHeading>Projekt-Detailseite (/projects/:id)</SubHeading>
