@@ -100,7 +100,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const active = (href: string) => href === '/' ? location.pathname === '/' : location.pathname.startsWith(href);
+  const active = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    if (href === '/cases') {
+      return location.pathname === '/cases' || /^\/cases\/[^\/]+$/.test(location.pathname);
+    }
+    return location.pathname === href || location.pathname.startsWith(href + '/');
+  };
 
   const linkClass = (href: string) => cn(
     'relative flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all duration-150 ease-out',
