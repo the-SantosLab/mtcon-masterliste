@@ -51,9 +51,20 @@ export function useCaseActions(userId: string | undefined, onSuccess?: () => voi
     onSuccess?.();
   };
 
-  const completeCase = async (caseId: string) => {
+  const completeCase = async (caseId: string, closingNote?: string) => {
     if (!userId) return;
     const now = new Date().toISOString();
+
+    // Save closing note first (if provided), so it appears in Notizen
+    if (closingNote && closingNote.trim()) {
+      const body = `**Abschlussnotiz**\n\n${closingNote.trim()}`;
+      const { error: noteErr } = await (supabase as any).from('case_notes').insert({
+        case_id: caseId,
+        author_id: userId,
+        body,
+      });
+      if (noteErr) { toast.error('Fehler beim Speichern der Abschlussnotiz'); return; }
+    }
 
     const { data, error } = await supabase
       .from('cases')
@@ -74,6 +85,7 @@ export function useCaseActions(userId: string | undefined, onSuccess?: () => voi
     await supabase.from('case_activity').insert({
       case_id: caseId, action: 'CLOSE', actor_id: userId,
       field: 'status', new_value: 'abgeschlossen',
+      ...(closingNote && closingNote.trim() ? { message: `Abschlussnotiz: ${closingNote.trim()}` } : {}),
     });
     if (c && c.created_by && c.created_by !== userId) {
       await notifyUser(c.created_by, 'status_change', `Vorgang abgeschlossen: ${c.case_no}`, c.project_name, `/cases/${c.id}`);

@@ -23,6 +23,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { FileAttachments } from '@/components/FileAttachments';
+import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -50,6 +51,7 @@ export default function CaseDetail() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [dueChange, setDueChange] = useState<{ at: string; by_name: string | null } | null>(null);
+  const [completeOpen, setCompleteOpen] = useState(false);
   const navigate = useNavigate();
 
   const deleteCase = async () => {
@@ -319,8 +321,13 @@ export default function CaseDetail() {
               <Button variant="outline" size="sm" onClick={() => unclaimCase(c.id)} className="h-8 text-xs">Freigeben</Button>
             )}
             {canEdit && !isTerminalStatus(c.status) && (
-              <Button variant="outline" size="sm" onClick={() => completeCase(c.id)} className="h-8 text-xs">Abschließen</Button>
+              <Button variant="outline" size="sm" onClick={() => setCompleteOpen(true)} className="h-8 text-xs">Abschließen</Button>
             )}
+            <CompleteCaseDialog
+              open={completeOpen}
+              onOpenChange={setCompleteOpen}
+              onConfirm={async (note) => { await completeCase(c.id, note); setRefreshKey(k => k + 1); }}
+            />
             {isAdmin && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
