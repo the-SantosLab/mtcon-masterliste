@@ -365,6 +365,11 @@ export default function CaseDetail() {
               onOpenChange={setCompleteOpen}
               onConfirm={async (note) => { await completeCase(c.id, note); setRefreshKey(k => k + 1); }}
             />
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={duplicateCase} className="h-8 text-xs gap-1.5">
+                <Copy className="h-3.5 w-3.5" />Duplizieren
+              </Button>
+            )}
             {isAdmin && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
