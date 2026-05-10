@@ -79,6 +79,7 @@ function AuthenticatedApp() {
         <Route path="/admin/backups" element={<ProtectedRoute><AdminBackups /></ProtectedRoute>} />
         <Route path="/admin/deleted-cases" element={<ProtectedRoute><AdminDeletedCases /></ProtectedRoute>} />
         <Route path="/admin/papierkorb" element={<ProtectedRoute><AdminTrash /></ProtectedRoute>} />
+        <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
