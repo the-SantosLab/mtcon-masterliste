@@ -51,6 +51,7 @@ export default function CaseDetail() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [dueChange, setDueChange] = useState<{ at: string; by_name: string | null } | null>(null);
+  const [completeOpen, setCompleteOpen] = useState(false);
   const navigate = useNavigate();
 
   const deleteCase = async () => {
