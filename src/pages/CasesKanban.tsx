@@ -276,9 +276,13 @@ export default function CasesKanban() {
   const bulkDeleteCases = async () => {
     const ids = Array.from(selectedCaseIds);
     if (ids.length === 0) return;
-    const { error } = await supabase.from('cases').delete().in('id', ids);
+    const { error } = await supabase
+      .from('cases')
+      .update({ deleted: true, deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null } as any)
+      .in('id', ids)
+      .eq('deleted', false);
     if (error) { toast.error('Fehler: ' + error.message); return; }
-    toast.success(`${ids.length} Vorgänge gelöscht`);
+    toast.success(`${ids.length} Vorgänge in den Papierkorb verschoben`);
     setConfirmBulkDelete(false);
     exitSelectMode();
     fetchCases();
@@ -346,7 +350,7 @@ export default function CasesKanban() {
     let caseCounts: Record<string, number> = {};
     let memberCounts: Record<string, number> = {};
     if (ids.length > 0) {
-      const { data: cs } = await supabase.from('cases').select('project_id').in('project_id', ids);
+      const { data: cs } = await supabase.from('cases').select('project_id').in('project_id', ids).eq('deleted', false);
       (cs || []).forEach((c: any) => { if (c.project_id) caseCounts[c.project_id] = (caseCounts[c.project_id] || 0) + 1; });
       const { data: ms } = await supabase.from('project_members').select('project_id').in('project_id', ids);
       (ms || []).forEach((m: any) => { memberCounts[m.project_id] = (memberCounts[m.project_id] || 0) + 1; });
@@ -359,6 +363,7 @@ export default function CasesKanban() {
     const { data } = await supabase
       .from('cases')
       .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at')
+      .eq('deleted', false)
       .order('created_at', { ascending: true });
     const list = (data || []) as any[];
 

@@ -97,6 +97,7 @@ export default function AdminDashboard() {
     const [casesRes, projectsRes, usersRes] = await Promise.all([
       supabase.from('cases')
         .select('id, case_no, project_name, status, assignee_id, due_at, created_at, assignee:users_profile!cases_assignee_id_fkey(id, short_code, display_name, avatar_url)')
+        .eq('deleted', false)
         .order('created_at', { ascending: false }),
       supabase.from('projects').select('id, name, project_number, status, created_at'),
       supabase.from('users_profile').select('id', { count: 'exact', head: true }).eq('active', true),

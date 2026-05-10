@@ -48,6 +48,7 @@ export default function Dashboard() {
     const { data } = await supabase
       .from('cases')
       .select('*, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .eq('deleted', false)
       .order('created_at', { ascending: false });
     setCases((data as CaseRow[]) || []);
     setLoading(false);
