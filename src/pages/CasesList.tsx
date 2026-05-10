@@ -46,6 +46,7 @@ export default function CasesList() {
   const [searchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<{ id: string; project_number: string; name: string }[]>([]);
+  const [completeId, setCompleteId] = useState<string | null>(null);
 
   const fetchCases = async () => {
     const { data } = await supabase
