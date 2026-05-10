@@ -550,7 +550,10 @@ export default function CaseDetail() {
                           const parent = departments.find(d => d.id === deptId);
                           if (parent?.parent_id) deptIds.add(parent.parent_id);
                         }
-                        const inDept = deptId ? profiles.filter(p => p.department_id && deptIds.has(p.department_id)) : [];
+                        const memberIds = new Set(
+                          deptMembers.filter(m => deptIds.has(m.department_id)).map(m => m.user_id)
+                        );
+                        const inDept = deptId ? profiles.filter(p => (p.department_id && deptIds.has(p.department_id)) || memberIds.has(p.id)) : [];
                         const others = profiles.filter(p => !inDept.includes(p));
                         return (
                           <>
