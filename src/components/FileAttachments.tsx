@@ -91,7 +91,24 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
 
   const handleOpen = async (fileName: string) => {
     const url = await getSignedUrl(fileName);
-    if (url) window.open(url, '_blank');
+    if (!url) return;
+    const isPdf = fileName.toLowerCase().endsWith('.pdf');
+    if (!isPdf) {
+      window.open(url, '_blank');
+      return;
+    }
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Fetch fehlgeschlagen');
+      const buf = await res.arrayBuffer();
+      const blob = new Blob([buf], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (err: any) {
+      toast.error('PDF konnte nicht geladen werden');
+      window.open(url, '_blank');
+    }
   };
 
   const handleDownload = async (fileName: string) => {
