@@ -87,15 +87,17 @@ export default function Dashboard() {
     const day = (startOfWeek.getDay() + 6) % 7; // Mo=0
     startOfWeek.setDate(startOfWeek.getDate() - day);
     startOfWeek.setHours(0, 0, 0, 0);
-    const buckets = [0, 0, 0, 0, 0];
+    const buckets: CaseRow[][] = [[], [], [], [], []];
     cases.forEach(c => {
       if (!c.created_at) return;
       const d = new Date(c.created_at);
       const diff = Math.floor((d.getTime() - startOfWeek.getTime()) / 86400000);
-      if (diff >= 0 && diff < 5) buckets[diff]++;
+      if (diff >= 0 && diff < 5) buckets[diff].push(c);
     });
-    return labels.map((label, i) => ({ label, value: buckets[i] }));
+    return labels.map((label, i) => ({ label, value: buckets[i].length, items: buckets[i] }));
   }, [cases, now]);
+
+  const [barDrill, setBarDrill] = useState<{ label: string; items: CaseRow[] } | null>(null);
 
   const drilldownItems = useMemo(() => {
     if (!activeFilter) return [];
