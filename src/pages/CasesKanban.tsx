@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { buildTree, STATUS_LABELS, STATUS_DOT_COLORS, getUrgencyDotColor } from '@/lib/case-utils';
+import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Department, DepartmentNode } from '@/lib/case-utils';
 import { DepartmentTreeView } from '@/components/DepartmentTreeView';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
