@@ -158,6 +158,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       const { data } = await supabase.from('cases')
         .select('project_name, customer_no, product_code, client_name, department_id, internal_area_code, note')
         .ilike('project_name', `%${form.project_name}%`)
+        .eq('deleted', false)
         .order('created_at', { ascending: false })
         .limit(5);
       setSuggestions(data || []);
