@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle } from 'lucide-react';
+import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
