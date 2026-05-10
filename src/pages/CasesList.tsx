@@ -229,8 +229,8 @@ export default function CasesList() {
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cellCls}>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground whitespace-nowrap">
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', getUrgencyDotColor(c.status, c.due_at))} />
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
+                      <UrgencyDot status={c.status} dueAt={c.due_at} />
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>
