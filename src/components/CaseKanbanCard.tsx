@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
-import { STATUS_DOT_COLORS, STATUS_LABELS } from '@/lib/case-utils';
+import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Enums } from '@/integrations/supabase/types';
 
 interface Props {
@@ -28,10 +28,7 @@ export function CaseKanbanCard({ caseItem, isDragging }: Props) {
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-[10px] font-mono text-muted-foreground">{caseItem.case_no}</span>
-        <span
-          className={cn('h-1.5 w-1.5 rounded-full shrink-0 mt-1', STATUS_DOT_COLORS[caseItem.status as Enums<'case_status'>] || 'bg-muted-foreground')}
-          title={STATUS_LABELS[caseItem.status as Enums<'case_status'>] || caseItem.status}
-        />
+        <UrgencyDot status={caseItem.status as Enums<'case_status'>} dueAt={caseItem.due_at} />
       </div>
       <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">{caseItem.project_name}</p>
       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
