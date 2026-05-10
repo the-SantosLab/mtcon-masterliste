@@ -141,6 +141,49 @@ export const formatRelativeTime = (date: string) => {
   return formatDate(date);
 };
 
+/** Urgency indicator for Vorgang list rows.
+ *  Priority: Red > Yellow > Green > Blue > Grey/Purple
+ */
+export function getUrgencyDotColor(status: CaseStatus, dueAt: string | null): string {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  // Terminal statuses — no urgency dot
+  if (['abgeschlossen', 'verworfen', 'archiv'].includes(status)) {
+    return 'bg-transparent';
+  }
+
+  if (dueAt) {
+    const due = new Date(dueAt);
+    due.setHours(0, 0, 0, 0);
+    const diffMs = due.getTime() - now.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    // Red: overdue
+    if (diffDays < 0) {
+      return 'bg-red-500';
+    }
+
+    // Yellow: due within 3 days
+    if (diffDays <= 3) {
+      return 'bg-yellow-500';
+    }
+
+    // Green: in_arbeit with future due date
+    if (status === 'in_arbeit') {
+      return 'bg-emerald-500';
+    }
+  }
+
+  // Blue: not started
+  if (status === 'nicht_begonnen') {
+    return 'bg-blue-500';
+  }
+
+  // Grey/Purple: active but no deadline (or other active with future due)
+  return 'bg-purple-500';
+}
+
 // ── Department types (moved from ticket-types.ts) ──
 
 export interface Department {
