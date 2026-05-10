@@ -128,7 +128,8 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
           </div>
         </div>
         <span
-          className={cn('h-1.5 w-1.5 rounded-full shrink-0 mt-1', STATUS_DOT_COLORS[c.status as Enums<'case_status'>] || 'bg-muted-foreground')}
+          className={cn('h-2 w-2 rounded-full shrink-0 mt-1', getUrgencyDotColor(c.status as Enums<'case_status'>, c.due_at))}
+          title={STATUS_LABELS[c.status as Enums<'case_status'>] || c.status}
         />
       </div>
       <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
