@@ -49,6 +49,7 @@ export default function CaseDetail() {
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [dueChange, setDueChange] = useState<{ at: string; by_name: string | null } | null>(null);
   const navigate = useNavigate();
 
   const deleteCase = async () => {
@@ -70,6 +71,29 @@ export default function CaseDetail() {
       setCase(data as CaseWithRels);
     }
     setLoading(false);
+
+    // Fetch latest "due_at changed" event (only counts when previous value existed)
+    const { data: act } = await supabase
+      .from('case_activity')
+      .select('created_at, actor_id, old_value, new_value')
+      .eq('case_id', id)
+      .eq('field', 'due_at')
+      .not('old_value', 'is', null)
+      .neq('old_value', '')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const ev = (act || [])[0];
+    if (ev) {
+      let by_name: string | null = null;
+      if (ev.actor_id) {
+        const { data: p } = await supabase
+          .from('users_profile').select('display_name, short_code').eq('id', ev.actor_id).maybeSingle();
+        by_name = (p as any)?.display_name || (p as any)?.short_code || null;
+      }
+      setDueChange({ at: ev.created_at, by_name });
+    } else {
+      setDueChange(null);
+    }
   };
 
   useEffect(() => { fetchCase(); }, [id]);
