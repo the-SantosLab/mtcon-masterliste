@@ -389,6 +389,15 @@ export default function CaseDetail() {
                           initialFocus
                           className={cn('p-3 pointer-events-auto')}
                         />
+                        <div className="border-t border-border px-3 py-2">
+                          <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                            <Checkbox
+                              checked={sendIcs}
+                              onCheckedChange={(v) => setSendIcs(v === true)}
+                            />
+                            <span>📅 Kalendereinladung zusenden</span>
+                          </label>
+                        </div>
                         {c.due_at && (
                           <div className="border-t border-border p-2">
                             <button
