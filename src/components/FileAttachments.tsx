@@ -24,6 +24,7 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fetchFiles = async () => {
     const { data, error } = await supabase.storage.from(bucket).list(folder, { sortBy: { column: 'created_at', order: 'desc' } });
@@ -35,11 +36,12 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
 
   useEffect(() => { fetchFiles(); }, [bucket, folder]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
+  const uploadFiles = async (fileList: FileList | File[]) => {
+    const arr = Array.from(fileList);
+    if (arr.length === 0) return;
     setUploading(true);
     try {
-      for (const file of Array.from(e.target.files)) {
+      for (const file of arr) {
         const path = `${folder}/${Date.now()}_${sanitizeFileName(file.name)}`;
         const { error } = await supabase.storage.from(bucket).upload(path, file);
         if (error) throw error;
@@ -50,8 +52,31 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
       toast.error('Upload fehlgeschlagen: ' + (err.message || ''));
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    await uploadFiles(e.target.files);
+    e.target.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!canUpload || uploading) return;
+    e.preventDefault();
+    if (e.dataTransfer.types.includes('Files')) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!canUpload || uploading) return;
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
   };
 
   const getSignedUrl = async (fileName: string) => {
@@ -166,14 +191,29 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
       )}
 
       {canUpload && (
-        <label className={cn(
-          'inline-flex items-center gap-1.5 text-xs cursor-pointer transition-opacity hover:opacity-70 text-primary',
-          uploading && 'pointer-events-none opacity-50'
-        )}>
-          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
-          {uploading ? 'Wird hochgeladen…' : 'Datei anhängen'}
-          <input type="file" className="hidden" onChange={handleUpload} multiple disabled={uploading} />
-        </label>
+        <div
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={cn(
+            'rounded-md border-2 border-dashed transition-colors px-4 py-3 flex items-center justify-center text-center',
+            isDragging
+              ? 'border-primary bg-primary/5 text-primary'
+              : 'border-muted-foreground/40 text-muted-foreground hover:border-muted-foreground/70',
+            uploading && 'opacity-50 pointer-events-none',
+          )}
+        >
+          {isDragging ? (
+            <span className="text-xs font-medium">Datei ablegen…</span>
+          ) : (
+            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer hover:text-foreground transition-colors">
+              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
+              {uploading ? 'Wird hochgeladen…' : 'Datei anhängen oder hierher ziehen'}
+              <input type="file" className="hidden" onChange={handleUpload} multiple disabled={uploading} />
+            </label>
+          )}
+        </div>
       )}
     </div>
   );
