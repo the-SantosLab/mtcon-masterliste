@@ -61,24 +61,25 @@ export default function CaseDetail() {
     try {
       const { data, error } = await supabase
         .from('cases')
-        .delete()
+        .update({
+          deleted: true,
+          deleted_at: new Date().toISOString(),
+          deleted_by: user?.id ?? null,
+        } as any)
         .eq('id', c.id)
+        .eq('deleted', false)
         .select('id');
       if (error) {
-        console.error('Delete case failed:', error);
-        const hint = error.code === '23503'
-          ? ' Es existieren noch verknüpfte Datensätze.'
-          : error.code === '42501'
-          ? ' Fehlende Berechtigung (RLS).'
-          : '';
+        console.error('Soft-delete case failed:', error);
+        const hint = error.code === '42501' ? ' Fehlende Berechtigung (RLS).' : '';
         toast.error(`Vorgang konnte nicht gelöscht werden: ${error.message}.${hint}`);
         return;
       }
       if (!data || data.length === 0) {
-        toast.error('Vorgang konnte nicht gelöscht werden: keine Berechtigung oder Datensatz nicht gefunden.');
+        toast.error('Vorgang konnte nicht gelöscht werden: keine Berechtigung oder bereits gelöscht.');
         return;
       }
-      toast.success(`Vorgang ${c.case_no} gelöscht`);
+      toast.success('Vorgang wurde in den Papierkorb verschoben');
       navigate('/cases');
     } catch (e: any) {
       console.error('Delete case exception:', e);
