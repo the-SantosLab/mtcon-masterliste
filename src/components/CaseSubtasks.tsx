@@ -396,119 +396,169 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
         ) : tasks.length === 0 && !canEdit ? (
           <p className="text-xs text-muted-foreground py-2">Keine Unteraufgaben</p>
         ) : (
-          tasks.map(task => {
-            const isExpanded = expandedId === task.id;
-            const st = STATUS_MAP[task.status] || STATUS_MAP.open;
-            const canEditTask = canEdit;
-            const note = completionNotes[task.id];
-            const hasNote = task.status === 'done' && !!note;
-            const isNoteOpen = noteExpandedId === task.id;
-            return (
-              <div key={task.id} className="rounded-md border border-border/50 overflow-hidden">
-                <div
-                  className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
-                  onClick={() => setExpandedId(isExpanded ? null : task.id)}
-                >
-                  <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
-                  <span className={cn(
-                    'flex-1 text-sm transition-colors',
-                    task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'
-                  )}>
-                    {task.title}
-                  </span>
-                  {hasNote && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setNoteExpandedId(isNoteOpen ? null : task.id); }}
-                      title={isNoteOpen ? 'Abschlussnotiz ausblenden' : 'Abschlussnotiz anzeigen'}
-                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 hover:bg-muted transition-colors"
-                    >
-                      <FileText className="h-3 w-3" />
-                      <ChevronDown className={cn('h-3 w-3 transition-transform', isNoteOpen && 'rotate-180')} />
-                    </button>
-                  )}
-                  {getDeptName(task.department_id) && (
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
-                      <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
-                    </Badge>
-                  )}
-                  {getProfileName(task.assigned_to) && (
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1">
-                      <User className="h-2.5 w-2.5" />{getProfileName(task.assigned_to)}
-                    </Badge>
-                  )}
-                  <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
-                </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {tasks.map((task, index) => {
+                const isExpanded = expandedId === task.id;
+                const st = STATUS_MAP[task.status] || STATUS_MAP.open;
+                const canEditTask = canEdit;
+                const note = completionNotes[task.id];
+                const hasNote = task.status === 'done' && !!note;
+                const isNoteOpen = noteExpandedId === task.id;
+                return (
+                  <SortableSubtaskRow
+                    key={task.id}
+                    id={task.id}
+                    canReorder={canEdit}
+                    isFirst={index === 0}
+                    isLast={index === tasks.length - 1}
+                    onMoveUp={() => moveTask(task.id, -1)}
+                    onMoveDown={() => moveTask(task.id, 1)}
+                  >
+                    {({ dragHandleProps, isDragging }) => (
+                      <div className={cn('rounded-md border border-border/50 overflow-hidden bg-card', isDragging && 'shadow-lg ring-1 ring-primary/40')}>
+                        <div
+                          className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
+                          onClick={() => setExpandedId(isExpanded ? null : task.id)}
+                        >
+                          {canEdit && (
+                            <>
+                              <button
+                                type="button"
+                                {...dragHandleProps}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="Zum Sortieren ziehen"
+                                title="Ziehen zum Sortieren"
+                                className="hidden md:flex shrink-0 items-center justify-center h-5 w-4 -ml-1 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing touch-none"
+                              >
+                                <GripVertical className="h-3.5 w-3.5" />
+                              </button>
+                              <div className="flex md:hidden flex-col -ml-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); moveTask(task.id, -1); }}
+                                  disabled={index === 0}
+                                  aria-label="Nach oben"
+                                  className="h-3.5 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); moveTask(task.id, 1); }}
+                                  disabled={index === tasks.length - 1}
+                                  aria-label="Nach unten"
+                                  className="h-3.5 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                >
+                                  <ArrowDown className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                          <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
+                          <span className={cn(
+                            'flex-1 text-sm transition-colors',
+                            task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'
+                          )}>
+                            {task.title}
+                          </span>
+                          {hasNote && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setNoteExpandedId(isNoteOpen ? null : task.id); }}
+                              title={isNoteOpen ? 'Abschlussnotiz ausblenden' : 'Abschlussnotiz anzeigen'}
+                              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 hover:bg-muted transition-colors"
+                            >
+                              <FileText className="h-3 w-3" />
+                              <ChevronDown className={cn('h-3 w-3 transition-transform', isNoteOpen && 'rotate-180')} />
+                            </button>
+                          )}
+                          {getDeptName(task.department_id) && (
+                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+                              <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
+                            </Badge>
+                          )}
+                          {getProfileName(task.assigned_to) && (
+                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1">
+                              <User className="h-2.5 w-2.5" />{getProfileName(task.assigned_to)}
+                            </Badge>
+                          )}
+                          <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
+                        </div>
 
-                {hasNote && isNoteOpen && (
-                  <div className="px-3 pb-3 pt-2 border-t border-border/50">
-                    <div
-                      className="ml-4 rounded-md bg-muted/40 border border-border/40 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
-                      style={{ fontSize: '13px', lineHeight: '1.5' }}
-                    >
-                      {note}
-                    </div>
-                  </div>
-                )}
+                        {hasNote && isNoteOpen && (
+                          <div className="px-3 pb-3 pt-2 border-t border-border/50">
+                            <div
+                              className="ml-4 rounded-md bg-muted/40 border border-border/40 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
+                              style={{ fontSize: '13px', lineHeight: '1.5' }}
+                            >
+                              {note}
+                            </div>
+                          </div>
+                        )}
 
-                {isExpanded && canEditTask && (
-                  <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50 bg-muted/20">
-                    <div className="space-y-1">
-                      <p className="text-[10px] text-muted-foreground">Titel</p>
-                      <Input
-                        defaultValue={task.title}
-                        className="h-7 text-xs"
-                        onBlur={e => { if (e.target.value.trim() && e.target.value !== task.title) updateTitle(task.id, e.target.value); }}
-                        onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground">Status</p>
-                        <Select value={task.status} onValueChange={v => updateTaskStatus(task, v)}>
-                          <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(STATUS_MAP).map(([k, v]) => (
-                              <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {isExpanded && canEditTask && (
+                          <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50 bg-muted/20">
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-muted-foreground">Titel</p>
+                              <Input
+                                defaultValue={task.title}
+                                className="h-7 text-xs"
+                                onBlur={e => { if (e.target.value.trim() && e.target.value !== task.title) updateTitle(task.id, e.target.value); }}
+                                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground">Status</p>
+                                <Select value={task.status} onValueChange={v => updateTaskStatus(task, v)}>
+                                  <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(STATUS_MAP).map(([k, v]) => (
+                                      <SelectItem key={k} value={k} className="text-xs">{v.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground">Abteilung</p>
+                                <Select value={task.department_id || '_none'} onValueChange={v => updateDepartment(task.id, v)}>
+                                  <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="_none" className="text-xs">Keine</SelectItem>
+                                    {departments.map(d => (
+                                      <SelectItem key={d.id} value={d.id} className="text-xs">
+                                        {d.code ? `${d.code} – ` : ''}{d.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground">Zuständig</p>
+                                <Select value={task.assigned_to || '_none'} onValueChange={v => updateAssignee(task.id, v)}>
+                                  <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
+                                    {profiles.map(p => (
+                                      <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => deleteTask(task.id)}>
+                              <Trash2 className="h-3 w-3 mr-1" />Löschen
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground">Abteilung</p>
-                        <Select value={task.department_id || '_none'} onValueChange={v => updateDepartment(task.id, v)}>
-                          <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="_none" className="text-xs">Keine</SelectItem>
-                            {departments.map(d => (
-                              <SelectItem key={d.id} value={d.id} className="text-xs">
-                                {d.code ? `${d.code} – ` : ''}{d.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] text-muted-foreground">Zuständig</p>
-                        <Select value={task.assigned_to || '_none'} onValueChange={v => updateAssignee(task.id, v)}>
-                          <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-                            {profiles.map(p => (
-                              <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => deleteTask(task.id)}>
-                      <Trash2 className="h-3 w-3 mr-1" />Löschen
-                    </Button>
-                  </div>
-                )}
-              </div>
-            );
-          })
+                    )}
+                  </SortableSubtaskRow>
+                );
+              })}
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
