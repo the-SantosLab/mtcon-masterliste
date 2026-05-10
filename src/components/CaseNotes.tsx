@@ -102,6 +102,12 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
     onRefresh?.();
   };
 
+  const togglePin = async (id: string, pinned: boolean) => {
+    const { error } = await (supabase as any).from('case_notes').update({ pinned: !pinned }).eq('id', id);
+    if (error) { toast.error('Fehler beim Anpinnen'); return; }
+    onRefresh?.();
+  };
+
   return (
     <div className="rounded-md border border-border bg-card p-5 space-y-4">
       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Notizen</h3>
