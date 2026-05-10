@@ -58,10 +58,32 @@ export default function CaseDetail() {
 
   const deleteCase = async () => {
     if (!c) return;
-    const { error } = await supabase.from('cases').delete().eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-    toast.success(`Vorgang ${c.case_no} gelöscht`);
-    navigate('/cases');
+    try {
+      const { data, error } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', c.id)
+        .select('id');
+      if (error) {
+        console.error('Delete case failed:', error);
+        const hint = error.code === '23503'
+          ? ' Es existieren noch verknüpfte Datensätze.'
+          : error.code === '42501'
+          ? ' Fehlende Berechtigung (RLS).'
+          : '';
+        toast.error(`Vorgang konnte nicht gelöscht werden: ${error.message}.${hint}`);
+        return;
+      }
+      if (!data || data.length === 0) {
+        toast.error('Vorgang konnte nicht gelöscht werden: keine Berechtigung oder Datensatz nicht gefunden.');
+        return;
+      }
+      toast.success(`Vorgang ${c.case_no} gelöscht`);
+      navigate('/cases');
+    } catch (e: any) {
+      console.error('Delete case exception:', e);
+      toast.error(`Unerwarteter Fehler beim Löschen: ${e?.message ?? 'Unbekannt'}`);
+    }
   };
 
   const duplicateCase = async () => {
