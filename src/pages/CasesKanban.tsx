@@ -346,7 +346,7 @@ export default function CasesKanban() {
     let caseCounts: Record<string, number> = {};
     let memberCounts: Record<string, number> = {};
     if (ids.length > 0) {
-      const { data: cs } = await supabase.from('cases').select('project_id').in('project_id', ids);
+      const { data: cs } = await supabase.from('cases').select('project_id').in('project_id', ids).eq('deleted', false);
       (cs || []).forEach((c: any) => { if (c.project_id) caseCounts[c.project_id] = (caseCounts[c.project_id] || 0) + 1; });
       const { data: ms } = await supabase.from('project_members').select('project_id').in('project_id', ids);
       (ms || []).forEach((m: any) => { memberCounts[m.project_id] = (memberCounts[m.project_id] || 0) + 1; });
