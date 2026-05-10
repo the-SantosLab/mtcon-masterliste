@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { FileAttachments } from '@/components/FileAttachments';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
+import { SaveAsTemplateDialog } from '@/components/SaveAsTemplateDialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
