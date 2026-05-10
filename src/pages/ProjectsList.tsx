@@ -154,7 +154,7 @@ export default function ProjectsList() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Abteilungsübergreifende Vorgänge</h1>
+            <h1 className="text-lg font-semibold text-foreground">Vorgänge abteilungsübergreifend / Projekte</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Alle abteilungsübergreifenden Vorgänge und Dateiablagen</p>
           </div>
           {!isViewer && (
