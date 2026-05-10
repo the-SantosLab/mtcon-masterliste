@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { ArrowLeft, Building2, UserCheck, FolderKanban, Trash2, CalendarIcon, Pencil } from 'lucide-react';
+import { ArrowLeft, Building2, UserCheck, FolderKanban, Trash2, CalendarIcon, Pencil, Copy } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,43 @@ export default function CaseDetail() {
     if (error) { toast.error('Fehler: ' + error.message); return; }
     toast.success(`Vorgang ${c.case_no} gelöscht`);
     navigate('/cases');
+  };
+
+  const duplicateCase = async () => {
+    if (!c || !user) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const payload: any = {
+      project_name: `Kopie – ${c.project_name}`,
+      client_name: c.client_name,
+      customer_no: c.customer_no,
+      project_article_no: c.project_article_no,
+      quantity: c.quantity,
+      sop: c.sop,
+      project_id: c.project_id,
+      department_id: c.department_id,
+      project_duration: c.project_duration,
+      estimated_hours: c.estimated_hours,
+      note: c.note,
+      internal_area_code: c.internal_area_code,
+      product_code: c.product_code,
+      visibility: c.visibility,
+      watchers: c.watchers ?? [],
+      status: 'nicht_begonnen',
+      assignee_id: null,
+      received_at: today,
+      started_at: null,
+      due_at: null,
+      completed_at: null,
+      closed_at: null,
+      closed_by: null,
+      created_by: user.id,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    };
+    const { data, error } = await supabase.from('cases').insert(payload).select('id, case_no').single();
+    if (error) { toast.error('Fehler beim Duplizieren: ' + error.message); return; }
+    toast.success('Vorgang wurde dupliziert');
+    navigate(`/cases/${(data as any).id}`);
   };
 
   const fetchCase = async () => {
@@ -328,6 +365,11 @@ export default function CaseDetail() {
               onOpenChange={setCompleteOpen}
               onConfirm={async (note) => { await completeCase(c.id, note); setRefreshKey(k => k + 1); }}
             />
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={duplicateCase} className="h-8 text-xs gap-1.5">
+                <Copy className="h-3.5 w-3.5" />Duplizieren
+              </Button>
+            )}
             {isAdmin && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
