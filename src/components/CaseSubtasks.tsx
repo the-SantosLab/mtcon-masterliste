@@ -311,6 +311,39 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
     fetchTasks();
   };
 
+  const persistOrder = async (ordered: Subtask[]) => {
+    const updates = ordered.map((t, idx) => ({ id: t.id, sort_order: idx }));
+    // Optimistic update
+    setTasks(ordered.map((t, idx) => ({ ...t, sort_order: idx })));
+    // Persist sequentially (small list)
+    for (const u of updates) {
+      await supabase.from('case_tasks').update({ sort_order: u.sort_order } as any).eq('id', u.id);
+    }
+  };
+
+  const moveTask = (taskId: string, direction: -1 | 1) => {
+    const idx = tasks.findIndex(t => t.id === taskId);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= tasks.length) return;
+    const next = arrayMove(tasks, idx, newIdx);
+    persistOrder(next);
+  };
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = tasks.findIndex(t => t.id === active.id);
+    const newIdx = tasks.findIndex(t => t.id === over.id);
+    if (oldIdx < 0 || newIdx < 0) return;
+    persistOrder(arrayMove(tasks, oldIdx, newIdx));
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const completedCount = tasks.filter(t => t.status === 'done').length;
   const totalCount = tasks.length;
 
