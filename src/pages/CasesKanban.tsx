@@ -557,10 +557,10 @@ export default function CasesKanban() {
               onValueChange={(v) => { if (v) setViewMode(v as ViewMode); }}
               className="ml-2"
             >
-              <ToggleGroupItem value="projects" className="h-7 px-2.5 text-[11px] data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <ToggleGroupItem value="projects" className="h-7 px-3 text-[11px] rounded-full transition-all duration-150 ease-out text-muted-foreground hover:text-foreground hover:bg-muted/50 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:font-semibold">
                 Übergreifende Vorgänge
               </ToggleGroupItem>
-              <ToggleGroupItem value="cases" className="h-7 px-2.5 text-[11px] data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <ToggleGroupItem value="cases" className="h-7 px-3 text-[11px] rounded-full transition-all duration-150 ease-out text-muted-foreground hover:text-foreground hover:bg-muted/50 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:font-semibold">
                 Einzelne Vorgänge
               </ToggleGroupItem>
             </ToggleGroup>
