@@ -194,6 +194,15 @@ export default function CasesList() {
           </button>
         </div>
 
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Überfällig</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" />Fällig in ≤3 Tagen</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />In Arbeit (Zukunft)</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" />Nicht begonnen</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-500" />Aktiv ohne Endtermin</span>
+        </div>
+
         {/* Table */}
         <div className="rounded-md border border-border bg-card overflow-x-auto">
           <table className="w-full">
@@ -272,13 +281,6 @@ export default function CasesList() {
           onOpenChange={(o) => { if (!o) setCompleteId(null); }}
           onConfirm={async (note) => { if (completeId) await completeCase(completeId, note); }}
         />
-        <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Überfällig</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" />Fällig in ≤3 Tagen</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />In Arbeit (Zukunft)</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" />Nicht begonnen</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-500" />Aktiv ohne Endtermin</span>
-        </div>
         <p className="text-[11px] text-muted-foreground">{filtered.length} Vorgang/Vorgänge</p>
       </div>
     </AppLayout>
