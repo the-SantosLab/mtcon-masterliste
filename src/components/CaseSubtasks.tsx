@@ -66,6 +66,31 @@ const STATUS_LABELS: Record<string, string> = {
   abgeschlossen: 'Abgeschlossen', verworfen: 'Verworfen', archiv: 'Archiv',
 };
 
+interface SortableSubtaskRowProps {
+  id: string;
+  canReorder: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  children: (args: { dragHandleProps: any; isDragging: boolean }) => React.ReactNode;
+}
+
+function SortableSubtaskRow({ id, canReorder, children }: SortableSubtaskRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: !canReorder });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+    opacity: isDragging ? 0.85 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ dragHandleProps: { ...attributes, ...listeners }, isDragging })}
+    </div>
+  );
+}
+
 export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
