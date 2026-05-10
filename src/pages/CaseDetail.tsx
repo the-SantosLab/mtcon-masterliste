@@ -154,6 +154,34 @@ export default function CaseDetail() {
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
+  const [titleEditing, setTitleEditing] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [titleSaving, setTitleSaving] = useState(false);
+
+  const startEditTitle = () => {
+    if (!c) return;
+    setTitleDraft(c.project_name);
+    setTitleEditing(true);
+  };
+
+  const saveTitle = async () => {
+    if (!c) return;
+    const next = titleDraft.trim();
+    if (!next) return;
+    if (next === c.project_name) { setTitleEditing(false); return; }
+    setTitleSaving(true);
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('cases')
+      .update({ project_name: next, last_changed_by: user?.id, last_changed_at: now })
+      .eq('id', c.id);
+    setTitleSaving(false);
+    if (error) { toast.error('Titel konnte nicht gespeichert werden'); return; }
+    setCase({ ...c, project_name: next });
+    setTitleEditing(false);
+    setRefreshKey(k => k + 1);
+    toast.success('Titel aktualisiert');
+  };
   const canEditDueDate = !isViewer && (isAdmin || !!profile?.is_manager);
   const [dueOpen, setDueOpen] = useState(false);
   const [sendIcs, setSendIcs] = useState(false);
@@ -349,7 +377,33 @@ export default function CaseDetail() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-lg font-semibold text-foreground">{c.project_name}</h1>
+              {titleEditing ? (
+                <input
+                  autoFocus
+                  value={titleDraft}
+                  disabled={titleSaving}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={() => { if (titleDraft.trim()) saveTitle(); else setTitleEditing(false); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); if (titleDraft.trim()) saveTitle(); }
+                    else if (e.key === 'Escape') { e.preventDefault(); setTitleEditing(false); }
+                  }}
+                  className="text-lg font-semibold text-foreground bg-background border border-input rounded px-2 py-0.5 outline-none focus:ring-2 focus:ring-ring min-w-[280px]"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => canEdit && !isTerminalStatus(c.status) && startEditTitle()}
+                  disabled={!canEdit || isTerminalStatus(c.status)}
+                  className="group inline-flex items-center gap-2 text-left disabled:cursor-default"
+                  title={canEdit && !isTerminalStatus(c.status) ? 'Titel bearbeiten' : undefined}
+                >
+                  <h1 className="text-lg font-semibold text-foreground">{c.project_name}</h1>
+                  {canEdit && !isTerminalStatus(c.status) && (
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </button>
+              )}
               <StatusBadge status={c.status} />
             </div>
             <p className="text-xs text-muted-foreground font-mono">{c.case_no}</p>
