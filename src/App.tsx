@@ -24,6 +24,7 @@ import AdminWorkflows from "./pages/AdminWorkflows";
 import AdminBackups from "./pages/AdminBackups";
 import AdminDeletedCases from "./pages/AdminDeletedCases";
 import AdminTrash from "./pages/AdminTrash";
+import AdminTemplates from "./pages/AdminTemplates";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -78,6 +79,7 @@ function AuthenticatedApp() {
         <Route path="/admin/backups" element={<ProtectedRoute><AdminBackups /></ProtectedRoute>} />
         <Route path="/admin/deleted-cases" element={<ProtectedRoute><AdminDeletedCases /></ProtectedRoute>} />
         <Route path="/admin/papierkorb" element={<ProtectedRoute><AdminTrash /></ProtectedRoute>} />
+        <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

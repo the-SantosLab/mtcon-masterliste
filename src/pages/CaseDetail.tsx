@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { FileAttachments } from '@/components/FileAttachments';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
+import { SaveAsTemplateDialog } from '@/components/SaveAsTemplateDialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -451,6 +452,14 @@ export default function CaseDetail() {
               <Button variant="outline" size="sm" onClick={duplicateCase} className="h-8 text-xs gap-1.5">
                 <Copy className="h-3.5 w-3.5" />Duplizieren
               </Button>
+            )}
+            {isAdmin && (
+              <SaveAsTemplateDialog
+                caseId={c.id}
+                defaultTitle={c.project_name}
+                defaultDescription={c.note}
+                defaultDepartmentId={c.department_id}
+              />
             )}
             {isAdmin && (
               <AlertDialog>

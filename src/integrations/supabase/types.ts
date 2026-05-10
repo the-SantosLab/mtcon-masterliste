@@ -356,6 +356,117 @@ export type Database = {
           },
         ]
       }
+      case_template_departments: {
+        Row: {
+          department_id: string
+          id: string
+          template_id: string
+        }
+        Insert: {
+          department_id: string
+          id?: string
+          template_id: string
+        }
+        Update: {
+          department_id?: string
+          id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_template_departments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_template_departments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "case_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_template_tasks: {
+        Row: {
+          assigned_role: string | null
+          created_at: string
+          department_id: string | null
+          description: string | null
+          id: string
+          order_index: number
+          template_id: string
+          title: string
+        }
+        Insert: {
+          assigned_role?: string | null
+          created_at?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          template_id: string
+          title: string
+        }
+        Update: {
+          assigned_role?: string | null
+          created_at?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          template_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_template_tasks_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_template_tasks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "case_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          last_used_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_used_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_used_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cases: {
         Row: {
           assignee_id: string | null

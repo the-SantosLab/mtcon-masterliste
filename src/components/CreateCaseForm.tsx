@@ -66,6 +66,13 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [suggestForm, setSuggestForm] = useState({ product_name: '', article_number: '', category: '', description: '', request_reason: '' });
   const [suggestSaving, setSuggestSaving] = useState(false);
 
+  // Templates
+  const [templates, setTemplates] = useState<{ id: string; title: string; description: string | null; department_ids: string[]; tasks: { title: string; description: string | null; department_id: string | null; order_index: number }[] }[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [userDeptId, setUserDeptId] = useState<string | null>(null);
+  const [pendingTemplateTasks, setPendingTemplateTasks] = useState<{ title: string; description: string | null; department_id: string | null }[]>([]);
+  const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
+
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
@@ -113,7 +120,49 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         }
       }
     });
+
+    // Load templates and user's department
+    Promise.all([
+      (supabase as any).from('case_templates').select('id, title, description').order('title'),
+      (supabase as any).from('case_template_departments').select('template_id, department_id'),
+      (supabase as any).from('case_template_tasks').select('template_id, title, description, department_id, order_index').order('order_index'),
+      supabase.from('users_profile').select('department_id').eq('id', userId).maybeSingle(),
+    ]).then(([tplRes, joinRes, taskRes, profRes]: any[]) => {
+      const joins = (joinRes.data || []) as { template_id: string; department_id: string }[];
+      const tasks = (taskRes.data || []) as any[];
+      const tpls = ((tplRes.data || []) as any[]).map(t => ({
+        ...t,
+        department_ids: joins.filter(j => j.template_id === t.id).map(j => j.department_id),
+        tasks: tasks.filter(x => x.template_id === t.id),
+      }));
+      setTemplates(tpls);
+      setUserDeptId((profRes.data as any)?.department_id ?? null);
+    });
   }, [defaultProjectId, userId]);
+
+  const visibleTemplates = useMemo(() => {
+    if (!userDeptId) return templates;
+    const matching = templates.filter(t => t.department_ids.length === 0 || t.department_ids.includes(userDeptId));
+    return matching.length ? matching : templates;
+  }, [templates, userDeptId]);
+
+  const applyTemplate = (id: string) => {
+    setSelectedTemplateId(id);
+    if (!id) { setPendingTemplateTasks([]); setPendingTemplateId(null); return; }
+    const tpl = templates.find(t => t.id === id);
+    if (!tpl) return;
+    setForm(f => ({
+      ...f,
+      project_name: f.project_name || tpl.title,
+      note: f.note || (tpl.description || ''),
+    }));
+    setPendingTemplateTasks(tpl.tasks.map(t => ({
+      title: t.title, description: t.description, department_id: t.department_id,
+    })));
+    setPendingTemplateId(id);
+    toast.success('Template wurde übernommen – bitte anpassen');
+  };
+
 
   const topLevel = useMemo(() => {
     const all = departments.filter(d => !d.parent_id);
@@ -286,6 +335,21 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         pinned: true,
       });
     }
+    if (pendingTemplateTasks.length) {
+      await (supabase as any).from('case_tasks').insert(
+        pendingTemplateTasks.map((t, i) => ({
+          case_id: newCase.id,
+          title: t.title,
+          description: t.description,
+          department_id: t.department_id,
+          sort_order: i,
+          created_by: userId,
+        })),
+      );
+      if (pendingTemplateId) {
+        await (supabase as any).from('case_templates').update({ last_used_at: new Date().toISOString() }).eq('id', pendingTemplateId);
+      }
+    }
     toast.success('Vorgang erstellt');
     onCreated();
   };
@@ -336,6 +400,23 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {/* STEP 1: Projektname */}
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              {visibleTemplates.length > 0 && (
+                <div className="space-y-1 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+                  <Label className="text-xs text-muted-foreground">Aus Template erstellen? (optional)</Label>
+                  <Select value={selectedTemplateId || '_none'} onValueChange={v => applyTemplate(v === '_none' ? '' : v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Template wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Ohne Template</SelectItem>
+                      {visibleTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.title} <span className="text-muted-foreground ml-1.5">({t.tasks.length})</span></SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {pendingTemplateTasks.length > 0 && (
+                    <p className="text-[10px] text-muted-foreground">{pendingTemplateTasks.length} Unteraufgaben werden mit angelegt.</p>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
