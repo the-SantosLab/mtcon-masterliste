@@ -41,6 +41,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       .from('case_notes')
       .select('*')
       .eq('case_id', caseId)
+      .order('pinned', { ascending: false })
       .order('created_at', { ascending: false });
     if (error) { console.error('case_notes load error', error); setLoading(false); return; }
     const rows = (data || []) as NoteRow[];
