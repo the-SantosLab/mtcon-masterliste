@@ -602,11 +602,11 @@ export default function Documentation() {
             <SubHeading>Ordnerstruktur</SubHeading>
             <div className="grid grid-cols-3 gap-2 mt-2">
               {[
-                ['01_Admin', 'Administrative Dokumente'],
+                ['01_Verwaltung', 'Administrative Dokumente'],
                 ['02_Briefing', 'Briefing-Unterlagen'],
                 ['03_Kalkulation', 'Kalkulationen & Kostenvoranschläge'],
-                ['04_Assets', 'Medien, Bilder, Design-Dateien'],
-                ['05_Delivery', 'Lieferbare Ergebnisse'],
+                ['04_Dateien', 'Medien, Bilder, Design-Dateien'],
+                ['05_Lieferung', 'Lieferbare Ergebnisse'],
                 ['99_Archiv', 'Archivierte Dateien'],
               ].map(([name, desc]) => (
                 <div key={name} className="rounded border border-border px-2.5 py-2">
