@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronRight, Plus, User, ClipboardList } from 'lucide-react';
+import { ChevronRight, Plus, User, ClipboardList, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DepartmentNode } from '@/lib/case-utils';
 
