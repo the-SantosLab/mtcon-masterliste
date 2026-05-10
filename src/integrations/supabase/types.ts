@@ -117,6 +117,117 @@ export type Database = {
           },
         ]
       }
+      case_email_attachments: {
+        Row: {
+          case_id: string
+          created_at: string
+          email_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          email_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          email_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_email_attachments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_email_attachments_email_id_fkey"
+            columns: ["email_id"]
+            isOneToOne: false
+            referencedRelation: "case_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_emails: {
+        Row: {
+          body_html: string | null
+          body_plain: string | null
+          case_id: string
+          created_at: string
+          from_email: string
+          from_name: string | null
+          id: string
+          message_id: string | null
+          note_id: string | null
+          raw: Json | null
+          received_at: string
+          subject: string | null
+          to_email: string | null
+        }
+        Insert: {
+          body_html?: string | null
+          body_plain?: string | null
+          case_id: string
+          created_at?: string
+          from_email: string
+          from_name?: string | null
+          id?: string
+          message_id?: string | null
+          note_id?: string | null
+          raw?: Json | null
+          received_at?: string
+          subject?: string | null
+          to_email?: string | null
+        }
+        Update: {
+          body_html?: string | null
+          body_plain?: string | null
+          case_id?: string
+          created_at?: string
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          message_id?: string | null
+          note_id?: string | null
+          raw?: Json | null
+          received_at?: string
+          subject?: string | null
+          to_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_emails_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_emails_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "case_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_notes: {
         Row: {
           author_id: string
