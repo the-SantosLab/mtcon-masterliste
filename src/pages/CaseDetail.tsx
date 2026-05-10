@@ -26,6 +26,8 @@ import { FileAttachments } from '@/components/FileAttachments';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { buildAllDayIcs, downloadIcs } from '@/lib/ics';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
@@ -87,6 +89,7 @@ export default function CaseDetail() {
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
   const canEditDueDate = !isViewer && (isAdmin || !!profile?.is_manager);
   const [dueOpen, setDueOpen] = useState(false);
+  const [sendIcs, setSendIcs] = useState(false);
 
   const changeDueDate = async (date: Date | undefined) => {
     if (!c || !user) return;
@@ -111,6 +114,21 @@ export default function CaseDetail() {
       actor_id: user.id,
     });
     toast.success(newIso ? 'Endtermin gesetzt' : 'Endtermin entfernt');
+
+    if (newIso && sendIcs) {
+      const link = `${window.location.origin}/cases/${c.id}`;
+      const ics = buildAllDayIcs({
+        uid: `case-${c.id}-${Date.now()}@kscommand.com`,
+        summary: `${c.case_no} – ${c.project_name}`,
+        description: `Vorgang öffnen: ${link}`,
+        url: link,
+        dueDate: newIso,
+        organizerName: profile?.display_name || undefined,
+        organizerEmail: user.email || undefined,
+      });
+      downloadIcs(`${c.case_no}.ics`, ics);
+    }
+
     setDueOpen(false);
     refresh();
   };
@@ -371,6 +389,15 @@ export default function CaseDetail() {
                           initialFocus
                           className={cn('p-3 pointer-events-auto')}
                         />
+                        <div className="border-t border-border px-3 py-2">
+                          <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                            <Checkbox
+                              checked={sendIcs}
+                              onCheckedChange={(v) => setSendIcs(v === true)}
+                            />
+                            <span>📅 Kalendereinladung zusenden</span>
+                          </label>
+                        </div>
                         {c.due_at && (
                           <div className="border-t border-border p-2">
                             <button
