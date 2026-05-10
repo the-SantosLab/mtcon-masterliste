@@ -50,15 +50,15 @@ export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange 
   };
 
   return (
-    <div className="rounded-md border border-border bg-card p-5">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="rounded-md border border-border bg-card px-5 py-2">
+      <div className="flex items-center gap-2 mb-1">
         <Users className="h-3.5 w-3.5 text-muted-foreground" />
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Weitere Personen informieren</h3>
+        <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Weitere Personen informieren</h3>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-3">Diese Personen erhalten eine Email, wenn Aufgaben abgeschlossen werden.</p>
+      <p className="text-[11px] text-muted-foreground mb-2">Diese Personen erhalten eine Email, wenn Aufgaben abgeschlossen werden.</p>
 
       <div className="flex flex-wrap items-center gap-2">
-        {watched.length === 0 && <span className="text-xs text-muted-foreground">Niemand</span>}
+        {watched.length === 0 && <span className="text-[13px] text-muted-foreground">Niemand</span>}
         {watched.map(p => (
           <Badge key={p.id} variant="secondary" className="text-[11px] gap-1.5 pr-1">
             <span className="font-mono text-[10px] text-muted-foreground">{p.short_code}</span>
