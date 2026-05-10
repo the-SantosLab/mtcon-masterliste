@@ -392,52 +392,72 @@ export default function CaseDetail() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2">
                 <Field label="Auftragseingang" value={formatDate(c.received_at)} />
                 <Field label="Gestartet" value={formatDateTime(c.started_at)} />
-                {canEditDueDate ? (
-                  <div>
-                    <p className="text-[11px] text-muted-foreground mb-0.5 flex items-center gap-1">
-                      Endtermin
-                      {c.due_date_corrected_at && <span className="text-[10px] italic opacity-70">(korrigiert)</span>}
-                    </p>
-                    <Popover open={dueOpen} onOpenChange={setDueOpen}>
-                      <PopoverTrigger asChild>
-                        <button className="text-[13px] text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
-                          <span>{formatDate(c.due_at) || '–'}</span>
-                          <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={c.due_at ? new Date(c.due_at) : undefined}
-                          onSelect={changeDueDate}
-                          initialFocus
-                          className={cn('p-3 pointer-events-auto')}
-                        />
-                        <div className="border-t border-border px-3 py-2">
-                          <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-                            <Checkbox
-                              checked={sendIcs}
-                              onCheckedChange={(v) => setSendIcs(v === true)}
-                            />
-                            <span>📅 Kalendereinladung zusenden</span>
-                          </label>
-                        </div>
-                        {c.due_at && (
-                          <div className="border-t border-border p-2">
-                            <button
-                              onClick={() => changeDueDate(undefined)}
-                              className="w-full text-xs text-muted-foreground hover:text-destructive py-1 transition-colors"
-                            >
-                              Endtermin entfernen
-                            </button>
+                {(() => {
+                  const showBadge = !!dueChange && !isTerminalStatus(c.status);
+                  const badgeTitle = dueChange
+                    ? `Endtermin wurde am ${formatDateTime(dueChange.at)}${dueChange.by_name ? ` von ${dueChange.by_name}` : ''} geändert`
+                    : '';
+                  const Badge = showBadge ? (
+                    <span
+                      title={badgeTitle}
+                      className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-1.5 py-0 text-[9px] font-medium leading-tight"
+                    >
+                      ⚠ Geändert
+                    </span>
+                  ) : null;
+                  return canEditDueDate ? (
+                    <div>
+                      <p className="text-[11px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                        Endtermin
+                        {Badge}
+                      </p>
+                      <Popover open={dueOpen} onOpenChange={setDueOpen}>
+                        <PopoverTrigger asChild>
+                          <button className="text-[13px] text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                            <span>{formatDate(c.due_at) || '–'}</span>
+                            <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={c.due_at ? new Date(c.due_at) : undefined}
+                            onSelect={changeDueDate}
+                            initialFocus
+                            className={cn('p-3 pointer-events-auto')}
+                          />
+                          <div className="border-t border-border px-3 py-2">
+                            <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                              <Checkbox
+                                checked={sendIcs}
+                                onCheckedChange={(v) => setSendIcs(v === true)}
+                              />
+                              <span>📅 Kalendereinladung zusenden</span>
+                            </label>
                           </div>
-                        )}
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                ) : (
-                  <Field label="Endtermin" value={formatDate(c.due_at)} />
-                )}
+                          {c.due_at && (
+                            <div className="border-t border-border p-2">
+                              <button
+                                onClick={() => changeDueDate(undefined)}
+                                className="w-full text-xs text-muted-foreground hover:text-destructive py-1 transition-colors"
+                              >
+                                Endtermin entfernen
+                              </button>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-[11px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                        Endtermin
+                        {Badge}
+                      </p>
+                      <p className="text-[13px] text-foreground">{formatDate(c.due_at) || '–'}</p>
+                    </div>
+                  );
+                })()}
                 <Field label="Abgeschlossen" value={formatDateTime(c.completed_at)} />
               </div>
             </div>
