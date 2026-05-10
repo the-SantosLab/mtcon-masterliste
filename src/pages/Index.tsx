@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/case-utils';
 import type { Tables } from '@/integrations/supabase/types';
 import { ClipboardList, Clock, AlertTriangle, CalendarCheck, Calendar, ArrowRight, X, UserCheck, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 
@@ -87,15 +88,17 @@ export default function Dashboard() {
     const day = (startOfWeek.getDay() + 6) % 7; // Mo=0
     startOfWeek.setDate(startOfWeek.getDate() - day);
     startOfWeek.setHours(0, 0, 0, 0);
-    const buckets = [0, 0, 0, 0, 0];
+    const buckets: CaseRow[][] = [[], [], [], [], []];
     cases.forEach(c => {
       if (!c.created_at) return;
       const d = new Date(c.created_at);
       const diff = Math.floor((d.getTime() - startOfWeek.getTime()) / 86400000);
-      if (diff >= 0 && diff < 5) buckets[diff]++;
+      if (diff >= 0 && diff < 5) buckets[diff].push(c);
     });
-    return labels.map((label, i) => ({ label, value: buckets[i] }));
+    return labels.map((label, i) => ({ label, value: buckets[i].length, items: buckets[i] }));
   }, [cases, now]);
+
+  const [barDrill, setBarDrill] = useState<{ label: string; items: CaseRow[] } | null>(null);
 
   const drilldownItems = useMemo(() => {
     if (!activeFilter) return [];
@@ -211,7 +214,12 @@ export default function Dashboard() {
                       }}
                       labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                     />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    <Bar
+                      dataKey="value"
+                      radius={[6, 6, 0, 0]}
+                      cursor="pointer"
+                      onClick={(d: any) => setBarDrill({ label: d.label, items: d.items || [] })}
+                    >
                       {weekChart.map((_, i) => (
                         <Cell key={i} fill="hsl(var(--primary))" />
                       ))}
@@ -300,6 +308,44 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      <Sheet open={!!barDrill} onOpenChange={o => !o && setBarDrill(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+          <SheetHeader className="px-5 py-4 border-b border-border/50 shrink-0">
+            <SheetTitle className="text-sm font-medium">
+              Erstellt am {barDrill?.label} · {barDrill?.items.length ?? 0} Vorgang/Vorgänge
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto">
+            {!barDrill?.items.length ? (
+              <p className="p-5 text-xs text-muted-foreground">Keine Vorgänge in diesem Bereich</p>
+            ) : (
+              <div className="divide-y divide-border">
+                {barDrill.items.map(c => (
+                  <Link
+                    key={c.id}
+                    to={`/cases/${c.id}`}
+                    onClick={() => setBarDrill(null)}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
+                    <UrgencyDot status={c.status} dueAt={c.due_at} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
+                      <p className="text-sm text-foreground truncate">{c.project_name}</p>
+                    </div>
+                    {c.assignee?.short_code && (
+                      <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded shrink-0">
+                        {c.assignee.short_code}
+                      </span>
+                    )}
+                    <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 w-16 text-right">{formatDate(c.due_at)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }
