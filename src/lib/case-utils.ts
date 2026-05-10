@@ -184,6 +184,20 @@ export function getUrgencyDotColor(status: CaseStatus, dueAt: string | null): st
   return 'bg-purple-500';
 }
 
+/** Accessibility label inside the urgency dot (color-blind safe).
+ *  TODO(Mario): Confirm whether to switch to numbers 1–5 or letters A–E instead of symbols. */
+export function getUrgencyDotLabel(status: CaseStatus, dueAt: string | null): string {
+  const color = getUrgencyDotColor(status, dueAt);
+  switch (color) {
+    case 'bg-red-500': return '!';
+    case 'bg-yellow-500': return '~';
+    case 'bg-emerald-500': return '✓';
+    case 'bg-blue-500': return '○';
+    case 'bg-purple-500': return '?';
+    default: return '';
+  }
+}
+
 // ── Department types (moved from ticket-types.ts) ──
 
 export interface Department {

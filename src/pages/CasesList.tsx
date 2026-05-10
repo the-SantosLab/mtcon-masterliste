@@ -7,6 +7,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
+import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { Search, Plus, UserCheck } from 'lucide-react';
@@ -197,11 +198,11 @@ export default function CasesList() {
 
         {/* Legend */}
         <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Überfällig</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" />Fällig in ≤3 Tagen</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />In Arbeit (Zukunft)</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" />Nicht begonnen</span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-500" />Aktiv ohne Endtermin</span>
+          <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-red-500" forceLabel="!" />Überfällig</span>
+          <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-yellow-500" forceLabel="~" />Fällig in ≤3 Tagen</span>
+          <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-emerald-500" forceLabel="✓" />In Arbeit (Zukunft)</span>
+          <span className="flex items-center gap-1.5"><UrgencyDot status={'nicht_begonnen' as any} dueAt={null} forceColor="bg-blue-500" forceLabel="○" />Nicht begonnen</span>
+          <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-purple-500" forceLabel="?" />Aktiv ohne Endtermin</span>
         </div>
 
         {/* Table */}
@@ -228,8 +229,8 @@ export default function CasesList() {
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cellCls}>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground whitespace-nowrap">
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', getUrgencyDotColor(c.status, c.due_at))} />
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
+                      <UrgencyDot status={c.status} dueAt={c.due_at} />
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>

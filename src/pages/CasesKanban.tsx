@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { buildTree, STATUS_LABELS, STATUS_DOT_COLORS, getUrgencyDotColor } from '@/lib/case-utils';
+import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Department, DepartmentNode } from '@/lib/case-utils';
 import { DepartmentTreeView } from '@/components/DepartmentTreeView';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -127,10 +128,12 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
             )}
           </div>
         </div>
-        <span
-          className={cn('h-2 w-2 rounded-full shrink-0 mt-1', getUrgencyDotColor(c.status as Enums<'case_status'>, c.due_at))}
-          title={STATUS_LABELS[c.status as Enums<'case_status'>] || c.status}
+        <UrgencyDot
+          status={c.status as Enums<'case_status'>}
+          dueAt={c.due_at}
+          className="mt-0.5"
         />
+        <span className="sr-only">{STATUS_LABELS[c.status as Enums<'case_status'>] || c.status}</span>
       </div>
       <p className="text-xs font-medium text-foreground line-clamp-2 leading-snug mb-2">{c.project_name}</p>
       {c.subtasks_total > 0 && (
