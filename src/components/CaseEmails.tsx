@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 
 interface EmailRow {
   id: string;
@@ -11,6 +12,7 @@ interface EmailRow {
   from_name: string | null;
   subject: string | null;
   body_plain: string | null;
+  body_html: string | null;
   received_at: string;
   attachments: { id: string; file_name: string; storage_path: string; size_bytes: number | null }[];
 }
@@ -43,14 +45,14 @@ export function CaseEmails({ caseId }: Props) {
   const fetchEmails = async () => {
     const { data, error } = await (supabase as any)
       .from('case_emails')
-      .select('id, case_id, from_email, from_name, subject, body_plain, received_at, case_email_attachments(id, file_name, storage_path, size_bytes)')
+      .select('id, case_id, from_email, from_name, subject, body_plain, body_html, received_at, case_email_attachments(id, file_name, storage_path, size_bytes)')
       .eq('case_id', caseId)
       .order('received_at', { ascending: false });
     if (error) { console.error(error); setLoading(false); return; }
     setEmails(((data || []) as any[]).map(e => ({
       id: e.id, case_id: e.case_id,
       from_email: e.from_email, from_name: e.from_name,
-      subject: e.subject, body_plain: e.body_plain,
+      subject: e.subject, body_plain: e.body_plain, body_html: e.body_html,
       received_at: e.received_at,
       attachments: e.case_email_attachments || [],
     })));
@@ -128,11 +130,8 @@ export function CaseEmails({ caseId }: Props) {
                   <span className="text-foreground font-medium">{e.subject || '(kein Betreff)'}</span>
                 </div>
 
-                <div className="rounded border border-border bg-background px-3 py-2 max-h-80 overflow-y-auto">
-                  <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">
-                    {e.body_plain || '(kein Textinhalt)'}
-                  </pre>
-                </div>
+                <EmailBody html={e.body_html} plain={e.body_plain} />
+
 
                 {e.attachments.length > 0 && (
                   <div className="space-y-1">
@@ -162,6 +161,94 @@ export function CaseEmails({ caseId }: Props) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function EmailBody({ html, plain }: { html: string | null; plain: string | null }) {
+  const hasHtml = !!(html && html.trim());
+  const hasPlain = !!(plain && plain.trim());
+  const [mode, setMode] = useState<'html' | 'plain'>(hasHtml ? 'html' : 'plain');
+
+  // Sanitize HTML: strip scripts, event handlers, dangerous protocols.
+  // Force links to open in a new tab with no referrer.
+  const safeHtml = useMemo(() => {
+    if (!hasHtml) return '';
+    const clean = DOMPurify.sanitize(html as string, {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ['style', 'script', 'iframe', 'form', 'object', 'embed', 'meta', 'link'],
+      FORBID_ATTR: ['style', 'srcset'],
+      ALLOW_DATA_ATTR: false,
+    });
+    // Tag links to open externally
+    return clean.replace(/<a /gi, '<a target="_blank" rel="noopener noreferrer nofollow" ');
+  }, [html, hasHtml]);
+
+  if (!hasHtml && !hasPlain) {
+    return (
+      <div className="rounded border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+        (kein Textinhalt)
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {hasHtml && hasPlain && (
+        <div className="inline-flex rounded border border-border overflow-hidden text-[10px]">
+          <button
+            type="button"
+            onClick={() => setMode('html')}
+            className={cn(
+              'px-2 py-0.5 transition-colors',
+              mode === 'html' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50',
+            )}
+          >
+            HTML
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('plain')}
+            className={cn(
+              'px-2 py-0.5 border-l border-border transition-colors',
+              mode === 'plain' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50',
+            )}
+          >
+            Text
+          </button>
+        </div>
+      )}
+
+      <div className="rounded border border-border bg-background px-4 py-3 max-h-96 overflow-y-auto">
+        {mode === 'html' && hasHtml ? (
+          <div
+            className={cn(
+              'text-sm text-foreground leading-relaxed break-words',
+              '[&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0',
+              '[&_a]:text-primary [&_a]:underline [&_a]:break-all',
+              '[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2',
+              '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2',
+              '[&_li]:my-0.5',
+              '[&_h1]:text-base [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1',
+              '[&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1',
+              '[&_h3]:text-sm [&_h3]:font-medium [&_h3]:mt-2 [&_h3]:mb-1',
+              '[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground [&_blockquote]:my-2',
+              '[&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_pre]:text-xs [&_pre]:overflow-x-auto',
+              '[&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs',
+              '[&_table]:border-collapse [&_table]:my-2',
+              '[&_th]:border [&_th]:border-border [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_th]:bg-muted/40',
+              '[&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1',
+              '[&_img]:max-w-full [&_img]:h-auto [&_img]:rounded',
+              '[&_hr]:my-3 [&_hr]:border-border',
+            )}
+            dangerouslySetInnerHTML={{ __html: safeHtml }}
+          />
+        ) : (
+          <pre className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed font-sans m-0">
+            {plain || ''}
+          </pre>
+        )}
+      </div>
     </div>
   );
 }
