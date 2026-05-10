@@ -103,6 +103,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const active = (href: string) => {
     if (href === '/') return location.pathname === '/';
     if (href === '/cases') {
+      if (location.pathname.startsWith('/cases/kanban')) return false;
       return location.pathname === '/cases' || /^\/cases\/[^\/]+$/.test(location.pathname);
     }
     return location.pathname === href || location.pathname.startsWith(href + '/');
