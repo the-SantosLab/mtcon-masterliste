@@ -609,6 +609,17 @@ export default function CasesKanban() {
             </AlertDialogContent>
           </AlertDialog>
 
+          {/* Legend */}
+          {!isProjects && (
+            <div className="flex flex-wrap items-center gap-3 px-4 py-2 border-b border-border bg-card/30 shrink-0 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Überfällig</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" />Fällig in ≤3 Tagen</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />In Arbeit (Zukunft)</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" />Nicht begonnen</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-500" />Aktiv ohne Endtermin</span>
+            </div>
+          )}
+
           {/* Kanban */}
           <div className="flex-1 overflow-x-auto p-4">
             {loading ? (
