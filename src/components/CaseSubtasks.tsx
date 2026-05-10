@@ -350,6 +350,9 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
             const isExpanded = expandedId === task.id;
             const st = STATUS_MAP[task.status] || STATUS_MAP.open;
             const canEditTask = canEdit;
+            const note = completionNotes[task.id];
+            const hasNote = task.status === 'done' && !!note;
+            const isNoteOpen = noteExpandedId === task.id;
             return (
               <div key={task.id} className="rounded-md border border-border/50 overflow-hidden">
                 <div
@@ -363,6 +366,17 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                   )}>
                     {task.title}
                   </span>
+                  {hasNote && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setNoteExpandedId(isNoteOpen ? null : task.id); }}
+                      title={isNoteOpen ? 'Abschlussnotiz ausblenden' : 'Abschlussnotiz anzeigen'}
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 hover:bg-muted transition-colors"
+                    >
+                      <FileText className="h-3 w-3" />
+                      <ChevronDown className={cn('h-3 w-3 transition-transform', isNoteOpen && 'rotate-180')} />
+                    </button>
+                  )}
                   {getDeptName(task.department_id) && (
                     <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
                       <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
@@ -375,6 +389,17 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                   )}
                   <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                 </div>
+
+                {hasNote && isNoteOpen && (
+                  <div className="px-3 pb-3 pt-2 border-t border-border/50">
+                    <div
+                      className="ml-4 rounded-md bg-muted/40 border border-border/40 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
+                      style={{ fontSize: '13px', lineHeight: '1.5' }}
+                    >
+                      {note}
+                    </div>
+                  </div>
+                )}
 
                 {isExpanded && canEditTask && (
                   <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/50 bg-muted/20">
