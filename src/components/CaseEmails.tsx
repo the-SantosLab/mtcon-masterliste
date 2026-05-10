@@ -45,14 +45,14 @@ export function CaseEmails({ caseId }: Props) {
   const fetchEmails = async () => {
     const { data, error } = await (supabase as any)
       .from('case_emails')
-      .select('id, case_id, from_email, from_name, subject, body_plain, received_at, case_email_attachments(id, file_name, storage_path, size_bytes)')
+      .select('id, case_id, from_email, from_name, subject, body_plain, body_html, received_at, case_email_attachments(id, file_name, storage_path, size_bytes)')
       .eq('case_id', caseId)
       .order('received_at', { ascending: false });
     if (error) { console.error(error); setLoading(false); return; }
     setEmails(((data || []) as any[]).map(e => ({
       id: e.id, case_id: e.case_id,
       from_email: e.from_email, from_name: e.from_name,
-      subject: e.subject, body_plain: e.body_plain,
+      subject: e.subject, body_plain: e.body_plain, body_html: e.body_html,
       received_at: e.received_at,
       attachments: e.case_email_attachments || [],
     })));
