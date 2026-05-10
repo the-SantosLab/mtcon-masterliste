@@ -262,6 +262,7 @@ export default function ProjectDetail() {
       supabase.from('cases')
         .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
         .eq('project_id', id)
+        .eq('deleted', false)
         .order('created_at', { ascending: false }),
       supabase.from('project_members').select('id, user_id, role').eq('project_id', id),
       supabase.from('users_profile').select('id, display_name, short_code').eq('active', true),
