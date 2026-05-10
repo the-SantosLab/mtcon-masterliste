@@ -308,6 +308,44 @@ export default function Dashboard() {
           />
         </div>
       </div>
+
+      <Sheet open={!!barDrill} onOpenChange={o => !o && setBarDrill(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
+          <SheetHeader className="px-5 py-4 border-b border-border/50 shrink-0">
+            <SheetTitle className="text-sm font-medium">
+              Erstellt am {barDrill?.label} · {barDrill?.items.length ?? 0} Vorgang/Vorgänge
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto">
+            {!barDrill?.items.length ? (
+              <p className="p-5 text-xs text-muted-foreground">Keine Vorgänge in diesem Bereich</p>
+            ) : (
+              <div className="divide-y divide-border">
+                {barDrill.items.map(c => (
+                  <Link
+                    key={c.id}
+                    to={`/cases/${c.id}`}
+                    onClick={() => setBarDrill(null)}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
+                    <UrgencyDot status={c.status} dueAt={c.due_at} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
+                      <p className="text-sm text-foreground truncate">{c.project_name}</p>
+                    </div>
+                    {c.assignee?.short_code && (
+                      <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded shrink-0">
+                        {c.assignee.short_code}
+                      </span>
+                    )}
+                    <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 w-16 text-right">{formatDate(c.due_at)}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }
