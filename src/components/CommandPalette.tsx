@@ -81,6 +81,7 @@ export function CommandPalette({ open, onClose }: Props) {
       supabase.from('cases')
         .select('id, case_no, project_name, status')
         .or(`case_no.ilike.${term},project_name.ilike.${term},customer_no.ilike.${term}`)
+        .eq('deleted', false)
         .limit(5),
       supabase.from('users_profile')
         .select('id, display_name, short_code')
