@@ -55,7 +55,8 @@ const adminItems = [
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { profile, role, signOut, isAdmin } = useAuth();
+  const { profile, role, signOut, isAdmin, user } = useAuth();
+  const isMaster = isMasterUser(user?.id);
   const { preferences, setTheme, setCompactTables } = usePreferences();
   const location = useLocation();
   const [open, setOpen] = useState(false);
