@@ -678,15 +678,24 @@ export default function CaseDetail() {
             {/* Tasks checklist */}
             <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} />
 
-            {/* Attachments */}
-            <div className="rounded-md border border-border bg-card p-5">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Anhänge</h3>
-              <FileAttachments
-                bucket="case-attachments"
-                folder={`cases/${c.id}`}
-                canUpload={!isViewer && !isTerminalStatus(c.status)}
-                canDelete={!isViewer}
-              />
+            {/* Anhänge */}
+            <div className="rounded-md border border-border bg-card p-5 space-y-5">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Anhänge</h3>
+
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Dateien</p>
+                <FileAttachments
+                  bucket="case-attachments"
+                  folder={`cases/${c.id}`}
+                  canUpload={!isViewer && !isTerminalStatus(c.status)}
+                  canDelete={!isViewer}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">E-Mails</p>
+                <CaseEmails caseId={c.id} />
+              </div>
             </div>
 
             {/* Email-Adresse für diesen Vorgang */}
