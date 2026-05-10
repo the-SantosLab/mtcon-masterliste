@@ -6,12 +6,12 @@ const corsHeaders = {
 };
 
 const DEFAULT_FOLDERS = [
-  { name: '01_Admin',      sort: 1 },
-  { name: '02_Briefing',   sort: 2 },
+  { name: '01_Verwaltung',  sort: 1 },
+  { name: '02_Briefing',    sort: 2 },
   { name: '03_Kalkulation', sort: 3 },
-  { name: '04_Assets',     sort: 4 },
-  { name: '05_Delivery',   sort: 5 },
-  { name: '99_Archiv',     sort: 99 },
+  { name: '04_Dateien',     sort: 4 },
+  { name: '05_Lieferung',   sort: 5 },
+  { name: '99_Archiv',      sort: 99 },
 ];
 
 Deno.serve(async (req) => {
