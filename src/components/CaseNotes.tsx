@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatRelativeTime } from '@/lib/case-utils';
-import { Send, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Send, Pencil, Trash2, Check, X, Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface NoteRow {
   id: string;
@@ -14,6 +15,7 @@ interface NoteRow {
   created_at: string;
   edited_at: string | null;
   edited_by: string | null;
+  pinned: boolean;
   author: { display_name: string; short_code: string } | null;
 }
 
