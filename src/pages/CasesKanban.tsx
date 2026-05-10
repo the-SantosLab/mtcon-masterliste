@@ -359,6 +359,7 @@ export default function CasesKanban() {
     const { data } = await supabase
       .from('cases')
       .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at')
+      .eq('deleted', false)
       .order('created_at', { ascending: true });
     const list = (data || []) as any[];
 
