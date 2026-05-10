@@ -305,7 +305,7 @@ export default function ProjectsList() {
             </div>
             <div className="rounded-md bg-muted/50 border border-border px-3 py-2 text-[11px] text-muted-foreground">
               Nach dem Anlegen werden automatisch <strong className="text-foreground">6 Ordner</strong> erstellt:<br />
-              01_Admin · 02_Briefing · 03_Kalkulation · 04_Assets · 05_Delivery · 99_Archiv
+              01_Verwaltung · 02_Briefing · 03_Kalkulation · 04_Dateien · 05_Lieferung · 99_Archiv
             </div>
             <Button onClick={createProject} className="w-full h-8 text-xs" disabled={creating}>
               {creating ? 'Wird angelegt…' : 'Projekt anlegen'}
