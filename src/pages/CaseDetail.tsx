@@ -250,7 +250,7 @@ export default function CaseDetail() {
   const Field = ({ label, value }: { label: string; value: string | null | undefined }) => (
     <div>
       <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
-      <p className="text-sm text-foreground">{value || '–'}</p>
+      <p className="text-[13px] text-foreground">{value || '–'}</p>
     </div>
   );
 
@@ -345,9 +345,9 @@ export default function CaseDetail() {
               </div>
             )}
 
-            <div className="rounded-md border border-border bg-card p-5">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Termine</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
+            <div className="rounded-md border border-border bg-card px-5 py-2">
+              <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Termine</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2">
                 <Field label="Auftragseingang" value={formatDate(c.received_at)} />
                 <Field label="Gestartet" value={formatDateTime(c.started_at)} />
                 {canEditDueDate ? (
@@ -358,7 +358,7 @@ export default function CaseDetail() {
                     </p>
                     <Popover open={dueOpen} onOpenChange={setDueOpen}>
                       <PopoverTrigger asChild>
-                        <button className="text-sm text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
+                        <button className="text-[13px] text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
                           <span>{formatDate(c.due_at) || '–'}</span>
                           <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
                         </button>
@@ -392,10 +392,10 @@ export default function CaseDetail() {
             </div>
 
             {canEdit && !isTerminalStatus(c.status) && (
-              <div className="rounded-md border border-border bg-card p-5">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Status ändern</h3>
+              <div className="rounded-md border border-border bg-card px-5 py-2">
+                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Status ändern</h3>
                 <Select value={c.status} onValueChange={changeStatus}>
-                  <SelectTrigger className="w-[180px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-[180px] h-8 text-[13px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
                   </SelectContent>
@@ -405,13 +405,13 @@ export default function CaseDetail() {
 
             {/* Assign to user */}
             {!isViewer && !isTerminalStatus(c.status) && (
-              <div className="rounded-md border border-border bg-card p-5">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="rounded-md border border-border bg-card px-5 py-2">
+                <div className="flex items-center gap-2 mb-2">
                   <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Bearbeiter zuweisen</h3>
+                  <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Bearbeiter zuweisen</h3>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-[13px] text-muted-foreground">
                     Aktuell: <span className="text-foreground font-medium">{c.assignee ? `${c.assignee.short_code} – ${c.assignee.display_name}` : 'Niemand'}</span>
                   </div>
                   <Select value={c.assignee_id || '_none'} onValueChange={assignCase}>
@@ -467,13 +467,13 @@ export default function CaseDetail() {
 
             {/* Department move */}
             {!isViewer && !isTerminalStatus(c.status) && (
-              <div className="rounded-md border border-border bg-card p-5">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="rounded-md border border-border bg-card px-5 py-2">
+                <div className="flex items-center gap-2 mb-2">
                   <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Abteilung verschieben</h3>
+                  <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Abteilung verschieben</h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-[13px] text-muted-foreground">
                     Aktuell: <span className="text-foreground font-medium">{c.department?.name || 'Keine'}</span>
                     {!c.department_id && (() => {
                       const creator = profiles.find(p => p.id === c.created_by);
@@ -509,13 +509,13 @@ export default function CaseDetail() {
 
             {/* Project move */}
             {!isViewer && !isTerminalStatus(c.status) && (
-              <div className="rounded-md border border-border bg-card p-5">
-                <div className="flex items-center gap-2 mb-3">
+              <div className="rounded-md border border-border bg-card px-5 py-2">
+                <div className="flex items-center gap-2 mb-2">
                   <FolderKanban className="h-3.5 w-3.5 text-muted-foreground" />
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Projekt verschieben</h3>
+                  <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projekt verschieben</h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-[13px] text-muted-foreground">
                     Aktuell: <span className="text-foreground font-medium">
                       {c.project ? `${c.project.project_number || ''} ${c.project.name}`.trim() : 'Keines'}
                     </span>
