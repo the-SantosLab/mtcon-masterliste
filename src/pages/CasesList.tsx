@@ -226,15 +226,17 @@ export default function CasesList() {
                 <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : filtered.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
-                  <td className={cellCls}><StatusBadge status={c.status} /></td>
+                  <td className={cellCls}>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground whitespace-nowrap">
+                      <span className={cn('h-2 w-2 rounded-full shrink-0', getUrgencyDotColor(c.status, c.due_at))} />
+                      {STATUS_LABELS[c.status]}
+                    </span>
+                  </td>
                   <td className={cn(cellCls, 'font-mono')}>
                     <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
-                    <div className="flex items-center gap-2">
-                      <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', getUrgencyDotColor(c.status, c.due_at))} />
-                    </div>
+                    <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
                   </td>
                   <td className={cellCls}>
                     {c.project ? (
