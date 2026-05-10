@@ -454,6 +454,14 @@ export default function CaseDetail() {
               </Button>
             )}
             {isAdmin && (
+              <SaveAsTemplateDialog
+                caseId={c.id}
+                defaultTitle={c.project_name}
+                defaultDescription={c.note}
+                defaultDepartmentId={c.department_id}
+              />
+            )}
+            {isAdmin && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" className="h-8 text-xs gap-1.5">
