@@ -51,6 +51,7 @@ const adminItems = [
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
+  { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, masterOnly: true },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
