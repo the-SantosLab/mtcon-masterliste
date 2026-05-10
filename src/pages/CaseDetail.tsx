@@ -154,6 +154,34 @@ export default function CaseDetail() {
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
+  const [titleEditing, setTitleEditing] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [titleSaving, setTitleSaving] = useState(false);
+
+  const startEditTitle = () => {
+    if (!c) return;
+    setTitleDraft(c.project_name);
+    setTitleEditing(true);
+  };
+
+  const saveTitle = async () => {
+    if (!c) return;
+    const next = titleDraft.trim();
+    if (!next) return;
+    if (next === c.project_name) { setTitleEditing(false); return; }
+    setTitleSaving(true);
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('cases')
+      .update({ project_name: next, last_changed_by: user?.id, last_changed_at: now })
+      .eq('id', c.id);
+    setTitleSaving(false);
+    if (error) { toast.error('Titel konnte nicht gespeichert werden'); return; }
+    setCase({ ...c, project_name: next });
+    setTitleEditing(false);
+    setRefreshKey(k => k + 1);
+    toast.success('Titel aktualisiert');
+  };
   const canEditDueDate = !isViewer && (isAdmin || !!profile?.is_manager);
   const [dueOpen, setDueOpen] = useState(false);
   const [sendIcs, setSendIcs] = useState(false);
