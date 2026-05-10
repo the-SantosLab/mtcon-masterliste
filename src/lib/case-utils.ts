@@ -190,9 +190,9 @@ export function getUrgencyDotLabel(status: CaseStatus, dueAt: string | null): st
   const color = getUrgencyDotColor(status, dueAt);
   switch (color) {
     case 'bg-red-500': return '!';
-    case 'bg-yellow-500': return '~';
+    case 'bg-yellow-500': return '⏱';
     case 'bg-emerald-500': return '✓';
-    case 'bg-blue-500': return '○';
+    case 'bg-blue-500': return '–';
     case 'bg-purple-500': return '?';
     default: return '';
   }
