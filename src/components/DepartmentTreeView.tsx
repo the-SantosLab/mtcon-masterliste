@@ -24,9 +24,11 @@ function TreeNode({
     <div>
       <div
         className={cn(
-          'group flex items-center gap-1.5 rounded-md cursor-pointer transition-colors',
+          'group flex items-center gap-1.5 rounded-md cursor-pointer transition-all duration-150 ease-out',
           compact ? 'px-2 py-1' : 'px-2.5 py-1.5',
-          isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/60 text-foreground',
+          isSelected
+            ? 'bg-primary/10 text-foreground font-medium border-l-2 border-primary'
+            : 'hover:bg-muted/60 text-foreground border-l-2 border-transparent',
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => onSelect?.(node.id)}
@@ -42,7 +44,7 @@ function TreeNode({
           <span className="w-4.5" />
         )}
 
-        <span className={cn('flex-1 truncate', compact ? 'text-xs' : 'text-sm', !node.parent_id && 'font-medium')}>
+        <span className={cn('flex-1 truncate', compact ? 'text-xs' : 'text-sm', !node.parent_id && 'font-medium', isSelected && 'text-foreground')}>
           {node.code && <span className="text-muted-foreground mr-1.5 font-mono text-[10px]">{node.code}</span>}
           {node.name}
         </span>
@@ -59,6 +61,10 @@ function TreeNode({
             <User className="h-2.5 w-2.5" />
             {node.head_name}
           </span>
+        )}
+
+        {isSelected && (
+          <Check className="h-3 w-3 text-primary shrink-0" />
         )}
 
         {onCreateCase && (
