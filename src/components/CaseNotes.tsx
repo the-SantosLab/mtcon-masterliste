@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { formatRelativeTime } from '@/lib/case-utils';
-import { Send, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Send, Pencil, Trash2, Check, X, Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface NoteRow {
   id: string;
@@ -14,6 +15,7 @@ interface NoteRow {
   created_at: string;
   edited_at: string | null;
   edited_by: string | null;
+  pinned: boolean;
   author: { display_name: string; short_code: string } | null;
 }
 
@@ -39,6 +41,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       .from('case_notes')
       .select('*')
       .eq('case_id', caseId)
+      .order('pinned', { ascending: false })
       .order('created_at', { ascending: false });
     if (error) { console.error('case_notes load error', error); setLoading(false); return; }
     const rows = (data || []) as NoteRow[];
@@ -99,6 +102,12 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
     onRefresh?.();
   };
 
+  const togglePin = async (id: string, pinned: boolean) => {
+    const { error } = await (supabase as any).from('case_notes').update({ pinned: !pinned }).eq('id', id);
+    if (error) { toast.error('Fehler beim Anpinnen'); return; }
+    onRefresh?.();
+  };
+
   return (
     <div className="rounded-md border border-border bg-card p-5 space-y-4">
       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Notizen</h3>
@@ -131,9 +140,13 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
             const canModify = isAdmin || n.author_id === userId;
             const isEditing = editingId === n.id;
             return (
-              <div key={n.id} className="px-5 py-3 group">
+              <div key={n.id} className={cn('px-5 py-3 group', n.pinned && 'bg-primary/5 border-l-2 border-l-primary')}>
                 <div className="flex items-baseline justify-between gap-2 mb-1">
-                  <span className="text-xs font-medium text-foreground">{n.author?.short_code || '–'}</span>
+                  <span className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
+                    {n.pinned && <Pin className="h-3 w-3 text-primary fill-primary/30" />}
+                    {n.author?.short_code || '–'}
+                    {n.pinned && <span className="text-[9px] uppercase tracking-wide text-primary font-medium">Angepinnt</span>}
+                  </span>
                   <span className="text-[10px] text-muted-foreground tabular-nums">
                     {formatRelativeTime(n.created_at)}
                     {n.edited_at && <span className="ml-1 italic">(bearb.)</span>}
@@ -156,6 +169,13 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
                     <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed flex-1">{n.body}</p>
                     {canModify && canEdit && (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <button
+                          onClick={() => togglePin(n.id, n.pinned)}
+                          className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title={n.pinned ? 'Lösen' : 'Anpinnen'}
+                        >
+                          {n.pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                        </button>
                         <button
                           onClick={() => { setEditingId(n.id); setEditText(n.body); }}
                           className="h-6 w-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"

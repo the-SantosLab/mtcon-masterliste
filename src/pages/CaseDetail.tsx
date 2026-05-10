@@ -689,12 +689,10 @@ export default function CaseDetail() {
               />
             </div>
 
-            {/* Ticket-Verlauf / Notiz */}
-            {c.note && (
+            {/* Ticket-Verlauf */}
+            {c.note && c.note.includes('--- Ticket-Verlauf:') && (
               <div className="rounded-md border border-border bg-card p-5 space-y-2">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {c.note.includes('--- Ticket-Verlauf:') ? 'Ticket-Verlauf' : 'Notiz'}
-                </h3>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ticket-Verlauf</h3>
                 <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">{c.note}</pre>
               </div>
             )}

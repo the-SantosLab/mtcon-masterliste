@@ -126,6 +126,7 @@ export type Database = {
           edited_at: string | null
           edited_by: string | null
           id: string
+          pinned: boolean
           updated_at: string
         }
         Insert: {
@@ -136,6 +137,7 @@ export type Database = {
           edited_at?: string | null
           edited_by?: string | null
           id?: string
+          pinned?: boolean
           updated_at?: string
         }
         Update: {
@@ -146,6 +148,7 @@ export type Database = {
           edited_at?: string | null
           edited_by?: string | null
           id?: string
+          pinned?: boolean
           updated_at?: string
         }
         Relationships: [
