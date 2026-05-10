@@ -58,6 +58,8 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   const [newDeptId, setNewDeptId] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [noteExpandedId, setNoteExpandedId] = useState<string | null>(null);
+  const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
   const [warning, setWarning] = useState<string | null>(null);
   const [completingTask, setCompletingTask] = useState<Subtask | null>(null);
   const [completionNote, setCompletionNote] = useState('');
