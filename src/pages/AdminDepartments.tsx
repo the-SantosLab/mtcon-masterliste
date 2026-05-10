@@ -32,18 +32,23 @@ export default function AdminDepartments() {
   const { isAdmin, loading: authLoading } = useAuth();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [members, setMembers] = useState<{ id: string; department_id: string; user_id: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Department | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: '', code: '', manager_user_id: '' });
+  const [addMemberFor, setAddMemberFor] = useState<string | null>(null);
+  const [addMemberUserId, setAddMemberUserId] = useState<string>('');
 
   const fetchAll = async () => {
-    const [deptRes, profRes] = await Promise.all([
+    const [deptRes, profRes, memRes] = await Promise.all([
       supabase.from('departments').select('*').order('name'),
       supabase.from('users_profile').select('id, display_name, short_code, avatar_url, department_id').eq('active', true).order('display_name'),
+      (supabase as any).from('department_members').select('id, department_id, user_id'),
     ]);
     setDepartments(deptRes.data || []);
     setProfiles((profRes.data || []) as Profile[]);
+    setMembers(((memRes as any).data || []) as { id: string; department_id: string; user_id: string }[]);
     setLoading(false);
   };
 
