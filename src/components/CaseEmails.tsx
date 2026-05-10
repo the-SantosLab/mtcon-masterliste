@@ -130,11 +130,8 @@ export function CaseEmails({ caseId }: Props) {
                   <span className="text-foreground font-medium">{e.subject || '(kein Betreff)'}</span>
                 </div>
 
-                <div className="rounded border border-border bg-background px-3 py-2 max-h-80 overflow-y-auto">
-                  <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">
-                    {e.body_plain || '(kein Textinhalt)'}
-                  </pre>
-                </div>
+                <EmailBody html={e.body_html} plain={e.body_plain} />
+
 
                 {e.attachments.length > 0 && (
                   <div className="space-y-1">
