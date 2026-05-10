@@ -266,7 +266,6 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       project_article_no: form.project_article_no || null,
       received_at: form.received_at || new Date().toISOString().slice(0, 10),
       due_at: form.due_at || null,
-      note: form.note || null,
       estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : null,
       sop: form.sop || null,
       quantity: form.quantity ? Number(form.quantity) : null,
@@ -278,6 +277,14 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     setSaving(false);
     if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
     await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
+    if (form.note && form.note.trim()) {
+      await (supabase as any).from('case_notes').insert({
+        case_id: newCase.id,
+        author_id: userId,
+        body: form.note.trim(),
+        pinned: true,
+      });
+    }
     toast.success('Vorgang erstellt');
     onCreated();
   };
