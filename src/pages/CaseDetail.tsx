@@ -689,6 +689,27 @@ export default function CaseDetail() {
               />
             </div>
 
+            {/* Email-Adresse für diesen Vorgang */}
+            <div className="rounded-md border border-border bg-card p-5 space-y-2">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email an diesen Vorgang</h3>
+              <p className="text-[11px] text-muted-foreground">Emails an diese Adresse landen automatisch hier — inklusive Anhängen.</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs bg-muted/40 border border-border rounded px-2 py-1.5 font-mono break-all">
+                  vorgang+{c.case_no}@inbox.kscommand.com
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`vorgang+${c.case_no}@inbox.kscommand.com`);
+                    toast.success('Adresse kopiert');
+                  }}
+                  className="text-xs px-2 py-1.5 rounded border border-border hover:bg-muted text-foreground"
+                >
+                  Kopieren
+                </button>
+              </div>
+            </div>
+
             {/* Ticket-Verlauf */}
             {c.note && c.note.includes('--- Ticket-Verlauf:') && (
               <div className="rounded-md border border-border bg-card p-5 space-y-2">
