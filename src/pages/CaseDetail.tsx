@@ -47,6 +47,7 @@ export default function CaseDetail() {
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -144,6 +145,8 @@ export default function CaseDetail() {
       .then(r => setProfiles((r.data || []) as ProfileOption[]));
     supabase.from('projects').select('id, name, project_number, department_id, status').order('name')
       .then(r => setProjectOptions((r.data || []) as ProjectOption[]));
+    (supabase as any).from('department_members').select('department_id, user_id')
+      .then((r: any) => setDeptMembers((r.data || []) as { department_id: string; user_id: string }[]));
   }, []);
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
@@ -547,7 +550,10 @@ export default function CaseDetail() {
                           const parent = departments.find(d => d.id === deptId);
                           if (parent?.parent_id) deptIds.add(parent.parent_id);
                         }
-                        const inDept = deptId ? profiles.filter(p => p.department_id && deptIds.has(p.department_id)) : [];
+                        const memberIds = new Set(
+                          deptMembers.filter(m => deptIds.has(m.department_id)).map(m => m.user_id)
+                        );
+                        const inDept = deptId ? profiles.filter(p => (p.department_id && deptIds.has(p.department_id)) || memberIds.has(p.id)) : [];
                         const others = profiles.filter(p => !inDept.includes(p));
                         return (
                           <>
