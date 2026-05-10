@@ -321,8 +321,13 @@ export default function CaseDetail() {
               <Button variant="outline" size="sm" onClick={() => unclaimCase(c.id)} className="h-8 text-xs">Freigeben</Button>
             )}
             {canEdit && !isTerminalStatus(c.status) && (
-              <Button variant="outline" size="sm" onClick={() => completeCase(c.id)} className="h-8 text-xs">Abschließen</Button>
+              <Button variant="outline" size="sm" onClick={() => setCompleteOpen(true)} className="h-8 text-xs">Abschließen</Button>
             )}
+            <CompleteCaseDialog
+              open={completeOpen}
+              onOpenChange={setCompleteOpen}
+              onConfirm={async (note) => { await completeCase(c.id, note); setRefreshKey(k => k + 1); }}
+            />
             {isAdmin && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
