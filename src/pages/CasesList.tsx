@@ -258,7 +258,7 @@ export default function CasesList() {
                         <button onClick={() => unclaimCase(c.id)} className="text-muted-foreground hover:text-foreground text-xs">Freigeben</button>
                       )}
                       {!isViewer && (c.assignee_id === user?.id || isAdmin) && !isTerminalStatus(c.status) && (
-                        <button onClick={() => completeCase(c.id)} className="text-muted-foreground hover:text-foreground text-xs ml-1">Abschließen</button>
+                        <button onClick={() => setCompleteId(c.id)} className="text-muted-foreground hover:text-foreground text-xs ml-1">Abschließen</button>
                       )}
                     </div>
                   </td>
@@ -267,6 +267,11 @@ export default function CasesList() {
             </tbody>
           </table>
         </div>
+        <CompleteCaseDialog
+          open={!!completeId}
+          onOpenChange={(o) => { if (!o) setCompleteId(null); }}
+          onConfirm={async (note) => { if (completeId) await completeCase(completeId, note); }}
+        />
         <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Überfällig</span>
           <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-yellow-500" />Fällig in ≤3 Tagen</span>
