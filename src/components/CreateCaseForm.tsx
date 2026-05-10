@@ -400,6 +400,23 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {/* STEP 1: Projektname */}
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+              {visibleTemplates.length > 0 && (
+                <div className="space-y-1 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+                  <Label className="text-xs text-muted-foreground">Aus Template erstellen? (optional)</Label>
+                  <Select value={selectedTemplateId || '_none'} onValueChange={v => applyTemplate(v === '_none' ? '' : v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Template wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Ohne Template</SelectItem>
+                      {visibleTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.title} <span className="text-muted-foreground ml-1.5">({t.tasks.length})</span></SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {pendingTemplateTasks.length > 0 && (
+                    <p className="text-[10px] text-muted-foreground">{pendingTemplateTasks.length} Unteraufgaben werden mit angelegt.</p>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
