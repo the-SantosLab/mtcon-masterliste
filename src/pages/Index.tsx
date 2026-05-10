@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
-import { StatusBadge } from '@/components/StatusBadge';
+import { UrgencyDot } from '@/components/UrgencyDot';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/case-utils';
@@ -119,7 +119,7 @@ export default function Dashboard() {
         : items.length === 0 ? <p className="p-4 text-xs text-muted-foreground">{empty}</p>
         : items.map(c => (
           <Link key={c.id} to={`/cases/${c.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors">
-            <StatusBadge status={c.status} />
+            <UrgencyDot status={c.status} dueAt={c.due_at} />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground truncate">{c.project_name}</p>
               <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
