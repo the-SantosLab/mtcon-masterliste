@@ -214,7 +214,12 @@ export default function Dashboard() {
                       }}
                       labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                     />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    <Bar
+                      dataKey="value"
+                      radius={[6, 6, 0, 0]}
+                      cursor="pointer"
+                      onClick={(d: any) => setBarDrill({ label: d.label, items: d.items || [] })}
+                    >
                       {weekChart.map((_, i) => (
                         <Cell key={i} fill="hsl(var(--primary))" />
                       ))}
