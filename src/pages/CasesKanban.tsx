@@ -276,9 +276,13 @@ export default function CasesKanban() {
   const bulkDeleteCases = async () => {
     const ids = Array.from(selectedCaseIds);
     if (ids.length === 0) return;
-    const { error } = await supabase.from('cases').delete().in('id', ids);
+    const { error } = await supabase
+      .from('cases')
+      .update({ deleted: true, deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null } as any)
+      .in('id', ids)
+      .eq('deleted', false);
     if (error) { toast.error('Fehler: ' + error.message); return; }
-    toast.success(`${ids.length} Vorgänge gelöscht`);
+    toast.success(`${ids.length} Vorgänge in den Papierkorb verschoben`);
     setConfirmBulkDelete(false);
     exitSelectMode();
     fetchCases();
