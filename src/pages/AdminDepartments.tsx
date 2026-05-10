@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, Plus, Building2 } from 'lucide-react';
+import { Pencil, Plus, Building2, X, UserPlus } from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
 
 interface Department {
