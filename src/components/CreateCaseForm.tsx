@@ -586,7 +586,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 5 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Bemerkung</Label>
+                <Label className="text-xs text-muted-foreground">Bemerkung (wird als angepinnte Notiz gespeichert)</Label>
                 <Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={3} className="text-xs" />
               </div>
 
