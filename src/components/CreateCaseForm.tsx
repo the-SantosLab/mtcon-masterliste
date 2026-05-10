@@ -134,8 +134,11 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     departments.filter(d => d.parent_id === effectiveDeptId).forEach(d => deptIds.add(d.id));
     const parent = departments.find(d => d.id === effectiveDeptId);
     if (parent?.parent_id) deptIds.add(parent.parent_id);
-    return profiles.filter(p => p.department_id && deptIds.has(p.department_id));
-  }, [effectiveDeptId, profiles, departments]);
+    const extraUserIds = new Set(
+      deptMembers.filter(m => deptIds.has(m.department_id)).map(m => m.user_id)
+    );
+    return profiles.filter(p => (p.department_id && deptIds.has(p.department_id)) || extraUserIds.has(p.id));
+  }, [effectiveDeptId, profiles, departments, deptMembers]);
 
   const filteredCustomers = useMemo(() => {
     if (!customerSearch) return customers;
