@@ -335,6 +335,21 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         pinned: true,
       });
     }
+    if (pendingTemplateTasks.length) {
+      await (supabase as any).from('case_tasks').insert(
+        pendingTemplateTasks.map((t, i) => ({
+          case_id: newCase.id,
+          title: t.title,
+          description: t.description,
+          department_id: t.department_id,
+          sort_order: i,
+          created_by: userId,
+        })),
+      );
+      if (pendingTemplateId) {
+        await (supabase as any).from('case_templates').update({ last_used_at: new Date().toISOString() }).eq('id', pendingTemplateId);
+      }
+    }
     toast.success('Vorgang erstellt');
     onCreated();
   };
