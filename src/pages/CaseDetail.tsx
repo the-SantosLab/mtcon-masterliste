@@ -47,6 +47,7 @@ export default function CaseDetail() {
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
