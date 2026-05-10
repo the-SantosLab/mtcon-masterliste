@@ -145,23 +145,9 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Create note (so it shows up in the existing notes list)
-  const noteBody = `📧 **${subject}**\nVon: ${fromName ? `${fromName} <${fromEmail}>` : fromEmail}\n\n${bodyPlain || "(kein Text)"}`;
-  const { data: noteRow, error: noteErr } = await admin
-    .from("case_notes")
-    .insert({
-      case_id: caseRow.id,
-      author_id: "00000000-0000-0000-0000-000000000000",
-      body: noteBody,
-    })
-    .select("id")
-    .maybeSingle();
+  // Insert email row (displayed inline in notes panel; no case_notes row needed)
+  const noteId = null;
 
-  // note may fail due to author_id FK — that's OK, we still want the email row
-  const noteId = noteErr ? null : noteRow?.id ?? null;
-  if (noteErr) console.warn("receive-email: note insert failed (continuing)", noteErr.message);
-
-  // Insert email row
   const { data: emailRow, error: emailErr } = await admin
     .from("case_emails")
     .insert({
