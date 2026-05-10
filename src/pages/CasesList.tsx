@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept } from '@/lib/case-utils';
+import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
 import { Search, Plus, UserCheck } from 'lucide-react';
@@ -220,7 +220,10 @@ export default function CasesList() {
                     <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
-                    <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
+                    <div className="flex items-center gap-2">
+                      <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
+                      <span className={cn('h-2 w-2 rounded-full shrink-0', getUrgencyDotColor(c.status, c.due_at))} />
+                    </div>
                   </td>
                   <td className={cellCls}>
                     {c.project ? (
