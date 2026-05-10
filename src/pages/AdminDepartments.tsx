@@ -171,35 +171,95 @@ export default function AdminDepartments() {
         </div>
 
         {/* Team-Übersicht je Abteilung */}
-        {!loading && departments.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams</h2>
-            {departments.map(d => {
-              const members = profiles.filter(p => p.department_id === d.id);
-              if (members.length === 0) return null;
-              return (
-                <div key={d.id} className="rounded-md border border-border bg-card p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    <h3 className="text-sm font-medium text-foreground">{d.name}</h3>
-                    <span className="text-[11px] text-muted-foreground">({members.length})</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {members.map(m => (
-                      <div key={m.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors">
-                        <UserAvatar user={m as any} size="lg" tooltip={false} />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{m.display_name}</p>
-                          <p className="text-[11px] font-mono text-muted-foreground">{m.short_code}</p>
-                        </div>
+        {!loading && departments.length > 0 && (() => {
+          const addExtraMember = async (deptId: string) => {
+            if (!addMemberUserId) return;
+            const { error } = await (supabase as any).from('department_members').insert({
+              department_id: deptId, user_id: addMemberUserId,
+            });
+            if (error) return toast.error(error.message);
+            toast.success('Mitglied hinzugefügt');
+            setAddMemberFor(null);
+            setAddMemberUserId('');
+            fetchAll();
+          };
+          const removeExtraMember = async (memberRowId: string) => {
+            const { error } = await (supabase as any).from('department_members').delete().eq('id', memberRowId);
+            if (error) return toast.error(error.message);
+            toast.success('Mitglied entfernt');
+            fetchAll();
+          };
+          return (
+            <div className="space-y-4">
+              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams</h2>
+              {departments.map(d => {
+                const primary = profiles.filter(p => p.department_id === d.id);
+                const extraRows = members.filter(m => m.department_id === d.id);
+                const extras = extraRows
+                  .map(m => ({ row: m, profile: profiles.find(p => p.id === m.user_id) }))
+                  .filter(x => x.profile && !primary.some(p => p.id === x.profile!.id));
+                if (primary.length === 0 && extras.length === 0 && addMemberFor !== d.id) return null;
+                const assignedIds = new Set([...primary.map(p => p.id), ...extras.map(x => x.profile!.id)]);
+                const candidates = profiles.filter(p => !assignedIds.has(p.id));
+                return (
+                  <div key={d.id} className="rounded-md border border-border bg-card p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <h3 className="text-sm font-medium text-foreground">{d.name}</h3>
+                        <span className="text-[11px] text-muted-foreground">({primary.length + extras.length})</span>
                       </div>
-                    ))}
+                      <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1.5"
+                        onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); }}>
+                        <UserPlus className="h-3 w-3" />Mitglied hinzufügen
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {primary.map(m => (
+                        <div key={m.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors">
+                          <UserAvatar user={m as any} size="lg" tooltip={false} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">{m.display_name}</p>
+                            <p className="text-[11px] font-mono text-muted-foreground">{m.short_code}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {extras.map(({ row, profile }) => (
+                        <div key={row.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors border border-dashed border-border/60">
+                          <UserAvatar user={profile as any} size="lg" tooltip={false} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">{profile!.display_name}</p>
+                            <p className="text-[11px] font-mono text-muted-foreground">{profile!.short_code} · zusätzlich</p>
+                          </div>
+                          <button onClick={() => removeExtraMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {addMemberFor === d.id && (
+                      <div className="mt-3 flex items-end gap-2 border-t border-border pt-3">
+                        <div className="flex-1 space-y-1.5">
+                          <Label className="text-[11px] text-muted-foreground">Mitarbeiter</Label>
+                          <Select value={addMemberUserId} onValueChange={setAddMemberUserId}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                            <SelectContent>
+                              {candidates.map(p => (
+                                <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button size="sm" className="h-8 text-xs" onClick={() => addExtraMember(d.id)} disabled={!addMemberUserId}>Hinzufügen</Button>
+                        <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setAddMemberFor(null); setAddMemberUserId(''); }}>Abbrechen</Button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Create Dialog */}
         <Dialog open={creating} onOpenChange={o => !o && setCreating(false)}>
