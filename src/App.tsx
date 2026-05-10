@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminWorkflows from "./pages/AdminWorkflows";
 import AdminBackups from "./pages/AdminBackups";
 import AdminDeletedCases from "./pages/AdminDeletedCases";
+import AdminTrash from "./pages/AdminTrash";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
