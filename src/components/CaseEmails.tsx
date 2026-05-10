@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 
 interface EmailRow {
   id: string;
@@ -11,6 +12,7 @@ interface EmailRow {
   from_name: string | null;
   subject: string | null;
   body_plain: string | null;
+  body_html: string | null;
   received_at: string;
   attachments: { id: string; file_name: string; storage_path: string; size_bytes: number | null }[];
 }
