@@ -368,6 +368,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_no: string | null
+          deleted: boolean
+          deleted_at: string | null
+          deleted_by: string | null
           department_id: string | null
           due_at: string | null
           due_date_corrected_at: string | null
@@ -404,6 +407,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_no?: string | null
+          deleted?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
           department_id?: string | null
           due_at?: string | null
           due_date_corrected_at?: string | null
@@ -440,6 +446,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_no?: string | null
+          deleted?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
           department_id?: string | null
           due_at?: string | null
           due_date_corrected_at?: string | null
@@ -1465,6 +1474,7 @@ export type Database = {
         Returns: boolean
       }
       next_counter: { Args: { p_key: string }; Returns: number }
+      purge_trashed_cases: { Args: never; Returns: number }
       user_department: { Args: { uid?: string }; Returns: string }
     }
     Enums: {
