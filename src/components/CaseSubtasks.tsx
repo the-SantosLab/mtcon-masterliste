@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
@@ -481,12 +482,31 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                             </>
                           )}
                           <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
-                          <span className={cn(
-                            'flex-1 text-sm transition-colors',
-                            task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'
-                          )}>
-                            {task.title}
-                          </span>
+                          {hasNote ? (
+                            <TooltipProvider delayDuration={300}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="flex-1 text-sm transition-colors line-through text-muted-foreground cursor-help">
+                                    {task.title}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="top"
+                                  className="max-w-[300px] whitespace-pre-wrap break-words bg-[hsl(0_0%_12%/0.95)] text-white border-0 shadow-lg px-3 py-2"
+                                  style={{ fontSize: '13px', borderRadius: '6px' }}
+                                >
+                                  {note}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <span className={cn(
+                              'flex-1 text-sm transition-colors',
+                              task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'
+                            )}>
+                              {task.title}
+                            </span>
+                          )}
                           {hasNote && (
                             <button
                               type="button"
