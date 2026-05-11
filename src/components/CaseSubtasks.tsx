@@ -201,6 +201,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [completionNote, setCompletionNote] = useState('');
   const [savingCompletion, setSavingCompletion] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'process'>('list');
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked
   const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
