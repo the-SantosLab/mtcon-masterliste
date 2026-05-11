@@ -622,8 +622,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           <p className="text-xs text-muted-foreground py-2">Keine Unteraufgaben</p>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {tasks.map((task, index) => {
+            <SortableContext items={tasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {tasks.slice(0, visibleCount).map((task, index) => {
                 const isExpanded = expandedId === task.id;
                 const st = STATUS_MAP[task.status] || STATUS_MAP.open;
                 const canEditTask = canEdit;
