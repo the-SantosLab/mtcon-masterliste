@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/case-utils';
 import type { Tables } from '@/integrations/supabase/types';
-import { ClipboardList, Clock, AlertTriangle, CalendarCheck, Calendar, ArrowRight, X, UserCheck, Users } from 'lucide-react';
+import { ClipboardList, Clock, AlertTriangle, CalendarCheck, Calendar, ArrowRight, X, UserCheck, Users, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,7 @@ const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] 
 export default function Dashboard() {
   const { user, profile } = useAuth();
   const [cases, setCases] = useState<CaseRow[]>([]);
+  const [myTasks, setMyTasks] = useState<Array<{ id: string; title: string; due_at: string | null; status: string; case_id: string; case: { id: string; case_no: string; project_name: string } | null }>>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
@@ -55,11 +56,34 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const fetchMyTasks = async () => {
+    if (!user?.id) return;
+    const { data: tasks } = await supabase
+      .from('case_tasks')
+      .select('id, title, due_at, status, case_id')
+      .eq('assigned_to', user.id)
+      .neq('status', 'done')
+      .order('due_at', { ascending: true, nullsFirst: false })
+      .limit(15);
+    const list = (tasks as any[]) || [];
+    const ids = Array.from(new Set(list.map(t => t.case_id).filter(Boolean)));
+    let caseMap: Record<string, any> = {};
+    if (ids.length) {
+      const { data: cs } = await supabase.from('cases').select('id, case_no, project_name').in('id', ids);
+      caseMap = Object.fromEntries(((cs as any[]) || []).map(c => [c.id, c]));
+    }
+    setMyTasks(list.map(t => ({ ...t, case: caseMap[t.case_id] || null })));
+  };
+
   useEffect(() => {
     fetchCases();
-    const ch = supabase.channel('dash-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
+    fetchMyTasks();
+    const ch = supabase.channel('dash-cases')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, () => fetchMyTasks())
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+  }, [user?.id]);
 
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
@@ -306,6 +330,40 @@ export default function Dashboard() {
             items={cases.filter(c => c.assignee_id === user?.id && !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)).slice(0, 10)}
             empty="Keine zugewiesenen Vorgänge"
           />
+        </div>
+
+        {/* Meine Unteraufgaben — zu bearbeiten */}
+        <div className="glass-card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <ListChecks className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-medium text-foreground">Meine Unteraufgaben</h2>
+              <span className="text-[11px] text-muted-foreground tabular-nums">{myTasks.length}</span>
+            </div>
+          </div>
+          <div className="divide-y divide-border">
+            {myTasks.length === 0 ? (
+              <p className="p-4 text-xs text-muted-foreground">Keine offenen Unteraufgaben</p>
+            ) : myTasks.map(t => {
+              const overdue = t.due_at && t.due_at < today;
+              return (
+                <Link key={t.id} to={`/cases/${t.case_id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors">
+                  <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', overdue ? 'bg-red-500' : 'bg-blue-500')} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground truncate">{t.title}</p>
+                    <p className="text-[11px] text-muted-foreground font-mono truncate">
+                      {t.case?.case_no} · {t.case?.project_name}
+                    </p>
+                  </div>
+                  {t.due_at && (
+                    <span className={cn('text-[11px] tabular-nums shrink-0', overdue ? 'text-red-500' : 'text-muted-foreground')}>
+                      Fällig: {new Date(t.due_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
 
