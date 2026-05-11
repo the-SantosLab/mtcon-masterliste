@@ -324,6 +324,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       quantity: form.quantity ? Number(form.quantity) : null,
       project_duration: form.project_duration || null,
       sequential_mode: tplForCase?.sequential_mode || false,
+      due_required: tplForCase?.due_required || false,
       created_by: userId,
       last_changed_by: userId,
       last_changed_at: new Date().toISOString(),
