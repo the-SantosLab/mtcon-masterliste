@@ -199,17 +199,8 @@ export default function AdminUsers() {
   const saveEdit = async () => {
     if (!editing) return;
 
-    // Schutz: Hauptadmin (Igor Petreski) darf nicht herabgestuft oder deaktiviert werden
-    const PROTECTED_ADMIN_ID = '6da81b97-5ab7-4601-9130-8ebbb4a70e3e';
-    let effectiveRole = newRole;
-    let effectiveActive = newActive;
-    if (editing.id === PROTECTED_ADMIN_ID) {
-      if (effectiveRole !== 'admin' || !effectiveActive) {
-        toast.error('Dieser Hauptadministrator kann nicht herabgestuft oder deaktiviert werden.');
-        effectiveRole = 'admin';
-        effectiveActive = true;
-      }
-    }
+    const effectiveRole = newRole;
+    const effectiveActive = newActive;
 
     const { error: profileErr } = await supabase.from('users_profile').update({
       active: effectiveActive,
