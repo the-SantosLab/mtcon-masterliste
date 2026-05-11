@@ -108,6 +108,22 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
   const [completingTask, setCompletingTask] = useState<Subtask | null>(null);
   const [completionNote, setCompletionNote] = useState('');
   const [savingCompletion, setSavingCompletion] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'process'>('list');
+
+  // Locked-task indices in sequential mode: every task after the first non-done task is locked
+  const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+  const firstOpenIdx = sortedTasks.findIndex(t => t.status !== 'done');
+  const isLocked = (taskId: string): boolean => {
+    if (!sequentialMode) return false;
+    const idx = sortedTasks.findIndex(t => t.id === taskId);
+    if (idx < 0) return false;
+    if (sortedTasks[idx].status === 'done') return false;
+    return firstOpenIdx >= 0 && idx > firstOpenIdx;
+  };
+  const previousStepNumber = (taskId: string): number => {
+    const idx = sortedTasks.findIndex(t => t.id === taskId);
+    return idx;
+  };
 
   const fetchTasks = async () => {
     const { data } = await supabase
