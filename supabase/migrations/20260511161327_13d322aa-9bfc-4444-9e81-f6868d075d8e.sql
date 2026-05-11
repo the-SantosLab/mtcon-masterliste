@@ -1,0 +1,2 @@
+ALTER TABLE public.case_templates ADD COLUMN IF NOT EXISTS sequential_mode boolean NOT NULL DEFAULT false;
+ALTER TABLE public.cases ADD COLUMN IF NOT EXISTS sequential_mode boolean NOT NULL DEFAULT false;

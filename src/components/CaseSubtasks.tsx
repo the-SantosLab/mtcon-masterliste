@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -53,6 +53,7 @@ interface CaseSubtasksProps {
   caseId: string;
   canEdit: boolean;
   userId: string;
+  sequentialMode?: boolean;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -92,7 +93,92 @@ function SortableSubtaskRow({ id, canReorder, children }: SortableSubtaskRowProp
   );
 }
 
-export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
+interface ProcessViewProps {
+  tasks: Subtask[];
+  firstOpenIdx: number;
+  departments: Dept[];
+  profiles: Profile[];
+  canEdit: boolean;
+  completionNotes: Record<string, string>;
+  onComplete: (t: Subtask) => void;
+  onStart: (t: Subtask) => void;
+  onLockedClick: (stepNum: number) => void;
+}
+
+function ProcessView({ tasks, firstOpenIdx, departments, profiles, canEdit, completionNotes, onComplete, onStart, onLockedClick }: ProcessViewProps) {
+  const deptName = (id: string | null) => id ? departments.find(d => d.id === id)?.name : null;
+  const profName = (id: string | null) => id ? profiles.find(p => p.id === id)?.short_code : null;
+  return (
+    <ol className="space-y-2">
+      {tasks.map((t, idx) => {
+        const isDone = t.status === 'done';
+        const isActive = !isDone && idx === firstOpenIdx;
+        const isLocked = !isDone && idx > firstOpenIdx && firstOpenIdx >= 0;
+        const stepNum = idx + 1;
+        const note = completionNotes[t.id];
+        return (
+          <li
+            key={t.id}
+            onClick={() => isLocked && onLockedClick(idx)}
+            className={cn(
+              'rounded-md border p-3 transition-colors flex gap-3 items-start',
+              isActive && 'border-primary bg-primary/5 shadow-sm',
+              isDone && 'border-border/40 bg-muted/30 opacity-80',
+              isLocked && 'border-border/40 bg-muted/10 opacity-50 cursor-not-allowed',
+              !isActive && !isDone && !isLocked && 'border-border bg-card'
+            )}
+            title={isLocked ? `Bitte zuerst Schritt ${idx} abschließen` : undefined}
+          >
+            <div className={cn(
+              'h-7 w-7 rounded-full shrink-0 flex items-center justify-center text-xs font-semibold border-2',
+              isDone && 'bg-[hsl(var(--status-done))]/20 border-[hsl(var(--status-done))] text-[hsl(var(--status-done))]',
+              isActive && 'bg-primary text-primary-foreground border-primary',
+              isLocked && 'bg-muted border-border text-muted-foreground',
+              !isActive && !isDone && !isLocked && 'border-border text-muted-foreground'
+            )}>
+              {isDone ? <CheckCircle2 className="h-4 w-4" /> : isLocked ? <Lock className="h-3 w-3" /> : stepNum}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={cn('text-sm font-medium', isDone && 'line-through text-muted-foreground', !isDone && 'text-foreground')}>
+                  {t.title}
+                </p>
+                {deptName(t.department_id) && (
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+                    <Building2 className="h-2.5 w-2.5" />{deptName(t.department_id)}
+                  </Badge>
+                )}
+                {profName(t.assigned_to) && (
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1">
+                    <User className="h-2.5 w-2.5" />{profName(t.assigned_to)}
+                  </Badge>
+                )}
+              </div>
+              {t.description && <p className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap">{t.description}</p>}
+              {isDone && note && (
+                <p className="text-[11px] text-muted-foreground mt-1.5 italic">„{note}"</p>
+              )}
+              {isActive && canEdit && (
+                <div className="flex gap-1.5 mt-2">
+                  {t.status === 'open' && (
+                    <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => onStart(t)}>
+                      Starten
+                    </Button>
+                  )}
+                  <Button size="sm" className="h-6 text-[10px]" onClick={() => onComplete(t)}>
+                    Erledigt markieren
+                  </Button>
+                </div>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -107,6 +193,22 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   const [completingTask, setCompletingTask] = useState<Subtask | null>(null);
   const [completionNote, setCompletionNote] = useState('');
   const [savingCompletion, setSavingCompletion] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'process'>('list');
+
+  // Locked-task indices in sequential mode: every task after the first non-done task is locked
+  const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+  const firstOpenIdx = sortedTasks.findIndex(t => t.status !== 'done');
+  const isLocked = (taskId: string): boolean => {
+    if (!sequentialMode) return false;
+    const idx = sortedTasks.findIndex(t => t.id === taskId);
+    if (idx < 0) return false;
+    if (sortedTasks[idx].status === 'done') return false;
+    return firstOpenIdx >= 0 && idx > firstOpenIdx;
+  };
+  const previousStepNumber = (taskId: string): number => {
+    const idx = sortedTasks.findIndex(t => t.id === taskId);
+    return idx;
+  };
 
   const fetchTasks = async () => {
     const { data } = await supabase
@@ -162,6 +264,10 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
   };
 
   const updateTaskStatus = async (task: Subtask, newStatus: string) => {
+    if (sequentialMode && isLocked(task.id)) {
+      toast.error(`Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen`);
+      return;
+    }
     if (newStatus === 'done') {
       setCompletingTask(task);
       setCompletionNote('');
@@ -205,6 +311,15 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
 
     // Notify watchers via email (fire-and-forget)
     supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } }).catch(() => {});
+
+    if (sequentialMode) {
+      const idx = sortedTasks.findIndex(t => t.id === task.id);
+      const nextStep = sortedTasks.slice(idx + 1).find(t => t.status !== 'done');
+      const stepNum = idx + 1;
+      if (nextStep) {
+        toast.success(`Schritt ${stepNum} abgeschlossen – Schritt ${stepNum + 1} ist jetzt aktiv`);
+      }
+    }
 
     setCompletingTask(null);
     setCompletionNote('');
@@ -386,15 +501,42 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
 
   return (
     <div className="rounded-md border border-border bg-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Unteraufgaben
-        </h3>
-        {totalCount > 0 && (
-          <span className="text-[11px] text-muted-foreground">
-            {completedCount}/{totalCount} erledigt
-          </span>
-        )}
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Unteraufgaben
+          </h3>
+          {sequentialMode && (
+            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30">
+              <GitBranch className="h-2.5 w-2.5" />Sequenziell
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {sequentialMode && totalCount > 0 && (
+            <div className="inline-flex rounded border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={cn('text-[10px] px-2 py-1 flex items-center gap-1', viewMode === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >
+                <ListChecks className="h-3 w-3" />Liste
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('process')}
+                className={cn('text-[10px] px-2 py-1 flex items-center gap-1 border-l border-border', viewMode === 'process' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >
+                <GitBranch className="h-3 w-3" />Prozessansicht
+              </button>
+            </div>
+          )}
+          {totalCount > 0 && (
+            <span className="text-[11px] text-muted-foreground">
+              {completedCount}/{totalCount} erledigt
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}
@@ -415,8 +557,26 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
         </Alert>
       )}
 
-      {/* Task list */}
-      <div className="space-y-1">
+      {/* Task list / Process view */}
+      <div className={cn(viewMode === 'process' && sequentialMode ? 'space-y-3' : 'space-y-1')}>
+        {viewMode === 'process' && sequentialMode && !loading && tasks.length > 0 ? (
+          <ProcessView
+            tasks={sortedTasks}
+            firstOpenIdx={firstOpenIdx}
+            departments={departments}
+            profiles={profiles}
+            canEdit={canEdit}
+            completionNotes={completionNotes}
+            onComplete={(t) => updateTaskStatus(t, 'done')}
+            onStart={async (t) => {
+              const { error } = await supabase.from('case_tasks').update({ status: 'in_progress' } as any).eq('id', t.id);
+              if (error) toast.error('Fehler'); else fetchTasks();
+            }}
+            onLockedClick={(stepNum) => toast.error(`Bitte zuerst Schritt ${stepNum} abschließen`)}
+          />
+        ) : null}
+        {(viewMode !== 'process' || !sequentialMode) && (
+        <>
         {loading ? (
           <p className="text-xs text-muted-foreground py-2">Laden…</p>
         ) : tasks.length === 0 && !canEdit ? (
@@ -431,6 +591,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                 const note = completionNotes[task.id];
                 const hasNote = task.status === 'done' && !!note;
                 const isNoteOpen = noteExpandedId === task.id;
+                const taskLocked = isLocked(task.id);
                 return (
                   <SortableSubtaskRow
                     key={task.id}
@@ -442,7 +603,17 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                     onMoveDown={() => moveTask(task.id, 1)}
                   >
                     {({ dragHandleProps, isDragging }) => (
-                      <div className={cn('rounded-md border border-border/50 overflow-hidden bg-card', isDragging && 'shadow-lg ring-1 ring-primary/40')}>
+                      <div
+                        className={cn('rounded-md border border-border/50 overflow-hidden bg-card', isDragging && 'shadow-lg ring-1 ring-primary/40', taskLocked && 'opacity-50')}
+                        title={taskLocked ? `Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen` : undefined}
+                        onClickCapture={(e) => {
+                          if (taskLocked) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toast.error(`Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen`);
+                          }
+                        }}
+                      >
                         <div
                           className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
                           onClick={() => setExpandedId(isExpanded ? null : task.id)}
@@ -482,6 +653,7 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
                             </>
                           )}
                           <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
+                          {taskLocked && <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />}
                           {hasNote ? (
                             <TooltipProvider delayDuration={300}>
                               <Tooltip>
@@ -604,6 +776,8 @@ export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
               })}
             </SortableContext>
           </DndContext>
+        )}
+        </>
         )}
       </div>
 
