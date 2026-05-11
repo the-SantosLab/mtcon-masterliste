@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -190,6 +191,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [newDueAt, setNewDueAt] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [noteExpandedId, setNoteExpandedId] = useState<string | null>(null);
   const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
   const [warning, setWarning] = useState<string | null>(null);
@@ -465,11 +468,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   };
 
   const deleteTask = async (taskId: string) => {
-    if (!confirm('Unteraufgabe wirklich löschen?')) return;
+    setDeleting(true);
+    const target = tasks.find(t => t.id === taskId);
     const { error, count } = await supabase
       .from('case_tasks')
       .delete({ count: 'exact' })
       .eq('id', taskId);
+    setDeleting(false);
+    setConfirmDeleteId(null);
     if (error) {
       toast.error('Löschen fehlgeschlagen: ' + error.message);
       return;
@@ -478,7 +484,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       toast.error('Löschen nicht möglich – fehlende Berechtigung.');
       return;
     }
-    toast.success('Unteraufgabe gelöscht');
+    toast.success(`Unteraufgabe „${target?.title ?? ''}" gelöscht`);
     fetchTasks();
   };
 
@@ -811,7 +817,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                   onBlur={e => { if ((e.target.value || null) !== task.due_at) updateDueAt(task.id, e.target.value || null); }}
                                 />
                               </div>
-                            <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => deleteTask(task.id)}>
+                            <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => setConfirmDeleteId(task.id)}>
                               <Trash2 className="h-3 w-3 mr-1" />Löschen
                             </Button>
                           </div>
@@ -886,6 +892,32 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => { if (!o) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unteraufgabe löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const t = tasks.find(x => x.id === confirmDeleteId);
+                return t
+                  ? `„${t.title}" wird unwiderruflich gelöscht. Im Aktivitätsverlauf bleibt der Eintrag erhalten.`
+                  : 'Diese Aktion kann nicht rückgängig gemacht werden.';
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); if (confirmDeleteId) deleteTask(confirmDeleteId); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Lösche…' : 'Löschen'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
