@@ -227,6 +227,15 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
     // Notify watchers via email (fire-and-forget)
     supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } }).catch(() => {});
 
+    if (sequentialMode) {
+      const idx = sortedTasks.findIndex(t => t.id === task.id);
+      const nextStep = sortedTasks.slice(idx + 1).find(t => t.status !== 'done');
+      const stepNum = idx + 1;
+      if (nextStep) {
+        toast.success(`Schritt ${stepNum} abgeschlossen – Schritt ${stepNum + 1} ist jetzt aktiv`);
+      }
+    }
+
     setCompletingTask(null);
     setCompletionNote('');
     setSavingCompletion(false);
