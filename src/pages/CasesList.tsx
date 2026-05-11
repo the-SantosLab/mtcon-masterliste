@@ -234,7 +234,7 @@ export default function CasesList() {
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>
-                  <td className={cn(cellCls, 'font-mono')}>
+                  <td className={cn(cellCls, 'font-mono min-w-[120px] whitespace-nowrap')}>
                     <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
