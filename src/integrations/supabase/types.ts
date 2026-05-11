@@ -444,6 +444,7 @@ export type Database = {
           description: string | null
           id: string
           last_used_at: string | null
+          sequential_mode: boolean
           title: string
           updated_at: string
         }
@@ -453,6 +454,7 @@ export type Database = {
           description?: string | null
           id?: string
           last_used_at?: string | null
+          sequential_mode?: boolean
           title: string
           updated_at?: string
         }
@@ -462,6 +464,7 @@ export type Database = {
           description?: string | null
           id?: string
           last_used_at?: string | null
+          sequential_mode?: boolean
           title?: string
           updated_at?: string
         }
@@ -501,6 +504,7 @@ export type Database = {
           received_at: string | null
           secondary_check_by: string | null
           secondary_check_confirmed_at: string | null
+          sequential_mode: boolean
           sop: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
@@ -540,6 +544,7 @@ export type Database = {
           received_at?: string | null
           secondary_check_by?: string | null
           secondary_check_confirmed_at?: string | null
+          sequential_mode?: boolean
           sop?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
@@ -579,6 +584,7 @@ export type Database = {
           received_at?: string | null
           secondary_check_by?: string | null
           secondary_check_confirmed_at?: string | null
+          sequential_mode?: boolean
           sop?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
