@@ -93,6 +93,91 @@ function SortableSubtaskRow({ id, canReorder, children }: SortableSubtaskRowProp
   );
 }
 
+interface ProcessViewProps {
+  tasks: Subtask[];
+  firstOpenIdx: number;
+  departments: Dept[];
+  profiles: Profile[];
+  canEdit: boolean;
+  completionNotes: Record<string, string>;
+  onComplete: (t: Subtask) => void;
+  onStart: (t: Subtask) => void;
+  onLockedClick: (stepNum: number) => void;
+}
+
+function ProcessView({ tasks, firstOpenIdx, departments, profiles, canEdit, completionNotes, onComplete, onStart, onLockedClick }: ProcessViewProps) {
+  const deptName = (id: string | null) => id ? departments.find(d => d.id === id)?.name : null;
+  const profName = (id: string | null) => id ? profiles.find(p => p.id === id)?.short_code : null;
+  return (
+    <ol className="space-y-2">
+      {tasks.map((t, idx) => {
+        const isDone = t.status === 'done';
+        const isActive = !isDone && idx === firstOpenIdx;
+        const isLocked = !isDone && idx > firstOpenIdx && firstOpenIdx >= 0;
+        const stepNum = idx + 1;
+        const note = completionNotes[t.id];
+        return (
+          <li
+            key={t.id}
+            onClick={() => isLocked && onLockedClick(idx)}
+            className={cn(
+              'rounded-md border p-3 transition-colors flex gap-3 items-start',
+              isActive && 'border-primary bg-primary/5 shadow-sm',
+              isDone && 'border-border/40 bg-muted/30 opacity-80',
+              isLocked && 'border-border/40 bg-muted/10 opacity-50 cursor-not-allowed',
+              !isActive && !isDone && !isLocked && 'border-border bg-card'
+            )}
+            title={isLocked ? `Bitte zuerst Schritt ${idx} abschließen` : undefined}
+          >
+            <div className={cn(
+              'h-7 w-7 rounded-full shrink-0 flex items-center justify-center text-xs font-semibold border-2',
+              isDone && 'bg-[hsl(var(--status-done))]/20 border-[hsl(var(--status-done))] text-[hsl(var(--status-done))]',
+              isActive && 'bg-primary text-primary-foreground border-primary',
+              isLocked && 'bg-muted border-border text-muted-foreground',
+              !isActive && !isDone && !isLocked && 'border-border text-muted-foreground'
+            )}>
+              {isDone ? <CheckCircle2 className="h-4 w-4" /> : isLocked ? <Lock className="h-3 w-3" /> : stepNum}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={cn('text-sm font-medium', isDone && 'line-through text-muted-foreground', !isDone && 'text-foreground')}>
+                  {t.title}
+                </p>
+                {deptName(t.department_id) && (
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+                    <Building2 className="h-2.5 w-2.5" />{deptName(t.department_id)}
+                  </Badge>
+                )}
+                {profName(t.assigned_to) && (
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1">
+                    <User className="h-2.5 w-2.5" />{profName(t.assigned_to)}
+                  </Badge>
+                )}
+              </div>
+              {t.description && <p className="text-[11px] text-muted-foreground mt-1 whitespace-pre-wrap">{t.description}</p>}
+              {isDone && note && (
+                <p className="text-[11px] text-muted-foreground mt-1.5 italic">„{note}"</p>
+              )}
+              {isActive && canEdit && (
+                <div className="flex gap-1.5 mt-2">
+                  {t.status === 'open' && (
+                    <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => onStart(t)}>
+                      Starten
+                    </Button>
+                  )}
+                  <Button size="sm" className="h-6 text-[10px]" onClick={() => onComplete(t)}>
+                    Erledigt markieren
+                  </Button>
+                </div>
+              )}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
