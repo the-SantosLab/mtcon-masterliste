@@ -277,6 +277,11 @@ export default function AdminTemplates() {
                       </div>
                       <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                         <span>{t.task_count} Aufgabe{t.task_count === 1 ? '' : 'n'}</span>
+                        {t.sequential_mode && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30">
+                            <ArrowRightCircle className="h-2.5 w-2.5" />Sequenziell
+                          </span>
+                        )}
                         {t.last_used_at && <span>· Zuletzt: {formatDate(t.last_used_at)}</span>}
                       </div>
                       {t.department_ids.length > 1 && (
