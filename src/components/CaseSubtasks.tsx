@@ -730,6 +730,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                               <User className="h-2.5 w-2.5" />{getProfileName(task.assigned_to)}
                             </Badge>
                           )}
+                          {task.due_at && (() => {
+                            const overdue = task.status !== 'done' && new Date(task.due_at) < new Date(new Date().toDateString());
+                            return (
+                              <span className={cn('text-[10px] px-1 py-0', overdue ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+                                Fällig: {new Date(task.due_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                              </span>
+                            );
+                          })()}
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
