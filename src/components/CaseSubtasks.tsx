@@ -53,6 +53,7 @@ interface CaseSubtasksProps {
   caseId: string;
   canEdit: boolean;
   userId: string;
+  sequentialMode?: boolean;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
