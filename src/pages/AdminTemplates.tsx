@@ -67,7 +67,7 @@ export default function AdminTemplates() {
   const loadAll = async () => {
     setLoading(true);
     const [tplRes, deptRes, joinRes, taskCountRes] = await Promise.all([
-      (supabase as any).from('case_templates').select('id, title, description, created_at, last_used_at, sequential_mode').order('created_at', { ascending: false }),
+      (supabase as any).from('case_templates').select('id, title, description, created_at, last_used_at, sequential_mode, due_required').order('created_at', { ascending: false }),
       supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order'),
       (supabase as any).from('case_template_departments').select('template_id, department_id'),
       (supabase as any).from('case_template_tasks').select('template_id'),
