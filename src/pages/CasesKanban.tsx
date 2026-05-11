@@ -58,6 +58,7 @@ interface CaseCard {
   created_at: string;
   subtasks_done: number;
   subtasks_total: number;
+  priority_order: number;
 }
 
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
