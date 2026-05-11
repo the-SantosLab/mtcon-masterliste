@@ -44,6 +44,7 @@ interface Subtask {
   department_id: string | null;
   assigned_to: string | null;
   status: string;
+  due_at: string | null;
 }
 
 interface Dept { id: string; name: string; code: string | null; parent_id: string | null; }
@@ -54,6 +55,7 @@ interface CaseSubtasksProps {
   canEdit: boolean;
   userId: string;
   sequentialMode?: boolean;
+  dueRequired?: boolean;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -178,13 +180,14 @@ function ProcessView({ tasks, firstOpenIdx, departments, profiles, canEdit, comp
   );
 }
 
-export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }: CaseSubtasksProps) {
+export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, dueRequired = false }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newDeptId, setNewDeptId] = useState('');
+  const [newDueAt, setNewDueAt] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteExpandedId, setNoteExpandedId] = useState<string | null>(null);
@@ -245,6 +248,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
 
   const addTask = async () => {
     if (!newTitle.trim()) return;
+    if (dueRequired && !newDueAt) { toast.error('„Fällig bis" ist verpflichtend'); return; }
     setAdding(true);
     const { error } = await supabase.from('case_tasks').insert({
       case_id: caseId,
@@ -252,12 +256,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
       created_by: userId,
       sort_order: tasks.length,
       department_id: newDeptId || null,
+      due_at: newDueAt || null,
       status: 'open',
     } as any);
     if (error) toast.error('Fehler: ' + error.message);
     else {
       setNewTitle('');
       setNewDeptId('');
+      setNewDueAt('');
       await fetchTasks();
     }
     setAdding(false);
@@ -429,7 +435,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
 
   const updateAssignee = async (taskId: string, assigneeId: string) => {
     const val = assigneeId === '_none' ? null : assigneeId;
-    await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
+    const { error } = await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (val && val !== userId) {
+      supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } }).catch(() => {});
+    }
+    fetchTasks();
+  };
+
+  const updateDueAt = async (taskId: string, due: string | null) => {
+    if (dueRequired && !due) { toast.error('„Fällig bis" ist verpflichtend'); return; }
+    const { error } = await supabase.from('case_tasks').update({ due_at: due } as any).eq('id', taskId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
     fetchTasks();
   };
 
@@ -713,6 +730,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
                               <User className="h-2.5 w-2.5" />{getProfileName(task.assigned_to)}
                             </Badge>
                           )}
+                          {task.due_at && (() => {
+                            const overdue = task.status !== 'done' && new Date(task.due_at) < new Date(new Date().toDateString());
+                            return (
+                              <span className={cn('text-[10px] px-1 py-0', overdue ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+                                Fällig: {new Date(task.due_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                              </span>
+                            );
+                          })()}
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
@@ -775,6 +800,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
                                     ))}
                                   </SelectContent>
                                 </Select>
+                              </div>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground">Fällig bis{dueRequired ? ' *' : ''}</p>
+                                <Input
+                                  type="date"
+                                  defaultValue={task.due_at || ''}
+                                  className="h-7 text-[11px]"
+                                  onBlur={e => { if ((e.target.value || null) !== task.due_at) updateDueAt(task.id, e.target.value || null); }}
+                                />
                               </div>
                             </div>
                             <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => deleteTask(task.id)}>

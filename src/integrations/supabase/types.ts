@@ -283,6 +283,7 @@ export type Database = {
           created_by: string | null
           department_id: string | null
           description: string | null
+          due_at: string | null
           id: string
           sort_order: number
           status: string
@@ -298,6 +299,7 @@ export type Database = {
           created_by?: string | null
           department_id?: string | null
           description?: string | null
+          due_at?: string | null
           id?: string
           sort_order?: number
           status?: string
@@ -313,6 +315,7 @@ export type Database = {
           created_by?: string | null
           department_id?: string | null
           description?: string | null
+          due_at?: string | null
           id?: string
           sort_order?: number
           status?: string
@@ -442,6 +445,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          due_required: boolean
           id: string
           last_used_at: string | null
           sequential_mode: boolean
@@ -452,6 +456,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_required?: boolean
           id?: string
           last_used_at?: string | null
           sequential_mode?: boolean
@@ -462,6 +467,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_required?: boolean
           id?: string
           last_used_at?: string | null
           sequential_mode?: boolean
@@ -489,6 +495,7 @@ export type Database = {
           due_at: string | null
           due_date_corrected_at: string | null
           due_date_corrected_by: string | null
+          due_required: boolean
           estimated_hours: number | null
           id: string
           internal_area_code: string | null
@@ -529,6 +536,7 @@ export type Database = {
           due_at?: string | null
           due_date_corrected_at?: string | null
           due_date_corrected_by?: string | null
+          due_required?: boolean
           estimated_hours?: number | null
           id?: string
           internal_area_code?: string | null
@@ -569,6 +577,7 @@ export type Database = {
           due_at?: string | null
           due_date_corrected_at?: string | null
           due_date_corrected_by?: string | null
+          due_required?: boolean
           estimated_hours?: number | null
           id?: string
           internal_area_code?: string | null

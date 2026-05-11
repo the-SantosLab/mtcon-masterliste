@@ -36,12 +36,13 @@ interface Template {
   created_at: string;
   last_used_at: string | null;
   sequential_mode: boolean;
+  due_required: boolean;
   department_ids: string[];
   task_count: number;
 }
 
-const emptyForm = (): { title: string; description: string; sequential_mode: boolean; department_ids: string[]; tasks: TemplateTask[] } => ({
-  title: '', description: '', sequential_mode: false, department_ids: [], tasks: [],
+const emptyForm = (): { title: string; description: string; sequential_mode: boolean; due_required: boolean; department_ids: string[]; tasks: TemplateTask[] } => ({
+  title: '', description: '', sequential_mode: false, due_required: false, department_ids: [], tasks: [],
 });
 
 export default function AdminTemplates() {
@@ -66,7 +67,7 @@ export default function AdminTemplates() {
   const loadAll = async () => {
     setLoading(true);
     const [tplRes, deptRes, joinRes, taskCountRes] = await Promise.all([
-      (supabase as any).from('case_templates').select('id, title, description, created_at, last_used_at, sequential_mode').order('created_at', { ascending: false }),
+      (supabase as any).from('case_templates').select('id, title, description, created_at, last_used_at, sequential_mode, due_required').order('created_at', { ascending: false }),
       supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order'),
       (supabase as any).from('case_template_departments').select('template_id, department_id'),
       (supabase as any).from('case_template_tasks').select('template_id'),
@@ -123,6 +124,7 @@ export default function AdminTemplates() {
       title: tpl.title,
       description: tpl.description || '',
       sequential_mode: tpl.sequential_mode || false,
+      due_required: tpl.due_required || false,
       department_ids: [...tpl.department_ids],
       tasks: ((tasks || []) as any[]).map((t, i) => ({ ...t, order_index: i })),
     });
@@ -165,14 +167,14 @@ export default function AdminTemplates() {
       let tplId = editingId;
       if (editingId) {
         const { error } = await (supabase as any).from('case_templates').update({
-          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode,
+          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required,
         }).eq('id', editingId);
         if (error) throw error;
         await (supabase as any).from('case_template_departments').delete().eq('template_id', editingId);
         await (supabase as any).from('case_template_tasks').delete().eq('template_id', editingId);
       } else {
         const { data, error } = await (supabase as any).from('case_templates').insert({
-          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode,
+          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required,
         }).select('id').single();
         if (error) throw error;
         tplId = data.id;
@@ -218,7 +220,7 @@ export default function AdminTemplates() {
       .select('title, description, department_id, assigned_role, order_index')
       .eq('template_id', id).order('order_index');
     const { data: newTpl, error } = await (supabase as any).from('case_templates').insert({
-      title: tpl.title + ' (Kopie)', description: tpl.description, sequential_mode: tpl.sequential_mode,
+      title: tpl.title + ' (Kopie)', description: tpl.description, sequential_mode: tpl.sequential_mode, due_required: tpl.due_required,
     }).select('id').single();
     if (error) { toast.error('Fehler: ' + error.message); return; }
     if (tpl.department_ids.length) {
@@ -341,6 +343,16 @@ export default function AdminTemplates() {
               <Switch
                 checked={form.sequential_mode}
                 onCheckedChange={v => setForm(f => ({ ...f, sequential_mode: v }))}
+              />
+            </div>
+            <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
+              <div className="space-y-0.5">
+                <Label className="text-xs text-foreground">Termin verpflichtend</Label>
+                <p className="text-[10px] text-muted-foreground">Unteraufgaben können nur mit einem „Fällig bis"-Datum gespeichert werden.</p>
+              </div>
+              <Switch
+                checked={form.due_required}
+                onCheckedChange={v => setForm(f => ({ ...f, due_required: v }))}
               />
             </div>
             <div className="space-y-1">
