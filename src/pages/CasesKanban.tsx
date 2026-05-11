@@ -7,8 +7,11 @@ import { buildTree, STATUS_LABELS, STATUS_DOT_COLORS, getUrgencyDotColor } from 
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Department, DepartmentNode } from '@/lib/case-utils';
 import { DepartmentTreeView } from '@/components/DepartmentTreeView';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Search, FolderKanban, Users, Calendar, User as UserIcon, ChevronDown, ChevronRight, Trash2, CheckSquare, X } from 'lucide-react';
@@ -55,6 +58,7 @@ interface CaseCard {
   created_at: string;
   subtasks_done: number;
   subtasks_total: number;
+  priority_order: number;
 }
 
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
@@ -186,12 +190,28 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
 }
 
 function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[] }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: card.id, data: { card, kind: 'case', bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
+  const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+    id: card.id,
+    data: { card, kind: 'case', status: card.status, bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
   });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || 'transform 150ms ease',
+  };
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
-      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
+    <div ref={setNodeRef} style={style} {...attributes} className="group relative">
+      <button
+        type="button"
+        {...listeners}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -ml-1 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity cursor-grab active:cursor-grabbing z-10"
+        aria-label="Verschieben"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="h-3 w-3 text-muted-foreground" />
+      </button>
+      <div className={cn(isDragging && 'opacity-40')}>
+        <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
+      </div>
     </div>
   );
 }
@@ -365,8 +385,9 @@ export default function CasesKanban() {
   const fetchCases = useCallback(async () => {
     const { data } = await supabase
       .from('cases')
-      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at')
+      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at, priority_order')
       .eq('deleted', false)
+      .order('priority_order', { ascending: true })
       .order('created_at', { ascending: true });
     const list = (data || []) as any[];
 
@@ -417,6 +438,7 @@ export default function CasesKanban() {
         created_at: c.created_at,
         subtasks_done: subDone[c.id] || 0,
         subtasks_total: subTotal[c.id] || 0,
+        priority_order: c.priority_order ?? 0,
       };
     }));
   }, []);
@@ -459,7 +481,7 @@ export default function CasesKanban() {
     const filtered = scopeByDept(cases)
       .filter(c => !searchQuery || c.project_name.toLowerCase().includes(q) || c.case_no.toLowerCase().includes(q))
       .filter(c => c.status === s.id)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      .sort((a, b) => (a.priority_order - b.priority_order) || (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
     return { ...s, cards: filtered };
   });
 
@@ -473,11 +495,11 @@ export default function CasesKanban() {
     const data = e.active.data.current as any;
     setActiveProject(null);
     setActiveCase(null);
-    const { over } = e;
+    const { over, active } = e;
     if (!over) return;
-    const targetStatus = over.id as string;
 
     if (data?.kind === 'project') {
+      const targetStatus = over.id as string;
       const card = data.card as ProjectCard;
       if (card.status === targetStatus) return;
       const { error } = await supabase
@@ -498,19 +520,59 @@ export default function CasesKanban() {
       const lbl = PROJECT_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
       toast.success(`Status auf "${lbl}" geändert`);
       fetchProjects();
-    } else if (data?.kind === 'case') {
+      return;
+    }
+
+    if (data?.kind === 'case') {
       const card = data.card as CaseCard;
-      const bulkIds: string[] | undefined = data.bulkIds;
-      const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
-      const { error } = await supabase
-        .from('cases')
-        .update({ status: targetStatus as Enums<'case_status'>, last_changed_at: new Date().toISOString(), last_changed_by: user?.id ?? null })
-        .in('id', ids);
-      if (error) { toast.error(error.message); return; }
-      const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
-      toast.success(ids.length > 1 ? `${ids.length} Vorgänge auf "${lbl}" verschoben` : `Status auf "${lbl}" geändert`);
-      if (ids.length > 1) exitSelectMode();
-      fetchCases();
+      const overData = over.data.current as any;
+      // Determine target status: either column id (over.id) or sibling card's status
+      const overIsColumn = CASE_STATUSES.some(s => s.id === over.id);
+      const targetStatus = overIsColumn ? (over.id as string) : (overData?.status as string) || card.status;
+
+      // Same column => reorder
+      if (targetStatus === card.status && !overIsColumn && over.id !== active.id) {
+        const colCards = caseColumns.find(c => c.id === card.status)?.cards || [];
+        const oldIndex = colCards.findIndex(c => c.id === active.id);
+        const newIndex = colCards.findIndex(c => c.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+        const reordered = arrayMove(colCards, oldIndex, newIndex);
+        // Optimistic update
+        setCases(prev => {
+          const map = new Map(reordered.map((c, i) => [c.id, i]));
+          return prev.map(c => map.has(c.id) ? { ...c, priority_order: map.get(c.id)! } : c);
+        });
+        // Persist
+        const updates = reordered.map((c, i) =>
+          supabase.from('cases').update({ priority_order: i }).eq('id', c.id),
+        );
+        const results = await Promise.all(updates);
+        const failed = results.find(r => r.error);
+        if (failed?.error) { toast.error(failed.error.message); fetchCases(); }
+        return;
+      }
+
+      // Status change (column move)
+      if (targetStatus !== card.status) {
+        const bulkIds: string[] | undefined = data.bulkIds;
+        const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
+        const targetCol = caseColumns.find(c => c.id === targetStatus);
+        const baseOrder = (targetCol?.cards.length ?? 0);
+        const { error } = await supabase
+          .from('cases')
+          .update({
+            status: targetStatus as Enums<'case_status'>,
+            priority_order: baseOrder,
+            last_changed_at: new Date().toISOString(),
+            last_changed_by: user?.id ?? null,
+          })
+          .in('id', ids);
+        if (error) { toast.error(error.message); return; }
+        const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
+        toast.success(ids.length > 1 ? `${ids.length} Vorgänge auf "${lbl}" verschoben` : `Status auf "${lbl}" geändert`);
+        if (ids.length > 1) exitSelectMode();
+        fetchCases();
+      }
     }
   };
 
@@ -634,7 +696,7 @@ export default function CasesKanban() {
             {loading ? (
               <p className="text-xs text-muted-foreground text-center py-12">Laden…</p>
             ) : (
-              <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex gap-3 h-full">
                   {isProjects
                     ? projectColumns.map(col => (
@@ -646,18 +708,20 @@ export default function CasesKanban() {
                       ))
                     : caseColumns.map(col => (
                         <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length} collapsed={!!collapsedCols[col.id]} onToggle={() => toggleCol(col.id)}>
-                          {col.cards.map(c => (
-                            <DraggableCase
-                              key={c.id}
-                              card={c}
-                              onOpen={() => navigate(`/cases/${c.id}`)}
-                              departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined}
-                              selectable={selectMode}
-                              selected={selectedCaseIds.has(c.id)}
-                              onToggleSelect={() => toggleCaseSelected(c.id)}
-                              bulkIds={Array.from(selectedCaseIds)}
-                            />
-                          ))}
+                          <SortableContext items={col.cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                            {col.cards.map(c => (
+                              <DraggableCase
+                                key={c.id}
+                                card={c}
+                                onOpen={() => navigate(`/cases/${c.id}`)}
+                                departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined}
+                                selectable={selectMode}
+                                selected={selectedCaseIds.has(c.id)}
+                                onToggleSelect={() => toggleCaseSelected(c.id)}
+                                bulkIds={Array.from(selectedCaseIds)}
+                              />
+                            ))}
+                          </SortableContext>
                         </DroppableColumn>
                       ))}
                 </div>

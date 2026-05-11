@@ -502,6 +502,7 @@ export type Database = {
           last_changed_at: string | null
           last_changed_by: string | null
           note: string | null
+          priority_order: number
           product_code: string | null
           project_article_no: string | null
           project_duration: string | null
@@ -543,6 +544,7 @@ export type Database = {
           last_changed_at?: string | null
           last_changed_by?: string | null
           note?: string | null
+          priority_order?: number
           product_code?: string | null
           project_article_no?: string | null
           project_duration?: string | null
@@ -584,6 +586,7 @@ export type Database = {
           last_changed_at?: string | null
           last_changed_by?: string | null
           note?: string | null
+          priority_order?: number
           product_code?: string | null
           project_article_no?: string | null
           project_duration?: string | null
