@@ -817,7 +817,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                   onBlur={e => { if ((e.target.value || null) !== task.due_at) updateDueAt(task.id, e.target.value || null); }}
                                 />
                               </div>
-                            <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => deleteTask(task.id)}>
+                            <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => setConfirmDeleteId(task.id)}>
                               <Trash2 className="h-3 w-3 mr-1" />Löschen
                             </Button>
                           </div>
