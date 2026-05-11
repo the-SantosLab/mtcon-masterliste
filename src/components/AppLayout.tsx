@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
+import { QuickSettings } from '@/components/QuickSettings';
 
 
 interface AppLayoutProps {
@@ -250,6 +251,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         </header>
         <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]">{children}</main>
       </div>
+
+      <QuickSettings />
 
       {/* Password change dialog */}
       <Dialog open={pwDialogOpen} onOpenChange={o => { if (!o) { setPwDialogOpen(false); setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false); } }}>
