@@ -369,8 +369,9 @@ export default function CasesKanban() {
   const fetchCases = useCallback(async () => {
     const { data } = await supabase
       .from('cases')
-      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at')
+      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at, priority_order')
       .eq('deleted', false)
+      .order('priority_order', { ascending: true })
       .order('created_at', { ascending: true });
     const list = (data || []) as any[];
 
