@@ -201,6 +201,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [completionNote, setCompletionNote] = useState('');
   const [savingCompletion, setSavingCompletion] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'process'>('list');
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked
   const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
@@ -620,8 +622,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           <p className="text-xs text-muted-foreground py-2">Keine Unteraufgaben</p>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {tasks.map((task, index) => {
+            <SortableContext items={tasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {tasks.slice(0, visibleCount).map((task, index) => {
                 const isExpanded = expandedId === task.id;
                 const st = STATUS_MAP[task.status] || STATUS_MAP.open;
                 const canEditTask = canEdit;
@@ -856,6 +858,33 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
               })}
             </SortableContext>
           </DndContext>
+        )}
+        {!loading && tasks.length > PAGE_SIZE && (
+          <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-border/40">
+            <span className="text-[11px] text-muted-foreground tabular-nums">
+              {Math.min(visibleCount, tasks.length)} von {tasks.length}
+            </span>
+            {visibleCount < tasks.length && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, tasks.length))}
+              >
+                Mehr laden ({Math.min(PAGE_SIZE, tasks.length - visibleCount)})
+              </Button>
+            )}
+            {visibleCount > PAGE_SIZE && visibleCount >= tasks.length && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-[11px] text-muted-foreground"
+                onClick={() => setVisibleCount(PAGE_SIZE)}
+              >
+                Weniger anzeigen
+              </Button>
+            )}
+          </div>
         )}
         </>
         )}
