@@ -465,7 +465,7 @@ export default function CasesKanban() {
     const filtered = scopeByDept(cases)
       .filter(c => !searchQuery || c.project_name.toLowerCase().includes(q) || c.case_no.toLowerCase().includes(q))
       .filter(c => c.status === s.id)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      .sort((a, b) => (a.priority_order - b.priority_order) || (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
     return { ...s, cards: filtered };
   });
 
