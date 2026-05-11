@@ -472,8 +472,27 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
         </Alert>
       )}
 
-      {/* Task list */}
-      <div className="space-y-1">
+      {/* Task list / Process view */}
+      <div className={cn(viewMode === 'process' && sequentialMode ? 'space-y-3' : 'space-y-1')}>
+        {viewMode === 'process' && sequentialMode && !loading && tasks.length > 0 ? (
+          <ProcessView
+            tasks={sortedTasks}
+            firstOpenIdx={firstOpenIdx}
+            departments={departments}
+            profiles={profiles}
+            canEdit={canEdit}
+            completionNotes={completionNotes}
+            onComplete={(t) => updateTaskStatus(t, 'done')}
+            onStart={async (t) => {
+              const { error } = await supabase.from('case_tasks').update({ status: 'in_progress' } as any).eq('id', t.id);
+              if (error) toast.error('Fehler'); else fetchTasks();
+            }}
+            onLockedClick={(stepNum) => toast.error(`Bitte zuerst Schritt ${stepNum} abschließen`)}
+          />
+        ) : null}
+        {(viewMode !== 'process' || !sequentialMode) && (
+          <></>
+        )}
         {loading ? (
           <p className="text-xs text-muted-foreground py-2">Laden…</p>
         ) : tasks.length === 0 && !canEdit ? (
