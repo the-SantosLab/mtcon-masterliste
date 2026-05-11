@@ -211,7 +211,7 @@ export default function CasesList() {
             <thead>
               <tr className="border-b border-border">
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
@@ -234,7 +234,7 @@ export default function CasesList() {
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>
-                  <td className={cn(cellCls, 'font-mono')}>
+                  <td className={cn(cellCls, 'font-mono min-w-[120px] whitespace-nowrap')}>
                     <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
