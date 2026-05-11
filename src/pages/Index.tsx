@@ -331,6 +331,40 @@ export default function Dashboard() {
             empty="Keine zugewiesenen Vorgänge"
           />
         </div>
+
+        {/* Meine Unteraufgaben — zu bearbeiten */}
+        <div className="glass-card overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <ListChecks className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-medium text-foreground">Meine Unteraufgaben</h2>
+              <span className="text-[11px] text-muted-foreground tabular-nums">{myTasks.length}</span>
+            </div>
+          </div>
+          <div className="divide-y divide-border">
+            {myTasks.length === 0 ? (
+              <p className="p-4 text-xs text-muted-foreground">Keine offenen Unteraufgaben</p>
+            ) : myTasks.map(t => {
+              const overdue = t.due_at && t.due_at < today;
+              return (
+                <Link key={t.id} to={`/cases/${t.case_id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors">
+                  <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', overdue ? 'bg-red-500' : 'bg-blue-500')} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground truncate">{t.title}</p>
+                    <p className="text-[11px] text-muted-foreground font-mono truncate">
+                      {t.case?.case_no} · {t.case?.project_name}
+                    </p>
+                  </div>
+                  {t.due_at && (
+                    <span className={cn('text-[11px] tabular-nums shrink-0', overdue ? 'text-red-500' : 'text-muted-foreground')}>
+                      Fällig: {new Date(t.due_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <Sheet open={!!barDrill} onOpenChange={o => !o && setBarDrill(null)}>
