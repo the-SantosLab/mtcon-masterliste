@@ -58,14 +58,21 @@ export default function Dashboard() {
 
   const fetchMyTasks = async () => {
     if (!user?.id) return;
-    const { data } = await supabase
+    const { data: tasks } = await supabase
       .from('case_tasks')
-      .select('id, title, due_at, status, case_id, case:cases!case_tasks_case_id_fkey(id, case_no, project_name)')
+      .select('id, title, due_at, status, case_id')
       .eq('assigned_to', user.id)
       .neq('status', 'done')
       .order('due_at', { ascending: true, nullsFirst: false })
       .limit(15);
-    setMyTasks((data as any) || []);
+    const list = (tasks as any[]) || [];
+    const ids = Array.from(new Set(list.map(t => t.case_id).filter(Boolean)));
+    let caseMap: Record<string, any> = {};
+    if (ids.length) {
+      const { data: cs } = await supabase.from('cases').select('id, case_no, project_name').in('id', ids);
+      caseMap = Object.fromEntries(((cs as any[]) || []).map(c => [c.id, c]));
+    }
+    setMyTasks(list.map(t => ({ ...t, case: caseMap[t.case_id] || null })));
   };
 
   useEffect(() => {
