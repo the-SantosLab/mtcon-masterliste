@@ -14,7 +14,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Eye, Copy, X, ArrowUp, ArrowDown, ListChecks } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Pencil, Trash2, Eye, Copy, X, ArrowUp, ArrowDown, ListChecks, ArrowRightCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/case-utils';
 import { Navigate } from 'react-router-dom';
