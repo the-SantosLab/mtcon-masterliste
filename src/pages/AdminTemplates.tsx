@@ -345,6 +345,16 @@ export default function AdminTemplates() {
                 onCheckedChange={v => setForm(f => ({ ...f, sequential_mode: v }))}
               />
             </div>
+            <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
+              <div className="space-y-0.5">
+                <Label className="text-xs text-foreground">Termin verpflichtend</Label>
+                <p className="text-[10px] text-muted-foreground">Unteraufgaben können nur mit einem „Fällig bis"-Datum gespeichert werden.</p>
+              </div>
+              <Switch
+                checked={form.due_required}
+                onCheckedChange={v => setForm(f => ({ ...f, due_required: v }))}
+              />
+            </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Abteilungen</Label>
               <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded border border-border p-2 bg-muted/20">
