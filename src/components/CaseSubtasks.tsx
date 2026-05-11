@@ -691,31 +691,57 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           )}
                           <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
                           {taskLocked && <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />}
-                          {hasNote ? (
-                            <TooltipProvider delayDuration={300}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="flex-1 text-sm transition-colors line-through text-muted-foreground cursor-help">
-                                    {task.title}
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="top"
-                                  className="max-w-[300px] whitespace-pre-wrap break-words bg-[hsl(0_0%_12%/0.95)] text-white border-0 shadow-lg px-3 py-2"
-                                  style={{ fontSize: '13px', borderRadius: '6px' }}
-                                >
-                                  {note}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ) : (
-                            <span className={cn(
-                              'flex-1 text-sm transition-colors',
-                              task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'
-                            )}>
-                              {task.title}
-                            </span>
-                          )}
+                          {(() => {
+                            const isDone = task.status === 'done';
+                            const isLong = (task.title?.length || 0) > 50;
+                            const showCollapse = isDone && isLong;
+                            const isTitleOpen = titleExpandedIds.has(task.id);
+                            const toggleTitle = (e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              setTitleExpandedIds(prev => {
+                                const next = new Set(prev);
+                                if (next.has(task.id)) next.delete(task.id); else next.add(task.id);
+                                return next;
+                              });
+                            };
+                            const titleClass = cn(
+                              'flex-1 text-sm transition-colors break-words',
+                              isDone ? 'line-through text-muted-foreground' : 'text-foreground',
+                              showCollapse && !isTitleOpen && 'line-clamp-2'
+                            );
+                            return (
+                              <>
+                                {showCollapse && (
+                                  <button
+                                    type="button"
+                                    onClick={toggleTitle}
+                                    aria-label={isTitleOpen ? 'Einklappen' : 'Ausklappen'}
+                                    className="shrink-0 self-start mt-0.5 text-muted-foreground hover:text-foreground"
+                                  >
+                                    <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', !isTitleOpen && '-rotate-90')} />
+                                  </button>
+                                )}
+                                {hasNote ? (
+                                  <TooltipProvider delayDuration={300}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className={cn(titleClass, 'cursor-help')}>{task.title}</span>
+                                      </TooltipTrigger>
+                                      <TooltipContent
+                                        side="top"
+                                        className="max-w-[300px] whitespace-pre-wrap break-words bg-[hsl(0_0%_12%/0.95)] text-white border-0 shadow-lg px-3 py-2"
+                                        style={{ fontSize: '13px', borderRadius: '6px' }}
+                                      >
+                                        {note}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                ) : (
+                                  <span className={titleClass}>{task.title}</span>
+                                )}
+                              </>
+                            );
+                          })()}
                           {hasNote && (
                             <button
                               type="button"
