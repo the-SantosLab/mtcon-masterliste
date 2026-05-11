@@ -696,7 +696,7 @@ export default function CasesKanban() {
             {loading ? (
               <p className="text-xs text-muted-foreground text-center py-12">Laden…</p>
             ) : (
-              <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex gap-3 h-full">
                   {isProjects
                     ? projectColumns.map(col => (
@@ -708,18 +708,20 @@ export default function CasesKanban() {
                       ))
                     : caseColumns.map(col => (
                         <DroppableColumn key={col.id} id={col.id} label={col.label} color={col.color} count={col.cards.length} collapsed={!!collapsedCols[col.id]} onToggle={() => toggleCol(col.id)}>
-                          {col.cards.map(c => (
-                            <DraggableCase
-                              key={c.id}
-                              card={c}
-                              onOpen={() => navigate(`/cases/${c.id}`)}
-                              departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined}
-                              selectable={selectMode}
-                              selected={selectedCaseIds.has(c.id)}
-                              onToggleSelect={() => toggleCaseSelected(c.id)}
-                              bulkIds={Array.from(selectedCaseIds)}
-                            />
-                          ))}
+                          <SortableContext items={col.cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                            {col.cards.map(c => (
+                              <DraggableCase
+                                key={c.id}
+                                card={c}
+                                onOpen={() => navigate(`/cases/${c.id}`)}
+                                departmentName={!selectedDeptId ? departments.find(d => d.id === c.department_id)?.name : undefined}
+                                selectable={selectMode}
+                                selected={selectedCaseIds.has(c.id)}
+                                onToggleSelect={() => toggleCaseSelected(c.id)}
+                                bulkIds={Array.from(selectedCaseIds)}
+                              />
+                            ))}
+                          </SortableContext>
                         </DroppableColumn>
                       ))}
                 </div>
