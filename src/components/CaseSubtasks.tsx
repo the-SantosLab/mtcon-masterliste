@@ -44,6 +44,7 @@ interface Subtask {
   department_id: string | null;
   assigned_to: string | null;
   status: string;
+  due_at: string | null;
 }
 
 interface Dept { id: string; name: string; code: string | null; parent_id: string | null; }
@@ -54,6 +55,7 @@ interface CaseSubtasksProps {
   canEdit: boolean;
   userId: string;
   sequentialMode?: boolean;
+  dueRequired?: boolean;
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
