@@ -236,9 +236,27 @@ export default function Dashboard() {
           {/* RIGHT: Chart on top, "Frei zum Abholen" below */}
           <div className="lg:col-span-2 grid grid-rows-[auto_1fr] gap-4 min-h-[480px] lg:min-h-[560px]">
             <div className="glass-card p-4 lg:p-5">
-              <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-sm font-medium text-foreground">Vorgänge diese Woche</h2>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Mo – Fr</span>
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h2 className="text-sm font-medium text-foreground">
+                  {chartRange === 'week' ? 'Vorgänge diese Woche' : 'Vorgänge diesen Monat'}
+                </h2>
+                <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
+                  {(['week', 'month'] as const).map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setChartRange(r)}
+                      className={cn(
+                        'px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded transition-colors',
+                        chartRange === r
+                          ? 'bg-card text-foreground shadow-sm border border-border'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      {r === 'week' ? 'Woche' : 'Monat'}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="h-[180px]">
                 <ResponsiveContainer width="100%" height="100%">
