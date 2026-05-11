@@ -591,6 +591,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
                 const note = completionNotes[task.id];
                 const hasNote = task.status === 'done' && !!note;
                 const isNoteOpen = noteExpandedId === task.id;
+                const taskLocked = isLocked(task.id);
                 return (
                   <SortableSubtaskRow
                     key={task.id}
@@ -602,7 +603,17 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
                     onMoveDown={() => moveTask(task.id, 1)}
                   >
                     {({ dragHandleProps, isDragging }) => (
-                      <div className={cn('rounded-md border border-border/50 overflow-hidden bg-card', isDragging && 'shadow-lg ring-1 ring-primary/40')}>
+                      <div
+                        className={cn('rounded-md border border-border/50 overflow-hidden bg-card', isDragging && 'shadow-lg ring-1 ring-primary/40', taskLocked && 'opacity-50')}
+                        title={taskLocked ? `Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen` : undefined}
+                        onClickCapture={(e) => {
+                          if (taskLocked) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toast.error(`Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen`);
+                          }
+                        }}
+                      >
                         <div
                           className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
                           onClick={() => setExpandedId(isExpanded ? null : task.id)}
