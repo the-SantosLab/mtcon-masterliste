@@ -35,12 +35,13 @@ interface Template {
   description: string | null;
   created_at: string;
   last_used_at: string | null;
+  sequential_mode: boolean;
   department_ids: string[];
   task_count: number;
 }
 
-const emptyForm = (): { title: string; description: string; department_ids: string[]; tasks: TemplateTask[] } => ({
-  title: '', description: '', department_ids: [], tasks: [],
+const emptyForm = (): { title: string; description: string; sequential_mode: boolean; department_ids: string[]; tasks: TemplateTask[] } => ({
+  title: '', description: '', sequential_mode: false, department_ids: [], tasks: [],
 });
 
 export default function AdminTemplates() {
