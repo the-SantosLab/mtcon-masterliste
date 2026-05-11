@@ -331,6 +331,17 @@ export default function AdminTemplates() {
               <Label className="text-xs text-muted-foreground">Beschreibung</Label>
               <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} className="text-xs" />
             </div>
+            <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
+              <div className="space-y-0.5">
+                <Label className="text-xs text-foreground flex items-center gap-1.5">
+                  <ArrowRightCircle className="h-3.5 w-3.5" />Sequenzieller Modus
+                </Label>
+                <p className="text-[10px] text-muted-foreground">Unteraufgaben müssen strikt nacheinander abgeschlossen werden.</p>
+              </div>
+              <Switch
+                checked={form.sequential_mode}
+                onCheckedChange={v => setForm(f => ({ ...f, sequential_mode: v }))}
+              />
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Abteilungen</Label>
               <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded border border-border p-2 bg-muted/20">
