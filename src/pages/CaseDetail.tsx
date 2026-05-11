@@ -207,7 +207,7 @@ export default function CaseDetail() {
     setRefreshKey(k => k + 1);
     toast.success('Titel aktualisiert');
   };
-  const canEditDueDate = !isViewer && (isAdmin || !!profile?.is_manager);
+  const canEditDueDate = !isViewer && !isTerminalStatus(c?.status) && (isAdmin || !!profile?.is_manager || c?.created_by === user?.id || c?.assignee_id === user?.id);
   const [dueOpen, setDueOpen] = useState(false);
   const [sendIcs, setSendIcs] = useState(false);
 
