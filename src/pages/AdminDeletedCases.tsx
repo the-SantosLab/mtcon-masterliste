@@ -144,8 +144,7 @@ export default function AdminDeletedCases() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Vorgang wiederherstellen?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Vorgang <span className="font-mono">{r.case_no}</span> ({r.project_name}) wird mit allen Stammdaten aus dem Snapshot wiederhergestellt.
-                            Hinweis: Verknüpfte Unteraufgaben, Notizen, Anhänge und Aktivitätsverlauf können nicht wiederhergestellt werden, sofern sie beim Löschen kaskadiert entfernt wurden.
+                            Vorgang <span className="font-mono">{r.case_no}</span> ({r.project_name}) wird vollständig wiederhergestellt – inklusive Unteraufgaben, Notizen, E-Mails, Anhängen und Aktivitätsverlauf (sofern im Snapshot enthalten).
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
