@@ -416,15 +416,42 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
 
   return (
     <div className="rounded-md border border-border bg-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Unteraufgaben
-        </h3>
-        {totalCount > 0 && (
-          <span className="text-[11px] text-muted-foreground">
-            {completedCount}/{totalCount} erledigt
-          </span>
-        )}
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Unteraufgaben
+          </h3>
+          {sequentialMode && (
+            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30">
+              <GitBranch className="h-2.5 w-2.5" />Sequenziell
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {sequentialMode && totalCount > 0 && (
+            <div className="inline-flex rounded border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={cn('text-[10px] px-2 py-1 flex items-center gap-1', viewMode === 'list' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >
+                <ListChecks className="h-3 w-3" />Liste
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('process')}
+                className={cn('text-[10px] px-2 py-1 flex items-center gap-1 border-l border-border', viewMode === 'process' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >
+                <GitBranch className="h-3 w-3" />Prozessansicht
+              </button>
+            </div>
+          )}
+          {totalCount > 0 && (
+            <span className="text-[11px] text-muted-foreground">
+              {completedCount}/{totalCount} erledigt
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}
