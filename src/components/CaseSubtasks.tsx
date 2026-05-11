@@ -680,6 +680,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
             </SortableContext>
           </DndContext>
         )}
+        </>
+        )}
       </div>
 
       {/* Add new subtask */}
