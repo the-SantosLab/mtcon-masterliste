@@ -491,8 +491,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
           />
         ) : null}
         {(viewMode !== 'process' || !sequentialMode) && (
-          <></>
-        )}
+        <>
         {loading ? (
           <p className="text-xs text-muted-foreground py-2">Laden…</p>
         ) : tasks.length === 0 && !canEdit ? (
