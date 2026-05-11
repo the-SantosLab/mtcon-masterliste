@@ -93,7 +93,7 @@ function SortableSubtaskRow({ id, canReorder, children }: SortableSubtaskRowProp
   );
 }
 
-export function CaseSubtasks({ caseId, canEdit, userId }: CaseSubtasksProps) {
+export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
