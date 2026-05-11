@@ -69,56 +69,10 @@ export default function AdminDeletedCases() {
     }
     setRestoringId(row.id);
     try {
-      // Check if case still exists (e.g. only soft-deleted)
-      const { data: existing } = await supabase
-        .from('cases')
-        .select('id, deleted')
-        .eq('id', row.case_id)
-        .maybeSingle();
+      const { error: rpcErr } = await supabase.rpc('restore_deleted_case' as any, { p_deleted_id: row.id });
+      if (rpcErr) throw rpcErr;
 
-      if (existing) {
-        // Case row still exists – just clear deleted flag
-        const { error: updErr } = await supabase
-          .from('cases')
-          .update({ deleted: false, deleted_at: null, deleted_by: null })
-          .eq('id', row.case_id);
-        if (updErr) throw updErr;
-      } else {
-        // Re-insert from snapshot
-        const snap = { ...row.snapshot } as Record<string, any>;
-        snap.deleted = false;
-        snap.deleted_at = null;
-        snap.deleted_by = null;
-
-        const { error: insErr } = await supabase.from('cases').insert(snap as any);
-        if (insErr) throw insErr;
-
-        // The assign_case_number trigger overwrites case_no/case_number on insert –
-        // restore the original values so the Vorgangs-Nr. stays identical.
-        if (snap.case_no || snap.case_number) {
-          await supabase
-            .from('cases')
-            .update({
-              case_no: snap.case_no,
-              case_number: snap.case_number ?? snap.case_no,
-            })
-            .eq('id', row.case_id);
-        }
-      }
-
-      // Log activity
-      await supabase.from('case_activity').insert({
-        case_id: row.case_id,
-        action: 'restored',
-        actor_id: user?.id,
-        message: 'Vorgang wiederhergestellt',
-      });
-
-      // Remove the deleted_cases entry
-      const { error: delErr } = await supabase.from('deleted_cases').delete().eq('id', row.id);
-      if (delErr) throw delErr;
-
-      toast.success(`Vorgang ${row.case_no || ''} wiederhergestellt`);
+      toast.success(`Vorgang ${row.case_no || ''} vollständig wiederhergestellt`);
       setRows(prev => prev.filter(r => r.id !== row.id));
     } catch (err: any) {
       console.error('restore failed', err);
@@ -190,8 +144,7 @@ export default function AdminDeletedCases() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Vorgang wiederherstellen?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Vorgang <span className="font-mono">{r.case_no}</span> ({r.project_name}) wird mit allen Stammdaten aus dem Snapshot wiederhergestellt.
-                            Hinweis: Verknüpfte Unteraufgaben, Notizen, Anhänge und Aktivitätsverlauf können nicht wiederhergestellt werden, sofern sie beim Löschen kaskadiert entfernt wurden.
+                            Vorgang <span className="font-mono">{r.case_no}</span> ({r.project_name}) wird vollständig wiederhergestellt – inklusive Unteraufgaben, Notizen, E-Mails, Anhängen und Aktivitätsverlauf (sofern im Snapshot enthalten).
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

@@ -1604,6 +1604,7 @@ export type Database = {
       }
       next_counter: { Args: { p_key: string }; Returns: number }
       purge_trashed_cases: { Args: never; Returns: number }
+      restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
       user_department: { Args: { uid?: string }; Returns: string }
     }
     Enums: {
