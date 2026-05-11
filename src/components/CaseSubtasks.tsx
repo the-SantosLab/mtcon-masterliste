@@ -435,7 +435,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
   const updateAssignee = async (taskId: string, assigneeId: string) => {
     const val = assigneeId === '_none' ? null : assigneeId;
-    await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
+    const { error } = await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (val && val !== userId) {
+      supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } }).catch(() => {});
+    }
+    fetchTasks();
+  };
+
+  const updateDueAt = async (taskId: string, due: string | null) => {
+    if (dueRequired && !due) { toast.error('„Fällig bis" ist verpflichtend'); return; }
+    const { error } = await supabase.from('case_tasks').update({ due_at: due } as any).eq('id', taskId);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
     fetchTasks();
   };
 
