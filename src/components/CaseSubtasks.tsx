@@ -180,13 +180,14 @@ function ProcessView({ tasks, firstOpenIdx, departments, profiles, canEdit, comp
   );
 }
 
-export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }: CaseSubtasksProps) {
+export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, dueRequired = false }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newDeptId, setNewDeptId] = useState('');
+  const [newDueAt, setNewDueAt] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [noteExpandedId, setNoteExpandedId] = useState<string | null>(null);
