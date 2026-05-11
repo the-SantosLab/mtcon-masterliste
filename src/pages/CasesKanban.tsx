@@ -7,8 +7,11 @@ import { buildTree, STATUS_LABELS, STATUS_DOT_COLORS, getUrgencyDotColor } from 
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Department, DepartmentNode } from '@/lib/case-utils';
 import { DepartmentTreeView } from '@/components/DepartmentTreeView';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCorners } from '@dnd-kit/core';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Search, FolderKanban, Users, Calendar, User as UserIcon, ChevronDown, ChevronRight, Trash2, CheckSquare, X } from 'lucide-react';
