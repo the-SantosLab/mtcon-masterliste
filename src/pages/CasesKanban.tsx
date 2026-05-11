@@ -190,12 +190,28 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
 }
 
 function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[] }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: card.id, data: { card, kind: 'case', bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
+  const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+    id: card.id,
+    data: { card, kind: 'case', status: card.status, bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
   });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || 'transform 150ms ease',
+  };
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
-      <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
+    <div ref={setNodeRef} style={style} {...attributes} className="group relative">
+      <button
+        type="button"
+        {...listeners}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -ml-1 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity cursor-grab active:cursor-grabbing z-10"
+        aria-label="Verschieben"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical className="h-3 w-3 text-muted-foreground" />
+      </button>
+      <div className={cn(isDragging && 'opacity-40')}>
+        <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
+      </div>
     </div>
   );
 }
