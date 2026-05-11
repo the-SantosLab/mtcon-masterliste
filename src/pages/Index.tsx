@@ -56,11 +56,27 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const fetchMyTasks = async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from('case_tasks')
+      .select('id, title, due_at, status, case_id, case:cases!case_tasks_case_id_fkey(id, case_no, project_name)')
+      .eq('assigned_to', user.id)
+      .neq('status', 'done')
+      .order('due_at', { ascending: true, nullsFirst: false })
+      .limit(15);
+    setMyTasks((data as any) || []);
+  };
+
   useEffect(() => {
     fetchCases();
-    const ch = supabase.channel('dash-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
+    fetchMyTasks();
+    const ch = supabase.channel('dash-cases')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, () => fetchMyTasks())
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+  }, [user?.id]);
 
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
