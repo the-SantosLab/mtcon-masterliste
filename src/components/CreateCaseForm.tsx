@@ -67,7 +67,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [suggestSaving, setSuggestSaving] = useState(false);
 
   // Templates
-  const [templates, setTemplates] = useState<{ id: string; title: string; description: string | null; department_ids: string[]; tasks: { title: string; description: string | null; department_id: string | null; order_index: number }[] }[]>([]);
+  const [templates, setTemplates] = useState<{ id: string; title: string; description: string | null; sequential_mode: boolean; department_ids: string[]; tasks: { title: string; description: string | null; department_id: string | null; order_index: number }[] }[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [userDeptId, setUserDeptId] = useState<string | null>(null);
   const [pendingTemplateTasks, setPendingTemplateTasks] = useState<{ title: string; description: string | null; department_id: string | null }[]>([]);
