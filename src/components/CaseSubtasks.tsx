@@ -179,6 +179,10 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
   };
 
   const updateTaskStatus = async (task: Subtask, newStatus: string) => {
+    if (sequentialMode && isLocked(task.id)) {
+      toast.error(`Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen`);
+      return;
+    }
     if (newStatus === 'done') {
       setCompletingTask(task);
       setCompletionNote('');
