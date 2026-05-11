@@ -305,6 +305,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     if (!form.project_name) { toast.error('Projektname ist Pflicht'); setStep(1); return; }
     setSaving(true);
     const finalDeptId = form.team_id || form.department_id || null;
+    const tplForCase = pendingTemplateId ? templates.find(t => t.id === pendingTemplateId) : null;
     const { data: newCase, error } = await supabase.from('cases').insert({
       project_name: form.project_name,
       project_id: form.project_id || null,
@@ -321,6 +322,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       sop: form.sop || null,
       quantity: form.quantity ? Number(form.quantity) : null,
       project_duration: form.project_duration || null,
+      sequential_mode: tplForCase?.sequential_mode || false,
       created_by: userId,
       last_changed_by: userId,
       last_changed_at: new Date().toISOString(),
