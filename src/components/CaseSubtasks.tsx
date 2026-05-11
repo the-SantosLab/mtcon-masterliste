@@ -653,6 +653,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
                             </>
                           )}
                           <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
+                          {taskLocked && <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />}
                           {hasNote ? (
                             <TooltipProvider delayDuration={300}>
                               <Tooltip>
