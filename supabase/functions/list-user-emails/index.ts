@@ -16,22 +16,17 @@ Deno.serve(async (req) => {
   }
   const token = authHeader.replace('Bearer ', '');
 
-  // Validate JWT via anon client + getClaims (signing-keys system).
-  const supabaseAuth = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-  );
-  const { data: claimsData, error: claimsErr } = await supabaseAuth.auth.getClaims(token);
-  if (claimsErr || !claimsData?.claims?.sub) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
-  }
-  const userId = claimsData.claims.sub as string;
-
-  // Admin client for role check + listUsers.
+  // Admin client for user validation, role check + listUsers.
   const supabaseAdmin = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
+
+  const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+  if (userErr || !userData?.user?.id) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+  const userId = userData.user.id;
 
   const { data: roleData } = await supabaseAdmin
     .from('user_roles')
