@@ -342,6 +342,7 @@ export default function AdminTemplates() {
                 checked={form.sequential_mode}
                 onCheckedChange={v => setForm(f => ({ ...f, sequential_mode: v }))}
               />
+            </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Abteilungen</Label>
               <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded border border-border p-2 bg-muted/20">
