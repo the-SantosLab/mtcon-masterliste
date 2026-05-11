@@ -248,6 +248,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
   const addTask = async () => {
     if (!newTitle.trim()) return;
+    if (dueRequired && !newDueAt) { toast.error('„Fällig bis" ist verpflichtend'); return; }
     setAdding(true);
     const { error } = await supabase.from('case_tasks').insert({
       case_id: caseId,
@@ -255,12 +256,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       created_by: userId,
       sort_order: tasks.length,
       department_id: newDeptId || null,
+      due_at: newDueAt || null,
       status: 'open',
     } as any);
     if (error) toast.error('Fehler: ' + error.message);
     else {
       setNewTitle('');
       setNewDeptId('');
+      setNewDueAt('');
       await fetchTasks();
     }
     setAdding(false);
