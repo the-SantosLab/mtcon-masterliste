@@ -892,6 +892,32 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => { if (!o) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unteraufgabe löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const t = tasks.find(x => x.id === confirmDeleteId);
+                return t
+                  ? `„${t.title}" wird unwiderruflich gelöscht. Im Aktivitätsverlauf bleibt der Eintrag erhalten.`
+                  : 'Diese Aktion kann nicht rückgängig gemacht werden.';
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); if (confirmDeleteId) deleteTask(confirmDeleteId); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Lösche…' : 'Löschen'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
