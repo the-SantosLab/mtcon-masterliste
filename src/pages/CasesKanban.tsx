@@ -495,11 +495,11 @@ export default function CasesKanban() {
     const data = e.active.data.current as any;
     setActiveProject(null);
     setActiveCase(null);
-    const { over } = e;
+    const { over, active } = e;
     if (!over) return;
-    const targetStatus = over.id as string;
 
     if (data?.kind === 'project') {
+      const targetStatus = over.id as string;
       const card = data.card as ProjectCard;
       if (card.status === targetStatus) return;
       const { error } = await supabase
@@ -520,19 +520,59 @@ export default function CasesKanban() {
       const lbl = PROJECT_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
       toast.success(`Status auf "${lbl}" geändert`);
       fetchProjects();
-    } else if (data?.kind === 'case') {
+      return;
+    }
+
+    if (data?.kind === 'case') {
       const card = data.card as CaseCard;
-      const bulkIds: string[] | undefined = data.bulkIds;
-      const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
-      const { error } = await supabase
-        .from('cases')
-        .update({ status: targetStatus as Enums<'case_status'>, last_changed_at: new Date().toISOString(), last_changed_by: user?.id ?? null })
-        .in('id', ids);
-      if (error) { toast.error(error.message); return; }
-      const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
-      toast.success(ids.length > 1 ? `${ids.length} Vorgänge auf "${lbl}" verschoben` : `Status auf "${lbl}" geändert`);
-      if (ids.length > 1) exitSelectMode();
-      fetchCases();
+      const overData = over.data.current as any;
+      // Determine target status: either column id (over.id) or sibling card's status
+      const overIsColumn = CASE_STATUSES.some(s => s.id === over.id);
+      const targetStatus = overIsColumn ? (over.id as string) : (overData?.status as string) || card.status;
+
+      // Same column => reorder
+      if (targetStatus === card.status && !overIsColumn && over.id !== active.id) {
+        const colCards = caseColumns.find(c => c.id === card.status)?.cards || [];
+        const oldIndex = colCards.findIndex(c => c.id === active.id);
+        const newIndex = colCards.findIndex(c => c.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return;
+        const reordered = arrayMove(colCards, oldIndex, newIndex);
+        // Optimistic update
+        setCases(prev => {
+          const map = new Map(reordered.map((c, i) => [c.id, i]));
+          return prev.map(c => map.has(c.id) ? { ...c, priority_order: map.get(c.id)! } : c);
+        });
+        // Persist
+        const updates = reordered.map((c, i) =>
+          supabase.from('cases').update({ priority_order: i }).eq('id', c.id),
+        );
+        const results = await Promise.all(updates);
+        const failed = results.find(r => r.error);
+        if (failed?.error) { toast.error(failed.error.message); fetchCases(); }
+        return;
+      }
+
+      // Status change (column move)
+      if (targetStatus !== card.status) {
+        const bulkIds: string[] | undefined = data.bulkIds;
+        const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
+        const targetCol = caseColumns.find(c => c.id === targetStatus);
+        const baseOrder = (targetCol?.cards.length ?? 0);
+        const { error } = await supabase
+          .from('cases')
+          .update({
+            status: targetStatus as Enums<'case_status'>,
+            priority_order: baseOrder,
+            last_changed_at: new Date().toISOString(),
+            last_changed_by: user?.id ?? null,
+          })
+          .in('id', ids);
+        if (error) { toast.error(error.message); return; }
+        const lbl = CASE_STATUSES.find(s => s.id === targetStatus)?.label || targetStatus;
+        toast.success(ids.length > 1 ? `${ids.length} Vorgänge auf "${lbl}" verschoben` : `Status auf "${lbl}" geändert`);
+        if (ids.length > 1) exitSelectMode();
+        fetchCases();
+      }
     }
   };
 
