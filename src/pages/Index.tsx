@@ -35,6 +35,7 @@ const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] 
 export default function Dashboard() {
   const { user, profile } = useAuth();
   const [cases, setCases] = useState<CaseRow[]>([]);
+  const [myTasks, setMyTasks] = useState<Array<{ id: string; title: string; due_at: string | null; status: string; case_id: string; case: { id: string; case_no: string; project_name: string } | null }>>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
