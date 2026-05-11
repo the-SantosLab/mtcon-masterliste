@@ -448,7 +448,20 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false }
   };
 
   const deleteTask = async (taskId: string) => {
-    await supabase.from('case_tasks').delete().eq('id', taskId);
+    if (!confirm('Unteraufgabe wirklich löschen?')) return;
+    const { error, count } = await supabase
+      .from('case_tasks')
+      .delete({ count: 'exact' })
+      .eq('id', taskId);
+    if (error) {
+      toast.error('Löschen fehlgeschlagen: ' + error.message);
+      return;
+    }
+    if (!count) {
+      toast.error('Löschen nicht möglich – fehlende Berechtigung.');
+      return;
+    }
+    toast.success('Unteraufgabe gelöscht');
     fetchTasks();
   };
 
