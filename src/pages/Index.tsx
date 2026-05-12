@@ -109,6 +109,19 @@ export default function Dashboard() {
 
   // Bar chart: cases created per weekday this week (Mo-Fr) or per day this month
   const weekChart = useMemo(() => {
+    // Apply KPI filter to chart data when active
+    let pool: CaseRow[] = cases;
+    if (activeFilter) {
+      const activePool = cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status));
+      switch (activeFilter) {
+        case 'open': pool = activePool.filter(c => c.status === 'nicht_begonnen'); break;
+        case 'in_progress': pool = activePool.filter(c => ['in_arbeit', 'in_planung'].includes(c.status)); break;
+        case 'overdue': pool = activePool.filter(c => c.status === 'in_verzug' || (c.due_at && c.due_at < today)); break;
+        case 'today': pool = activePool.filter(c => c.due_at === today); break;
+        case 'week': pool = activePool.filter(c => c.due_at && c.due_at >= today && c.due_at <= weekEnd); break;
+      }
+    }
+
     if (chartRange === 'week') {
       const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
       const startOfWeek = new Date(now);
@@ -116,7 +129,7 @@ export default function Dashboard() {
       startOfWeek.setDate(startOfWeek.getDate() - day);
       startOfWeek.setHours(0, 0, 0, 0);
       const buckets: CaseRow[][] = [[], [], [], [], []];
-      cases.forEach(c => {
+      pool.forEach(c => {
         if (!c.created_at) return;
         const d = new Date(c.created_at);
         const diff = Math.floor((d.getTime() - startOfWeek.getTime()) / 86400000);
@@ -129,7 +142,7 @@ export default function Dashboard() {
     const month = now.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const buckets: CaseRow[][] = Array.from({ length: daysInMonth }, () => []);
-    cases.forEach(c => {
+    pool.forEach(c => {
       if (!c.created_at) return;
       const d = new Date(c.created_at);
       if (d.getFullYear() === year && d.getMonth() === month) {
@@ -137,7 +150,7 @@ export default function Dashboard() {
       }
     });
     return buckets.map((items, i) => ({ label: String(i + 1), value: items.length, items }));
-  }, [cases, now, chartRange]);
+  }, [cases, now, chartRange, activeFilter, today, weekEnd]);
 
   const [barDrill, setBarDrill] = useState<{ label: string; items: CaseRow[] } | null>(null);
 
