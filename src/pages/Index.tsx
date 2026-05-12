@@ -261,7 +261,9 @@ export default function Dashboard() {
             <div className="glass-card p-4 lg:p-5">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <h2 className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
-                  <span>{chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat'}</span>
+                  <span>{dueBased
+                    ? (chartRange === 'week' ? 'Fällige Vorgänge diese Woche' : 'Fällige Vorgänge diesen Monat')
+                    : (chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat')}</span>
                   {activeFilter && (
                     <button
                       type="button"
