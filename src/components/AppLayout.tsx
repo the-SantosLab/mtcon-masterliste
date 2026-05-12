@@ -28,7 +28,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
-import { QuickSettings } from '@/components/QuickSettings';
 
 
 interface AppLayoutProps {
@@ -176,12 +175,33 @@ export function AppLayout({ children }: AppLayoutProps) {
           )}
         </nav>
 
-        <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-center">
+        <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-between gap-2">
           <img
             src={isDark ? mtconErpLabel : mtconErpLabelLight}
             alt="MTCON goes ERP"
-            className="w-full max-w-[140px] h-auto opacity-90"
+            className="w-full max-w-[120px] h-auto opacity-90"
           />
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              title={isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
+              className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+            >
+              {isDark ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCompactTables(!isCompact)}
+              title={isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
+              className={cn(
+                'h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                isCompact && 'text-foreground'
+              )}
+            >
+              {isCompact ? <AlignJustify className="h-3 w-3" /> : <AlignLeft className="h-3 w-3" />}
+            </button>
+          </div>
         </div>
 
         <div className="border-t border-sidebar-border px-3 py-3 shrink-0">
@@ -252,9 +272,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]">{children}</main>
       </div>
 
-      <QuickSettings />
-
-      {/* Password change dialog */}
       <Dialog open={pwDialogOpen} onOpenChange={o => { if (!o) { setPwDialogOpen(false); setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false); } }}>
         <DialogContent>
           <DialogHeader>
