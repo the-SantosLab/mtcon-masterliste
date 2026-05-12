@@ -238,7 +238,7 @@ export default function Dashboard() {
             <div className="glass-card p-4 lg:p-5">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <h2 className="text-sm font-medium text-foreground">
-                  {chartRange === 'week' ? 'Vorgänge diese Woche' : 'Vorgänge diesen Monat'}
+                  {chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat'}
                 </h2>
                 <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
                   {(['week', 'month'] as const).map(r => (
