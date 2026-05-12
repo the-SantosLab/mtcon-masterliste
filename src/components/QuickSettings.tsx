@@ -10,7 +10,7 @@ export function QuickSettings() {
   return (
     <TooltipProvider delayDuration={300}>
       <div
-        className="fixed bottom-2 left-2 z-40 flex items-center gap-0.5 px-1 py-0.5 rounded-md border border-border/30 bg-card/40 backdrop-blur-sm opacity-40 hover:opacity-100 transition-opacity"
+        className="fixed bottom-2 left-[14.5rem] z-40 flex items-center gap-0.5 px-1 py-0.5 rounded-md border border-border/40 bg-card/70 backdrop-blur-sm shadow-sm"
         role="region"
         aria-label="Schnelleinstellungen"
       >
