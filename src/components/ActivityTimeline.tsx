@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ACTION_LABELS, FIELD_LABELS, formatRelativeTime } from '@/lib/case-utils';
 import type { Tables } from '@/integrations/supabase/types';
-import { CheckSquare } from 'lucide-react';
+import { CheckSquare, ChevronDown, ChevronUp } from 'lucide-react';
 
 type ActivityWithActor = Tables<'case_activity'> & {
   task_id?: string | null;
@@ -28,8 +28,10 @@ const formatValue = (field: string | null, value: string | null, profiles: Recor
 export function ActivityTimeline({ caseId, refreshKey }: ActivityTimelineProps) {
   const [activities, setActivities] = useState<ActivityWithActor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [depts, setDepts] = useState<Record<string, string>>({});
+  const LIMIT = 20;
 
   const fetchActivities = async () => {
     const { data } = await supabase
@@ -69,9 +71,12 @@ export function ActivityTimeline({ caseId, refreshKey }: ActivityTimelineProps) 
   if (loading) return <p className="text-xs text-muted-foreground p-4">Laden</p>;
   if (activities.length === 0) return <p className="text-xs text-muted-foreground p-4">Keine Aktivitäten</p>;
 
+  const visible = expanded ? activities : activities.slice(0, LIMIT);
+  const hiddenCount = activities.length - visible.length;
+
   return (
     <div className="divide-y divide-border">
-      {activities.map((a) => {
+      {visible.map((a) => {
         const isTask = !!a.task_id || (a.action || '').startsWith('task_');
         const fieldLabel = a.field ? (FIELD_LABELS[a.field] || a.field) : null;
         const oldV = formatValue(a.field, a.old_value, profiles, depts);
@@ -116,6 +121,18 @@ export function ActivityTimeline({ caseId, refreshKey }: ActivityTimelineProps) 
           </div>
         );
       })}
+      {activities.length > LIMIT && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+        >
+          {expanded ? (
+            <><ChevronUp className="h-3 w-3" />Weniger anzeigen</>
+          ) : (
+            <><ChevronDown className="h-3 w-3" />{hiddenCount} weitere anzeigen</>
+          )}
+        </button>
+      )}
     </div>
   );
 }
