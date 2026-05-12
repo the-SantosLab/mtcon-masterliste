@@ -28,7 +28,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
-import { QuickSettings } from '@/components/QuickSettings';
 
 
 interface AppLayoutProps {
