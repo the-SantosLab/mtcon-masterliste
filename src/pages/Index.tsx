@@ -107,7 +107,10 @@ export default function Dashboard() {
 
   const [chartRange, setChartRange] = useState<'week' | 'month'>('week');
 
-  // Bar chart: cases created per weekday this week (Mo-Fr) or per day this month
+  // Bar chart: cases bucketed per weekday (Mo-So) or per day this month.
+  // For due-date based filters (today/week/overdue) we bucket by due_at,
+  // otherwise by created_at.
+  const dueBased = activeFilter === 'today' || activeFilter === 'week' || activeFilter === 'overdue';
   const weekChart = useMemo(() => {
     // Apply KPI filter to chart data when active
     let pool: CaseRow[] = cases;
@@ -122,18 +125,24 @@ export default function Dashboard() {
       }
     }
 
+    const dateField = (c: CaseRow) => (dueBased ? c.due_at : c.created_at);
+
     if (chartRange === 'week') {
-      const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
+      const labels = dueBased
+        ? ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+        : ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
       const startOfWeek = new Date(now);
       const day = (startOfWeek.getDay() + 6) % 7;
       startOfWeek.setDate(startOfWeek.getDate() - day);
       startOfWeek.setHours(0, 0, 0, 0);
-      const buckets: CaseRow[][] = [[], [], [], [], []];
+      const len = labels.length;
+      const buckets: CaseRow[][] = Array.from({ length: len }, () => []);
       pool.forEach(c => {
-        if (!c.created_at) return;
-        const d = new Date(c.created_at);
+        const value = dateField(c);
+        if (!value) return;
+        const d = new Date(value);
         const diff = Math.floor((d.getTime() - startOfWeek.getTime()) / 86400000);
-        if (diff >= 0 && diff < 5) buckets[diff].push(c);
+        if (diff >= 0 && diff < len) buckets[diff].push(c);
       });
       return labels.map((label, i) => ({ label, value: buckets[i].length, items: buckets[i] }));
     }
@@ -143,14 +152,15 @@ export default function Dashboard() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const buckets: CaseRow[][] = Array.from({ length: daysInMonth }, () => []);
     pool.forEach(c => {
-      if (!c.created_at) return;
-      const d = new Date(c.created_at);
+      const value = dateField(c);
+      if (!value) return;
+      const d = new Date(value);
       if (d.getFullYear() === year && d.getMonth() === month) {
         buckets[d.getDate() - 1].push(c);
       }
     });
     return buckets.map((items, i) => ({ label: String(i + 1), value: items.length, items }));
-  }, [cases, now, chartRange, activeFilter, today, weekEnd]);
+  }, [cases, now, chartRange, activeFilter, today, weekEnd, dueBased]);
 
   const [barDrill, setBarDrill] = useState<{ label: string; items: CaseRow[] } | null>(null);
 
@@ -251,7 +261,9 @@ export default function Dashboard() {
             <div className="glass-card p-4 lg:p-5">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <h2 className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
-                  <span>{chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat'}</span>
+                  <span>{dueBased
+                    ? (chartRange === 'week' ? 'Fällige Vorgänge diese Woche' : 'Fällige Vorgänge diesen Monat')
+                    : (chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat')}</span>
                   {activeFilter && (
                     <button
                       type="button"
