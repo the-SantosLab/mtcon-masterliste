@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
+import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, STATUS_DOT_COLORS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
