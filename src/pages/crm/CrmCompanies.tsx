@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 
 const TYPES = [
   { key: 'all', label: 'Alle' },
@@ -26,6 +28,9 @@ export default function CrmCompanies() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', type: 'kunde', website: '', industry: '', country: '', customer_no: '' });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
   const load = async () => {
@@ -53,9 +58,16 @@ export default function CrmCompanies() {
     <CrmLayout>
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-xl font-semibold text-foreground">Unternehmen</h1>
-        <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Neu
-        </Button>
+        <div className="flex gap-2">
+          {selected.size > 0 && (
+            <Button onClick={() => setBulkOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+              <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
+            </Button>
+          )}
+          <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> Neu
+          </Button>
+        </div>
       </div>
 
       <Tabs value={filter} onValueChange={setFilter} className="mb-4">
