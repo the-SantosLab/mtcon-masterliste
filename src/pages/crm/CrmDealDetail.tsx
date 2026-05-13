@@ -166,6 +166,22 @@ export default function CrmDealDetail() {
         </div>
       </div>
 
+      {protections.length > 0 && !protectionAck && (
+        <div className="mb-5 p-3 rounded border border-amber-500/40 bg-amber-500/10 text-amber-100">
+          <p className="text-xs font-semibold mb-1">⚠ Projektschutz aktiv</p>
+          {protections.map(p => (
+            <p key={p.id} className="text-[11px] text-amber-100/90">
+              Distributor: <strong>{p.distributor_name}</strong> · Scope: {p.scope_type}{p.scope_detail ? ` (${p.scope_detail})` : ''}{p.valid_until ? ` · gültig bis ${new Date(p.valid_until).toLocaleDateString('de-DE')}` : ''}
+            </p>
+          ))}
+          <button onClick={() => setProtectionAck(true)} className="mt-2 text-[11px] underline hover:no-underline">Schutz zur Kenntnis genommen</button>
+        </div>
+      )}
+
+      <div className="mb-3 flex justify-end">
+        <button onClick={() => { setWikiOpen(true); setWikiQuery(''); setWikiResults([]); }} className="text-[11px] text-muted-foreground hover:text-foreground underline">Wiki durchsuchen</button>
+      </div>
+
       <div className="mb-5 flex flex-wrap gap-1.5">
         {STAGES.map(s => (
           <button
