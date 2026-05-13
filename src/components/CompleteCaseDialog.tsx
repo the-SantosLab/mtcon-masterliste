@@ -3,20 +3,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { NotifyToggle } from '@/components/NotifyToggle';
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  onConfirm: (note: string) => Promise<void> | void;
+  onConfirm: (note: string, sendEmail: boolean) => Promise<void> | void;
+  lastSentAt?: string | null;
 }
 
 const MIN_CHARS = 10;
 
-export function CompleteCaseDialog({ open, onOpenChange, onConfirm }: Props) {
+export function CompleteCaseDialog({ open, onOpenChange, onConfirm, lastSentAt }: Props) {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
 
-  const reset = () => { setNote(''); setSaving(false); };
+  const reset = () => { setNote(''); setSaving(false); setSendEmail(true); };
 
   const handleOpenChange = (o: boolean) => {
     if (!o) reset();
