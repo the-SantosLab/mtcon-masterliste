@@ -778,9 +778,7 @@ export default function CaseDetail() {
             )}
 
             {/* Tasks checklist */}
-            <div className={compactCls}>
-              <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} />
-            </div>
+            <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} />
 
             {/* Anhänge */}
             <div className="rounded-md border border-border bg-card p-5 space-y-5">
