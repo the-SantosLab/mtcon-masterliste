@@ -44,6 +44,10 @@ import CrmCompanies from "./pages/crm/CrmCompanies";
 import CrmCompanyDetail from "./pages/crm/CrmCompanyDetail";
 import CrmContacts from "./pages/crm/CrmContacts";
 import CrmStub from "./pages/crm/CrmStub";
+import CrmOffers from "./pages/crm/CrmOffers";
+import CrmOfferDetail from "./pages/crm/CrmOfferDetail";
+import CrmActivities from "./pages/crm/CrmActivities";
+import CrmSettings from "./pages/crm/CrmSettings";
 
 const queryClient = new QueryClient();
 
@@ -105,9 +109,11 @@ function AuthenticatedApp() {
         <Route path="/crm/companies" element={<CrmProtectedRoute><CrmCompanies /></CrmProtectedRoute>} />
         <Route path="/crm/companies/:id" element={<CrmProtectedRoute><CrmCompanyDetail /></CrmProtectedRoute>} />
         <Route path="/crm/contacts" element={<CrmProtectedRoute><CrmContacts /></CrmProtectedRoute>} />
-        <Route path="/crm/offers" element={<CrmProtectedRoute><CrmStub title="Angebote" /></CrmProtectedRoute>} />
-        <Route path="/crm/activities" element={<CrmProtectedRoute><CrmStub title="Aktivitäten" /></CrmProtectedRoute>} />
-        <Route path="/crm/settings" element={<CrmProtectedRoute><CrmStub title="Einstellungen" /></CrmProtectedRoute>} />
+        <Route path="/crm/offers" element={<CrmProtectedRoute><CrmOffers /></CrmProtectedRoute>} />
+        <Route path="/crm/offers/:id" element={<CrmProtectedRoute><CrmOfferDetail /></CrmProtectedRoute>} />
+        <Route path="/crm/activities" element={<CrmProtectedRoute><CrmActivities /></CrmProtectedRoute>} />
+        <Route path="/crm/settings" element={<CrmProtectedRoute><CrmSettings /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/preislisten" element={<CrmProtectedRoute><CrmSettings /></CrmProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>

@@ -780,9 +780,11 @@ export type Database = {
       }
       crm_activities: {
         Row: {
+          auto_generated: boolean
           body: string | null
           company_id: string | null
           completed_at: string | null
+          completed_by: string | null
           contact_id: string | null
           created_at: string
           deal_id: string | null
@@ -793,9 +795,11 @@ export type Database = {
           type: Database["public"]["Enums"]["crm_activity_type"]
         }
         Insert: {
+          auto_generated?: boolean
           body?: string | null
           company_id?: string | null
           completed_at?: string | null
+          completed_by?: string | null
           contact_id?: string | null
           created_at?: string
           deal_id?: string | null
@@ -806,9 +810,11 @@ export type Database = {
           type: Database["public"]["Enums"]["crm_activity_type"]
         }
         Update: {
+          auto_generated?: boolean
           body?: string | null
           company_id?: string | null
           completed_at?: string | null
+          completed_by?: string | null
           contact_id?: string | null
           created_at?: string
           deal_id?: string | null
@@ -1290,7 +1296,9 @@ export type Database = {
           discount_pct: number
           id: string
           offer_id: string
+          product_id: string | null
           quantity: number
+          sort_order: number
           unit_price: number
         }
         Insert: {
@@ -1298,7 +1306,9 @@ export type Database = {
           discount_pct?: number
           id?: string
           offer_id: string
+          product_id?: string | null
           quantity?: number
+          sort_order?: number
           unit_price?: number
         }
         Update: {
@@ -1306,7 +1316,9 @@ export type Database = {
           discount_pct?: number
           id?: string
           offer_id?: string
+          product_id?: string | null
           quantity?: number
+          sort_order?: number
           unit_price?: number
         }
         Relationships: [
@@ -1321,40 +1333,73 @@ export type Database = {
       }
       offers: {
         Row: {
+          accepted_at: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           deal_id: string
+          delivery_address: string | null
           id: string
+          notes: string | null
           offer_no: string
+          owner_id: string | null
+          parent_offer_id: string | null
+          payment_terms: string | null
+          pdf_url: string | null
+          primary_contact_id: string | null
+          rejected_at: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["offer_status"]
           total: number
           updated_at: string
           valid_until: string | null
+          version: number
         }
         Insert: {
+          accepted_at?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_id: string
+          delivery_address?: string | null
           id?: string
+          notes?: string | null
           offer_no?: string
+          owner_id?: string | null
+          parent_offer_id?: string | null
+          payment_terms?: string | null
+          pdf_url?: string | null
+          primary_contact_id?: string | null
+          rejected_at?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
           total?: number
           updated_at?: string
           valid_until?: string | null
+          version?: number
         }
         Update: {
+          accepted_at?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_id?: string
+          delivery_address?: string | null
           id?: string
+          notes?: string | null
           offer_no?: string
+          owner_id?: string | null
+          parent_offer_id?: string | null
+          payment_terms?: string | null
+          pdf_url?: string | null
+          primary_contact_id?: string | null
+          rejected_at?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["offer_status"]
           total?: number
           updated_at?: string
           valid_until?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -1409,6 +1454,60 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_list_items: {
+        Row: {
+          created_at: string
+          customer_tier: Database["public"]["Enums"]["customer_tier"]
+          id: string
+          is_active: boolean
+          min_quantity: number
+          price: number
+          price_list_id: string | null
+          product_id: string | null
+          updated_at: string
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_tier?: Database["public"]["Enums"]["customer_tier"]
+          id?: string
+          is_active?: boolean
+          min_quantity?: number
+          price?: number
+          price_list_id?: string | null
+          product_id?: string | null
+          updated_at?: string
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_tier?: Database["public"]["Enums"]["customer_tier"]
+          id?: string
+          is_active?: boolean
+          min_quantity?: number
+          price?: number
+          price_list_id?: string | null
+          product_id?: string | null
+          updated_at?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_list_items_price_list_id_fkey"
+            columns: ["price_list_id"]
+            isOneToOne: false
+            referencedRelation: "price_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_list_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -2220,6 +2319,7 @@ export type Database = {
         | "archiv"
       company_type: "kunde" | "distributor" | "mitbewerber"
       crm_activity_type: "call" | "email" | "meeting" | "task" | "note"
+      customer_tier: "standard" | "premium" | "distributor"
       deal_stage:
         | "anfrage"
         | "qualifikation"
@@ -2228,7 +2328,12 @@ export type Database = {
         | "won"
         | "lost"
       dept_permission: "none" | "read" | "write"
-      offer_status: "entwurf" | "versendet" | "angenommen" | "abgelehnt"
+      offer_status:
+        | "entwurf"
+        | "versendet"
+        | "angenommen"
+        | "abgelehnt"
+        | "abgelaufen"
       product_request_status: "ausstehend" | "genehmigt" | "abgelehnt"
       sequence_channel: "email" | "task"
       sequence_enrollment_status: "active" | "paused" | "done"
@@ -2380,6 +2485,7 @@ export const Constants = {
       ],
       company_type: ["kunde", "distributor", "mitbewerber"],
       crm_activity_type: ["call", "email", "meeting", "task", "note"],
+      customer_tier: ["standard", "premium", "distributor"],
       deal_stage: [
         "anfrage",
         "qualifikation",
@@ -2389,7 +2495,13 @@ export const Constants = {
         "lost",
       ],
       dept_permission: ["none", "read", "write"],
-      offer_status: ["entwurf", "versendet", "angenommen", "abgelehnt"],
+      offer_status: [
+        "entwurf",
+        "versendet",
+        "angenommen",
+        "abgelehnt",
+        "abgelaufen",
+      ],
       product_request_status: ["ausstehend", "genehmigt", "abgelehnt"],
       sequence_channel: ["email", "task"],
       sequence_enrollment_status: ["active", "paused", "done"],
