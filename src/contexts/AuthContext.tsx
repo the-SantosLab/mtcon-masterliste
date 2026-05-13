@@ -19,6 +19,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isStaff: boolean;
   isViewer: boolean;
+  isCrmBetaUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
