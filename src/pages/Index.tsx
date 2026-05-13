@@ -276,7 +276,7 @@ export default function Dashboard() {
             <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5 z-10">
               <div className="grid grid-cols-5 gap-2">
                 {KPI_DEFS.map(({ key, title, icon: Icon }) => {
-                  const isActive = activeFilter === key;
+                  const isActive = activeFilters.includes(key);
                   return (
                     <button
                       key={key}
