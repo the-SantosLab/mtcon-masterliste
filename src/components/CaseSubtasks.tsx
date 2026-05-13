@@ -209,6 +209,11 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const PAGE_SIZE = preferences.compactTables ? 5 : 20;
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [PAGE_SIZE]);
+  const [logBump, setLogBump] = useState(0);
+  const { lastByType, refresh: refreshLog } = useNotificationLog(caseId, logBump);
+  const [sendCreateEmail, setSendCreateEmail] = useState(true);
+  const [sendCompleteEmail, setSendCompleteEmail] = useState(true);
+  const [sendAssignEmail, setSendAssignEmail] = useState(true);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
