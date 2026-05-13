@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Loader2, Pencil } from 'lucide-react';
+import { Plus, Loader2, Pencil, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 
 export default function CrmContacts() {
   const [rows, setRows] = useState<any[]>([]);
@@ -16,7 +18,10 @@ export default function CrmContacts() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', position: '', company_id: '' });
+  const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
   const load = async () => {
@@ -47,7 +52,14 @@ export default function CrmContacts() {
     <CrmLayout>
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-xl font-semibold text-foreground">Kontakte</h1>
-        <Button onClick={openNew} size="sm" className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neu</Button>
+        <div className="flex gap-2">
+          {selected.size > 0 && (
+            <Button onClick={() => setBulkOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+              <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
+            </Button>
+          )}
+          <Button onClick={openNew} size="sm" className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neu</Button>
+        </div>
       </div>
 
       {loading ? (
@@ -57,6 +69,9 @@ export default function CrmContacts() {
           <table className="w-full text-xs">
             <thead className="bg-muted/40">
               <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-3 py-2 font-normal w-8">
+                  <Checkbox checked={selected.size > 0 && selected.size === rows.length} onCheckedChange={v => setSelected(v ? new Set(rows.map(r => r.id)) : new Set())} />
+                </th>
                 <th className="px-3 py-2 font-normal">Name</th>
                 <th className="px-3 py-2 font-normal">Unternehmen</th>
                 <th className="px-3 py-2 font-normal">Position</th>
@@ -68,6 +83,9 @@ export default function CrmContacts() {
             <tbody>
               {rows.map(r => (
                 <tr key={r.id} className="border-t border-border hover:bg-muted/30">
+                  <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
+                    <Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggle(r.id)} />
+                  </td>
                   <td className="px-3 py-2 text-foreground font-medium">{r.last_name}, {r.first_name}</td>
                   <td className="px-3 py-2 text-muted-foreground">{r.companies?.name ?? '–'}</td>
                   <td className="px-3 py-2 text-muted-foreground">{r.position ?? '–'}</td>
@@ -78,7 +96,7 @@ export default function CrmContacts() {
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">Keine Kontakte.</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">Keine Kontakte.</td></tr>}
             </tbody>
           </table>
         </div>
