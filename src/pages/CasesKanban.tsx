@@ -25,6 +25,8 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { format } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
+import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
+import { useCaseActions } from '@/hooks/useCaseActions';
 
 type ViewMode = 'projects' | 'cases';
 
@@ -319,6 +321,8 @@ export default function CasesKanban() {
   const [activeProject, setActiveProject] = useState<ProjectCard | null>(null);
   const [activeCase, setActiveCase] = useState<CaseCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingCloseIds, setPendingCloseIds] = useState<string[] | null>(null);
+  const { completeCase } = useCaseActions(user?.id, () => fetchCases());
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -556,6 +560,13 @@ export default function CasesKanban() {
       if (targetStatus !== card.status) {
         const bulkIds: string[] | undefined = data.bulkIds;
         const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
+
+        // Unify: closing always goes through CompleteCaseDialog (mandatory note + email + activity)
+        if (targetStatus === 'abgeschlossen') {
+          setPendingCloseIds(ids);
+          return;
+        }
+
         const targetCol = caseColumns.find(c => c.id === targetStatus);
         const baseOrder = (targetCol?.cards.length ?? 0);
         const { error } = await supabase
@@ -679,6 +690,19 @@ export default function CasesKanban() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <CompleteCaseDialog
+            open={!!pendingCloseIds}
+            onOpenChange={(o) => { if (!o) setPendingCloseIds(null); }}
+            onConfirm={async (note, sendEmail) => {
+              const ids = pendingCloseIds || [];
+              for (const id of ids) {
+                await completeCase(id, note, sendEmail);
+              }
+              if (ids.length > 1) exitSelectMode();
+              setPendingCloseIds(null);
+            }}
+          />
 
           {/* Legend */}
           {!isProjects && (

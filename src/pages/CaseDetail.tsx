@@ -358,16 +358,10 @@ export default function CaseDetail() {
 
   const changeStatus = async (newStatus: string) => {
     if (!c || !user) return;
+    // Unify: closing always goes through CompleteCaseDialog (mandatory note + email + activity)
     if (newStatus === 'abgeschlossen') {
-      const { data: openTasks } = await supabase
-        .from('case_tasks')
-        .select('id')
-        .eq('case_id', c.id)
-        .neq('status', 'done');
-      if (openTasks && openTasks.length > 0) {
-        toast.error(`Vorgang kann nicht abgeschlossen werden: ${openTasks.length} offene Unteraufgabe(n)`);
-        return;
-      }
+      setCompleteOpen(true);
+      return;
     }
     const old = c.status;
     const { error } = await supabase.from('cases').update({
