@@ -51,7 +51,19 @@ export default function CrmDealDetail() {
     setActivities(acts ?? []);
     setOffers(ofs ?? []);
     setReasons(lr ?? []);
+    if (d?.company_id) {
+      const { data: prot } = await supabase.from('project_protection').select('*').eq('company_id', d.company_id).eq('status', 'aktiv');
+      setProtections(prot ?? []);
+    } else { setProtections([]); }
     setLoading(false);
+  };
+
+  const searchWiki = async (q: string) => {
+    setWikiQuery(q);
+    if (!q.trim()) { setWikiResults([]); return; }
+    const { data } = await supabase.from('wiki_articles').select('id, title, body, tags')
+      .or(`title.ilike.%${q}%,body.ilike.%${q}%`).limit(10);
+    setWikiResults(data ?? []);
   };
 
   const save = async (patch?: any) => {
