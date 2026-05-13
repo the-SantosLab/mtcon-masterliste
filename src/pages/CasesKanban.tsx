@@ -25,6 +25,8 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { format } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
+import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
+import { useCaseActions } from '@/hooks/useCaseActions';
 
 type ViewMode = 'projects' | 'cases';
 
