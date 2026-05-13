@@ -3,20 +3,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { NotifyToggle } from '@/components/NotifyToggle';
 
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  onConfirm: (note: string) => Promise<void> | void;
+  onConfirm: (note: string, sendEmail: boolean) => Promise<void> | void;
+  lastSentAt?: string | null;
 }
 
 const MIN_CHARS = 10;
 
-export function CompleteCaseDialog({ open, onOpenChange, onConfirm }: Props) {
+export function CompleteCaseDialog({ open, onOpenChange, onConfirm, lastSentAt }: Props) {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
 
-  const reset = () => { setNote(''); setSaving(false); };
+  const reset = () => { setNote(''); setSaving(false); setSendEmail(true); };
 
   const handleOpenChange = (o: boolean) => {
     if (!o) reset();
@@ -27,7 +30,7 @@ export function CompleteCaseDialog({ open, onOpenChange, onConfirm }: Props) {
     if (note.trim().length < MIN_CHARS) return;
     setSaving(true);
     try {
-      await onConfirm(note.trim());
+      await onConfirm(note.trim(), sendEmail);
       reset();
       onOpenChange(false);
     } finally {
@@ -63,6 +66,14 @@ export function CompleteCaseDialog({ open, onOpenChange, onConfirm }: Props) {
               ? `Noch ${remaining} Zeichen bis zum Mindestmaß (${MIN_CHARS}).`
               : `${note.trim().length} Zeichen.`}
           </p>
+        </div>
+        <div className="border-t border-border pt-3">
+          <NotifyToggle
+            checked={sendEmail}
+            onChange={setSendEmail}
+            lastSentAt={lastSentAt}
+            recipientsHint="Ersteller, Bearbeiter, Watcher"
+          />
         </div>
         <DialogFooter>
           <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleOpenChange(false)} disabled={saving}>

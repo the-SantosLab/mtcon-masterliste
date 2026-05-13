@@ -32,6 +32,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { buildAllDayIcs, downloadIcs } from '@/lib/ics';
+import { NotificationCockpit } from '@/components/NotificationCockpit';
+import { NotifyToggle } from '@/components/NotifyToggle';
+import { useNotificationLog } from '@/hooks/useNotificationLog';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
@@ -58,6 +61,8 @@ export default function CaseDetail() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [dueChange, setDueChange] = useState<{ at: string; by_name: string | null } | null>(null);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [sendStatusEmail, setSendStatusEmail] = useState(true);
+  const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
   const navigate = useNavigate();
 
   const deleteCase = async () => {
@@ -388,8 +393,10 @@ export default function CaseDetail() {
       })
     ));
 
-    if (newStatus === 'in_arbeit' && old !== 'in_arbeit') {
-      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } }).catch(() => {});
+    if (newStatus === 'in_arbeit' && old !== 'in_arbeit' && sendStatusEmail) {
+      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } })
+        .then(() => setTimeout(() => refreshLog(), 1500))
+        .catch(() => {});
     }
 
     toast.success('Status geändert');
@@ -460,7 +467,12 @@ export default function CaseDetail() {
             <CompleteCaseDialog
               open={completeOpen}
               onOpenChange={setCompleteOpen}
-              onConfirm={async (note) => { await completeCase(c.id, note); setRefreshKey(k => k + 1); }}
+              lastSentAt={lastByType['vorgang_abgeschlossen']}
+              onConfirm={async (note, sendEmail) => {
+                await completeCase(c.id, note, sendEmail);
+                setRefreshKey(k => k + 1);
+                setTimeout(() => refreshLog(), 1500);
+              }}
             />
             {canEdit && (
               <Button variant="outline" size="sm" onClick={duplicateCase} className="h-8 text-xs gap-1.5">
@@ -499,6 +511,9 @@ export default function CaseDetail() {
             )}
           </div>
         </div>
+
+        <NotificationCockpit caseId={c.id} refreshKey={refreshKey} />
+
 
 
         <div className="grid lg:grid-cols-3 gap-4">
@@ -617,14 +632,23 @@ export default function CaseDetail() {
             </div>
 
             {canEdit && !isTerminalStatus(c.status) && (
-              <div className="rounded-md border border-border bg-card px-5 py-2">
-                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Status ändern</h3>
-                <Select value={c.status} onValueChange={changeStatus}>
-                  <SelectTrigger className="w-[180px] h-8 text-[13px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="rounded-md border border-border bg-card px-5 py-2 space-y-2">
+                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Status ändern</h3>
+                <div className="flex flex-wrap items-end gap-4">
+                  <Select value={c.status} onValueChange={changeStatus}>
+                    <SelectTrigger className="w-[180px] h-8 text-[13px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <NotifyToggle
+                    checked={sendStatusEmail}
+                    onChange={setSendStatusEmail}
+                    lastSentAt={lastByType['abgeholt']}
+                    label='E-Mail bei „In Arbeit" an Ersteller'
+                    recipientsHint="nur beim Wechsel auf In Arbeit"
+                  />
+                </div>
               </div>
             )}
 

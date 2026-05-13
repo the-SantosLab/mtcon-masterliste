@@ -31,6 +31,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { NotifyToggle } from '@/components/NotifyToggle';
+import { useNotificationLog } from '@/hooks/useNotificationLog';
 
 interface Subtask {
   id: string;
@@ -207,6 +209,11 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const PAGE_SIZE = preferences.compactTables ? 5 : 20;
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [PAGE_SIZE]);
+  const [logBump, setLogBump] = useState(0);
+  const { lastByType, refresh: refreshLog } = useNotificationLog(caseId, logBump);
+  const [sendCreateEmail, setSendCreateEmail] = useState(true);
+  const [sendCompleteEmail, setSendCompleteEmail] = useState(true);
+  const [sendAssignEmail, setSendAssignEmail] = useState(true);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
@@ -334,7 +341,11 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     await autoForward(task);
 
     // Notify watchers via email (fire-and-forget)
-    supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } }).catch(() => {});
+    if (sendCompleteEmail) {
+      supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } })
+        .then(() => setTimeout(() => { setLogBump(b => b + 1); }, 1500))
+        .catch(() => {});
+    }
 
     if (sequentialMode) {
       const idx = sortedTasks.findIndex(t => t.id === task.id);
@@ -455,8 +466,10 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const val = assigneeId === '_none' ? null : assigneeId;
     const { error } = await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
     if (error) { toast.error('Fehler: ' + error.message); return; }
-    if (val && val !== userId) {
-      supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } }).catch(() => {});
+    if (val && val !== userId && sendAssignEmail) {
+      supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } })
+        .then(() => setTimeout(() => { setLogBump(b => b + 1); }, 1500))
+        .catch(() => {});
     }
     fetchTasks();
   };
@@ -986,6 +999,17 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </Button>
         </div>
       )}
+      {canEdit && (
+        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
+          <NotifyToggle
+            checked={sendAssignEmail}
+            onChange={setSendAssignEmail}
+            lastSentAt={lastByType['task_assigned']}
+            label="E-Mail bei Zuweisung von Unteraufgaben senden"
+            recipientsHint="an neuen Bearbeiter"
+          />
+        </div>
+      )}
 
       <Dialog open={!!completingTask} onOpenChange={(o) => { if (!o) { setCompletingTask(null); setCompletionNote(''); } }}>
         <DialogContent className="max-w-md">
@@ -1002,6 +1026,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
               className="text-xs min-h-[100px]"
               autoFocus
             />
+            <div className="border-t border-border pt-2">
+              <NotifyToggle
+                checked={sendCompleteEmail}
+                onChange={setSendCompleteEmail}
+                lastSentAt={lastByType['task_abgeschlossen']}
+                recipientsHint="an Watcher des Vorgangs"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" size="sm" onClick={() => { setCompletingTask(null); setCompletionNote(''); }} className="h-8 text-xs">Abbrechen</Button>

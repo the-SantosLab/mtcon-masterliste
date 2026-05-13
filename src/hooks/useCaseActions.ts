@@ -51,7 +51,7 @@ export function useCaseActions(userId: string | undefined, onSuccess?: () => voi
     onSuccess?.();
   };
 
-  const completeCase = async (caseId: string, closingNote?: string) => {
+  const completeCase = async (caseId: string, closingNote?: string, sendEmail: boolean = true) => {
     if (!userId) return;
     const now = new Date().toISOString();
 
@@ -102,9 +102,15 @@ export function useCaseActions(userId: string | undefined, onSuccess?: () => voi
     if (c && c.created_by && c.created_by !== userId) {
       await notifyUser(c.created_by, 'status_change', `Vorgang abgeschlossen: ${c.case_no}`, c.project_name, `/cases/${c.id}`);
     }
+    if (sendEmail) {
+      supabase.functions.invoke('notify-vorgang-abgeschlossen', {
+        body: { caseId, actorId: userId, note: closingNote || '' },
+      }).catch(() => {});
+    }
     toast.success('Vorgang abgeschlossen');
     onSuccess?.();
   };
 
   return { claimCase, unclaimCase, completeCase };
 }
+
