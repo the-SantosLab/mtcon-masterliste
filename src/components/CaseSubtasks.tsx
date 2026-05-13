@@ -1026,6 +1026,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
               className="text-xs min-h-[100px]"
               autoFocus
             />
+            <div className="border-t border-border pt-2">
+              <NotifyToggle
+                checked={sendCompleteEmail}
+                onChange={setSendCompleteEmail}
+                lastSentAt={lastByType['task_abgeschlossen']}
+                recipientsHint="an Watcher des Vorgangs"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" size="sm" onClick={() => { setCompletingTask(null); setCompletionNote(''); }} className="h-8 text-xs">Abbrechen</Button>
