@@ -65,6 +65,7 @@ export function CompleteCaseDialog({ open, onOpenChange, onConfirm, lastSentAt }
             {remaining > 0
               ? `Noch ${remaining} Zeichen bis zum Mindestmaß (${MIN_CHARS}).`
               : `${note.trim().length} Zeichen.`}
+          </p>
         </div>
         <div className="border-t border-border pt-3">
           <NotifyToggle
