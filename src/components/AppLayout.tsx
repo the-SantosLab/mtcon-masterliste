@@ -203,20 +203,20 @@ export function AppLayout({ children }: AppLayoutProps) {
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
               title={isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
-              className="h-[80px] w-[80px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              className="h-[100px] w-[100px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
             >
-              {isDark ? <Sun className="h-[60px] w-[60px]" /> : <Moon className="h-[60px] w-[60px]" />}
+              {isDark ? <Sun className="h-[80px] w-[80px]" /> : <Moon className="h-[80px] w-[80px]" />}
             </button>
             <button
               type="button"
               onClick={() => setCompactTables(!isCompact)}
               title={isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               className={cn(
-                'h-[80px] w-[80px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                'h-[100px] w-[100px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
                 isCompact && 'text-foreground'
               )}
             >
-              {isCompact ? <AlignJustify className="h-[60px] w-[60px]" /> : <AlignLeft className="h-[60px] w-[60px]" />}
+              {isCompact ? <AlignJustify className="h-[80px] w-[80px]" /> : <AlignLeft className="h-[80px] w-[80px]" />}
             </button>
           </div>
         </div>
