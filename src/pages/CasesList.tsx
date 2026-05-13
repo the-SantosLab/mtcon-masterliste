@@ -31,7 +31,10 @@ export default function CasesList() {
   const { user, isAdmin, isViewer } = useAuth();
   const { preferences } = usePreferences();
   const compact = preferences.compactTables;
-  const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
+  // Kompakt: einzeilig + ~0.75x Schriftgröße ggü. Normalansicht
+  const cellCls = compact
+    ? 'px-3 py-1 text-[10px] whitespace-nowrap'
+    : 'px-4 py-2.5 text-sm';
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [profiles, setProfiles] = useState<Tables<'users_profile'>[]>([]);
   const [departments, setDepartments] = useState<DeptFilterOption[]>([]);
