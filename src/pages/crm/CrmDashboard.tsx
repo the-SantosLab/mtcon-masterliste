@@ -52,13 +52,16 @@ export default function CrmDashboard() {
     setStaleDeals(stale);
   };
 
-  const KPI = ({ label, value, icon: Icon }: any) => (
-    <div className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
+  const KPI = ({ label, value, icon: Icon, accentColor }: any) => (
+    <div
+      className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4"
+      style={{ borderLeft: `4px solid ${accentColor}` }}
+    >
       <div className="flex items-center justify-between mb-2">
         <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className="h-4 w-4" style={{ color: accentColor }} />
       </div>
-      <p className="text-2xl font-semibold text-foreground tabular-nums">{value}</p>
+      <p className="text-2xl font-semibold tabular-nums" style={{ color: accentColor }}>{value}</p>
     </div>
   );
 
@@ -66,10 +69,10 @@ export default function CrmDashboard() {
     <CrmLayout>
       <h1 className="text-xl font-semibold text-foreground mb-5">CRM-Dashboard</h1>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <KPI label="Offene Deals" value={kpi.open} icon={Briefcase} />
-        <KPI label="Angebote versendet" value={kpi.sent} icon={FileText} />
-        <KPI label="Won (7 Tage)" value={kpi.wonWeek} icon={Trophy} />
-        <KPI label="Pipeline-Wert" value={formatEUR(kpi.pipeline)} icon={TrendingUp} />
+        <KPI label="Offene Deals" value={kpi.open} icon={Briefcase} accentColor="hsl(var(--status-open))" />
+        <KPI label="Angebote versendet" value={kpi.sent} icon={FileText} accentColor="hsl(var(--status-working))" />
+        <KPI label="Won (7 Tage)" value={kpi.wonWeek} icon={Trophy} accentColor="hsl(var(--status-done))" />
+        <KPI label="Pipeline-Wert" value={formatEUR(kpi.pipeline)} icon={TrendingUp} accentColor="hsl(var(--status-overdue))" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
