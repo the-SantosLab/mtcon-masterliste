@@ -2012,6 +2012,48 @@ export type Database = {
           },
         ]
       }
+      sequence_step_executions: {
+        Row: {
+          enrollment_id: string
+          executed_at: string
+          executed_by: string | null
+          id: string
+          result: string | null
+          step_id: string
+        }
+        Insert: {
+          enrollment_id: string
+          executed_at?: string
+          executed_by?: string | null
+          id?: string
+          result?: string | null
+          step_id: string
+        }
+        Update: {
+          enrollment_id?: string
+          executed_at?: string
+          executed_by?: string | null
+          id?: string
+          result?: string | null
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_step_executions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "sequence_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sequence_step_executions_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "sequence_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sequence_steps: {
         Row: {
           body: string | null
@@ -2503,6 +2545,12 @@ export type Database = {
         | "won"
         | "lost"
       dept_permission: "none" | "read" | "write"
+      enrollment_status:
+        | "aktiv"
+        | "pausiert"
+        | "abgeschlossen"
+        | "abgemeldet"
+        | "geantwortet"
       lead_source: "manuell" | "csv" | "linkedin" | "look-a-like"
       lead_status:
         | "neu"
@@ -2521,6 +2569,8 @@ export type Database = {
       protection_status: "aktiv" | "abgelaufen" | "strittig"
       sequence_channel: "email" | "task"
       sequence_enrollment_status: "active" | "paused" | "done"
+      sequence_status: "aktiv" | "pausiert"
+      sequence_step_type: "email" | "wait" | "task"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -2679,6 +2729,13 @@ export const Constants = {
         "lost",
       ],
       dept_permission: ["none", "read", "write"],
+      enrollment_status: [
+        "aktiv",
+        "pausiert",
+        "abgeschlossen",
+        "abgemeldet",
+        "geantwortet",
+      ],
       lead_source: ["manuell", "csv", "linkedin", "look-a-like"],
       lead_status: [
         "neu",
@@ -2699,6 +2756,8 @@ export const Constants = {
       protection_status: ["aktiv", "abgelaufen", "strittig"],
       sequence_channel: ["email", "task"],
       sequence_enrollment_status: ["active", "paused", "done"],
+      sequence_status: ["aktiv", "pausiert"],
+      sequence_step_type: ["email", "wait", "task"],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
         "open",
