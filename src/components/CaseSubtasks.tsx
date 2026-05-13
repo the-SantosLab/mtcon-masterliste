@@ -30,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
+import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface Subtask {
   id: string;
