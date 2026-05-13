@@ -182,6 +182,7 @@ export function CaseEmails({ caseId }: Props) {
                       {e.attachments.filter(a => !pendingDelete.has(a.id)).map(a => (
                         <div
                           key={a.id}
+                          data-compact-row
                           className="inline-flex items-center gap-0.5 text-[11px] rounded bg-background border border-border text-foreground overflow-hidden"
                         >
                           <button
