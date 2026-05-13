@@ -48,6 +48,7 @@ export function CaseEmails({ caseId }: Props) {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [pendingDelete, setPendingDelete] = useState<Set<string>>(new Set());
 
   const fetchEmails = async () => {
     const { data, error } = await (supabase as any)
