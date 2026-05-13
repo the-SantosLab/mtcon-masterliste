@@ -31,6 +31,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { NotifyToggle } from '@/components/NotifyToggle';
+import { useNotificationLog } from '@/hooks/useNotificationLog';
 
 interface Subtask {
   id: string;
