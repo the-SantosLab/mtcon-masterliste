@@ -645,7 +645,7 @@ export default function CaseDetail() {
                     checked={sendStatusEmail}
                     onChange={setSendStatusEmail}
                     lastSentAt={lastByType['abgeholt']}
-                    label="E-Mail bei „In Arbeit" an Ersteller"
+                    label='E-Mail bei „In Arbeit" an Ersteller'
                     recipientsHint="nur beim Wechsel auf In Arbeit"
                   />
                 </div>
