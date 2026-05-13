@@ -502,7 +502,7 @@ export default function CaseDetail() {
 
 
         <div className="grid lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 min-w-0">
             <div className="rounded-md border border-border bg-card p-5">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Details</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
@@ -823,9 +823,9 @@ export default function CaseDetail() {
 
             {/* Ticket-Verlauf */}
             {c.note && c.note.includes('--- Ticket-Verlauf:') && (
-              <div className="rounded-md border border-border bg-card p-5 space-y-2">
+              <div className="rounded-md border border-border bg-card p-5 space-y-2 min-w-0 overflow-hidden">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ticket-Verlauf</h3>
-                <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">{c.note}</pre>
+                <pre className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed font-sans max-w-full">{c.note}</pre>
               </div>
             )}
 
