@@ -55,6 +55,18 @@ export function useCaseActions(userId: string | undefined, onSuccess?: () => voi
     if (!userId) return;
     const now = new Date().toISOString();
 
+    // Block completion if there are unfinished subtasks
+    const { data: openTasks, error: tasksErr } = await supabase
+      .from('case_tasks')
+      .select('id, title, status')
+      .eq('case_id', caseId)
+      .neq('status', 'done');
+    if (tasksErr) { toast.error('Fehler beim Prüfen der Unteraufgaben'); return; }
+    if (openTasks && openTasks.length > 0) {
+      toast.error(`Vorgang kann nicht abgeschlossen werden: ${openTasks.length} offene Unteraufgabe(n)`);
+      return;
+    }
+
     // Save closing note first (if provided), so it appears in Notizen
     if (closingNote && closingNote.trim()) {
       const body = `**Abschlussnotiz**\n\n${closingNote.trim()}`;
