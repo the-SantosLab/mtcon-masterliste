@@ -32,6 +32,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { buildAllDayIcs, downloadIcs } from '@/lib/ics';
+import { NotificationCockpit } from '@/components/NotificationCockpit';
+import { NotifyToggle } from '@/components/NotifyToggle';
+import { useNotificationLog } from '@/hooks/useNotificationLog';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
