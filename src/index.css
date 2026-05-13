@@ -234,6 +234,14 @@
   }
 }
 
+/* Kompaktansicht für Vorgangsliste: erzwingt einzeilige Zellen
+   und reduziert Schriftgröße aller Nachfahren auf ~0.75x. */
+.cases-table-compact table { font-size: 10px; line-height: 1.25; }
+.cases-table-compact td,
+.cases-table-compact th { white-space: nowrap; }
+.cases-table-compact td *,
+.cases-table-compact th * { font-size: inherit !important; line-height: inherit !important; white-space: nowrap !important; }
+
 /* ============================================================
    PRINT STYLES — Documentation PDF Export
 ============================================================ */
