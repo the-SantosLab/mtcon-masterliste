@@ -322,7 +322,7 @@ export default function CasesKanban() {
   const [activeCase, setActiveCase] = useState<CaseCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingCloseIds, setPendingCloseIds] = useState<string[] | null>(null);
-  const { completeCase } = useCaseActions(() => fetchCases());
+  const { completeCase } = useCaseActions(user?.id, () => fetchCases());
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
