@@ -125,7 +125,10 @@ export default function Dashboard() {
     week: active.filter(c => c.due_at && c.due_at >= today && c.due_at <= weekEnd).length,
   };
 
-  const available = cases.filter(c => !c.assignee_id && !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)).slice(0, 10);
+  const available = cases
+    .filter(c => !c.assignee_id && !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
 
   const [chartRange, setChartRange] = useState<ChartRange>('week');
 
