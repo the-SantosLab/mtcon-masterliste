@@ -76,11 +76,44 @@ export default function CrmEnrollments() {
   const confirmEmail = async () => {
     if (!draft) return;
     const { enrollment, step, steps, subject, body } = draft;
-    window.location.href = `mailto:${enrollment.contacts?.email ?? ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    await supabase.from('crm_activities').insert({
-      company_id: enrollment.companies?.id, contact_id: enrollment.contacts?.id,
+    const contactId = enrollment.contacts?.id;
+    const toEmail = enrollment.contacts?.email;
+
+    if (!toEmail) { toast.error('Kontakt hat keine E-Mail-Adresse'); return; }
+
+    // Unsubscribe-Check
+    if (contactId) {
+      const { data: unsub } = await supabase.from('crm_unsubscribes')
+        .select('is_unsubscribed').eq('contact_id', contactId).maybeSingle();
+      if (unsub?.is_unsubscribed) {
+        toast.error('Kontakt hat sich abgemeldet — E-Mail nicht gesendet');
+        await supabase.from('sequence_enrollments').update({ status: 'pausiert', paused_at: new Date().toISOString() }).eq('id', enrollment.id);
+        setDraft(null); void load();
+        return;
+      }
+    }
+
+    // Aktivität anlegen (für Tracking-Verknüpfung)
+    const { data: act } = await supabase.from('crm_activities').insert({
+      company_id: enrollment.companies?.id, contact_id: contactId,
       type: 'email', subject, body, owner_id: user?.id, auto_generated: true,
+    }).select('id').single();
+
+    const { data, error } = await supabase.functions.invoke('crm-send-email', {
+      body: {
+        to: toEmail, subject, body,
+        contact_id: contactId, enrollment_id: enrollment.id,
+        step_number: enrollment.current_step_index + 1,
+        activity_id: act?.id,
+      },
     });
+
+    if (error || !data?.success) {
+      toast.error(data?.error === 'unsubscribed' ? 'Kontakt hat sich abgemeldet' : 'E-Mail konnte nicht gesendet werden');
+      return;
+    }
+
+    toast.success('E-Mail wurde gesendet');
     await supabase.from('sequence_step_executions').insert({ enrollment_id: enrollment.id, step_id: step.id, executed_by: user?.id, result: 'email_sent' });
     await advance(enrollment, steps);
     setDraft(null);
