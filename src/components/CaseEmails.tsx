@@ -179,7 +179,7 @@ export function CaseEmails({ caseId }: Props) {
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Anhänge</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {e.attachments.map(a => (
+                      {e.attachments.filter(a => !pendingDelete.has(a.id)).map(a => (
                         <div
                           key={a.id}
                           className="inline-flex items-center gap-0.5 text-[11px] rounded bg-background border border-border text-foreground overflow-hidden"
