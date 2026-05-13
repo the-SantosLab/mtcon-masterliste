@@ -1,91 +1,153 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { formatEUR } from '@/lib/crm';
-import { Briefcase, FileText, Trophy, TrendingUp } from 'lucide-react';
+import { formatEUR, STAGES, stageColor, StageKey } from '@/lib/crm';
+import { Briefcase, FileText, Trophy, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, CartesianGrid } from 'recharts';
+import { toast } from 'sonner';
 
-interface Kpi { open: number; sent: number; wonWeek: number; pipeline: number; }
+const FORECAST_WEIGHT: Partial<Record<StageKey, number>> = { anfrage: 0.1, qualifikation: 0.3, angebot_versendet: 0.5, verhandlung: 0.7, won: 1, lost: 0 };
 
 export default function CrmDashboard() {
   const { user } = useAuth();
-  const [kpi, setKpi] = useState<Kpi>({ open: 0, sent: 0, wonWeek: 0, pipeline: 0 });
-  const [overdueActs, setOverdueActs] = useState<any[]>([]);
-  const [staleDeals, setStaleDeals] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
 
   useEffect(() => { void load(); }, [user?.id]);
 
   const load = async () => {
-    const [{ data: deals }, { data: offers }, { data: acts }] = await Promise.all([
+    const [{ data: d }, { data: o }, { data: a }] = await Promise.all([
       supabase.from('deals').select('id, title, stage, value_estimated, value_final, stage_changed_at, owner_id, companies(name)'),
       supabase.from('offers').select('id, status, sent_at'),
-      supabase.from('crm_activities').select('id, subject, due_at, completed_at, deal_id, owner_id, deals(title)').eq('owner_id', user?.id ?? '').is('completed_at', null),
+      supabase.from('crm_activities').select('*, deals(title)').is('completed_at', null),
     ]);
-    const all = deals ?? [];
-    const open = all.filter(d => !['won','lost'].includes(d.stage)).length;
-    const sent = (offers ?? []).filter(o => o.status === 'versendet').length;
-    const weekAgo = Date.now() - 7 * 86400000;
-    const wonWeek = all.filter(d => d.stage === 'won' && new Date(d.stage_changed_at).getTime() >= weekAgo).length;
-    const pipeline = all.filter(d => !['won','lost'].includes(d.stage))
-      .reduce((s, d) => s + Number(d.value_estimated ?? 0), 0);
-    setKpi({ open, sent, wonWeek, pipeline });
-
-    const today = new Date(); today.setHours(23,59,59,999);
-    setOverdueActs((acts ?? []).filter(a => a.due_at && new Date(a.due_at) <= today));
-
-    // Deals without activity 7+ days
-    const dealIds = all.map(d => d.id);
-    const { data: lastActs } = dealIds.length
-      ? await supabase.from('crm_activities').select('deal_id, created_at').in('deal_id', dealIds).order('created_at', { ascending: false })
-      : { data: [] as any[] };
-    const lastByDeal = new Map<string, string>();
-    for (const a of (lastActs ?? [])) if (!lastByDeal.has(a.deal_id)) lastByDeal.set(a.deal_id, a.created_at);
-    const stale = all
-      .filter(d => !['won','lost'].includes(d.stage))
-      .filter(d => {
-        const last = lastByDeal.get(d.id);
-        const ref = last ? new Date(last).getTime() : new Date(d.stage_changed_at).getTime();
-        return Date.now() - ref >= 7 * 86400000;
-      })
-      .slice(0, 8);
-    setStaleDeals(stale);
+    setDeals(d ?? []); setOffers(o ?? []); setActivities(a ?? []);
   };
 
-  const KPI = ({ label, value, icon: Icon, accentColor }: any) => (
-    <div
-      className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4"
-      style={{ borderLeft: `4px solid ${accentColor}` }}
-    >
+  const open = deals.filter(d => !['won', 'lost'].includes(d.stage));
+  const won = deals.filter(d => d.stage === 'won');
+  const lost = deals.filter(d => d.stage === 'lost');
+  const pipelineValue = open.reduce((s, d) => s + Number(d.value_estimated ?? 0), 0);
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const monthWon = won.filter(d => new Date(d.stage_changed_at) >= monthStart).reduce((s, d) => s + Number(d.value_final ?? 0), 0);
+  const monthForecast = monthWon + open.filter(d => d.stage === 'verhandlung').reduce((s, d) => s + Number(d.value_estimated ?? 0) * 0.7, 0);
+  const sentOpen = offers.filter(o => o.status === 'versendet').length;
+  const winRate = won.length + lost.length > 0 ? Math.round((won.length / (won.length + lost.length)) * 100) : 0;
+
+  const chartData = useMemo(() => {
+    const months: { key: string; label: string; actual: number; forecast: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      months.push({ key, label: d.toLocaleDateString('de-DE', { month: 'short' }), actual: 0, forecast: 0 });
+    }
+    for (const d of won) {
+      const dt = new Date(d.stage_changed_at);
+      const k = `${dt.getFullYear()}-${dt.getMonth()}`;
+      const m = months.find(x => x.key === k); if (m) m.actual += Number(d.value_final ?? 0);
+    }
+    // forecast for current month
+    const cur = months[months.length - 1];
+    cur.forecast = open.reduce((s, d) => s + Number(d.value_estimated ?? 0) * (FORECAST_WEIGHT[d.stage as StageKey] ?? 0), 0);
+    return months;
+  }, [deals]);
+
+  const funnel = STAGES.filter(s => !['won', 'lost'].includes(s.key)).map((s, i, arr) => {
+    const stageDeals = deals.filter(d => d.stage === s.key);
+    const value = stageDeals.reduce((sum, d) => sum + Number(d.value_estimated ?? 0), 0);
+    let conv: number | null = null;
+    if (i === arr.length - 1) {
+      const totalAfter = won.length + lost.length;
+      conv = totalAfter ? Math.round((won.length / totalAfter) * 100) : null;
+    }
+    return { ...s, count: stageDeals.length, value, conv };
+  });
+
+  const stuckDeals = open.filter(d => Date.now() - new Date(d.stage_changed_at).getTime() > 14 * 86400000);
+
+  const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+  const myToday = activities.filter(a => a.owner_id === user?.id && a.due_at && new Date(a.due_at) <= todayEnd);
+
+  const toggleDone = async (a: any) => {
+    const { error } = await supabase.from('crm_activities').update({ completed_at: new Date().toISOString(), completed_by: user?.id }).eq('id', a.id);
+    if (error) toast.error(error.message); else void load();
+  };
+
+  const KPI = ({ label, value, icon: Icon, color }: any) => (
+    <div className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4" style={{ borderLeft: `4px solid ${color}` }}>
       <div className="flex items-center justify-between mb-2">
         <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
-        <Icon className="h-4 w-4" style={{ color: accentColor }} />
+        <Icon className="h-4 w-4" style={{ color }} />
       </div>
-      <p className="text-2xl font-semibold tabular-nums" style={{ color: accentColor }}>{value}</p>
+      <p className="text-2xl font-semibold tabular-nums" style={{ color }}>{value}</p>
     </div>
   );
 
   return (
     <CrmLayout>
-      <h1 className="text-xl font-semibold text-foreground mb-5">CRM-Dashboard</h1>
+      <h1 className="text-xl font-semibold mb-5">CRM-Dashboard</h1>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <KPI label="Offene Deals" value={kpi.open} icon={Briefcase} accentColor="hsl(var(--status-open))" />
-        <KPI label="Angebote versendet" value={kpi.sent} icon={FileText} accentColor="hsl(var(--status-working))" />
-        <KPI label="Won (7 Tage)" value={kpi.wonWeek} icon={Trophy} accentColor="hsl(var(--status-done))" />
-        <KPI label="Pipeline-Wert" value={formatEUR(kpi.pipeline)} icon={TrendingUp} accentColor="hsl(var(--status-overdue))" />
+        <KPI label="Pipeline-Wert" value={formatEUR(pipelineValue)} icon={Briefcase} color="hsl(var(--status-open))" />
+        <KPI label="Forecast Monat" value={formatEUR(monthForecast)} icon={TrendingUp} color="hsl(var(--status-working))" />
+        <KPI label="Angebote offen" value={sentOpen} icon={FileText} color="hsl(var(--status-overdue))" />
+        <KPI label="Won-Rate" value={`${winRate}%`} icon={Trophy} color="hsl(var(--status-done))" />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4 mb-4">
+        <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
+          <h2 className="text-sm font-semibold mb-3">Forecast — letzte 6 Monate</h2>
+          <div className="h-56">
+            <ResponsiveContainer>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
+                <Tooltip formatter={(v: any) => formatEUR(Number(v))} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="actual" name="Tatsächlich" fill="hsl(var(--status-done))" />
+                <Bar dataKey="forecast" name="Forecast" fill="hsl(var(--status-working))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
+          <h2 className="text-sm font-semibold mb-3">Pipeline-Funnel</h2>
+          <ul className="space-y-1.5">
+            {funnel.map(s => (
+              <li key={s.key} className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded" style={{ background: stageColor(s.key as StageKey) }} />
+                <span className="text-xs flex-1">{s.label}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{s.count} · {formatEUR(s.value)}</span>
+              </li>
+            ))}
+            <li className="flex items-center gap-2 pt-2 border-t border-border">
+              <span className="text-xs flex-1 text-muted-foreground">Angebot → Won</span>
+              <span className="text-xs font-semibold tabular-nums">{winRate}%</span>
+            </li>
+          </ul>
+        </section>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
         <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Meine offenen Aktivitäten</h2>
-          {overdueActs.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Keine fälligen Aktivitäten.</p>
+          <h2 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Engpass — &gt;14 Tage in Stage
+          </h2>
+          {stuckDeals.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Keine Engpässe.</p>
           ) : (
             <ul className="space-y-1">
-              {overdueActs.map(a => (
-                <li key={a.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
-                  <Link to={a.deal_id ? `/crm/deals/${a.deal_id}` : '/crm/activities'} className="text-foreground hover:text-primary truncate">{a.subject}</Link>
-                  <span className="text-muted-foreground tabular-nums">{a.due_at ? new Date(a.due_at).toLocaleDateString('de-DE') : '–'}</span>
+              {stuckDeals.slice(0, 8).map(d => (
+                <li key={d.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/40 last:border-0">
+                  <Link to={`/crm/deals/${d.id}`} className="text-foreground hover:text-primary truncate">{d.title}</Link>
+                  <span className="text-muted-foreground">{STAGES.find(s => s.key === d.stage)?.label} · {Math.floor((Date.now() - new Date(d.stage_changed_at).getTime()) / 86400000)}d</span>
                 </li>
               ))}
             </ul>
@@ -93,15 +155,16 @@ export default function CrmDashboard() {
         </section>
 
         <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
-          <h2 className="text-sm font-semibold text-foreground mb-3">Deals ohne Aktivität (7+ Tage)</h2>
-          {staleDeals.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Alle Deals sind aktuell.</p>
+          <h2 className="text-sm font-semibold mb-3">Meine Aktivitäten heute</h2>
+          {myToday.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nichts offen.</p>
           ) : (
             <ul className="space-y-1">
-              {staleDeals.map(d => (
-                <li key={d.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
-                  <Link to={`/crm/deals/${d.id}`} className="text-foreground hover:text-primary truncate">{d.title}</Link>
-                  <span className="text-muted-foreground">{(d as any).companies?.name ?? '–'}</span>
+              {myToday.map(a => (
+                <li key={a.id} className="flex items-center gap-2 text-xs py-1.5 border-b border-border/40 last:border-0">
+                  <Checkbox checked={false} onCheckedChange={() => toggleDone(a)} />
+                  <span className="flex-1 truncate text-foreground">{a.subject}</span>
+                  {a.deals && <Link to={`/crm/deals/${a.deal_id}`} className="text-muted-foreground hover:text-primary text-[11px]">{a.deals.title}</Link>}
                 </li>
               ))}
             </ul>
