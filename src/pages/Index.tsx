@@ -355,16 +355,18 @@ export default function Dashboard() {
                       }}
                       labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                     />
-                    <Bar
-                      dataKey="value"
-                      radius={[6, 6, 0, 0]}
-                      cursor="pointer"
-                      onClick={(d: any) => setBarDrill({ label: d.label, items: d.items || [] })}
-                    >
-                      {weekChart.map((_, i) => (
-                        <Cell key={i} fill="hsl(var(--primary))" />
-                      ))}
-                    </Bar>
+                    {visibleStatuses.map((k, i) => (
+                      <Bar
+                        key={k}
+                        dataKey={k}
+                        stackId="status"
+                        fill={FILTER_COLORS[k]}
+                        radius={i === visibleStatuses.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                        cursor="pointer"
+                        name={FILTER_LABELS[k]}
+                        onClick={(d: any) => setBarDrill({ label: d.label, items: d.items || [] })}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
