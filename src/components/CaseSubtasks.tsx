@@ -30,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
+import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface Subtask {
   id: string;
@@ -201,8 +202,10 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [completionNote, setCompletionNote] = useState('');
   const [savingCompletion, setSavingCompletion] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'process'>('list');
-  const PAGE_SIZE = 20;
+  const { preferences } = usePreferences();
+  const PAGE_SIZE = preferences.compactTables ? 5 : 20;
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [PAGE_SIZE]);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked
   const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
