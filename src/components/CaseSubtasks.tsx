@@ -1012,11 +1012,11 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       )}
 
       <Dialog open={!!completingTask} onOpenChange={(o) => { if (!o) { setCompletingTask(null); setCompletionNote(''); } }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-sm">Unteraufgabe abschließen</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1">
             <p className="text-xs text-muted-foreground">{completingTask?.title}</p>
             <label className="text-xs font-medium text-foreground">Was wurde gemacht?</label>
             <Textarea
