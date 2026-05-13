@@ -83,15 +83,38 @@ export function CaseEmails({ caseId }: Props) {
     a.href = data.signedUrl; a.download = name; a.click();
   };
 
-  const deleteAttachment = async (attachmentId: string, storagePath: string) => {
-    const { error: dbErr } = await (supabase as any)
-      .from('case_email_attachments')
-      .delete()
-      .eq('id', attachmentId);
-    if (dbErr) { toast.error('Löschen fehlgeschlagen'); return; }
-    await supabase.storage.from('case-attachments').remove([storagePath]).catch(() => {});
-    toast.success('Anhang gelöscht');
-    fetchEmails();
+  const deleteAttachment = (attachmentId: string, storagePath: string, fileName: string) => {
+    // Optimistisch ausblenden
+    setPendingDelete(prev => { const n = new Set(prev); n.add(attachmentId); return n; });
+    let cancelled = false;
+
+    const timer = window.setTimeout(async () => {
+      if (cancelled) return;
+      const { error: dbErr } = await (supabase as any)
+        .from('case_email_attachments')
+        .delete()
+        .eq('id', attachmentId);
+      if (dbErr) {
+        toast.error('Löschen fehlgeschlagen');
+        setPendingDelete(prev => { const n = new Set(prev); n.delete(attachmentId); return n; });
+        return;
+      }
+      await supabase.storage.from('case-attachments').remove([storagePath]).catch(() => {});
+      fetchEmails();
+    }, 6000);
+
+    toast(`Anhang „${fileName}" gelöscht`, {
+      duration: 6000,
+      action: {
+        label: 'Rückgängig',
+        onClick: () => {
+          cancelled = true;
+          window.clearTimeout(timer);
+          setPendingDelete(prev => { const n = new Set(prev); n.delete(attachmentId); return n; });
+          toast.success('Löschung rückgängig gemacht');
+        },
+      },
+    });
   };
 
   if (loading) return <p className="text-xs text-muted-foreground">Laden</p>;
