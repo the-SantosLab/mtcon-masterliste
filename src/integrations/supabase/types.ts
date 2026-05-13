@@ -2057,30 +2057,36 @@ export type Database = {
       sequence_steps: {
         Row: {
           body: string | null
-          channel: Database["public"]["Enums"]["sequence_channel"]
           id: string
+          order_index: number
           sequence_id: string
-          step_order: number
           subject: string | null
-          wait_days: number
+          task_assignee: string | null
+          task_title: string | null
+          type: string
+          wait_days: number | null
         }
         Insert: {
           body?: string | null
-          channel: Database["public"]["Enums"]["sequence_channel"]
           id?: string
+          order_index: number
           sequence_id: string
-          step_order: number
           subject?: string | null
-          wait_days?: number
+          task_assignee?: string | null
+          task_title?: string | null
+          type: string
+          wait_days?: number | null
         }
         Update: {
           body?: string | null
-          channel?: Database["public"]["Enums"]["sequence_channel"]
           id?: string
+          order_index?: number
           sequence_id?: string
-          step_order?: number
           subject?: string | null
-          wait_days?: number
+          task_assignee?: string | null
+          task_title?: string | null
+          type?: string
+          wait_days?: number | null
         }
         Relationships: [
           {
@@ -2100,6 +2106,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          status: string
         }
         Insert: {
           created_at?: string
@@ -2108,6 +2115,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          status?: string
         }
         Update: {
           created_at?: string
@@ -2116,6 +2124,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          status?: string
         }
         Relationships: []
       }
