@@ -37,12 +37,13 @@ interface Template {
   last_used_at: string | null;
   sequential_mode: boolean;
   due_required: boolean;
+  lock_mode: 'hard' | 'soft';
   department_ids: string[];
   task_count: number;
 }
 
-const emptyForm = (): { title: string; description: string; sequential_mode: boolean; due_required: boolean; department_ids: string[]; tasks: TemplateTask[] } => ({
-  title: '', description: '', sequential_mode: false, due_required: false, department_ids: [], tasks: [],
+const emptyForm = (): { title: string; description: string; sequential_mode: boolean; due_required: boolean; lock_mode: 'hard' | 'soft'; department_ids: string[]; tasks: TemplateTask[] } => ({
+  title: '', description: '', sequential_mode: false, due_required: false, lock_mode: 'hard', department_ids: [], tasks: [],
 });
 
 export default function AdminTemplates() {
