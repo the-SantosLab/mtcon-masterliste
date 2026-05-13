@@ -125,7 +125,7 @@ export function CaseEmails({ caseId }: Props) {
       {emails.map(e => {
         const isOpen = expanded[e.id] ?? false;
         return (
-          <div key={e.id} className="bg-background">
+          <div key={e.id} data-compact-row className="bg-background">
             <button
               type="button"
               onClick={() => setExpanded(s => ({ ...s, [e.id]: !isOpen }))}
