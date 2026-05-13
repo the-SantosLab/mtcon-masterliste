@@ -20,6 +20,7 @@ const TYPE_LABEL: Record<string, string> = { call: 'Anruf', email: 'E-Mail', mee
 export default function CrmActivities() {
   const { user } = useAuth();
   const [rows, setRows] = useState<any[]>([]);
+  const [tracking, setTracking] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('mine');
   const [typeF, setTypeF] = useState('all');
@@ -35,6 +36,13 @@ export default function CrmActivities() {
       .order('due_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
     setRows(data ?? []);
+    const emailIds = (data ?? []).filter((r: any) => r.type === 'email').map((r: any) => r.id);
+    if (emailIds.length) {
+      const { data: tr } = await (supabase as any).from('crm_email_tracking').select('*').in('activity_id', emailIds);
+      const map: Record<string, any> = {};
+      (tr ?? []).forEach((t: any) => { map[t.activity_id] = t; });
+      setTracking(map);
+    } else { setTracking({}); }
     setLoading(false);
   };
 
