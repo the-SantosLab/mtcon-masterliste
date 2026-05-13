@@ -60,7 +60,17 @@ export default function Dashboard() {
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [myTasks, setMyTasks] = useState<Array<{ id: string; title: string; due_at: string | null; status: string; case_id: string; case: { id: string; case_no: string; project_name: string } | null }>>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null);
+  const [activeFilters, setActiveFilters] = useState<FilterKey[]>(() => {
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.filter((k): k is FilterKey => k in FILTER_LABELS) : [];
+    } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(activeFilters)); } catch {}
+  }, [activeFilters]);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
   const [now, setNow] = useState(new Date());
 
