@@ -87,7 +87,7 @@ export default function CrmEnrollments() {
         .select('is_unsubscribed').eq('contact_id', contactId).maybeSingle();
       if (unsub?.is_unsubscribed) {
         toast.error('Kontakt hat sich abgemeldet — E-Mail nicht gesendet');
-        await supabase.from('sequence_enrollments').update({ status: 'pausiert', paused_at: new Date().toISOString() }).eq('id', enrollment.id);
+        await supabase.from('sequence_enrollments').update({ status: 'pausiert', paused_at: new Date().toISOString() } as any).eq('id', enrollment.id);
         setDraft(null); void load();
         return;
       }
