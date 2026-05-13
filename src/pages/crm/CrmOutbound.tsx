@@ -100,7 +100,40 @@ export default function CrmOutbound() {
           )}
         </TabsContent>
         <TabsContent value="campaigns" className="mt-4">
-          <p className="text-xs text-muted-foreground">Kampagnen-Funktion in Vorbereitung.</p>
+          {seqs.length === 0 ? <p className="text-xs text-muted-foreground">Keine Kampagnen — lege zuerst eine Sequenz an.</p>
+          : (
+            <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground tracking-wider">
+                  <tr>
+                    <th className="text-left p-2">Kampagne (Sequenz)</th>
+                    <th className="text-right p-2">Eingeschrieben</th>
+                    <th className="text-right p-2">Aktiv</th>
+                    <th className="text-right p-2">Abgeschlossen</th>
+                    <th className="text-right p-2">Antwortrate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {seqs.map(s => {
+                    const en = enrollments.filter(e => e.sequence_id === s.id);
+                    const active = en.filter(e => e.status === 'aktiv').length;
+                    const done = en.filter(e => e.status === 'abgeschlossen').length;
+                    const replies = en.filter(e => e.status === 'geantwortet').length;
+                    const rate = en.length ? Math.round((replies / en.length) * 100) : 0;
+                    return (
+                      <tr key={s.id} className="border-t border-border/40">
+                        <td className="p-2"><Link to={`/crm/outbound/sequences/${s.id}`} className="text-foreground hover:text-primary">{s.name}</Link></td>
+                        <td className="p-2 text-right tabular-nums text-foreground">{en.length}</td>
+                        <td className="p-2 text-right tabular-nums text-emerald-400">{active}</td>
+                        <td className="p-2 text-right tabular-nums text-muted-foreground">{done}</td>
+                        <td className="p-2 text-right tabular-nums text-blue-400">{rate}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="contacts" className="mt-4">
           <Link to="/crm/outbound/enrollments" className="text-xs text-primary hover:underline">Zur Enrollment-Übersicht →</Link>
