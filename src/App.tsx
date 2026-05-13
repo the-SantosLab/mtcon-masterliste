@@ -36,6 +36,14 @@ import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
 import PortalCreateTicket from "./pages/portal/PortalCreateTicket";
 import PortalTicketDetail from "./pages/portal/PortalTicketDetail";
+import ModuleSelect from "./pages/ModuleSelect";
+import CrmDashboard from "./pages/crm/CrmDashboard";
+import CrmDeals from "./pages/crm/CrmDeals";
+import CrmDealDetail from "./pages/crm/CrmDealDetail";
+import CrmCompanies from "./pages/crm/CrmCompanies";
+import CrmCompanyDetail from "./pages/crm/CrmCompanyDetail";
+import CrmContacts from "./pages/crm/CrmContacts";
+import CrmStub from "./pages/crm/CrmStub";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +89,17 @@ function AuthenticatedApp() {
         <Route path="/admin/papierkorb" element={<ProtectedRoute><AdminTrash /></ProtectedRoute>} />
         <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/modules" element={<ProtectedRoute><ModuleSelect /></ProtectedRoute>} />
+        <Route path="/crm" element={<ProtectedRoute><CrmDashboard /></ProtectedRoute>} />
+        <Route path="/crm/dashboard" element={<ProtectedRoute><CrmDashboard /></ProtectedRoute>} />
+        <Route path="/crm/deals" element={<ProtectedRoute><CrmDeals /></ProtectedRoute>} />
+        <Route path="/crm/deals/:id" element={<ProtectedRoute><CrmDealDetail /></ProtectedRoute>} />
+        <Route path="/crm/companies" element={<ProtectedRoute><CrmCompanies /></ProtectedRoute>} />
+        <Route path="/crm/companies/:id" element={<ProtectedRoute><CrmCompanyDetail /></ProtectedRoute>} />
+        <Route path="/crm/contacts" element={<ProtectedRoute><CrmContacts /></ProtectedRoute>} />
+        <Route path="/crm/offers" element={<ProtectedRoute><CrmStub title="Angebote" /></ProtectedRoute>} />
+        <Route path="/crm/activities" element={<ProtectedRoute><CrmStub title="Aktivitäten" /></ProtectedRoute>} />
+        <Route path="/crm/settings" element={<ProtectedRoute><CrmStub title="Einstellungen" /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>

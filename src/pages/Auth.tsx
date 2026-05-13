@@ -23,7 +23,10 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
-  if (session) return <Navigate to="/" replace />;
+  if (session) {
+    const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
+    return <Navigate to={mod === 'crm' ? '/crm/dashboard' : mod === 'ops' ? '/' : '/modules'} replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
