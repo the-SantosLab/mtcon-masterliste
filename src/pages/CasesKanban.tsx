@@ -691,6 +691,19 @@ export default function CasesKanban() {
             </AlertDialogContent>
           </AlertDialog>
 
+          <CompleteCaseDialog
+            open={!!pendingCloseIds}
+            onOpenChange={(o) => { if (!o) setPendingCloseIds(null); }}
+            onConfirm={async (note, sendEmail) => {
+              const ids = pendingCloseIds || [];
+              for (const id of ids) {
+                await completeCase(id, note, sendEmail);
+              }
+              if (ids.length > 1) exitSelectMode();
+              setPendingCloseIds(null);
+            }}
+          />
+
           {/* Legend */}
           {!isProjects && (
             <div className="flex flex-wrap items-center gap-3 px-4 py-2 border-b border-border bg-card/30 shrink-0 text-[10px] text-muted-foreground">
