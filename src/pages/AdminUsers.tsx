@@ -317,6 +317,7 @@ export default function AdminUsers() {
           <TabsList className="h-8">
             <TabsTrigger value="users" className="text-xs h-6">Mitarbeiter</TabsTrigger>
             <TabsTrigger value="import" className="text-xs h-6">CSV-Import</TabsTrigger>
+            <TabsTrigger value="personio" className="text-xs h-6">Personio</TabsTrigger>
             <TabsTrigger value="matrix" className="text-xs h-6">Rechtematrix</TabsTrigger>
           </TabsList>
 
