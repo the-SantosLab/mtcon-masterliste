@@ -872,6 +872,81 @@ export type Database = {
           },
         ]
       }
+      crm_email_tracking: {
+        Row: {
+          activity_id: string | null
+          bounced_at: string | null
+          clicked_at: string | null
+          contact_id: string | null
+          enrollment_id: string | null
+          id: string
+          opened_at: string | null
+          provider_message_id: string | null
+          sent_at: string
+          status: string
+          step_number: number | null
+          subject: string | null
+          to_email: string
+        }
+        Insert: {
+          activity_id?: string | null
+          bounced_at?: string | null
+          clicked_at?: string | null
+          contact_id?: string | null
+          enrollment_id?: string | null
+          id?: string
+          opened_at?: string | null
+          provider_message_id?: string | null
+          sent_at?: string
+          status?: string
+          step_number?: number | null
+          subject?: string | null
+          to_email: string
+        }
+        Update: {
+          activity_id?: string | null
+          bounced_at?: string | null
+          clicked_at?: string | null
+          contact_id?: string | null
+          enrollment_id?: string | null
+          id?: string
+          opened_at?: string | null
+          provider_message_id?: string | null
+          sent_at?: string
+          status?: string
+          step_number?: number | null
+          subject?: string | null
+          to_email?: string
+        }
+        Relationships: []
+      }
+      crm_unsubscribes: {
+        Row: {
+          contact_id: string
+          email: string | null
+          id: string
+          is_unsubscribed: boolean
+          reason: string | null
+          unsubscribed_at: string
+        }
+        Insert: {
+          contact_id: string
+          email?: string | null
+          id?: string
+          is_unsubscribed?: boolean
+          reason?: string | null
+          unsubscribed_at?: string
+        }
+        Update: {
+          contact_id?: string
+          email?: string | null
+          id?: string
+          is_unsubscribed?: boolean
+          reason?: string | null
+          unsubscribed_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string

@@ -20,6 +20,7 @@ const TYPE_LABEL: Record<string, string> = { call: 'Anruf', email: 'E-Mail', mee
 export default function CrmActivities() {
   const { user } = useAuth();
   const [rows, setRows] = useState<any[]>([]);
+  const [tracking, setTracking] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('mine');
   const [typeF, setTypeF] = useState('all');
@@ -35,6 +36,13 @@ export default function CrmActivities() {
       .order('due_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
     setRows(data ?? []);
+    const emailIds = (data ?? []).filter((r: any) => r.type === 'email').map((r: any) => r.id);
+    if (emailIds.length) {
+      const { data: tr } = await (supabase as any).from('crm_email_tracking').select('*').in('activity_id', emailIds);
+      const map: Record<string, any> = {};
+      (tr ?? []).forEach((t: any) => { map[t.activity_id] = t; });
+      setTracking(map);
+    } else { setTracking({}); }
     setLoading(false);
   };
 
@@ -111,6 +119,8 @@ export default function CrmActivities() {
                         <span className={`text-xs font-medium ${a.completed_at ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{a.subject}</span>
                         {a.auto_generated && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-muted text-muted-foreground">Auto</span>}
                         {overdue && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-destructive/20 text-destructive">Überfällig</span>}
+                        {a.type === 'email' && tracking[a.id] && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-emerald-500/15 text-emerald-400">Gesendet</span>}
+                        {a.type === 'email' && tracking[a.id]?.opened_at && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-blue-500/15 text-blue-400">Geöffnet · {new Date(tracking[a.id].opened_at).toLocaleDateString('de-DE')}</span>}
                       </div>
                       <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-2 flex-wrap">
                         {a.deals && <Link to={`/crm/deals/${a.deal_id}`} className="hover:text-primary">→ {a.deals.title}</Link>}
