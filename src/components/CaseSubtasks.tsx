@@ -58,6 +58,7 @@ interface CaseSubtasksProps {
   userId: string;
   sequentialMode?: boolean;
   dueRequired?: boolean;
+  lockMode?: 'hard' | 'soft';
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
