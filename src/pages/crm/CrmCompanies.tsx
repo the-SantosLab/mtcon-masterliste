@@ -7,11 +7,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2, Send } from 'lucide-react';
+import { Plus, Loader2, Send, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
+import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+
+const COMPANY_TYPE_MAP: Record<string, string> = {
+  customer: 'kunde', kunde: 'kunde',
+  distributor: 'distributor',
+  competitor: 'mitbewerber', mitbewerber: 'mitbewerber',
+};
+
+const COMPANIES_IMPORT: CrmImportConfig = {
+  title: 'Unternehmen importieren',
+  table: 'companies',
+  templateFilename: 'companies-vorlage.csv',
+  templateHeaders: ['name', 'type', 'industry', 'website', 'address', 'country', 'customer_no', 'notes'],
+  templateExample: ['Beispiel GmbH', 'customer', 'Maschinenbau', 'https://beispiel.de', 'Musterstraße 1, 10115 Berlin', 'DE', 'K-1001', 'Beispieleintrag'],
+  dupKey: 'name',
+  fields: [
+    { key: 'name', label: 'Name', required: true, aliases: ['firma', 'unternehmen', 'company'] },
+    { key: 'type', label: 'Typ', transform: (v) => COMPANY_TYPE_MAP[v.toLowerCase()] ?? 'kunde' },
+    { key: 'industry', label: 'Branche', aliases: ['branche'] },
+    { key: 'website', label: 'Website', aliases: ['url'] },
+    { key: 'address', label: 'Adresse', aliases: ['anschrift'] },
+    { key: 'country', label: 'Land' },
+    { key: 'customer_no', label: 'Kundennummer', aliases: ['kundennr', 'customer_number'] },
+    { key: 'notes', label: 'Notizen', aliases: ['notiz'] },
+  ],
+};
 
 const TYPES = [
   { key: 'all', label: 'Alle' },
