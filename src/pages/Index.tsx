@@ -42,8 +42,6 @@ const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] 
   { key: 'week', title: 'Diese Woche', icon: Calendar },
 ];
 
-const FILTER_STORAGE_KEY = 'dashboard.activeFilters.v2';
-const RANGE_STORAGE_KEY = 'dashboard.chartRange.v2';
 
 const matchesFilter = (c: CaseRow, k: FilterKey, today: string, weekEnd: string): boolean => {
   switch (k) {
@@ -60,17 +58,8 @@ export default function Dashboard() {
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [myTasks, setMyTasks] = useState<Array<{ id: string; title: string; due_at: string | null; status: string; case_id: string; case: { id: string; case_no: string; project_name: string } | null }>>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<FilterKey[]>(() => {
-    try {
-      const raw = localStorage.getItem(FILTER_STORAGE_KEY);
-      if (!raw) return [];
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.filter((k): k is FilterKey => k in FILTER_LABELS) : [];
-    } catch { return []; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(activeFilters)); } catch {}
-  }, [activeFilters]);
+  const [activeFilters, setActiveFilters] = useState<FilterKey[]>([]);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
   const [now, setNow] = useState(new Date());
 
@@ -138,13 +127,43 @@ export default function Dashboard() {
 
   const available = cases.filter(c => !c.assignee_id && !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)).slice(0, 10);
 
-  const [chartRange, setChartRange] = useState<ChartRange>(() => {
-    try {
-      const v = localStorage.getItem(RANGE_STORAGE_KEY);
-      return v === 'month' || v === 'year' || v === 'week' ? v : 'week';
-    } catch { return 'week'; }
-  });
-  useEffect(() => { try { localStorage.setItem(RANGE_STORAGE_KEY, chartRange); } catch {} }, [chartRange]);
+  const [chartRange, setChartRange] = useState<ChartRange>('week');
+
+  // Load persisted dashboard preferences from server
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('dashboard_status_filters, dashboard_chart_range')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const filters = (data?.dashboard_status_filters ?? [])
+        .filter((k: string): k is FilterKey => k in FILTER_LABELS);
+      const range = data?.dashboard_chart_range;
+      setActiveFilters(filters);
+      if (range === 'week' || range === 'month' || range === 'year') setChartRange(range);
+      setPrefsLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // Persist changes to server (debounced via simple effect)
+  useEffect(() => {
+    if (!user?.id || !prefsLoaded) return;
+    const t = setTimeout(() => {
+      supabase
+        .from('user_preferences')
+        .upsert(
+          { user_id: user.id, dashboard_status_filters: activeFilters, dashboard_chart_range: chartRange },
+          { onConflict: 'user_id' }
+        )
+        .then(() => {});
+    }, 300);
+    return () => clearTimeout(t);
+  }, [user?.id, prefsLoaded, activeFilters, chartRange]);
 
   // Welche Status werden im Chart als Säulen-Segmente gezeigt
   const visibleStatuses: FilterKey[] = activeFilters.length > 0

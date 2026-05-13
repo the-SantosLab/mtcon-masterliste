@@ -1420,18 +1420,24 @@ export type Database = {
       user_preferences: {
         Row: {
           compact_tables: boolean
+          dashboard_chart_range: string
+          dashboard_status_filters: string[]
           theme: string
           updated_at: string
           user_id: string
         }
         Insert: {
           compact_tables?: boolean
+          dashboard_chart_range?: string
+          dashboard_status_filters?: string[]
           theme?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           compact_tables?: boolean
+          dashboard_chart_range?: string
+          dashboard_status_filters?: string[]
           theme?: string
           updated_at?: string
           user_id?: string
