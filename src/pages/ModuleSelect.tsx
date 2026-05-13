@@ -1,16 +1,13 @@
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClipboardList, Briefcase, LogOut } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
+import { useCrmAccess } from '@/hooks/useCrmAccess';
 
 export default function ModuleSelect() {
   const navigate = useNavigate();
-  const { profile, signOut, user } = useAuth();
-
-  // CRM is beta-only for js@santoslab.de
-  if (user?.email !== 'js@santoslab.de') {
-    return <Navigate to="/" replace />;
-  }
+  const { profile, signOut } = useAuth();
+  const { allowed: crmAllowed } = useCrmAccess();
 
   const choose = (mod: 'ops' | 'crm') => {
     localStorage.setItem('mtcon.module', mod);
@@ -53,18 +50,20 @@ export default function ModuleSelect() {
             </p>
           </button>
 
-          <button
-            onClick={() => choose('crm')}
-            className="group text-left p-6 rounded-lg border border-border bg-card/60 backdrop-blur-xl hover:border-primary/60 hover:bg-card/80 transition-all"
-          >
-            <div className="h-10 w-10 rounded bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25">
-              <Briefcase className="h-5 w-5 text-primary" />
-            </div>
-            <p className="text-base font-semibold text-foreground mb-1">CRM</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Vertriebspipeline, Unternehmen, Kontakte, Angebote.
-            </p>
-          </button>
+          {crmAllowed && (
+            <button
+              onClick={() => choose('crm')}
+              className="group text-left p-6 rounded-lg border border-border bg-card/60 backdrop-blur-xl hover:border-primary/60 hover:bg-card/80 transition-all"
+            >
+              <div className="h-10 w-10 rounded bg-primary/15 flex items-center justify-center mb-4 group-hover:bg-primary/25">
+                <Briefcase className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-base font-semibold text-foreground mb-1">CRM</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Vertriebspipeline, Unternehmen, Kontakte, Angebote.
+              </p>
+            </button>
+          )}
         </div>
       </div>
     </div>
