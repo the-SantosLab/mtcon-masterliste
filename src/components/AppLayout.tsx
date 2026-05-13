@@ -28,6 +28,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
+import { useCrmAccess } from '@/hooks/useCrmAccess';
+
+function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => string; onClose: () => void }) {
+  const { allowed } = useCrmAccess();
+  if (!allowed) return null;
+  return (
+    <>
+      <div className="border-t border-sidebar-border my-1" />
+      <Link to="/modules" onClick={onClose} className={linkClass('/modules')}>
+        <RefreshCw className="h-4 w-4" />Module wechseln
+      </Link>
+    </>
+  );
+}
 
 
 interface AppLayoutProps {
@@ -157,14 +171,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               <item.icon className="h-4 w-4" />{item.label}
             </Link>
           ))}
-          {user?.email === 'js@santoslab.de' && (
-            <>
-              <div className="border-t border-sidebar-border my-1" />
-              <Link to="/modules" onClick={() => setOpen(false)} className={linkClass('/modules')}>
-                <RefreshCw className="h-4 w-4" />Module wechseln
-              </Link>
-            </>
-          )}
+          <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
+
           {isAdmin && (
             <>
               <div className="border-t border-sidebar-border my-1" />

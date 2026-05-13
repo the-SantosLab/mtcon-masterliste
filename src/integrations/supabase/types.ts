@@ -778,6 +778,30 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_access: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       crm_activities: {
         Row: {
           auto_generated: boolean
@@ -2501,6 +2525,7 @@ export type Database = {
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      has_crm_access: { Args: { uid?: string }; Returns: boolean }
       has_dept_read: {
         Args: { p_dept_id: string; p_uid: string }
         Returns: boolean

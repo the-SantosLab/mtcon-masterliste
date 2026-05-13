@@ -1,6 +1,7 @@
 import { CrmLayout } from '@/components/CrmLayout';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CrmSettingsTabs } from '@/components/crm/CrmSettingsTabs';
 
 const ROLES = [
   { key: 'crm_admin', label: 'CRM Admin', desc: 'Voller Zugriff' },
@@ -25,7 +26,9 @@ const FEATURES = [
 export default function CrmRoles() {
   return (
     <CrmLayout>
-      <h1 className="text-xl font-semibold text-foreground mb-1">Rollen & Berechtigungen</h1>
+      <h1 className="text-xl font-semibold text-foreground mb-1">Einstellungen</h1>
+      <CrmSettingsTabs />
+      <h2 className="text-base font-semibold text-foreground mb-1">Rollen & Berechtigungen</h2>
       <p className="text-xs text-muted-foreground mb-4">Übersicht der CRM-spezifischen Rollen-Matrix. Aktuell sind die Rollen frontendbasiert; Rollen-Zuweisung erfolgt über die Benutzerverwaltung.</p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
