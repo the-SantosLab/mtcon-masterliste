@@ -44,6 +44,10 @@ import CrmCompanies from "./pages/crm/CrmCompanies";
 import CrmCompanyDetail from "./pages/crm/CrmCompanyDetail";
 import CrmContacts from "./pages/crm/CrmContacts";
 import CrmStub from "./pages/crm/CrmStub";
+import CrmOffers from "./pages/crm/CrmOffers";
+import CrmOfferDetail from "./pages/crm/CrmOfferDetail";
+import CrmActivities from "./pages/crm/CrmActivities";
+import CrmSettings from "./pages/crm/CrmSettings";
 
 const queryClient = new QueryClient();
 
