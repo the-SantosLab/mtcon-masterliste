@@ -123,7 +123,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
 
     // Load templates and user's department
     Promise.all([
-      (supabase as any).from('case_templates').select('id, title, description, sequential_mode, due_required').order('title'),
+      (supabase as any).from('case_templates').select('id, title, description, sequential_mode, due_required, lock_mode').order('title'),
       (supabase as any).from('case_template_departments').select('template_id, department_id'),
       (supabase as any).from('case_template_tasks').select('template_id, title, description, department_id, order_index').order('order_index'),
       supabase.from('users_profile').select('department_id').eq('id', userId).maybeSingle(),
@@ -134,6 +134,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         ...t,
         sequential_mode: !!t.sequential_mode,
         due_required: !!t.due_required,
+        lock_mode: (t.lock_mode === 'soft' ? 'soft' : 'hard') as 'hard' | 'soft',
         department_ids: joins.filter(j => j.template_id === t.id).map(j => j.department_id),
         tasks: tasks.filter(x => x.template_id === t.id),
       }));
