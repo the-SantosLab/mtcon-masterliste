@@ -466,8 +466,10 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const val = assigneeId === '_none' ? null : assigneeId;
     const { error } = await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
     if (error) { toast.error('Fehler: ' + error.message); return; }
-    if (val && val !== userId) {
-      supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } }).catch(() => {});
+    if (val && val !== userId && sendAssignEmail) {
+      supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } })
+        .then(() => setTimeout(() => { setLogBump(b => b + 1); }, 1500))
+        .catch(() => {});
     }
     fetchTasks();
   };
