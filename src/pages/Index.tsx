@@ -301,22 +301,29 @@ export default function Dashboard() {
           {/* RIGHT: Chart on top, "Frei zum Abholen" below */}
           <div className="lg:col-span-2 grid grid-rows-[auto_1fr] gap-4 min-h-[480px] lg:min-h-[560px]">
             <div className="glass-card p-4 lg:p-5">
-              <div className="flex items-center justify-between mb-3 gap-2">
+              <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                 <h2 className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
-                  <span>{chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat'}</span>
-                  {activeFilter && (
+                  <span>
+                    {chartRange === 'week'
+                      ? 'Erstellte Vorgänge diese Woche'
+                      : chartRange === 'month'
+                        ? 'Erstellte Vorgänge diesen Monat'
+                        : 'Erstellte Vorgänge dieses Jahr'}
+                  </span>
+                  {activeFilters.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setActiveFilter(null)}
+                      onClick={() => setActiveFilters([])}
                       className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
+                      title="Alle Filter zurücksetzen"
                     >
-                      {FILTER_LABELS[activeFilter]}
+                      {activeFilters.length} Filter aktiv
                       <X className="h-2.5 w-2.5" />
                     </button>
                   )}
                 </h2>
                 <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
-                  {(['week', 'month'] as const).map(r => (
+                  {(['week', 'month', 'year'] as const).map(r => (
                     <button
                       key={r}
                       type="button"
@@ -328,7 +335,7 @@ export default function Dashboard() {
                           : 'text-muted-foreground hover:text-foreground',
                       )}
                     >
-                      {r === 'week' ? 'Woche' : 'Monat'}
+                      {r === 'week' ? 'Woche' : r === 'month' ? 'Monat' : 'Jahr'}
                     </button>
                   ))}
                 </div>
