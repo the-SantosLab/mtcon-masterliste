@@ -632,14 +632,23 @@ export default function CaseDetail() {
             </div>
 
             {canEdit && !isTerminalStatus(c.status) && (
-              <div className="rounded-md border border-border bg-card px-5 py-2">
-                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Status ändern</h3>
-                <Select value={c.status} onValueChange={changeStatus}>
-                  <SelectTrigger className="w-[180px] h-8 text-[13px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="rounded-md border border-border bg-card px-5 py-2 space-y-2">
+                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Status ändern</h3>
+                <div className="flex flex-wrap items-end gap-4">
+                  <Select value={c.status} onValueChange={changeStatus}>
+                    <SelectTrigger className="w-[180px] h-8 text-[13px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <NotifyToggle
+                    checked={sendStatusEmail}
+                    onChange={setSendStatusEmail}
+                    lastSentAt={lastByType['abgeholt']}
+                    label="E-Mail bei „In Arbeit" an Ersteller"
+                    recipientsHint="nur beim Wechsel auf In Arbeit"
+                  />
+                </div>
               </div>
             )}
 
