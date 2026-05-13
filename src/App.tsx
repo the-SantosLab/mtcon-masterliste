@@ -55,6 +55,9 @@ import CrmEnrollments from "./pages/crm/CrmEnrollments";
 import CrmLeads from "./pages/crm/CrmLeads";
 import CrmCalendar from "./pages/crm/CrmCalendar";
 import CrmRoles from "./pages/crm/CrmRoles";
+import CrmAccess from "./pages/crm/CrmAccess";
+import CrmNoAccess from "./pages/crm/CrmNoAccess";
+import { useCrmAccess } from "./hooks/useCrmAccess";
 
 const queryClient = new QueryClient();
 
@@ -73,10 +76,11 @@ function PortalProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function CrmProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading, user } = useAuth();
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
+  const { session, loading } = useAuth();
+  const { allowed, loading: accessLoading } = useCrmAccess();
+  if (loading || accessLoading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
   if (!session) return <Navigate to="/auth" replace />;
-  if (user?.email !== 'js@santoslab.de') return <Navigate to="/" replace />;
+  if (!allowed) return <CrmNoAccess />;
   return <>{children}</>;
 }
 
@@ -122,6 +126,7 @@ function AuthenticatedApp() {
         <Route path="/crm/settings" element={<CrmProtectedRoute><CrmSettings /></CrmProtectedRoute>} />
         <Route path="/crm/settings/preislisten" element={<CrmProtectedRoute><CrmSettings /></CrmProtectedRoute>} />
         <Route path="/crm/settings/roles" element={<CrmProtectedRoute><CrmRoles /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/zugang" element={<CrmProtectedRoute><CrmAccess /></CrmProtectedRoute>} />
         <Route path="/crm/wiki" element={<CrmProtectedRoute><CrmWiki /></CrmProtectedRoute>} />
         <Route path="/crm/outbound" element={<CrmProtectedRoute><CrmOutbound /></CrmProtectedRoute>} />
         <Route path="/crm/outbound/sequences/:id" element={<CrmProtectedRoute><CrmSequenceDetail /></CrmProtectedRoute>} />
