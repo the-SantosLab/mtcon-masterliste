@@ -129,13 +129,43 @@ export default function Dashboard() {
 
   const available = cases.filter(c => !c.assignee_id && !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)).slice(0, 10);
 
-  const [chartRange, setChartRange] = useState<ChartRange>(() => {
-    try {
-      const v = localStorage.getItem(RANGE_STORAGE_KEY);
-      return v === 'month' || v === 'year' || v === 'week' ? v : 'week';
-    } catch { return 'week'; }
-  });
-  useEffect(() => { try { localStorage.setItem(RANGE_STORAGE_KEY, chartRange); } catch {} }, [chartRange]);
+  const [chartRange, setChartRange] = useState<ChartRange>('week');
+
+  // Load persisted dashboard preferences from server
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('dashboard_status_filters, dashboard_chart_range')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const filters = (data?.dashboard_status_filters ?? [])
+        .filter((k: string): k is FilterKey => k in FILTER_LABELS);
+      const range = data?.dashboard_chart_range;
+      setActiveFilters(filters);
+      if (range === 'week' || range === 'month' || range === 'year') setChartRange(range);
+      setPrefsLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // Persist changes to server (debounced via simple effect)
+  useEffect(() => {
+    if (!user?.id || !prefsLoaded) return;
+    const t = setTimeout(() => {
+      supabase
+        .from('user_preferences')
+        .upsert(
+          { user_id: user.id, dashboard_status_filters: activeFilters, dashboard_chart_range: chartRange },
+          { onConflict: 'user_id' }
+        )
+        .then(() => {});
+    }, 300);
+    return () => clearTimeout(t);
+  }, [user?.id, prefsLoaded, activeFilters, chartRange]);
 
   // Welche Status werden im Chart als Säulen-Segmente gezeigt
   const visibleStatuses: FilterKey[] = activeFilters.length > 0
