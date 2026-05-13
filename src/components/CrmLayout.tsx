@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   LayoutDashboard, Briefcase, Building2, Users, FileText,
   Activity, Settings, LogOut, Menu, X, ChevronDown, ArrowLeftRight,
+  Send, BookOpen, Calendar, Target,
 } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,10 @@ const navItems = [
   { href: '/crm/contacts', label: 'Kontakte', icon: Users },
   { href: '/crm/offers', label: 'Angebote', icon: FileText },
   { href: '/crm/activities', label: 'Aktivitäten', icon: Activity },
+  { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar },
+  { href: '/crm/outbound', label: 'Outbound', icon: Send },
+  { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
+  { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
   { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
 ];
 
