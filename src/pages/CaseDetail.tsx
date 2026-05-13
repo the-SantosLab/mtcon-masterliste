@@ -823,9 +823,9 @@ export default function CaseDetail() {
 
             {/* Ticket-Verlauf */}
             {c.note && c.note.includes('--- Ticket-Verlauf:') && (
-              <div className="rounded-md border border-border bg-card p-5 space-y-2">
+              <div className="rounded-md border border-border bg-card p-5 space-y-2 min-w-0 overflow-hidden">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ticket-Verlauf</h3>
-                <pre className="text-xs text-foreground whitespace-pre-wrap leading-relaxed font-sans">{c.note}</pre>
+                <pre className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed font-sans max-w-full">{c.note}</pre>
               </div>
             )}
 
