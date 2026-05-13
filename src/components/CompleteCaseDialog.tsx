@@ -30,7 +30,7 @@ export function CompleteCaseDialog({ open, onOpenChange, onConfirm, lastSentAt }
     if (note.trim().length < MIN_CHARS) return;
     setSaving(true);
     try {
-      await onConfirm(note.trim());
+      await onConfirm(note.trim(), sendEmail);
       reset();
       onOpenChange(false);
     } finally {
