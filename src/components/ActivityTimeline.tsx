@@ -82,7 +82,7 @@ export function ActivityTimeline({ caseId, refreshKey }: ActivityTimelineProps) 
         const oldV = formatValue(a.field, a.old_value, profiles, depts);
         const newV = formatValue(a.field, a.new_value, profiles, depts);
         return (
-          <div key={a.id} className="px-4 py-3">
+          <div key={a.id} data-compact-row className="px-4 py-3">
             <div className="flex items-baseline justify-between gap-2 mb-0.5">
               <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">
                 {isTask && <CheckSquare className="h-3 w-3 text-muted-foreground" />}

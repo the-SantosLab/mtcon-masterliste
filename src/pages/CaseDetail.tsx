@@ -408,7 +408,7 @@ export default function CaseDetail() {
 
   return (
     <AppLayout>
-      <div className="space-y-5 max-w-5xl">
+      <div className={cn('space-y-5 max-w-5xl', compactCls)}>
         <Link to="/cases" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-3.5 w-3.5" />Zurück zur Liste
         </Link>
@@ -778,9 +778,7 @@ export default function CaseDetail() {
             )}
 
             {/* Tasks checklist */}
-            <div className={compactCls}>
-              <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} />
-            </div>
+            <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} />
 
             {/* Anhänge */}
             <div className="rounded-md border border-border bg-card p-5 space-y-5">
@@ -788,21 +786,17 @@ export default function CaseDetail() {
 
               <div className="space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Dateien</p>
-                <div className={compactCls}>
-                  <FileAttachments
-                    bucket="case-attachments"
-                    folder={`cases/${c.id}`}
-                    canUpload={!isViewer && !isTerminalStatus(c.status)}
-                    canDelete={!isViewer}
-                  />
-                </div>
+                <FileAttachments
+                  bucket="case-attachments"
+                  folder={`cases/${c.id}`}
+                  canUpload={!isViewer && !isTerminalStatus(c.status)}
+                  canDelete={!isViewer}
+                />
               </div>
 
               <div className="space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">E-Mails</p>
-                <div className={compactCls}>
-                  <CaseEmails caseId={c.id} />
-                </div>
+                <CaseEmails caseId={c.id} />
               </div>
             </div>
 
@@ -835,9 +829,7 @@ export default function CaseDetail() {
               </div>
             )}
 
-            <div className={compactCls}>
-              <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
-            </div>
+            <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
           <div className="space-y-4">
@@ -845,9 +837,7 @@ export default function CaseDetail() {
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Aktivitäten</h3>
               </div>
-              <div className={compactCls}>
-                <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
-              </div>
+              <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
             </div>
           </div>
         </div>

@@ -165,6 +165,7 @@ export function FileAttachments({ bucket, folder, canUpload = false, canDelete =
           {files.map(f => (
             <div
               key={f.id || f.name}
+              data-compact-row
               className={cn(
                 'flex items-center gap-2 rounded-md border border-border bg-muted/30 group',
                 compact ? 'px-2 py-1' : 'px-3 py-2'
