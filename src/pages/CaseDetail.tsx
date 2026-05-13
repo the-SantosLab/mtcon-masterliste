@@ -393,8 +393,10 @@ export default function CaseDetail() {
       })
     ));
 
-    if (newStatus === 'in_arbeit' && old !== 'in_arbeit') {
-      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } }).catch(() => {});
+    if (newStatus === 'in_arbeit' && old !== 'in_arbeit' && sendStatusEmail) {
+      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } })
+        .then(() => setTimeout(() => refreshLog(), 1500))
+        .catch(() => {});
     }
 
     toast.success('Status geändert');
