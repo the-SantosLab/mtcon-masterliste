@@ -81,6 +81,9 @@ export default function CrmCompanies() {
           <table className="w-full text-xs">
             <thead className="bg-muted/40">
               <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-3 py-2 font-normal w-8">
+                  <Checkbox checked={selected.size > 0 && selected.size === filtered.length} onCheckedChange={v => setSelected(v ? new Set(filtered.map(c => c.id)) : new Set())} />
+                </th>
                 <th className="px-3 py-2 font-normal">Name</th>
                 <th className="px-3 py-2 font-normal">Typ</th>
                 <th className="px-3 py-2 font-normal">Branche</th>
@@ -90,19 +93,24 @@ export default function CrmCompanies() {
             </thead>
             <tbody>
               {filtered.map(c => (
-                <tr key={c.id} className="border-t border-border hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/crm/companies/${c.id}`)}>
-                  <td className="px-3 py-2 text-foreground font-medium">{c.name}</td>
-                  <td className="px-3 py-2 text-muted-foreground capitalize">{c.type}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{c.industry ?? '–'}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{c.country ?? '–'}</td>
-                  <td className="px-3 py-2 text-muted-foreground tabular-nums">{c.customer_no ?? '–'}</td>
+                <tr key={c.id} className="border-t border-border hover:bg-muted/30">
+                  <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
+                    <Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} />
+                  </td>
+                  <td className="px-3 py-2 text-foreground font-medium cursor-pointer" onClick={() => navigate(`/crm/companies/${c.id}`)}>{c.name}</td>
+                  <td className="px-3 py-2 text-muted-foreground capitalize cursor-pointer" onClick={() => navigate(`/crm/companies/${c.id}`)}>{c.type}</td>
+                  <td className="px-3 py-2 text-muted-foreground cursor-pointer" onClick={() => navigate(`/crm/companies/${c.id}`)}>{c.industry ?? '–'}</td>
+                  <td className="px-3 py-2 text-muted-foreground cursor-pointer" onClick={() => navigate(`/crm/companies/${c.id}`)}>{c.country ?? '–'}</td>
+                  <td className="px-3 py-2 text-muted-foreground tabular-nums cursor-pointer" onClick={() => navigate(`/crm/companies/${c.id}`)}>{c.customer_no ?? '–'}</td>
                 </tr>
               ))}
-              {filtered.length === 0 && <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">Keine Einträge.</td></tr>}
+              {filtered.length === 0 && <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">Keine Einträge.</td></tr>}
             </tbody>
           </table>
         </div>
       )}
+
+      <BulkEnrollDialog open={bulkOpen} onClose={() => { setBulkOpen(false); setSelected(new Set()); }} companyIds={Array.from(selected)} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
