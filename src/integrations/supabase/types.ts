@@ -1204,6 +1204,63 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          company_name: string
+          contact_name: string | null
+          converted_company_id: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          industry: string | null
+          notes: string | null
+          phone: string | null
+          rejection_reason: string | null
+          source: Database["public"]["Enums"]["lead_source"]
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          company_name: string
+          contact_name?: string | null
+          converted_company_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          phone?: string | null
+          rejection_reason?: string | null
+          source?: Database["public"]["Enums"]["lead_source"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string | null
+          converted_company_id?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          phone?: string | null
+          rejection_reason?: string | null
+          source?: Database["public"]["Enums"]["lead_source"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       lost_reasons: {
         Row: {
           id: string
@@ -1753,28 +1810,46 @@ export type Database = {
         Row: {
           company_id: string | null
           created_at: string
+          created_by: string | null
+          distributor_company_id: string | null
+          distributor_name: string | null
           id: string
           notes: string | null
           owner_id: string | null
           product_id: string | null
+          scope_detail: string | null
+          scope_type: Database["public"]["Enums"]["protection_scope"]
+          status: Database["public"]["Enums"]["protection_status"]
           valid_until: string | null
         }
         Insert: {
           company_id?: string | null
           created_at?: string
+          created_by?: string | null
+          distributor_company_id?: string | null
+          distributor_name?: string | null
           id?: string
           notes?: string | null
           owner_id?: string | null
           product_id?: string | null
+          scope_detail?: string | null
+          scope_type?: Database["public"]["Enums"]["protection_scope"]
+          status?: Database["public"]["Enums"]["protection_status"]
           valid_until?: string | null
         }
         Update: {
           company_id?: string | null
           created_at?: string
+          created_by?: string | null
+          distributor_company_id?: string | null
+          distributor_name?: string | null
           id?: string
           notes?: string | null
           owner_id?: string | null
           product_id?: string | null
+          scope_detail?: string | null
+          scope_type?: Database["public"]["Enums"]["protection_scope"]
+          status?: Database["public"]["Enums"]["protection_status"]
           valid_until?: string | null
         }
         Relationships: [
@@ -2221,6 +2296,106 @@ export type Database = {
           },
         ]
       }
+      wiki_articles: {
+        Row: {
+          body: string
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          tags: string[]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body?: string
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_articles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      wiki_versions: {
+        Row: {
+          article_id: string
+          body: string
+          id: string
+          saved_at: string
+          saved_by: string | null
+          title: string | null
+        }
+        Insert: {
+          article_id: string
+          body: string
+          id?: string
+          saved_at?: string
+          saved_by?: string | null
+          title?: string | null
+        }
+        Update: {
+          article_id?: string
+          body?: string
+          id?: string
+          saved_at?: string
+          saved_by?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_versions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workflow_settings: {
         Row: {
           description: string | null
@@ -2328,6 +2503,13 @@ export type Database = {
         | "won"
         | "lost"
       dept_permission: "none" | "read" | "write"
+      lead_source: "manuell" | "csv" | "linkedin" | "look-a-like"
+      lead_status:
+        | "neu"
+        | "qualifiziert"
+        | "eingeschrieben"
+        | "konvertiert"
+        | "abgelehnt"
       offer_status:
         | "entwurf"
         | "versendet"
@@ -2335,6 +2517,8 @@ export type Database = {
         | "abgelehnt"
         | "abgelaufen"
       product_request_status: "ausstehend" | "genehmigt" | "abgelehnt"
+      protection_scope: "global" | "department" | "subsidiary"
+      protection_status: "aktiv" | "abgelaufen" | "strittig"
       sequence_channel: "email" | "task"
       sequence_enrollment_status: "active" | "paused" | "done"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
@@ -2495,6 +2679,14 @@ export const Constants = {
         "lost",
       ],
       dept_permission: ["none", "read", "write"],
+      lead_source: ["manuell", "csv", "linkedin", "look-a-like"],
+      lead_status: [
+        "neu",
+        "qualifiziert",
+        "eingeschrieben",
+        "konvertiert",
+        "abgelehnt",
+      ],
       offer_status: [
         "entwurf",
         "versendet",
@@ -2503,6 +2695,8 @@ export const Constants = {
         "abgelaufen",
       ],
       product_request_status: ["ausstehend", "genehmigt", "abgelehnt"],
+      protection_scope: ["global", "department", "subsidiary"],
+      protection_status: ["aktiv", "abgelaufen", "strittig"],
       sequence_channel: ["email", "task"],
       sequence_enrollment_status: ["active", "paused", "done"],
       support_ticket_priority: ["low", "medium", "high", "critical"],
