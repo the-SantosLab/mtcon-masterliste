@@ -347,6 +347,27 @@ export default function AdminTemplates() {
                 onCheckedChange={v => setForm(f => ({ ...f, sequential_mode: v }))}
               />
             </div>
+            {form.sequential_mode && (
+              <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
+                <div className="space-y-0.5">
+                  <Label className="text-xs text-foreground">Sperrmodus</Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    <strong>Hart:</strong> Folgeschritt bleibt gesperrt, bis Vorgänger erledigt ist.<br />
+                    <strong>Weich:</strong> Folgeschritte sind bearbeitbar; UI weist nur auf die Reihenfolge hin.
+                  </p>
+                </div>
+                <div className="flex rounded border border-border overflow-hidden shrink-0">
+                  <button type="button" onClick={() => setForm(f => ({ ...f, lock_mode: 'hard' }))}
+                    className={cn('px-2.5 py-1 text-[11px]', form.lock_mode === 'hard' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground')}>
+                    Hart
+                  </button>
+                  <button type="button" onClick={() => setForm(f => ({ ...f, lock_mode: 'soft' }))}
+                    className={cn('px-2.5 py-1 text-[11px] border-l border-border', form.lock_mode === 'soft' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground')}>
+                    Weich
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
               <div className="space-y-0.5">
                 <Label className="text-xs text-foreground">Termin verpflichtend</Label>
