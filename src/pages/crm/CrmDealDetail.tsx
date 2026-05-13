@@ -25,6 +25,11 @@ export default function CrmDealDetail() {
   const [activities, setActivities] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [reasons, setReasons] = useState<any[]>([]);
+  const [protections, setProtections] = useState<any[]>([]);
+  const [protectionAck, setProtectionAck] = useState<boolean>(false);
+  const [wikiOpen, setWikiOpen] = useState(false);
+  const [wikiQuery, setWikiQuery] = useState('');
+  const [wikiResults, setWikiResults] = useState<any[]>([]);
   const [pendingStage, setPendingStage] = useState<StageKey | null>(null);
   const [wonValue, setWonValue] = useState('');
   const [lostReason, setLostReason] = useState('');
