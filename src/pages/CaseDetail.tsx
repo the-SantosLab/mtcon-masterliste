@@ -467,7 +467,12 @@ export default function CaseDetail() {
             <CompleteCaseDialog
               open={completeOpen}
               onOpenChange={setCompleteOpen}
-              onConfirm={async (note) => { await completeCase(c.id, note); setRefreshKey(k => k + 1); }}
+              lastSentAt={lastByType['vorgang_abgeschlossen']}
+              onConfirm={async (note, sendEmail) => {
+                await completeCase(c.id, note, sendEmail);
+                setRefreshKey(k => k + 1);
+                setTimeout(() => refreshLog(), 1500);
+              }}
             />
             {canEdit && (
               <Button variant="outline" size="sm" onClick={duplicateCase} className="h-8 text-xs gap-1.5">
