@@ -560,6 +560,13 @@ export default function CasesKanban() {
       if (targetStatus !== card.status) {
         const bulkIds: string[] | undefined = data.bulkIds;
         const ids = bulkIds && bulkIds.length > 1 ? bulkIds : [card.id];
+
+        // Unify: closing always goes through CompleteCaseDialog (mandatory note + email + activity)
+        if (targetStatus === 'abgeschlossen') {
+          setPendingCloseIds(ids);
+          return;
+        }
+
         const targetCol = caseColumns.find(c => c.id === targetStatus);
         const baseOrder = (targetCol?.cards.length ?? 0);
         const { error } = await supabase
