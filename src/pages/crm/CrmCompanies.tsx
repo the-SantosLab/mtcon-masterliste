@@ -7,11 +7,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2, Send } from 'lucide-react';
+import { Plus, Loader2, Send, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
+import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+
+const COMPANY_TYPE_MAP: Record<string, string> = {
+  customer: 'kunde', kunde: 'kunde',
+  distributor: 'distributor',
+  competitor: 'mitbewerber', mitbewerber: 'mitbewerber',
+};
+
+const COMPANIES_IMPORT: CrmImportConfig = {
+  title: 'Unternehmen importieren',
+  table: 'companies',
+  templateFilename: 'companies-vorlage.csv',
+  templateHeaders: ['name', 'type', 'industry', 'website', 'address', 'country', 'customer_no', 'notes'],
+  templateExample: ['Beispiel GmbH', 'customer', 'Maschinenbau', 'https://beispiel.de', 'Musterstraße 1, 10115 Berlin', 'DE', 'K-1001', 'Beispieleintrag'],
+  dupKey: 'name',
+  fields: [
+    { key: 'name', label: 'Name', required: true, aliases: ['firma', 'unternehmen', 'company'] },
+    { key: 'type', label: 'Typ', transform: (v) => COMPANY_TYPE_MAP[v.toLowerCase()] ?? 'kunde' },
+    { key: 'industry', label: 'Branche', aliases: ['branche'] },
+    { key: 'website', label: 'Website', aliases: ['url'] },
+    { key: 'address', label: 'Adresse', aliases: ['anschrift'] },
+    { key: 'country', label: 'Land' },
+    { key: 'customer_no', label: 'Kundennummer', aliases: ['kundennr', 'customer_number'] },
+    { key: 'notes', label: 'Notizen', aliases: ['notiz'] },
+  ],
+};
 
 const TYPES = [
   { key: 'all', label: 'Alle' },
@@ -30,6 +56,7 @@ export default function CrmCompanies() {
   const [form, setForm] = useState({ name: '', type: 'kunde', website: '', industry: '', country: '', customer_no: '' });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
@@ -64,6 +91,9 @@ export default function CrmCompanies() {
               <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
             </Button>
           )}
+          <Button onClick={() => setImportOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+            <Upload className="h-3.5 w-3.5" /> Importieren
+          </Button>
           <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
             <Plus className="h-3.5 w-3.5" /> Neu
           </Button>
@@ -111,6 +141,8 @@ export default function CrmCompanies() {
       )}
 
       <BulkEnrollDialog open={bulkOpen} onClose={() => { setBulkOpen(false); setSelected(new Set()); }} companyIds={Array.from(selected)} />
+
+      <CrmCsvImport open={importOpen} onClose={() => setImportOpen(false)} onDone={load} config={COMPANIES_IMPORT} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

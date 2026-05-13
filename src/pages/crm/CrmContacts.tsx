@@ -6,10 +6,48 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Loader2, Pencil, Send } from 'lucide-react';
+import { Plus, Loader2, Pencil, Send, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
+import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+
+let _missingCompany = 0;
+
+const CONTACTS_IMPORT: CrmImportConfig = {
+  title: 'Kontakte importieren',
+  table: 'contacts',
+  templateFilename: 'kontakte-vorlage.csv',
+  templateHeaders: ['first_name', 'last_name', 'email', 'phone', 'role', 'company_name', 'notes'],
+  templateExample: ['Max', 'Mustermann', 'max@beispiel.de', '+49 30 1234567', 'Einkaufsleiter', 'Beispiel GmbH', 'Erstkontakt Messe'],
+  fields: [
+    { key: 'first_name', label: 'Vorname', required: true, aliases: ['vorname', 'firstname'] },
+    { key: 'last_name', label: 'Nachname', required: true, aliases: ['nachname', 'lastname', 'name'] },
+    { key: 'email', label: 'E-Mail', aliases: ['mail'] },
+    { key: 'phone', label: 'Telefon', aliases: ['tel'] },
+    { key: 'position', label: 'Position', aliases: ['role', 'rolle', 'funktion'] },
+    { key: 'company_name', label: 'Unternehmen (Name)', aliases: ['company', 'firma', 'unternehmen'] },
+    { key: 'notes', label: 'Notizen', aliases: ['notiz'] },
+  ],
+  buildContext: async () => {
+    const { data } = await supabase.from('companies').select('id, name');
+    const map = new Map<string, string>();
+    (data ?? []).forEach((c: any) => map.set(String(c.name).toLowerCase().trim(), c.id));
+    _missingCompany = 0;
+    return { companiesByName: map };
+  },
+  rowAdapter: async (row, ctx) => {
+    const cn = row.company_name;
+    if (cn) {
+      const id = ctx.companiesByName?.get(String(cn).toLowerCase().trim());
+      if (id) row.company_id = id; else _missingCompany++;
+    }
+    delete row.company_name;
+    return row;
+  },
+  extraSummary: () => _missingCompany > 0
+    ? `${_missingCompany} Kontakte ohne zugeordnete Company (Company nicht gefunden)` : null,
+};
 
 export default function CrmContacts() {
   const [rows, setRows] = useState<any[]>([]);
@@ -20,6 +58,7 @@ export default function CrmContacts() {
   const [saving, setSaving] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', position: '', company_id: '' });
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
@@ -58,6 +97,9 @@ export default function CrmContacts() {
               <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
             </Button>
           )}
+          <Button onClick={() => setImportOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+            <Upload className="h-3.5 w-3.5" /> Importieren
+          </Button>
           <Button onClick={openNew} size="sm" className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neu</Button>
         </div>
       </div>
@@ -103,6 +145,8 @@ export default function CrmContacts() {
       )}
 
       <BulkEnrollDialog open={bulkOpen} onClose={() => { setBulkOpen(false); setSelected(new Set()); }} contactIds={Array.from(selected)} />
+
+      <CrmCsvImport open={importOpen} onClose={() => setImportOpen(false)} onDone={load} config={CONTACTS_IMPORT} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
