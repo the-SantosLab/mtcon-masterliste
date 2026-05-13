@@ -138,7 +138,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
             const canModify = isAdmin || n.author_id === userId;
             const isEditing = editingId === n.id;
             return (
-              <div key={n.id} className={cn('px-5 py-3 group', n.pinned && 'bg-primary/5 border-l-2 border-l-primary')}>
+              <div key={n.id} data-compact-row className={cn('px-5 py-3 group', n.pinned && 'bg-primary/5 border-l-2 border-l-primary')}>
                 <div className="flex items-baseline justify-between gap-2 mb-1">
                   <span className="text-xs font-medium text-foreground inline-flex items-center gap-1.5">
                     {n.pinned && <Pin className="h-3 w-3 text-primary fill-primary/30" />}
