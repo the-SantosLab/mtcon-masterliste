@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ACTION_LABELS, FIELD_LABELS, formatRelativeTime } from '@/lib/case-utils';
+import { usePreferences } from '@/contexts/PreferencesContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { CheckSquare, ChevronDown, ChevronUp } from 'lucide-react';
 
