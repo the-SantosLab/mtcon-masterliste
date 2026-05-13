@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Mail, Paperclip, ChevronDown, ChevronRight } from 'lucide-react';
+import { Mail, Paperclip, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
@@ -38,6 +43,8 @@ function formatBytes(b: number | null): string {
 }
 
 export function CaseEmails({ caseId }: Props) {
+  const { isAdmin, role } = useAuth();
+  const canDelete = isAdmin || role === 'staff';
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -73,6 +80,17 @@ export function CaseEmails({ caseId }: Props) {
     if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
     const a = document.createElement('a');
     a.href = data.signedUrl; a.download = name; a.click();
+  };
+
+  const deleteAttachment = async (attachmentId: string, storagePath: string) => {
+    const { error: dbErr } = await (supabase as any)
+      .from('case_email_attachments')
+      .delete()
+      .eq('id', attachmentId);
+    if (dbErr) { toast.error('Löschen fehlgeschlagen'); return; }
+    await supabase.storage.from('case-attachments').remove([storagePath]).catch(() => {});
+    toast.success('Anhang gelöscht');
+    fetchEmails();
   };
 
   if (loading) return <p className="text-xs text-muted-foreground">Laden</p>;
@@ -138,20 +156,47 @@ export function CaseEmails({ caseId }: Props) {
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Anhänge</p>
                     <div className="flex flex-wrap gap-1.5">
                       {e.attachments.map(a => (
-                        <button
+                        <div
                           key={a.id}
-                          onClick={() => download(a.storage_path, a.file_name)}
-                          className={cn(
-                            'inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded',
-                            'bg-background border border-border hover:bg-muted text-foreground'
-                          )}
+                          className="inline-flex items-center gap-0.5 text-[11px] rounded bg-background border border-border text-foreground overflow-hidden"
                         >
-                          <Paperclip className="h-3 w-3 text-muted-foreground" />
-                          <span>{a.file_name}</span>
-                          {a.size_bytes && (
-                            <span className="text-muted-foreground">· {formatBytes(a.size_bytes)}</span>
+                          <button
+                            onClick={() => download(a.storage_path, a.file_name)}
+                            className="inline-flex items-center gap-1.5 px-2 py-1 hover:bg-muted transition-colors"
+                          >
+                            <Paperclip className="h-3 w-3 text-muted-foreground" />
+                            <span>{a.file_name}</span>
+                            {a.size_bytes && (
+                              <span className="text-muted-foreground">· {formatBytes(a.size_bytes)}</span>
+                            )}
+                          </button>
+                          {canDelete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  className="px-1.5 py-1 border-l border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                  title="Anhang löschen"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Anhang löschen?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    „{a.file_name}" wird unwiderruflich entfernt.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteAttachment(a.id, a.storage_path)}>
+                                    Löschen
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           )}
-                        </button>
+                        </div>
                       ))}
                     </div>
                   </div>
