@@ -65,7 +65,14 @@ export function CompleteCaseDialog({ open, onOpenChange, onConfirm, lastSentAt }
             {remaining > 0
               ? `Noch ${remaining} Zeichen bis zum Mindestmaß (${MIN_CHARS}).`
               : `${note.trim().length} Zeichen.`}
-          </p>
+        </div>
+        <div className="border-t border-border pt-3">
+          <NotifyToggle
+            checked={sendEmail}
+            onChange={setSendEmail}
+            lastSentAt={lastSentAt}
+            recipientsHint="Ersteller, Bearbeiter, Watcher"
+          />
         </div>
         <DialogFooter>
           <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleOpenChange(false)} disabled={saving}>
