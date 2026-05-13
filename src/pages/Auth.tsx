@@ -25,6 +25,11 @@ export default function Auth() {
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   if (session) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
+    const isCrmBeta = session.user?.email === 'js@santoslab.de';
+    if (!isCrmBeta) {
+      localStorage.removeItem('mtcon.module');
+      return <Navigate to="/" replace />;
+    }
     return <Navigate to={mod === 'crm' ? '/crm/dashboard' : mod === 'ops' ? '/' : '/modules'} replace />;
   }
 

@@ -61,6 +61,14 @@ function PortalProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function CrmProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { session, loading, user } = useAuth();
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
+  if (!session) return <Navigate to="/auth" replace />;
+  if (user?.email !== 'js@santoslab.de') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function AuthenticatedApp() {
   return (
     <PreferencesProvider>
@@ -90,16 +98,16 @@ function AuthenticatedApp() {
         <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/modules" element={<ProtectedRoute><ModuleSelect /></ProtectedRoute>} />
-        <Route path="/crm" element={<ProtectedRoute><CrmDashboard /></ProtectedRoute>} />
-        <Route path="/crm/dashboard" element={<ProtectedRoute><CrmDashboard /></ProtectedRoute>} />
-        <Route path="/crm/deals" element={<ProtectedRoute><CrmDeals /></ProtectedRoute>} />
-        <Route path="/crm/deals/:id" element={<ProtectedRoute><CrmDealDetail /></ProtectedRoute>} />
-        <Route path="/crm/companies" element={<ProtectedRoute><CrmCompanies /></ProtectedRoute>} />
-        <Route path="/crm/companies/:id" element={<ProtectedRoute><CrmCompanyDetail /></ProtectedRoute>} />
-        <Route path="/crm/contacts" element={<ProtectedRoute><CrmContacts /></ProtectedRoute>} />
-        <Route path="/crm/offers" element={<ProtectedRoute><CrmStub title="Angebote" /></ProtectedRoute>} />
-        <Route path="/crm/activities" element={<ProtectedRoute><CrmStub title="Aktivitäten" /></ProtectedRoute>} />
-        <Route path="/crm/settings" element={<ProtectedRoute><CrmStub title="Einstellungen" /></ProtectedRoute>} />
+        <Route path="/crm" element={<CrmProtectedRoute><CrmDashboard /></CrmProtectedRoute>} />
+        <Route path="/crm/dashboard" element={<CrmProtectedRoute><CrmDashboard /></CrmProtectedRoute>} />
+        <Route path="/crm/deals" element={<CrmProtectedRoute><CrmDeals /></CrmProtectedRoute>} />
+        <Route path="/crm/deals/:id" element={<CrmProtectedRoute><CrmDealDetail /></CrmProtectedRoute>} />
+        <Route path="/crm/companies" element={<CrmProtectedRoute><CrmCompanies /></CrmProtectedRoute>} />
+        <Route path="/crm/companies/:id" element={<CrmProtectedRoute><CrmCompanyDetail /></CrmProtectedRoute>} />
+        <Route path="/crm/contacts" element={<CrmProtectedRoute><CrmContacts /></CrmProtectedRoute>} />
+        <Route path="/crm/offers" element={<CrmProtectedRoute><CrmStub title="Angebote" /></CrmProtectedRoute>} />
+        <Route path="/crm/activities" element={<CrmProtectedRoute><CrmStub title="Aktivitäten" /></CrmProtectedRoute>} />
+        <Route path="/crm/settings" element={<CrmProtectedRoute><CrmStub title="Einstellungen" /></CrmProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>

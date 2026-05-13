@@ -157,8 +157,17 @@ export function AppLayout({ children }: AppLayoutProps) {
               <item.icon className="h-4 w-4" />{item.label}
             </Link>
           ))}
+          {user?.email === 'js@santoslab.de' && (
+            <>
+              <div className="border-t border-sidebar-border my-1" />
+              <Link to="/modules" onClick={() => setOpen(false)} className={linkClass('/modules')}>
+                <RefreshCw className="h-4 w-4" />Module wechseln
+              </Link>
+            </>
+          )}
           {isAdmin && (
             <>
+              <div className="border-t border-sidebar-border my-1" />
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"

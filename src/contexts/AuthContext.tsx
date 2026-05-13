@@ -19,6 +19,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isStaff: boolean;
   isViewer: boolean;
+  isCrmBetaUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin: role === 'admin',
       isStaff: role === 'staff',
       isViewer: role === 'viewer',
+      isCrmBetaUser: user?.email === 'js@santoslab.de',
     }}>
       {children}
     </AuthContext.Provider>
