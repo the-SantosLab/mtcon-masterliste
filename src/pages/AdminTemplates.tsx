@@ -222,7 +222,7 @@ export default function AdminTemplates() {
       .select('title, description, department_id, assigned_role, order_index')
       .eq('template_id', id).order('order_index');
     const { data: newTpl, error } = await (supabase as any).from('case_templates').insert({
-      title: tpl.title + ' (Kopie)', description: tpl.description, sequential_mode: tpl.sequential_mode, due_required: tpl.due_required,
+      title: tpl.title + ' (Kopie)', description: tpl.description, sequential_mode: tpl.sequential_mode, due_required: tpl.due_required, lock_mode: tpl.lock_mode || 'hard',
     }).select('id').single();
     if (error) { toast.error('Fehler: ' + error.message); return; }
     if (tpl.department_ids.length) {
