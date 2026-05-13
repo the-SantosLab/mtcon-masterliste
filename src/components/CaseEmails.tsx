@@ -213,7 +213,7 @@ export function CaseEmails({ caseId }: Props) {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteAttachment(a.id, a.storage_path)}>
+                                  <AlertDialogAction onClick={() => deleteAttachment(a.id, a.storage_path, a.file_name)}>
                                     Löschen
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
