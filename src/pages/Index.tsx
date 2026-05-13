@@ -296,6 +296,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-5 gap-2">
                 {KPI_DEFS.map(({ key, title, icon: Icon }) => {
                   const isActive = activeFilters.includes(key);
+                  const accent = FILTER_COLORS[key];
                   return (
                     <button
                       key={key}
@@ -307,8 +308,8 @@ export default function Dashboard() {
                         isActive ? 'border-primary/60 shadow-[0_0_0_1px_hsl(var(--primary)/0.5)]' : 'border-border/40',
                       )}
                     >
-                      <Icon className="h-3.5 w-3.5 text-muted-foreground mb-2" />
-                      <div className="text-xl lg:text-2xl font-semibold text-foreground tabular-nums leading-none">{counts[key]}</div>
+                      <Icon className="h-3.5 w-3.5 mb-2" style={{ color: accent }} />
+                      <div className="text-xl lg:text-2xl font-semibold tabular-nums leading-none" style={{ color: accent }}>{counts[key]}</div>
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">{title}</div>
                     </button>
                   );
