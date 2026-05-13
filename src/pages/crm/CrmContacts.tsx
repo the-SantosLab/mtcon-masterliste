@@ -102,6 +102,8 @@ export default function CrmContacts() {
         </div>
       )}
 
+      <BulkEnrollDialog open={bulkOpen} onClose={() => { setBulkOpen(false); setSelected(new Set()); }} contactIds={Array.from(selected)} />
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? 'Kontakt bearbeiten' : 'Neuer Kontakt'}</DialogTitle></DialogHeader>
