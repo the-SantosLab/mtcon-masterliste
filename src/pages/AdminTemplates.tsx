@@ -126,6 +126,7 @@ export default function AdminTemplates() {
       description: tpl.description || '',
       sequential_mode: tpl.sequential_mode || false,
       due_required: tpl.due_required || false,
+      lock_mode: (tpl.lock_mode === 'soft' ? 'soft' : 'hard'),
       department_ids: [...tpl.department_ids],
       tasks: ((tasks || []) as any[]).map((t, i) => ({ ...t, order_index: i })),
     });
