@@ -47,6 +47,8 @@ type CaseWithRels = Tables<'cases'> & {
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, isViewer, profile } = useAuth();
+  const { preferences } = usePreferences();
+  const compactCls = preferences.compactTables ? 'lov-compact-region' : '';
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
