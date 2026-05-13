@@ -91,6 +91,9 @@ export default function CrmCompanies() {
               <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
             </Button>
           )}
+          <Button onClick={() => setImportOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+            <Upload className="h-3.5 w-3.5" /> Importieren
+          </Button>
           <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
             <Plus className="h-3.5 w-3.5" /> Neu
           </Button>
