@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Pencil, Trash2, Eye, Copy, X, ArrowUp, ArrowDown, ListChecks, ArrowRightCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/case-utils';
+import { cn } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
 
 interface Department { id: string; name: string; code: string | null; parent_id: string | null; }
