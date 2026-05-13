@@ -42,8 +42,6 @@ const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] 
   { key: 'week', title: 'Diese Woche', icon: Calendar },
 ];
 
-const FILTER_STORAGE_KEY = 'dashboard.activeFilters.v2';
-const RANGE_STORAGE_KEY = 'dashboard.chartRange.v2';
 
 const matchesFilter = (c: CaseRow, k: FilterKey, today: string, weekEnd: string): boolean => {
   switch (k) {
