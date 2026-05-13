@@ -56,6 +56,7 @@ export default function CrmCompanies() {
   const [form, setForm] = useState({ name: '', type: 'kunde', website: '', industry: '', country: '', customer_no: '' });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
