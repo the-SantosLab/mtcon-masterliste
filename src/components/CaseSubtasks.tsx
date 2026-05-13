@@ -58,6 +58,7 @@ interface CaseSubtasksProps {
   userId: string;
   sequentialMode?: boolean;
   dueRequired?: boolean;
+  lockMode?: 'hard' | 'soft';
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -182,7 +183,7 @@ function ProcessView({ tasks, firstOpenIdx, departments, profiles, canEdit, comp
   );
 }
 
-export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, dueRequired = false }: CaseSubtasksProps) {
+export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, dueRequired = false, lockMode = 'hard' }: CaseSubtasksProps) {
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -207,10 +208,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [PAGE_SIZE]);
 
-  // Locked-task indices in sequential mode: every task after the first non-done task is locked
+  // Locked-task indices in sequential mode: every task after the first non-done task is locked.
+  // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
   const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
   const firstOpenIdx = sortedTasks.findIndex(t => t.status !== 'done');
   const isLocked = (taskId: string): boolean => {
+    if (!sequentialMode || lockMode === 'soft') return false;
+    const idx = sortedTasks.findIndex(t => t.id === taskId);
+    if (idx < 0) return false;
+    if (sortedTasks[idx].status === 'done') return false;
+    return firstOpenIdx >= 0 && idx > firstOpenIdx;
+  };
+  const isOutOfOrder = (taskId: string): boolean => {
     if (!sequentialMode) return false;
     const idx = sortedTasks.findIndex(t => t.id === taskId);
     if (idx < 0) return false;
@@ -588,6 +597,58 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             className="h-full rounded-full bg-[hsl(var(--status-done))] transition-all duration-300"
             style={{ width: `${(completedCount / totalCount) * 100}%` }}
           />
+        </div>
+      )}
+
+      {/* Horizontale Prozess-Chevrons (ERP-Stil) */}
+      {sequentialMode && sortedTasks.length > 0 && (
+        <div className="mb-4 -mx-1 overflow-x-auto">
+          <ol className="flex items-stretch gap-0 px-1 min-w-fit">
+            {sortedTasks.map((t, idx) => {
+              const isDone = t.status === 'done';
+              const isActive = !isDone && idx === firstOpenIdx;
+              const isLockedStep = !isDone && idx > firstOpenIdx && firstOpenIdx >= 0;
+              const isSoftAhead = isLockedStep && lockMode === 'soft';
+              const isHardLocked = isLockedStep && lockMode === 'hard';
+              return (
+                <li key={t.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById(`subtask-${t.id}`);
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
+                    title={t.title}
+                    className={cn(
+                      'flex items-center h-7 pl-3 pr-5 text-[10px] font-medium border-y border-l whitespace-nowrap max-w-[160px] truncate transition-colors',
+                      idx === 0 && 'rounded-l-md',
+                      idx === sortedTasks.length - 1 && 'border-r rounded-r-md pr-3',
+                      isDone && 'bg-[hsl(var(--status-done))]/15 border-[hsl(var(--status-done))]/40 text-[hsl(var(--status-done))]',
+                      isActive && 'bg-primary text-primary-foreground border-primary',
+                      isHardLocked && 'bg-muted/40 border-border text-muted-foreground/60',
+                      isSoftAhead && 'bg-muted/20 border-dashed border-border text-muted-foreground hover:text-foreground',
+                      !isDone && !isActive && !isLockedStep && 'bg-card border-border text-foreground hover:bg-muted/40',
+                    )}
+                    style={
+                      idx < sortedTasks.length - 1
+                        ? { clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)' }
+                        : { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 10px 50%)' }
+                    }
+                  >
+                    <span className="mr-1 inline-flex items-center justify-center h-3.5 w-3.5 shrink-0">
+                      {isDone ? <CheckCircle2 className="h-3 w-3" /> : isHardLocked ? <Lock className="h-2.5 w-2.5" /> : idx + 1}
+                    </span>
+                    <span className="truncate">{t.title}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          {lockMode === 'soft' && (
+            <p className="mt-1 px-1 text-[10px] text-muted-foreground">
+              Sequenzieller Prozess (weicher Modus): Folgeschritte sind bearbeitbar, die empfohlene Reihenfolge ist gestrichelt markiert.
+            </p>
+          )}
         </div>
       )}
 

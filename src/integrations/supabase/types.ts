@@ -448,6 +448,7 @@ export type Database = {
           due_required: boolean
           id: string
           last_used_at: string | null
+          lock_mode: string
           sequential_mode: boolean
           title: string
           updated_at: string
@@ -459,6 +460,7 @@ export type Database = {
           due_required?: boolean
           id?: string
           last_used_at?: string | null
+          lock_mode?: string
           sequential_mode?: boolean
           title: string
           updated_at?: string
@@ -470,6 +472,7 @@ export type Database = {
           due_required?: boolean
           id?: string
           last_used_at?: string | null
+          lock_mode?: string
           sequential_mode?: boolean
           title?: string
           updated_at?: string
@@ -501,6 +504,7 @@ export type Database = {
           internal_area_code: string | null
           last_changed_at: string | null
           last_changed_by: string | null
+          lock_mode: string
           note: string | null
           priority_order: number
           product_code: string | null
@@ -543,6 +547,7 @@ export type Database = {
           internal_area_code?: string | null
           last_changed_at?: string | null
           last_changed_by?: string | null
+          lock_mode?: string
           note?: string | null
           priority_order?: number
           product_code?: string | null
@@ -585,6 +590,7 @@ export type Database = {
           internal_area_code?: string | null
           last_changed_at?: string | null
           last_changed_by?: string | null
+          lock_mode?: string
           note?: string | null
           priority_order?: number
           product_code?: string | null

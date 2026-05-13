@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Pencil, Trash2, Eye, Copy, X, ArrowUp, ArrowDown, ListChecks, ArrowRightCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/case-utils';
+import { cn } from '@/lib/utils';
 import { Navigate } from 'react-router-dom';
 
 interface Department { id: string; name: string; code: string | null; parent_id: string | null; }
@@ -37,12 +38,13 @@ interface Template {
   last_used_at: string | null;
   sequential_mode: boolean;
   due_required: boolean;
+  lock_mode: 'hard' | 'soft';
   department_ids: string[];
   task_count: number;
 }
 
-const emptyForm = (): { title: string; description: string; sequential_mode: boolean; due_required: boolean; department_ids: string[]; tasks: TemplateTask[] } => ({
-  title: '', description: '', sequential_mode: false, due_required: false, department_ids: [], tasks: [],
+const emptyForm = (): { title: string; description: string; sequential_mode: boolean; due_required: boolean; lock_mode: 'hard' | 'soft'; department_ids: string[]; tasks: TemplateTask[] } => ({
+  title: '', description: '', sequential_mode: false, due_required: false, lock_mode: 'hard', department_ids: [], tasks: [],
 });
 
 export default function AdminTemplates() {
@@ -67,7 +69,7 @@ export default function AdminTemplates() {
   const loadAll = async () => {
     setLoading(true);
     const [tplRes, deptRes, joinRes, taskCountRes] = await Promise.all([
-      (supabase as any).from('case_templates').select('id, title, description, created_at, last_used_at, sequential_mode, due_required').order('created_at', { ascending: false }),
+      (supabase as any).from('case_templates').select('id, title, description, created_at, last_used_at, sequential_mode, due_required, lock_mode').order('created_at', { ascending: false }),
       supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order'),
       (supabase as any).from('case_template_departments').select('template_id, department_id'),
       (supabase as any).from('case_template_tasks').select('template_id'),
@@ -125,6 +127,7 @@ export default function AdminTemplates() {
       description: tpl.description || '',
       sequential_mode: tpl.sequential_mode || false,
       due_required: tpl.due_required || false,
+      lock_mode: (tpl.lock_mode === 'soft' ? 'soft' : 'hard'),
       department_ids: [...tpl.department_ids],
       tasks: ((tasks || []) as any[]).map((t, i) => ({ ...t, order_index: i })),
     });
@@ -167,14 +170,14 @@ export default function AdminTemplates() {
       let tplId = editingId;
       if (editingId) {
         const { error } = await (supabase as any).from('case_templates').update({
-          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required,
+          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required, lock_mode: form.lock_mode,
         }).eq('id', editingId);
         if (error) throw error;
         await (supabase as any).from('case_template_departments').delete().eq('template_id', editingId);
         await (supabase as any).from('case_template_tasks').delete().eq('template_id', editingId);
       } else {
         const { data, error } = await (supabase as any).from('case_templates').insert({
-          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required,
+          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required, lock_mode: form.lock_mode,
         }).select('id').single();
         if (error) throw error;
         tplId = data.id;
@@ -220,7 +223,7 @@ export default function AdminTemplates() {
       .select('title, description, department_id, assigned_role, order_index')
       .eq('template_id', id).order('order_index');
     const { data: newTpl, error } = await (supabase as any).from('case_templates').insert({
-      title: tpl.title + ' (Kopie)', description: tpl.description, sequential_mode: tpl.sequential_mode, due_required: tpl.due_required,
+      title: tpl.title + ' (Kopie)', description: tpl.description, sequential_mode: tpl.sequential_mode, due_required: tpl.due_required, lock_mode: tpl.lock_mode || 'hard',
     }).select('id').single();
     if (error) { toast.error('Fehler: ' + error.message); return; }
     if (tpl.department_ids.length) {
@@ -345,6 +348,27 @@ export default function AdminTemplates() {
                 onCheckedChange={v => setForm(f => ({ ...f, sequential_mode: v }))}
               />
             </div>
+            {form.sequential_mode && (
+              <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
+                <div className="space-y-0.5">
+                  <Label className="text-xs text-foreground">Sperrmodus</Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    <strong>Hart:</strong> Folgeschritt bleibt gesperrt, bis Vorgänger erledigt ist.<br />
+                    <strong>Weich:</strong> Folgeschritte sind bearbeitbar; UI weist nur auf die Reihenfolge hin.
+                  </p>
+                </div>
+                <div className="flex rounded border border-border overflow-hidden shrink-0">
+                  <button type="button" onClick={() => setForm(f => ({ ...f, lock_mode: 'hard' }))}
+                    className={cn('px-2.5 py-1 text-[11px]', form.lock_mode === 'hard' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground')}>
+                    Hart
+                  </button>
+                  <button type="button" onClick={() => setForm(f => ({ ...f, lock_mode: 'soft' }))}
+                    className={cn('px-2.5 py-1 text-[11px] border-l border-border', form.lock_mode === 'soft' ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:text-foreground')}>
+                    Weich
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-start justify-between gap-3 rounded border border-border bg-muted/20 p-2.5">
               <div className="space-y-0.5">
                 <Label className="text-xs text-foreground">Termin verpflichtend</Label>
