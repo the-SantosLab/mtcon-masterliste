@@ -142,6 +142,8 @@ export default function CrmCompanies() {
 
       <BulkEnrollDialog open={bulkOpen} onClose={() => { setBulkOpen(false); setSelected(new Set()); }} companyIds={Array.from(selected)} />
 
+      <CrmCsvImport open={importOpen} onClose={() => setImportOpen(false)} onDone={load} config={COMPANIES_IMPORT} />
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Neues Unternehmen</DialogTitle></DialogHeader>
