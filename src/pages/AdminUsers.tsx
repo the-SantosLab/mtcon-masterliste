@@ -421,6 +421,12 @@ export default function AdminUsers() {
             </div>
           </TabsContent>
 
+          <TabsContent value="personio" className="mt-0">
+            <div className="rounded-md border border-border bg-card p-4">
+              <PersonioSync onDone={fetchUsers} />
+            </div>
+          </TabsContent>
+
           <TabsContent value="matrix" className="mt-0">
             <PermissionMatrix />
           </TabsContent>
