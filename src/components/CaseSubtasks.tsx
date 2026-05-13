@@ -341,7 +341,11 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     await autoForward(task);
 
     // Notify watchers via email (fire-and-forget)
-    supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } }).catch(() => {});
+    if (sendCompleteEmail) {
+      supabase.functions.invoke('notify-task-abgeschlossen', { body: { caseId, taskId: task.id, actorId: userId } })
+        .then(() => setTimeout(() => { setLogBump(b => b + 1); }, 1500))
+        .catch(() => {});
+    }
 
     if (sequentialMode) {
       const idx = sortedTasks.findIndex(t => t.id === task.id);
