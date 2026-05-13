@@ -48,6 +48,13 @@ import CrmOffers from "./pages/crm/CrmOffers";
 import CrmOfferDetail from "./pages/crm/CrmOfferDetail";
 import CrmActivities from "./pages/crm/CrmActivities";
 import CrmSettings from "./pages/crm/CrmSettings";
+import CrmWiki from "./pages/crm/CrmWiki";
+import CrmOutbound from "./pages/crm/CrmOutbound";
+import CrmSequenceDetail from "./pages/crm/CrmSequenceDetail";
+import CrmEnrollments from "./pages/crm/CrmEnrollments";
+import CrmLeads from "./pages/crm/CrmLeads";
+import CrmCalendar from "./pages/crm/CrmCalendar";
+import CrmRoles from "./pages/crm/CrmRoles";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +121,13 @@ function AuthenticatedApp() {
         <Route path="/crm/activities" element={<CrmProtectedRoute><CrmActivities /></CrmProtectedRoute>} />
         <Route path="/crm/settings" element={<CrmProtectedRoute><CrmSettings /></CrmProtectedRoute>} />
         <Route path="/crm/settings/preislisten" element={<CrmProtectedRoute><CrmSettings /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/roles" element={<CrmProtectedRoute><CrmRoles /></CrmProtectedRoute>} />
+        <Route path="/crm/wiki" element={<CrmProtectedRoute><CrmWiki /></CrmProtectedRoute>} />
+        <Route path="/crm/outbound" element={<CrmProtectedRoute><CrmOutbound /></CrmProtectedRoute>} />
+        <Route path="/crm/outbound/sequences/:id" element={<CrmProtectedRoute><CrmSequenceDetail /></CrmProtectedRoute>} />
+        <Route path="/crm/outbound/enrollments" element={<CrmProtectedRoute><CrmEnrollments /></CrmProtectedRoute>} />
+        <Route path="/crm/outbound/leads" element={<CrmProtectedRoute><CrmLeads /></CrmProtectedRoute>} />
+        <Route path="/crm/activities/calendar" element={<CrmProtectedRoute><CrmCalendar /></CrmProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>
