@@ -48,6 +48,7 @@ export function CaseEmails({ caseId }: Props) {
   const [emails, setEmails] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [pendingDelete, setPendingDelete] = useState<Set<string>>(new Set());
 
   const fetchEmails = async () => {
     const { data, error } = await (supabase as any)
@@ -82,15 +83,38 @@ export function CaseEmails({ caseId }: Props) {
     a.href = data.signedUrl; a.download = name; a.click();
   };
 
-  const deleteAttachment = async (attachmentId: string, storagePath: string) => {
-    const { error: dbErr } = await (supabase as any)
-      .from('case_email_attachments')
-      .delete()
-      .eq('id', attachmentId);
-    if (dbErr) { toast.error('Löschen fehlgeschlagen'); return; }
-    await supabase.storage.from('case-attachments').remove([storagePath]).catch(() => {});
-    toast.success('Anhang gelöscht');
-    fetchEmails();
+  const deleteAttachment = (attachmentId: string, storagePath: string, fileName: string) => {
+    // Optimistisch ausblenden
+    setPendingDelete(prev => { const n = new Set(prev); n.add(attachmentId); return n; });
+    let cancelled = false;
+
+    const timer = window.setTimeout(async () => {
+      if (cancelled) return;
+      const { error: dbErr } = await (supabase as any)
+        .from('case_email_attachments')
+        .delete()
+        .eq('id', attachmentId);
+      if (dbErr) {
+        toast.error('Löschen fehlgeschlagen');
+        setPendingDelete(prev => { const n = new Set(prev); n.delete(attachmentId); return n; });
+        return;
+      }
+      await supabase.storage.from('case-attachments').remove([storagePath]).catch(() => {});
+      fetchEmails();
+    }, 6000);
+
+    toast(`Anhang „${fileName}" gelöscht`, {
+      duration: 6000,
+      action: {
+        label: 'Rückgängig',
+        onClick: () => {
+          cancelled = true;
+          window.clearTimeout(timer);
+          setPendingDelete(prev => { const n = new Set(prev); n.delete(attachmentId); return n; });
+          toast.success('Löschung rückgängig gemacht');
+        },
+      },
+    });
   };
 
   if (loading) return <p className="text-xs text-muted-foreground">Laden</p>;
@@ -155,7 +179,7 @@ export function CaseEmails({ caseId }: Props) {
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Anhänge</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {e.attachments.map(a => (
+                      {e.attachments.filter(a => !pendingDelete.has(a.id)).map(a => (
                         <div
                           key={a.id}
                           className="inline-flex items-center gap-0.5 text-[11px] rounded bg-background border border-border text-foreground overflow-hidden"
@@ -189,7 +213,7 @@ export function CaseEmails({ caseId }: Props) {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteAttachment(a.id, a.storage_path)}>
+                                  <AlertDialogAction onClick={() => deleteAttachment(a.id, a.storage_path, a.file_name)}>
                                     Löschen
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
