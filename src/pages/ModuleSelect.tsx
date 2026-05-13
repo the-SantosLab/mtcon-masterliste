@@ -1,11 +1,16 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClipboardList, Briefcase, LogOut } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 export default function ModuleSelect() {
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, user } = useAuth();
+
+  // CRM is beta-only for js@santoslab.de
+  if (user?.email !== 'js@santoslab.de') {
+    return <Navigate to="/" replace />;
+  }
 
   const choose = (mod: 'ops' | 'crm') => {
     localStorage.setItem('mtcon.module', mod);
