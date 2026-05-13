@@ -32,7 +32,8 @@ export function ActivityTimeline({ caseId, refreshKey }: ActivityTimelineProps) 
   const [expanded, setExpanded] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [depts, setDepts] = useState<Record<string, string>>({});
-  const LIMIT = 20;
+  const { preferences } = usePreferences();
+  const LIMIT = preferences.compactTables ? 5 : 20;
 
   const fetchActivities = async () => {
     const { data } = await supabase
