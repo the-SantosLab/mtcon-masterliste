@@ -157,14 +157,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               <item.icon className="h-4 w-4" />{item.label}
             </Link>
           ))}
-          {user?.email === 'js@santoslab.de' && (
-            <>
-              <div className="border-t border-sidebar-border my-1" />
-              <Link to="/modules" onClick={() => setOpen(false)} className={linkClass('/modules')}>
-                <RefreshCw className="h-4 w-4" />Module wechseln
-              </Link>
-            </>
-          )}
+          <CrmModuleLink linkClass={linkClass} onClick={() => setOpen(false)} />
+
           {isAdmin && (
             <>
               <div className="border-t border-sidebar-border my-1" />
