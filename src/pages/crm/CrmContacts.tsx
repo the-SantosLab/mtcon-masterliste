@@ -146,6 +146,8 @@ export default function CrmContacts() {
 
       <BulkEnrollDialog open={bulkOpen} onClose={() => { setBulkOpen(false); setSelected(new Set()); }} contactIds={Array.from(selected)} />
 
+      <CrmCsvImport open={importOpen} onClose={() => setImportOpen(false)} onDone={load} config={CONTACTS_IMPORT} />
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? 'Kontakt bearbeiten' : 'Neuer Kontakt'}</DialogTitle></DialogHeader>
