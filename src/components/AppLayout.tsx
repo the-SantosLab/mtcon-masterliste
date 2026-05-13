@@ -205,7 +205,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               title={isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
               className="h-12 w-12 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
             >
-              {isDark ? <Sun className="h-10 w-10" /> : <Moon className="h-10 w-10" />}
+              {isDark ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
             </button>
             <button
               type="button"
@@ -216,7 +216,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 isCompact && 'text-foreground'
               )}
             >
-              {isCompact ? <AlignJustify className="h-10 w-10" /> : <AlignLeft className="h-10 w-10" />}
+              {isCompact ? <AlignJustify className="h-6 w-6" /> : <AlignLeft className="h-6 w-6" />}
             </button>
           </div>
         </div>
