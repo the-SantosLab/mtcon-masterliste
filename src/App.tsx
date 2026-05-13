@@ -36,6 +36,14 @@ import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
 import PortalCreateTicket from "./pages/portal/PortalCreateTicket";
 import PortalTicketDetail from "./pages/portal/PortalTicketDetail";
+import ModuleSelect from "./pages/ModuleSelect";
+import CrmDashboard from "./pages/crm/CrmDashboard";
+import CrmDeals from "./pages/crm/CrmDeals";
+import CrmDealDetail from "./pages/crm/CrmDealDetail";
+import CrmCompanies from "./pages/crm/CrmCompanies";
+import CrmCompanyDetail from "./pages/crm/CrmCompanyDetail";
+import CrmContacts from "./pages/crm/CrmContacts";
+import CrmStub from "./pages/crm/CrmStub";
 
 const queryClient = new QueryClient();
 
