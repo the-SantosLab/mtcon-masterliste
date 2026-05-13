@@ -308,6 +308,22 @@ export default function CrmDealDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={wikiOpen} onOpenChange={setWikiOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Wissensdatenbank durchsuchen</DialogTitle></DialogHeader>
+          <Input autoFocus value={wikiQuery} onChange={e => searchWiki(e.target.value)} placeholder="Suchbegriff…" className="h-8 text-xs" />
+          <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+            {wikiResults.length === 0 && wikiQuery && <p className="text-xs text-muted-foreground">Keine Treffer.</p>}
+            {wikiResults.map(r => (
+              <a key={r.id} href={`/crm/wiki?article=${r.id}`} target="_blank" rel="noreferrer" className="block p-3 rounded border border-border bg-card/40 hover:bg-card transition-colors">
+                <p className="text-xs font-semibold text-foreground">{r.title}</p>
+                <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{r.body}</p>
+              </a>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </CrmLayout>
   );
 }
