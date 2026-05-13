@@ -203,7 +203,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
               title={isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
-              className="h-10 w-10 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              className="h-12 w-12 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
             >
               {isDark ? <Sun className="h-10 w-10" /> : <Moon className="h-10 w-10" />}
             </button>
@@ -212,7 +212,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               onClick={() => setCompactTables(!isCompact)}
               title={isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               className={cn(
-                'h-10 w-10 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                'h-12 w-12 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
                 isCompact && 'text-foreground'
               )}
             >
