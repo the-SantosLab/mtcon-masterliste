@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { CrmSettingsTabs } from '@/components/crm/CrmSettingsTabs';
 
 const TIERS = ['standard', 'premium', 'distributor'] as const;
 const TIER_LABEL: Record<string, string> = { standard: 'Standard', premium: 'Premium', distributor: 'Distributor' };
@@ -86,8 +87,10 @@ export default function CrmSettings() {
 
   return (
     <CrmLayout>
+      <h1 className="text-xl font-semibold text-foreground mb-1">Einstellungen</h1>
+      <CrmSettingsTabs />
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Preislisten</h1>
+        <h2 className="text-base font-semibold text-foreground">Preislisten</h2>
         <div className="flex gap-2">
           <label className="inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs border border-border bg-card/60 hover:bg-card cursor-pointer">
             <Upload className="h-3.5 w-3.5" /> CSV-Import
