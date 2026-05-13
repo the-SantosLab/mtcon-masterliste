@@ -397,11 +397,23 @@ export default function Dashboard() {
         </div>
 
         {/* Drilldown panel */}
-        {activeFilter && (
+        {activeFilters.length > 0 && (
           <div className="glass-card overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/50 flex-wrap">
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-medium text-foreground">{FILTER_LABELS[activeFilter]}</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm font-medium text-foreground">
+                  {activeFilters.length === 1 ? FILTER_LABELS[activeFilters[0]] : 'Auswahl'}
+                </h2>
+                {activeFilters.length > 1 && (
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {activeFilters.map(k => (
+                      <span key={k} className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px]" style={{ background: `${FILTER_COLORS[k]}22`, color: FILTER_COLORS[k] }}>
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: FILTER_COLORS[k] }} />
+                        {FILTER_LABELS[k]}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <span className="text-[11px] text-muted-foreground tabular-nums">{drilldownItems.length} Vorgang/Vorgänge</span>
               </div>
               <div className="flex items-center gap-1">
@@ -427,7 +439,7 @@ export default function Dashboard() {
                     <Users className="h-3 w-3" /> Alle
                   </button>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveFilter(null)} aria-label="Schließen">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveFilters([])} aria-label="Schließen">
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
