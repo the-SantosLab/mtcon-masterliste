@@ -25,6 +25,11 @@ export default function CrmDealDetail() {
   const [activities, setActivities] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [reasons, setReasons] = useState<any[]>([]);
+  const [protections, setProtections] = useState<any[]>([]);
+  const [protectionAck, setProtectionAck] = useState<boolean>(false);
+  const [wikiOpen, setWikiOpen] = useState(false);
+  const [wikiQuery, setWikiQuery] = useState('');
+  const [wikiResults, setWikiResults] = useState<any[]>([]);
   const [pendingStage, setPendingStage] = useState<StageKey | null>(null);
   const [wonValue, setWonValue] = useState('');
   const [lostReason, setLostReason] = useState('');
@@ -46,7 +51,19 @@ export default function CrmDealDetail() {
     setActivities(acts ?? []);
     setOffers(ofs ?? []);
     setReasons(lr ?? []);
+    if (d?.company_id) {
+      const { data: prot } = await supabase.from('project_protection').select('*').eq('company_id', d.company_id).eq('status', 'aktiv');
+      setProtections(prot ?? []);
+    } else { setProtections([]); }
     setLoading(false);
+  };
+
+  const searchWiki = async (q: string) => {
+    setWikiQuery(q);
+    if (!q.trim()) { setWikiResults([]); return; }
+    const { data } = await supabase.from('wiki_articles').select('id, title, body, tags')
+      .or(`title.ilike.%${q}%,body.ilike.%${q}%`).limit(10);
+    setWikiResults(data ?? []);
   };
 
   const save = async (patch?: any) => {
@@ -147,6 +164,22 @@ export default function CrmDealDetail() {
             {formatEUR(deal.stage === 'won' ? deal.value_final : deal.value_estimated)}
           </span>
         </div>
+      </div>
+
+      {protections.length > 0 && !protectionAck && (
+        <div className="mb-5 p-3 rounded border border-amber-500/40 bg-amber-500/10 text-amber-100">
+          <p className="text-xs font-semibold mb-1">⚠ Projektschutz aktiv</p>
+          {protections.map(p => (
+            <p key={p.id} className="text-[11px] text-amber-100/90">
+              Distributor: <strong>{p.distributor_name}</strong> · Scope: {p.scope_type}{p.scope_detail ? ` (${p.scope_detail})` : ''}{p.valid_until ? ` · gültig bis ${new Date(p.valid_until).toLocaleDateString('de-DE')}` : ''}
+            </p>
+          ))}
+          <button onClick={() => setProtectionAck(true)} className="mt-2 text-[11px] underline hover:no-underline">Schutz zur Kenntnis genommen</button>
+        </div>
+      )}
+
+      <div className="mb-3 flex justify-end">
+        <button onClick={() => { setWikiOpen(true); setWikiQuery(''); setWikiResults([]); }} className="text-[11px] text-muted-foreground hover:text-foreground underline">Wiki durchsuchen</button>
       </div>
 
       <div className="mb-5 flex flex-wrap gap-1.5">
@@ -273,6 +306,22 @@ export default function CrmDealDetail() {
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Lost bestätigen'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={wikiOpen} onOpenChange={setWikiOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Wissensdatenbank durchsuchen</DialogTitle></DialogHeader>
+          <Input autoFocus value={wikiQuery} onChange={e => searchWiki(e.target.value)} placeholder="Suchbegriff…" className="h-8 text-xs" />
+          <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+            {wikiResults.length === 0 && wikiQuery && <p className="text-xs text-muted-foreground">Keine Treffer.</p>}
+            {wikiResults.map(r => (
+              <a key={r.id} href={`/crm/wiki?article=${r.id}`} target="_blank" rel="noreferrer" className="block p-3 rounded border border-border bg-card/40 hover:bg-card transition-colors">
+                <p className="text-xs font-semibold text-foreground">{r.title}</p>
+                <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{r.body}</p>
+              </a>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </CrmLayout>
