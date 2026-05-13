@@ -871,6 +871,27 @@ export type Database = {
           },
         ]
       }
+      integration_settings: {
+        Row: {
+          config: Json
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config?: Json
+          id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config?: Json
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       internal_areas: {
         Row: {
           code: string
