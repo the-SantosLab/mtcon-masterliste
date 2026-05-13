@@ -205,6 +205,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const { preferences } = usePreferences();
   const PAGE_SIZE = preferences.compactTables ? 5 : 20;
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [PAGE_SIZE]);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked
   const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
