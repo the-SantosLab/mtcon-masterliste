@@ -569,7 +569,7 @@ export default function CaseDetail() {
                         <PopoverTrigger asChild>
                           <button className="text-[13px] text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5 group">
                             <span>{formatDate(c.due_at) || '–'}</span>
-                            <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
+                            <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground dark:text-foreground/80 group-hover:text-primary transition-colors" />
                           </button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
