@@ -119,6 +119,8 @@ export default function CrmActivities() {
                         <span className={`text-xs font-medium ${a.completed_at ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{a.subject}</span>
                         {a.auto_generated && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-muted text-muted-foreground">Auto</span>}
                         {overdue && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-destructive/20 text-destructive">Überfällig</span>}
+                        {a.type === 'email' && tracking[a.id] && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-emerald-500/15 text-emerald-400">Gesendet</span>}
+                        {a.type === 'email' && tracking[a.id]?.opened_at && <span className="px-1.5 py-0.5 rounded text-[9px] uppercase bg-blue-500/15 text-blue-400">Geöffnet · {new Date(tracking[a.id].opened_at).toLocaleDateString('de-DE')}</span>}
                       </div>
                       <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-2 flex-wrap">
                         {a.deals && <Link to={`/crm/deals/${a.deal_id}`} className="hover:text-primary">→ {a.deals.title}</Link>}
