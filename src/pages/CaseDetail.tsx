@@ -786,21 +786,17 @@ export default function CaseDetail() {
 
               <div className="space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Dateien</p>
-                <div className={compactCls}>
-                  <FileAttachments
-                    bucket="case-attachments"
-                    folder={`cases/${c.id}`}
-                    canUpload={!isViewer && !isTerminalStatus(c.status)}
-                    canDelete={!isViewer}
-                  />
-                </div>
+                <FileAttachments
+                  bucket="case-attachments"
+                  folder={`cases/${c.id}`}
+                  canUpload={!isViewer && !isTerminalStatus(c.status)}
+                  canDelete={!isViewer}
+                />
               </div>
 
               <div className="space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">E-Mails</p>
-                <div className={compactCls}>
-                  <CaseEmails caseId={c.id} />
-                </div>
+                <CaseEmails caseId={c.id} />
               </div>
             </div>
 
