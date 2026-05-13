@@ -371,11 +371,12 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-red-500" forceLabel="!" />Überfällig</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-yellow-500" forceLabel="⏱" />Fällig ≤3 Tage</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-emerald-500" forceLabel="✓" />In Arbeit</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'nicht_begonnen' as any} dueAt={null} forceColor="bg-blue-500" forceLabel="–" />Nicht begonnen</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-purple-500" forceLabel="?" />Ohne Endtermin</span>
+                {(Object.keys(FILTER_LABELS) as FilterKey[]).map(k => (
+                  <span key={k} className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full" style={{ background: FILTER_COLORS[k] }} />
+                    {FILTER_LABELS[k]}
+                  </span>
+                ))}
               </div>
             </div>
 
