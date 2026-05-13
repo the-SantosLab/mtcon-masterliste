@@ -198,25 +198,25 @@ export function AppLayout({ children }: AppLayoutProps) {
             alt="MTCON goes ERP"
             className="w-full max-w-[120px] h-auto opacity-90"
           />
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
               title={isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
-              className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              className="h-[60px] w-[60px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
             >
-              {isDark ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+              {isDark ? <Sun className="h-7 w-7" /> : <Moon className="h-7 w-7" />}
             </button>
             <button
               type="button"
               onClick={() => setCompactTables(!isCompact)}
               title={isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               className={cn(
-                'h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                'h-[60px] w-[60px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
                 isCompact && 'text-foreground'
               )}
             >
-              {isCompact ? <AlignJustify className="h-3 w-3" /> : <AlignLeft className="h-3 w-3" />}
+              {isCompact ? <AlignJustify className="h-7 w-7" /> : <AlignLeft className="h-7 w-7" />}
             </button>
           </div>
         </div>
