@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
 type FilterKey = 'open' | 'in_progress' | 'overdue' | 'today' | 'week';
+type ChartRange = 'week' | 'month' | 'year';
 
 const FILTER_LABELS: Record<FilterKey, string> = {
   open: 'Offen',
@@ -22,6 +23,15 @@ const FILTER_LABELS: Record<FilterKey, string> = {
   overdue: 'In Verzug',
   today: 'Heute fällig',
   week: 'Diese Woche fällig',
+};
+
+// Farbzuweisungen pro Status (HSL, abgestimmt auf bestehende Legende)
+const FILTER_COLORS: Record<FilterKey, string> = {
+  open: 'hsl(217 91% 60%)',        // blau
+  in_progress: 'hsl(160 84% 39%)', // emerald
+  overdue: 'hsl(0 84% 60%)',       // rot
+  today: 'hsl(45 93% 47%)',        // gelb
+  week: 'hsl(270 76% 58%)',        // violett
 };
 
 const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] = [
@@ -32,12 +42,35 @@ const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] 
   { key: 'week', title: 'Diese Woche', icon: Calendar },
 ];
 
+const FILTER_STORAGE_KEY = 'dashboard.activeFilters.v2';
+const RANGE_STORAGE_KEY = 'dashboard.chartRange.v2';
+
+const matchesFilter = (c: CaseRow, k: FilterKey, today: string, weekEnd: string): boolean => {
+  switch (k) {
+    case 'open': return c.status === 'nicht_begonnen';
+    case 'in_progress': return ['in_arbeit', 'in_planung'].includes(c.status);
+    case 'overdue': return c.status === 'in_verzug' || (!!c.due_at && c.due_at < today);
+    case 'today': return c.due_at === today;
+    case 'week': return !!c.due_at && c.due_at >= today && c.due_at <= weekEnd;
+  }
+};
+
 export default function Dashboard() {
   const { user, profile } = useAuth();
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [myTasks, setMyTasks] = useState<Array<{ id: string; title: string; due_at: string | null; status: string; case_id: string; case: { id: string; case_no: string; project_name: string } | null }>>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null);
+  const [activeFilters, setActiveFilters] = useState<FilterKey[]>(() => {
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.filter((k): k is FilterKey => k in FILTER_LABELS) : [];
+    } catch { return []; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(activeFilters)); } catch {}
+  }, [activeFilters]);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
   const [now, setNow] = useState(new Date());
 
@@ -105,22 +138,40 @@ export default function Dashboard() {
 
   const available = cases.filter(c => !c.assignee_id && !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)).slice(0, 10);
 
-  const [chartRange, setChartRange] = useState<'week' | 'month'>('week');
+  const [chartRange, setChartRange] = useState<ChartRange>(() => {
+    try {
+      const v = localStorage.getItem(RANGE_STORAGE_KEY);
+      return v === 'month' || v === 'year' || v === 'week' ? v : 'week';
+    } catch { return 'week'; }
+  });
+  useEffect(() => { try { localStorage.setItem(RANGE_STORAGE_KEY, chartRange); } catch {} }, [chartRange]);
 
-  // Bar chart: cases created per weekday this week (Mo-Fr) or per day this month
+  // Welche Status werden im Chart als Säulen-Segmente gezeigt
+  const visibleStatuses: FilterKey[] = activeFilters.length > 0
+    ? activeFilters
+    : (Object.keys(FILTER_LABELS) as FilterKey[]);
+
+  // Pool für Drilldown / Säulen: aktive Vorgänge, die mindestens einen aktiven Filter erfüllen
+  // Falls kein Filter aktiv -> alle aktiven Vorgänge
+  const filteredActive = useMemo(() => {
+    if (activeFilters.length === 0) return active;
+    return active.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
+  }, [active, activeFilters, today, weekEnd]);
+
+  // Säulendaten: pro Bucket je Status ein Wert (Stacked Bar)
   const weekChart = useMemo(() => {
-    // Apply KPI filter to chart data when active
-    let pool: CaseRow[] = cases;
-    if (activeFilter) {
-      const activePool = cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status));
-      switch (activeFilter) {
-        case 'open': pool = activePool.filter(c => c.status === 'nicht_begonnen'); break;
-        case 'in_progress': pool = activePool.filter(c => ['in_arbeit', 'in_planung'].includes(c.status)); break;
-        case 'overdue': pool = activePool.filter(c => c.status === 'in_verzug' || (c.due_at && c.due_at < today)); break;
-        case 'today': pool = activePool.filter(c => c.due_at === today); break;
-        case 'week': pool = activePool.filter(c => c.due_at && c.due_at >= today && c.due_at <= weekEnd); break;
-      }
-    }
+    const buildBucket = (filter: (c: CaseRow) => boolean, label: string) => {
+      const items = filteredActive.filter(filter);
+      const row: Record<string, any> = { label, items };
+      let total = 0;
+      visibleStatuses.forEach(k => {
+        const n = items.filter(c => matchesFilter(c, k, today, weekEnd)).length;
+        row[k] = n;
+        total += n;
+      });
+      row.value = total;
+      return row;
+    };
 
     if (chartRange === 'week') {
       const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
@@ -128,47 +179,48 @@ export default function Dashboard() {
       const day = (startOfWeek.getDay() + 6) % 7;
       startOfWeek.setDate(startOfWeek.getDate() - day);
       startOfWeek.setHours(0, 0, 0, 0);
-      const buckets: CaseRow[][] = [[], [], [], [], []];
-      pool.forEach(c => {
-        if (!c.created_at) return;
+      return labels.map((label, i) => buildBucket(c => {
+        if (!c.created_at) return false;
         const d = new Date(c.created_at);
         const diff = Math.floor((d.getTime() - startOfWeek.getTime()) / 86400000);
-        if (diff >= 0 && diff < 5) buckets[diff].push(c);
-      });
-      return labels.map((label, i) => ({ label, value: buckets[i].length, items: buckets[i] }));
+        return diff === i;
+      }, label));
     }
-    // month view
+
+    if (chartRange === 'month') {
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      return Array.from({ length: daysInMonth }, (_, i) => buildBucket(c => {
+        if (!c.created_at) return false;
+        const d = new Date(c.created_at);
+        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === i + 1;
+      }, String(i + 1)));
+    }
+
+    // year view
     const year = now.getFullYear();
-    const month = now.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const buckets: CaseRow[][] = Array.from({ length: daysInMonth }, () => []);
-    pool.forEach(c => {
-      if (!c.created_at) return;
+    const monthLabels = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    return monthLabels.map((label, i) => buildBucket(c => {
+      if (!c.created_at) return false;
       const d = new Date(c.created_at);
-      if (d.getFullYear() === year && d.getMonth() === month) {
-        buckets[d.getDate() - 1].push(c);
-      }
-    });
-    return buckets.map((items, i) => ({ label: String(i + 1), value: items.length, items }));
-  }, [cases, now, chartRange, activeFilter, today, weekEnd]);
+      return d.getFullYear() === year && d.getMonth() === i;
+    }, label));
+  }, [filteredActive, now, chartRange, visibleStatuses, today, weekEnd]);
 
   const [barDrill, setBarDrill] = useState<{ label: string; items: CaseRow[] } | null>(null);
 
   const drilldownItems = useMemo(() => {
-    if (!activeFilter) return [];
+    if (activeFilters.length === 0) return [];
     let pool = active;
     if (scope === 'mine') pool = pool.filter(c => c.assignee_id === user?.id);
-    switch (activeFilter) {
-      case 'open': return pool.filter(c => c.status === 'nicht_begonnen');
-      case 'in_progress': return pool.filter(c => ['in_arbeit', 'in_planung'].includes(c.status));
-      case 'overdue': return pool.filter(c => c.status === 'in_verzug' || (c.due_at && c.due_at < today));
-      case 'today': return pool.filter(c => c.due_at === today);
-      case 'week': return pool.filter(c => c.due_at && c.due_at >= today && c.due_at <= weekEnd);
-      default: return [];
-    }
-  }, [activeFilter, scope, active, user, today, weekEnd]);
+    return pool.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
+  }, [activeFilters, scope, active, user, today, weekEnd]);
 
-  const toggleFilter = (k: FilterKey) => setActiveFilter(prev => (prev === k ? null : k));
+  const toggleFilter = (k: FilterKey) => setActiveFilters(prev =>
+    prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]
+  );
+
 
   const CaseList = ({ items, empty }: { items: CaseRow[]; empty: string }) => (
     <div className="divide-y divide-border">
@@ -224,7 +276,7 @@ export default function Dashboard() {
             <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5 z-10">
               <div className="grid grid-cols-5 gap-2">
                 {KPI_DEFS.map(({ key, title, icon: Icon }) => {
-                  const isActive = activeFilter === key;
+                  const isActive = activeFilters.includes(key);
                   return (
                     <button
                       key={key}
@@ -249,22 +301,29 @@ export default function Dashboard() {
           {/* RIGHT: Chart on top, "Frei zum Abholen" below */}
           <div className="lg:col-span-2 grid grid-rows-[auto_1fr] gap-4 min-h-[480px] lg:min-h-[560px]">
             <div className="glass-card p-4 lg:p-5">
-              <div className="flex items-center justify-between mb-3 gap-2">
+              <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                 <h2 className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
-                  <span>{chartRange === 'week' ? 'Erstellte Vorgänge diese Woche' : 'Erstellte Vorgänge diesen Monat'}</span>
-                  {activeFilter && (
+                  <span>
+                    {chartRange === 'week'
+                      ? 'Erstellte Vorgänge diese Woche'
+                      : chartRange === 'month'
+                        ? 'Erstellte Vorgänge diesen Monat'
+                        : 'Erstellte Vorgänge dieses Jahr'}
+                  </span>
+                  {activeFilters.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setActiveFilter(null)}
+                      onClick={() => setActiveFilters([])}
                       className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
+                      title="Alle Filter zurücksetzen"
                     >
-                      {FILTER_LABELS[activeFilter]}
+                      {activeFilters.length} Filter aktiv
                       <X className="h-2.5 w-2.5" />
                     </button>
                   )}
                 </h2>
                 <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
-                  {(['week', 'month'] as const).map(r => (
+                  {(['week', 'month', 'year'] as const).map(r => (
                     <button
                       key={r}
                       type="button"
@@ -276,7 +335,7 @@ export default function Dashboard() {
                           : 'text-muted-foreground hover:text-foreground',
                       )}
                     >
-                      {r === 'week' ? 'Woche' : 'Monat'}
+                      {r === 'week' ? 'Woche' : r === 'month' ? 'Monat' : 'Jahr'}
                     </button>
                   ))}
                 </div>
@@ -296,25 +355,28 @@ export default function Dashboard() {
                       }}
                       labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                     />
-                    <Bar
-                      dataKey="value"
-                      radius={[6, 6, 0, 0]}
-                      cursor="pointer"
-                      onClick={(d: any) => setBarDrill({ label: d.label, items: d.items || [] })}
-                    >
-                      {weekChart.map((_, i) => (
-                        <Cell key={i} fill="hsl(var(--primary))" />
-                      ))}
-                    </Bar>
+                    {visibleStatuses.map((k, i) => (
+                      <Bar
+                        key={k}
+                        dataKey={k}
+                        stackId="status"
+                        fill={FILTER_COLORS[k]}
+                        radius={i === visibleStatuses.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                        cursor="pointer"
+                        name={FILTER_LABELS[k]}
+                        onClick={(d: any) => setBarDrill({ label: d.label, items: d.items || [] })}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-3 pt-3 border-t border-border/50 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-red-500" forceLabel="!" />Überfällig</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-yellow-500" forceLabel="⏱" />Fällig ≤3 Tage</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-emerald-500" forceLabel="✓" />In Arbeit</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'nicht_begonnen' as any} dueAt={null} forceColor="bg-blue-500" forceLabel="–" />Nicht begonnen</span>
-                <span className="flex items-center gap-1.5"><UrgencyDot status={'in_arbeit' as any} dueAt={null} forceColor="bg-purple-500" forceLabel="?" />Ohne Endtermin</span>
+                {(Object.keys(FILTER_LABELS) as FilterKey[]).map(k => (
+                  <span key={k} className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full" style={{ background: FILTER_COLORS[k] }} />
+                    {FILTER_LABELS[k]}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -335,11 +397,23 @@ export default function Dashboard() {
         </div>
 
         {/* Drilldown panel */}
-        {activeFilter && (
+        {activeFilters.length > 0 && (
           <div className="glass-card overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/50 flex-wrap">
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-medium text-foreground">{FILTER_LABELS[activeFilter]}</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-sm font-medium text-foreground">
+                  {activeFilters.length === 1 ? FILTER_LABELS[activeFilters[0]] : 'Auswahl'}
+                </h2>
+                {activeFilters.length > 1 && (
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {activeFilters.map(k => (
+                      <span key={k} className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px]" style={{ background: `${FILTER_COLORS[k]}22`, color: FILTER_COLORS[k] }}>
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: FILTER_COLORS[k] }} />
+                        {FILTER_LABELS[k]}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <span className="text-[11px] text-muted-foreground tabular-nums">{drilldownItems.length} Vorgang/Vorgänge</span>
               </div>
               <div className="flex items-center gap-1">
@@ -365,7 +439,7 @@ export default function Dashboard() {
                     <Users className="h-3 w-3" /> Alle
                   </button>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveFilter(null)} aria-label="Schließen">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveFilters([])} aria-label="Schließen">
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
