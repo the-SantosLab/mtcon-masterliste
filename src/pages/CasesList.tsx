@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
+import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, STATUS_DOT_COLORS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
@@ -40,7 +40,13 @@ export default function CasesList() {
   const [departments, setDepartments] = useState<DeptFilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const allStatuses = Constants.public.Enums.case_status;
+  const [statusFilter, setStatusFilter] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('casesFilter_statuses');
+      return stored ? JSON.parse(stored) : [...allStatuses];
+    } catch { return [...allStatuses]; }
+  });
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [deptFilter, setDeptFilter] = useState<string>('all');
@@ -89,11 +95,19 @@ export default function CasesList() {
     });
   };
 
+  const toggleStatus = (s: string) => {
+    setStatusFilter(prev => {
+      const next = prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s];
+      try { localStorage.setItem('casesFilter_statuses', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const creatorDeptMap = Object.fromEntries(profiles.map(p => [p.id, p.department_id]));
 
   const filtered = cases.filter(c => {
     if (onlyMine && c.assignee_id !== user?.id) return false;
-    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+    if (!statusFilter.includes(c.status)) return false;
     if (assigneeFilter === 'unassigned' && c.assignee_id !== null) return false;
     if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && c.assignee_id !== assigneeFilter) return false;
     if (projectFilter !== 'all') {
@@ -145,13 +159,27 @@ export default function CasesList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche" className="pl-9 h-8 text-xs" />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Status</SelectItem>
-              {Constants.public.Enums.case_status.map(s => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {allStatuses.map(s => {
+              const active = statusFilter.includes(s);
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => toggleStatus(s)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium transition-all border',
+                    active
+                      ? 'bg-muted/50 border-border/80 text-foreground'
+                      : 'bg-transparent border-transparent text-muted-foreground/40 hover:text-muted-foreground',
+                  )}
+                >
+                  <span className={cn('h-1.5 w-1.5 rounded-full', active ? STATUS_DOT_COLORS[s] : 'bg-muted-foreground/20')} />
+                  {STATUS_LABELS[s]}
+                </button>
+              );
+            })}
+          </div>
           <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
             <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
             <SelectContent>
