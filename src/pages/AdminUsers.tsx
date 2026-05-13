@@ -15,6 +15,7 @@ import { Navigate } from 'react-router-dom';
 import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound, ImageIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
+import { PersonioSync } from '@/components/PersonioSync';
 import { PermissionMatrix } from '@/components/PermissionMatrix';
 import { UserAvatar } from '@/components/UserAvatar';
 import { cn } from '@/lib/utils';
@@ -316,6 +317,7 @@ export default function AdminUsers() {
           <TabsList className="h-8">
             <TabsTrigger value="users" className="text-xs h-6">Mitarbeiter</TabsTrigger>
             <TabsTrigger value="import" className="text-xs h-6">CSV-Import</TabsTrigger>
+            <TabsTrigger value="personio" className="text-xs h-6">Personio</TabsTrigger>
             <TabsTrigger value="matrix" className="text-xs h-6">Rechtematrix</TabsTrigger>
           </TabsList>
 
@@ -416,6 +418,12 @@ export default function AdminUsers() {
           <TabsContent value="import" className="mt-0">
             <div className="rounded-md border border-border bg-card p-4">
               <UserCsvImport departments={departments} onDone={fetchUsers} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="personio" className="mt-0">
+            <div className="rounded-md border border-border bg-card p-4">
+              <PersonioSync onDone={fetchUsers} />
             </div>
           </TabsContent>
 
