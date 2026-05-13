@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
 type FilterKey = 'open' | 'in_progress' | 'overdue' | 'today' | 'week';
+type ChartRange = 'week' | 'month' | 'year';
 
 const FILTER_LABELS: Record<FilterKey, string> = {
   open: 'Offen',
@@ -24,6 +25,15 @@ const FILTER_LABELS: Record<FilterKey, string> = {
   week: 'Diese Woche fällig',
 };
 
+// Farbzuweisungen pro Status (HSL, abgestimmt auf bestehende Legende)
+const FILTER_COLORS: Record<FilterKey, string> = {
+  open: 'hsl(217 91% 60%)',        // blau
+  in_progress: 'hsl(160 84% 39%)', // emerald
+  overdue: 'hsl(0 84% 60%)',       // rot
+  today: 'hsl(45 93% 47%)',        // gelb
+  week: 'hsl(270 76% 58%)',        // violett
+};
+
 const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] = [
   { key: 'open', title: 'Offen', icon: ClipboardList },
   { key: 'in_progress', title: 'In Arbeit', icon: Clock },
@@ -31,6 +41,19 @@ const KPI_DEFS: { key: FilterKey; title: string; icon: typeof ClipboardList }[] 
   { key: 'today', title: 'Heute Fällig', icon: CalendarCheck },
   { key: 'week', title: 'Diese Woche', icon: Calendar },
 ];
+
+const FILTER_STORAGE_KEY = 'dashboard.activeFilters.v2';
+const RANGE_STORAGE_KEY = 'dashboard.chartRange.v2';
+
+const matchesFilter = (c: CaseRow, k: FilterKey, today: string, weekEnd: string): boolean => {
+  switch (k) {
+    case 'open': return c.status === 'nicht_begonnen';
+    case 'in_progress': return ['in_arbeit', 'in_planung'].includes(c.status);
+    case 'overdue': return c.status === 'in_verzug' || (!!c.due_at && c.due_at < today);
+    case 'today': return c.due_at === today;
+    case 'week': return !!c.due_at && c.due_at >= today && c.due_at <= weekEnd;
+  }
+};
 
 export default function Dashboard() {
   const { user, profile } = useAuth();
