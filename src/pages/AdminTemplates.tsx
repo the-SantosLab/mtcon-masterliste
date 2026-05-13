@@ -169,14 +169,14 @@ export default function AdminTemplates() {
       let tplId = editingId;
       if (editingId) {
         const { error } = await (supabase as any).from('case_templates').update({
-          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required,
+          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required, lock_mode: form.lock_mode,
         }).eq('id', editingId);
         if (error) throw error;
         await (supabase as any).from('case_template_departments').delete().eq('template_id', editingId);
         await (supabase as any).from('case_template_tasks').delete().eq('template_id', editingId);
       } else {
         const { data, error } = await (supabase as any).from('case_templates').insert({
-          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required,
+          title: form.title.trim(), description: form.description.trim() || null, sequential_mode: form.sequential_mode, due_required: form.due_required, lock_mode: form.lock_mode,
         }).select('id').single();
         if (error) throw error;
         tplId = data.id;
