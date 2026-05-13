@@ -829,9 +829,7 @@ export default function CaseDetail() {
               </div>
             )}
 
-            <div className={compactCls}>
-              <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
-            </div>
+            <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
           <div className="space-y-4">
@@ -839,9 +837,7 @@ export default function CaseDetail() {
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Aktivitäten</h3>
               </div>
-              <div className={compactCls}>
-                <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
-              </div>
+              <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
             </div>
           </div>
         </div>
