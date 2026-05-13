@@ -996,16 +996,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             className="h-8 text-xs gap-1 shrink-0"
           >
             {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
-            <NotifyToggle
-              checked={sendAssignEmail}
-              onChange={setSendAssignEmail}
-              lastSentAt={lastByType['task_assigned']}
-              label="E-Mail bei Zuweisung von Unteraufgaben senden"
-              recipientsHint="an neuen Bearbeiter"
-            />
-          </div>
+          </Button>
+        </div>
+      )}
+      {canEdit && (
+        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
+          <NotifyToggle
+            checked={sendAssignEmail}
+            onChange={setSendAssignEmail}
+            lastSentAt={lastByType['task_assigned']}
+            label="E-Mail bei Zuweisung von Unteraufgaben senden"
+            recipientsHint="an neuen Bearbeiter"
+          />
         </div>
       )}
 
