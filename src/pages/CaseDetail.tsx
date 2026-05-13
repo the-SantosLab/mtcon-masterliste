@@ -8,6 +8,7 @@ import { CaseEmails } from '@/components/CaseEmails';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
 import { WatchersSection } from '@/components/WatchersSection';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate, formatDateTime, canClaim, isTerminalStatus, STATUS_LABELS } from '@/lib/case-utils';
@@ -46,6 +47,8 @@ type CaseWithRels = Tables<'cases'> & {
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, isAdmin, isViewer, profile } = useAuth();
+  const { preferences } = usePreferences();
+  const compactCls = preferences.compactTables ? 'lov-compact-region' : '';
   const [c, setCase] = useState<CaseWithRels | null>(null);
   const [departments, setDepartments] = useState<DeptOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
@@ -775,7 +778,9 @@ export default function CaseDetail() {
             )}
 
             {/* Tasks checklist */}
-            <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} />
+            <div className={compactCls}>
+              <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} />
+            </div>
 
             {/* Anhänge */}
             <div className="rounded-md border border-border bg-card p-5 space-y-5">
@@ -783,17 +788,21 @@ export default function CaseDetail() {
 
               <div className="space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Dateien</p>
-                <FileAttachments
-                  bucket="case-attachments"
-                  folder={`cases/${c.id}`}
-                  canUpload={!isViewer && !isTerminalStatus(c.status)}
-                  canDelete={!isViewer}
-                />
+                <div className={compactCls}>
+                  <FileAttachments
+                    bucket="case-attachments"
+                    folder={`cases/${c.id}`}
+                    canUpload={!isViewer && !isTerminalStatus(c.status)}
+                    canDelete={!isViewer}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">E-Mails</p>
-                <CaseEmails caseId={c.id} />
+                <div className={compactCls}>
+                  <CaseEmails caseId={c.id} />
+                </div>
               </div>
             </div>
 
@@ -826,7 +835,9 @@ export default function CaseDetail() {
               </div>
             )}
 
-            <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
+            <div className={compactCls}>
+              <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -834,7 +845,9 @@ export default function CaseDetail() {
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Aktivitäten</h3>
               </div>
-              <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
+              <div className={compactCls}>
+                <ActivityTimeline caseId={c.id} refreshKey={refreshKey} />
+              </div>
             </div>
           </div>
         </div>
