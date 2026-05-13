@@ -181,7 +181,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
               >
                 <Settings className="h-4 w-4" />Verwaltung
-                <ChevronDown className={cn('h-3 w-3 ml-auto transition-transform', adminOpen && 'rotate-180')} />
+                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', adminOpen && 'rotate-180')} />
               </button>
               {adminOpen && adminItems.filter(i => !(i as any).masterOnly || isMaster).map(item => (
                 <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
@@ -203,20 +203,20 @@ export function AppLayout({ children }: AppLayoutProps) {
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
               title={isDark ? 'Hell-Modus' : 'Dunkel-Modus'}
-              className="h-3 w-3 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              className="h-[18px] w-[18px] flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
             >
-              {isDark ? <Sun className="h-3 w-3" /> : <Moon className="h-3 w-3" />}
+              {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
             <button
               type="button"
               onClick={() => setCompactTables(!isCompact)}
               title={isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               className={cn(
-                'h-3 w-3 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                'h-[18px] w-[18px] flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
                 isCompact && 'text-foreground'
               )}
             >
-              {isCompact ? <AlignJustify className="h-3 w-3" /> : <AlignLeft className="h-3 w-3" />}
+              {isCompact ? <AlignJustify className="h-[18px] w-[18px]" /> : <AlignLeft className="h-[18px] w-[18px]" />}
             </button>
           </div>
         </div>
@@ -234,7 +234,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <p className="text-sm font-medium text-foreground truncate leading-tight">{profile?.display_name || '–'}</p>
                   <p className="text-[10px] text-muted-foreground capitalize">{role || '–'}</p>
                 </div>
-                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                <ChevronDown className="h-[18px] w-[18px] text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="top" className="w-52 mb-1 text-xs">
