@@ -1,7 +1,7 @@
 // Personio Sync (Phase 2)
 // Holt Mitarbeitende aus Personio und synchronisiert sie mit users_profile.
-// Erwartet Secrets: PERSONIO_CLIENT_ID, PERSONIO_CLIENT_SECRET (optional PERSONIO_BASE_URL).
-// Solange Secrets fehlen, antwortet die Function mit einer klaren Meldung — keine weiteren Code-Anpassungen nötig.
+// Credentials werden bevorzugt aus integration_settings (id='personio') gelesen,
+// fallback auf Env-Secrets PERSONIO_CLIENT_ID / PERSONIO_CLIENT_SECRET.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -9,8 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const PERSONIO_BASE_URL = Deno.env.get('PERSONIO_BASE_URL') || 'https://api.personio.de';
 
 type Role = 'admin' | 'staff' | 'viewer';
 
@@ -28,16 +26,14 @@ interface MappedEmployee {
 const j = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-// Personio v1 employees API liefert Felder als { label, value, type }
 function attr<T = unknown>(emp: any, key: string): T | null {
   const a = emp?.attributes?.[key];
   if (!a) return null;
-  // value kann selbst ein Objekt mit attributes sein (z. B. department, supervisor)
   return (a.value ?? null) as T;
 }
 
-async function getAccessToken(clientId: string, clientSecret: string): Promise<string> {
-  const res = await fetch(`${PERSONIO_BASE_URL}/v1/auth`, {
+async function getAccessToken(baseUrl: string, clientId: string, clientSecret: string): Promise<string> {
+  const res = await fetch(`${baseUrl}/v1/auth`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
@@ -52,9 +48,8 @@ async function getAccessToken(clientId: string, clientSecret: string): Promise<s
   return token;
 }
 
-async function fetchAllEmployees(token: string): Promise<any[]> {
-  // Personio paginiert nicht standardmäßig auf /v1/company/employees → einfacher Single-Call.
-  const res = await fetch(`${PERSONIO_BASE_URL}/v1/company/employees`, {
+async function fetchAllEmployees(baseUrl: string, token: string): Promise<any[]> {
+  const res = await fetch(`${baseUrl}/v1/company/employees`, {
     headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
   });
   if (!res.ok) {
@@ -83,7 +78,6 @@ function mapEmployee(emp: any): MappedEmployee | null {
   const status = String(attr<string>(emp, 'status') || 'active').toLowerCase();
   const active = status === 'active';
 
-  // Heuristik: jemand ist Manager, wenn position ein "Lead/Head/Manager"-Wording enthält.
   const position = String(attr<string>(emp, 'position') || '').toLowerCase();
   const is_manager = /lead|head|manager|leiter|leitung/.test(position);
 
@@ -103,7 +97,6 @@ function mapEmployee(emp: any): MappedEmployee | null {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  // AuthZ: nur Admins
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return j(401, { error: 'Unauthorized' });
 
@@ -118,38 +111,38 @@ Deno.serve(async (req) => {
     .from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
   if (!roleRow) return j(403, { error: 'Forbidden – Admins only' });
 
-  const clientId = Deno.env.get('PERSONIO_CLIENT_ID');
-  const clientSecret = Deno.env.get('PERSONIO_CLIENT_SECRET');
+  // Credentials aus DB (bevorzugt) bzw. Env (fallback)
+  const { data: settingsRow } = await admin
+    .from('integration_settings').select('config').eq('id', 'personio').maybeSingle();
+  const cfg = (settingsRow?.config as Record<string, string> | undefined) || {};
+  const clientId = cfg.client_id || Deno.env.get('PERSONIO_CLIENT_ID');
+  const clientSecret = cfg.client_secret || Deno.env.get('PERSONIO_CLIENT_SECRET');
+  const baseUrl = cfg.base_url || Deno.env.get('PERSONIO_BASE_URL') || 'https://api.personio.de';
+
   if (!clientId || !clientSecret) {
     return j(412, {
       error: 'Personio-Credentials fehlen',
-      missing_secrets: ['PERSONIO_CLIENT_ID', 'PERSONIO_CLIENT_SECRET'],
-      hint: 'Secrets in Lovable Cloud hinterlegen, dann erneut ausführen.',
+      missing: ['client_id', 'client_secret'],
+      hint: 'Im Admin-Bereich unter Personio → Zugangsdaten hinterlegen.',
     });
   }
 
   let body: { dry_run?: boolean; deactivate_missing?: boolean; default_role?: Role; send_invite?: boolean } = {};
   try { body = await req.json(); } catch { /* leerer Body ok */ }
   const dryRun = body.dry_run === true;
-  const deactivateMissing = body.deactivate_missing !== false; // default an
+  const deactivateMissing = body.deactivate_missing !== false;
   const defaultRole: Role = body.default_role || 'staff';
   const sendInvite = body.send_invite === true;
 
   try {
-    const token = await getAccessToken(clientId, clientSecret);
-    const raw = await fetchAllEmployees(token);
+    const token = await getAccessToken(baseUrl, clientId, clientSecret);
+    const raw = await fetchAllEmployees(baseUrl, token);
     const mapped = raw.map(mapEmployee).filter((x): x is MappedEmployee => !!x);
 
     if (dryRun) {
-      return j(200, {
-        ok: true,
-        dry_run: true,
-        total: mapped.length,
-        sample: mapped.slice(0, 5),
-      });
+      return j(200, { ok: true, dry_run: true, total: mapped.length, sample: mapped.slice(0, 5) });
     }
 
-    // Re-use bulk-import-users via Service-Role HTTP-Call
     const importRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/bulk-import-users`, {
       method: 'POST',
       headers: {
@@ -160,31 +153,29 @@ Deno.serve(async (req) => {
     });
     const importJson = await importRes.json().catch(() => ({}));
 
-    let deactivated: string[] = [];
+    let deactivated = 0;
     if (deactivateMissing) {
       const personioEmails = new Set(mapped.filter(m => m.active).map(m => m.email));
-      // Alle aktiven Profile mit E-Mail laden — vergleiche nur die, die wir auch tatsächlich kennen.
       const { data: authList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
       const all = authList?.users || [];
       const toDeactivate = all
         .filter(u => u.email && !personioEmails.has(u.email.toLowerCase()))
         .map(u => u.id);
       if (toDeactivate.length > 0) {
-        // Wir setzen nur active=false auf users_profile — keine Auth-Löschung.
         const { error: deErr } = await admin
-          .from('users_profile')
-          .update({ active: false })
-          .in('id', toDeactivate);
-        if (!deErr) deactivated = toDeactivate;
+          .from('users_profile').update({ active: false }).in('id', toDeactivate);
+        if (!deErr) deactivated = toDeactivate.length;
       }
     }
 
-    return j(200, {
-      ok: true,
-      synced: mapped.length,
-      deactivated: deactivated.length,
-      import: importJson,
+    // Letzten Sync-Zeitstempel zurückschreiben
+    await admin.from('integration_settings').upsert({
+      id: 'personio',
+      config: { ...cfg, last_sync_at: new Date().toISOString(), last_sync_count: mapped.length },
+      updated_by: user.id,
     });
+
+    return j(200, { ok: true, synced: mapped.length, deactivated, import: importJson });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Sync fehlgeschlagen';
     return j(500, { ok: false, error: msg });
