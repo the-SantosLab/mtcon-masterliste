@@ -242,6 +242,26 @@
 .cases-table-compact td *,
 .cases-table-compact th * { font-size: inherit !important; line-height: inherit !important; white-space: nowrap !important; }
 
+/* Generische Kompaktansicht für Listen-Regionen (Untervorgänge, Notizen,
+   E-Mails, Aktivitäten innerhalb von Vorgangsdetails). Strikt einzeilig
+   und ~0.75x Schriftgröße ggü. Standard. */
+.lov-compact-region { font-size: 10px; line-height: 1.3; }
+.lov-compact-region p,
+.lov-compact-region span,
+.lov-compact-region a,
+.lov-compact-region li,
+.lov-compact-region td,
+.lov-compact-region th,
+.lov-compact-region button,
+.lov-compact-region label,
+.lov-compact-region div { font-size: inherit; }
+.lov-compact-region li,
+.lov-compact-region tr,
+.lov-compact-region [data-compact-row],
+.lov-compact-region .compact-row { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lov-compact-region li > *,
+.lov-compact-region [data-compact-row] > * { white-space: nowrap; }
+
 /* ============================================================
    PRINT STYLES — Documentation PDF Export
 ============================================================ */
