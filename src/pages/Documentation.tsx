@@ -113,7 +113,7 @@ export default function Documentation() {
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Masterliste — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge color="primary">v3.0</Badge>
+                  <Badge color="primary">v3.1</Badge>
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
                 </div>
               </div>
