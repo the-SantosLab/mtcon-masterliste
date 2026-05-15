@@ -10,6 +10,12 @@ interface Props {
 
 const RULES: Array<{ type: string; title: string; trigger: string; recipients: string }> = [
   {
+    type: 'task_created',
+    title: 'Unteraufgabe angelegt',
+    trigger: 'Neue Unteraufgabe wird zum Vorgang erstellt',
+    recipients: 'Ersteller, Bearbeiter und Watcher des Vorgangs (außer Akteur)',
+  },
+  {
     type: 'task_assigned',
     title: 'Unteraufgabe zugewiesen',
     trigger: 'Bearbeiter einer Unteraufgabe wird gesetzt',
@@ -42,6 +48,7 @@ const RULES: Array<{ type: string; title: string; trigger: string; recipients: s
 ];
 
 const TYPE_LABELS: Record<string, string> = {
+  task_created: 'Aufgabe angelegt',
   task_assigned: 'Aufgabe zugewiesen',
   task_abgeschlossen: 'Aufgabe erledigt',
   abgeholt: 'Vorgang abgeholt',
