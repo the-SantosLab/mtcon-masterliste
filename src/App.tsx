@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,6 +31,7 @@ import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
+import MfaChallenge from "./pages/MfaChallenge";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import PortalAuth from "./pages/portal/PortalAuth";
@@ -63,8 +66,26 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
+  const [mfaState, setMfaState] = useState<'unknown' | 'ok' | 'required'>('unknown');
+
+  useEffect(() => {
+    if (!session) { setMfaState('unknown'); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (cancelled) return;
+      if (data?.nextLevel === 'aal2' && data?.currentLevel !== 'aal2') {
+        setMfaState('required');
+      } else {
+        setMfaState('ok');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session]);
+
+  if (loading || (session && mfaState === 'unknown')) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
   if (!session) return <Navigate to="/auth" replace />;
+  if (mfaState === 'required') return <Navigate to="/mfa-challenge" replace />;
   return <>{children}</>;
 }
 
@@ -90,6 +111,7 @@ function AuthenticatedApp() {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/mfa-challenge" element={<MfaChallenge />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
         <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
         <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
