@@ -46,16 +46,21 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
   const addTask = async () => {
     if (!newTitle.trim()) return;
     setAdding(true);
-    const { error } = await supabase.from('case_tasks').insert({
+    const { data: ins, error } = await supabase.from('case_tasks').insert({
       case_id: caseId,
       title: newTitle.trim(),
       created_by: userId,
       sort_order: tasks.length,
-    });
+    }).select('id').single();
     if (error) toast.error('Fehler: ' + error.message);
     else {
       setNewTitle('');
       await fetchTasks();
+      if (ins?.id) {
+        supabase.functions.invoke('notify-task-created', {
+          body: { caseId, taskId: ins.id, actorId: userId },
+        }).catch(() => {});
+      }
     }
     setAdding(false);
   };

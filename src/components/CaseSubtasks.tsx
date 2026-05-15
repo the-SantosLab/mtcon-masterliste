@@ -275,7 +275,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     if (!newTitle.trim()) return;
     if (dueRequired && !newDueAt) { toast.error('„Fällig bis" ist verpflichtend'); return; }
     setAdding(true);
-    const { error } = await supabase.from('case_tasks').insert({
+    const { data: ins, error } = await supabase.from('case_tasks').insert({
       case_id: caseId,
       title: newTitle.trim(),
       created_by: userId,
@@ -283,13 +283,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       department_id: newDeptId || null,
       due_at: newDueAt || null,
       status: 'open',
-    } as any);
+    } as any).select('id').single();
     if (error) toast.error('Fehler: ' + error.message);
     else {
       setNewTitle('');
       setNewDeptId('');
       setNewDueAt('');
       await fetchTasks();
+      if (ins?.id) {
+        supabase.functions.invoke('notify-task-created', {
+          body: { caseId, taskId: ins.id, actorId: userId },
+        }).catch(() => {});
+      }
     }
     setAdding(false);
   };
