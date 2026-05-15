@@ -29,6 +29,7 @@ import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
+import MfaChallenge from "./pages/MfaChallenge";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import PortalAuth from "./pages/portal/PortalAuth";
