@@ -114,6 +114,7 @@ export default function CrmDealDetail() {
       assignee_id: user?.id,
     }).select('id').single();
     if (caseErr) { setSaving(false); toast.error('Case konnte nicht angelegt werden: ' + caseErr.message); return; }
+    try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: caseRow.id, actorId: user?.id } }); } catch {}
     const { error } = await supabase.from('deals').update({
       stage: 'won', value_final: Number(wonValue), won_case_id: caseRow.id,
     }).eq('id', deal.id);
