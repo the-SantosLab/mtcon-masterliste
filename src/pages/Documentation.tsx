@@ -22,6 +22,8 @@ interface Section {
 const SECTIONS: Section[] = [
   { id: 'overview', label: 'Übersicht', icon: Layers },
   { id: 'login', label: 'Anmeldung & Zugang', icon: KeyRound },
+  { id: 'mfa', label: '2-Faktor-Authentifizierung', icon: ShieldCheck },
+  { id: 'modules', label: 'Module-Auswahl', icon: Layers },
   { id: 'navigation', label: 'Navigation & Layout', icon: LayoutDashboard },
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
   { id: 'cases', label: 'Vorgänge', icon: ClipboardList },
