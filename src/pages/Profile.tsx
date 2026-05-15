@@ -19,7 +19,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto space-y-4">
         <div className="rounded-lg border border-border bg-card p-8 flex flex-col items-center text-center space-y-4">
           <UserAvatar
             user={profile as any}
@@ -37,6 +37,11 @@ export default function Profile() {
             <span className="text-muted-foreground text-left">Abteilung</span>
             <span className="text-foreground text-right">{deptName || '–'}</span>
           </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4">Sicherheit</h2>
+          <TwoFactorSettings />
         </div>
       </div>
     </AppLayout>
