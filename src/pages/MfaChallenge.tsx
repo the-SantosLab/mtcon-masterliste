@@ -10,7 +10,7 @@ import { ShieldCheck } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 export default function MfaChallenge() {
-  const { session, loading } = useAuth();
+  const { session, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState('');
@@ -59,8 +59,8 @@ export default function MfaChallenge() {
   };
 
   const cancel = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth', { replace: true });
+    await signOut();
+    setSignedOut(true);
   };
 
   return (
