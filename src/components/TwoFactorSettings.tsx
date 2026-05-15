@@ -37,9 +37,14 @@ export function TwoFactorSettings() {
 
   const startEnroll = async () => {
     setBusy(true);
+    // Cleanup any leftover unverified factors first
+    const { data: existing } = await supabase.auth.mfa.listFactors();
+    const unverified = existing?.totp?.filter(f => f.status !== 'verified') || [];
+    for (const f of unverified) await supabase.auth.mfa.unenroll({ factorId: f.id });
+
     const { data, error } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
-      friendlyName: `Masterliste (MTCON) (${new Date().toISOString().slice(0, 10)})`,
+      friendlyName: `Masterliste (MTCON) ${Date.now()}`,
       issuer: 'Masterliste (MTCON)',
     });
     setBusy(false);
