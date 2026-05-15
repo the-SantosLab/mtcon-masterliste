@@ -31,9 +31,8 @@ export default function MfaChallenge() {
       const { data: f } = await supabase.auth.mfa.listFactors();
       const verified = f?.totp?.find(x => x.status === 'verified');
       if (!verified) {
-        toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte erneut anmelden und 2FA einrichten.');
-        await supabase.auth.signOut();
-        setSignedOut(true);
+        toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte 2FA einrichten.');
+        navigate('/2fa-anleitung', { replace: true });
         return;
       }
       setFactorId(verified.id);
