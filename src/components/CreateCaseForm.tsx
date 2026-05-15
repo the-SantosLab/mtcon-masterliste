@@ -86,7 +86,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       supabase.from('departments').select('id, name, code, parent_id, owner_id, is_active').eq('is_active', true).order('sort_order'),
       supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name'),
       supabase.from('user_roles').select('role').eq('user_id', userId),
-      supabase.from('department_permissions').select('department_id, permission').eq('user_id', userId),
+      (supabase as any).from('department_members').select('department_id, user_id, role').eq('user_id', userId),
       (supabase as any).from('department_members').select('department_id, user_id'),
     ]).then(([cust, prod, ar, proj, dept, prof, roles, perms, members]) => {
       setCustomers(cust.data || []);
@@ -104,7 +104,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       if (isAdmin) {
         setWritableDeptIds(new Set(deptData.map(d => d.id)));
       } else {
-        const writePerms = new Set((perms.data || []).filter((p: any) => p.permission === 'write').map((p: any) => p.department_id));
+        const writePerms = new Set((perms.data || []).filter((p: any) => p.role === 'write' || p.role === 'lead').map((p: any) => p.department_id));
         const allowed = new Set<string>();
         for (const d of deptData) {
           if (d.owner_id === userId) allowed.add(d.id);

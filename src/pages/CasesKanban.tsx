@@ -338,10 +338,10 @@ export default function CasesKanban() {
     if (user?.id) {
       const [{ data: roles }, { data: perms }] = await Promise.all([
         supabase.from('user_roles').select('role').eq('user_id', user.id),
-        supabase.from('department_permissions')
-          .select('department_id, permission')
+        (supabase as any).from('department_members')
+          .select('department_id, role')
           .eq('user_id', user.id)
-          .in('permission', ['read', 'write']),
+          .in('role', ['read', 'write', 'lead']),
       ]);
       const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
       if (!isAdmin) {

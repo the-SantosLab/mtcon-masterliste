@@ -16,7 +16,7 @@ import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyR
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
 import { PersonioSync } from '@/components/PersonioSync';
-import { PermissionMatrix } from '@/components/PermissionMatrix';
+
 import { UserAvatar } from '@/components/UserAvatar';
 import { cn } from '@/lib/utils';
 
@@ -318,7 +318,7 @@ export default function AdminUsers() {
             <TabsTrigger value="users" className="text-xs h-6">Mitarbeiter</TabsTrigger>
             <TabsTrigger value="import" className="text-xs h-6">CSV-Import</TabsTrigger>
             <TabsTrigger value="personio" className="text-xs h-6">Personio</TabsTrigger>
-            <TabsTrigger value="matrix" className="text-xs h-6">Rechtematrix</TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="users" className="space-y-4 mt-0">
@@ -427,9 +427,6 @@ export default function AdminUsers() {
             </div>
           </TabsContent>
 
-          <TabsContent value="matrix" className="mt-0">
-            <PermissionMatrix />
-          </TabsContent>
         </Tabs>
 
         {/* Edit dialog */}

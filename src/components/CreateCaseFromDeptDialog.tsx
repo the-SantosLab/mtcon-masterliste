@@ -46,13 +46,13 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
       if (user?.id) {
         Promise.all([
           supabase.from('user_roles').select('role').eq('user_id', user.id),
-          supabase.from('department_permissions').select('department_id, permission').eq('user_id', user.id),
+          (supabase as any).from('department_members').select('department_id, role').eq('user_id', user.id),
         ]).then(([roles, perms]) => {
           const isAdmin = (roles.data || []).some((r: any) => r.role === 'admin');
           if (isAdmin) {
             setWritableDeptIds(new Set(departments.map(d => d.id)));
           } else {
-            const writePerms = new Set((perms.data || []).filter((p: any) => p.permission === 'write').map((p: any) => p.department_id));
+            const writePerms = new Set((perms.data || []).filter((p: any) => p.role === 'write' || p.role === 'lead').map((p: any) => p.department_id));
             const allowed = new Set<string>();
             for (const d of departments as any[]) {
               if (d.owner_id === user.id) allowed.add(d.id);
