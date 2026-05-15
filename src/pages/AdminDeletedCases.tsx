@@ -99,7 +99,7 @@ export default function AdminDeletedCases() {
             </div>
           </div>
           <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-            <Link to="/admin/trash">
+            <Link to="/admin/papierkorb">
               Papierkorb (Soft-Delete)
               <ArrowRight className="h-3 w-3" />
             </Link>
@@ -107,7 +107,7 @@ export default function AdminDeletedCases() {
         </div>
 
         <p className="text-[11px] text-muted-foreground -mt-2">
-          Hinweis: Soft-gelöschte Vorgänge (über „Löschen"-Button) liegen 90 Tage im <Link to="/admin/trash" className="underline hover:text-foreground">Papierkorb</Link> und erscheinen erst nach endgültiger Löschung hier.
+          Hinweis: Soft-gelöschte Vorgänge (über „Löschen"-Button) liegen 90 Tage im <Link to="/admin/papierkorb" className="underline hover:text-foreground">Papierkorb</Link> und erscheinen erst nach endgültiger Löschung hier.
         </p>
 
         <div className="rounded-md border border-border bg-card overflow-x-auto">
