@@ -84,7 +84,7 @@ export function MfaReminderBanner() {
               <Link to="/2fa-anleitung" onClick={dismissDialog}>
                 <Button variant="outline" size="sm" className="h-8 text-xs">Anleitung</Button>
               </Link>
-              <Link to="/profile" onClick={dismissDialog}>
+              <Link to="/2fa-anleitung" onClick={dismissDialog}>
                 <Button size="sm" className="h-8 text-xs gap-1">
                   Jetzt einrichten <ArrowRight className="h-3 w-3" />
                 </Button>
@@ -113,7 +113,7 @@ export function MfaReminderBanner() {
           </p>
           <div className="flex gap-2 mt-2">
             <Link
-              to="/profile"
+              to="/2fa-anleitung"
               className="inline-flex items-center gap-1 text-[11px] font-medium text-foreground hover:underline"
             >
               Jetzt einrichten <ArrowRight className="h-3 w-3" />
