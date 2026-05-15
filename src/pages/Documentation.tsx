@@ -938,6 +938,29 @@ export default function Documentation() {
             />
           </Card>
 
+          {/* ─── DEPARTMENT-MITGLIEDER ─── */}
+          <Card title="Abteilungs-Mitglieder (Cross-Membership)" id="department-members">
+            <p>
+              Neben der primären Abteilungs-Zuordnung über <Badge>users_profile.department_id</Badge> kann ein Benutzer
+              <strong className="text-foreground"> zusätzlich Mitglied weiterer Abteilungen</strong> sein. Das ist sinnvoll für Personen,
+              die in mehreren Bereichen arbeiten (z.&nbsp;B. Vertrieb + Einkauf).
+            </p>
+
+            <SubHeading>Verwaltung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Tabelle" value="department_members (user_id, department_id, role)" color="success" />
+              <Rule label="Zugriff" value="Verwaltung → Abteilungen → Abteilung wählen → Mitglieder" color="success" />
+              <Rule label="Wer darf?" value="Nur Admins können Mitglieder hinzufügen/entfernen" color="success" />
+              <Rule label="Wirkung" value="Zusätzliche Mitglieder erscheinen in den Zuweisungs-Dropdowns dieser Abteilung" color="success" />
+            </div>
+
+            <Tip>
+              Die primäre Abteilung (department_id im Profil) bleibt für Reporting und Hierarchie maßgeblich. Cross-Membership
+              wirkt rein operativ — z.&nbsp;B. wenn ein Vorgang an die Abteilung weitergegeben wird, kann er allen primären
+              und zusätzlichen Mitgliedern zugewiesen werden.
+            </Tip>
+          </Card>
+
           {/* ─── AUTO-NUMMERIERUNG ─── */}
           <Card title="Auto-Nummerierung" id="numbering">
             <p>
