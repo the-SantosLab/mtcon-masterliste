@@ -16,7 +16,7 @@ import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyR
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
 import { PersonioSync } from '@/components/PersonioSync';
-import { PermissionMatrix } from '@/components/PermissionMatrix';
+
 import { UserAvatar } from '@/components/UserAvatar';
 import { cn } from '@/lib/utils';
 
