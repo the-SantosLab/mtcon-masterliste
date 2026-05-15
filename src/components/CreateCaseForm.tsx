@@ -104,7 +104,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       if (isAdmin) {
         setWritableDeptIds(new Set(deptData.map(d => d.id)));
       } else {
-        const writePerms = new Set((perms.data || []).filter((p: any) => p.permission === 'write').map((p: any) => p.department_id));
+        const writePerms = new Set((perms.data || []).filter((p: any) => p.role === 'write' || p.role === 'lead').map((p: any) => p.department_id));
         const allowed = new Set<string>();
         for (const d of deptData) {
           if (d.owner_id === userId) allowed.add(d.id);
