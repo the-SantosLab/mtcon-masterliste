@@ -1033,6 +1033,73 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
             </Tip>
           </Card>
 
+          {/* ─── CRM-MODUL ─── */}
+          <Card title="CRM-Modul" id="crm">
+            <p>
+              Das CRM-Modul ist eine eigenständige Anwendung unter <Badge color="primary">/crm</Badge> für den vertrieblichen
+              Lead-zu-Kunde-Prozess. Es teilt sich Login, Benutzer und 2FA mit der Masterliste, hat aber eine
+              eigene Sidebar und eigene Berechtigungen.
+            </p>
+
+            <SubHeading>Hauptbereiche</SubHeading>
+            <Table
+              headers={['Bereich', 'Route', 'Zweck']}
+              rows={[
+                ['Dashboard', '/crm/dashboard', 'KPIs, Pipeline-Übersicht, anstehende Aktivitäten'],
+                ['Leads', '/crm/leads', 'Eingehende Interessenten, Qualifizierung'],
+                ['Companies', '/crm/companies', 'Firmenstammdaten + Kontakte'],
+                ['Deals', '/crm/deals', 'Verkaufschancen mit Pipeline-Stages'],
+                ['Angebote', '/crm/offers', 'Angebotserstellung inkl. PDF-Export'],
+                ['Sequenzen', '/crm/outbound', 'Outbound-E-Mail-Kadenzen mit Variablen'],
+                ['Aktivitäten', '/crm/activities', 'Anrufe, E-Mails, Termine'],
+                ['Kalender', '/crm/calendar', 'Termin- und Aktivitätenübersicht'],
+                ['Wiki', '/crm/wiki', 'Interne Vertriebs-Dokumentation'],
+                ['Einstellungen', '/crm/settings', 'Pipelines, Stages, Vorlagen, Projektschutz'],
+              ]}
+            />
+
+            <SubHeading>Berechtigungen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="CRM-Zugriff" value="Wird separat über crm_access / crm_roles gesteuert (Admin → CRM-Rollen)" color="success" />
+              <Rule label="Kein Zugriff" value="Benutzer ohne CRM-Rolle landen auf /crm/no-access" color="warn" />
+              <Rule label="Lead-Zuweisung" value="Leads können bestimmten Mitarbeitern zugewiesen werden (Lookalike-Vorschläge)" color="success" />
+              <Rule label="Projektschutz" value="Schutz von Deals/Angeboten vor versehentlichem Überschreiben" color="success" />
+            </div>
+
+            <SubHeading>Outbound-Sequenzen</SubHeading>
+            <p>
+              Mehrstufige E-Mail-Kadenzen mit Variablen-Substitution (siehe <Badge>src/lib/sequenceVars.ts</Badge>).
+              Empfänger können einzeln oder per Bulk-Enroll hinzugefügt werden. Versand erfolgt über
+              die <Badge>crm-send-email</Badge> Edge Function via Resend.
+            </p>
+
+            <Tip>
+              Das CRM-Modul wird über <Badge color="primary">/modules</Badge> oder direkt per URL aufgerufen.
+              Die letzte Modul-Auswahl wird gemerkt.
+            </Tip>
+          </Card>
+
+          {/* ─── PERSONIO-SYNC ─── */}
+          <Card title="Personio-Synchronisation" id="personio">
+            <p>
+              Mitarbeiterdaten können über die <strong className="text-foreground">Personio-API</strong> automatisch synchronisiert werden.
+              Die Konfiguration erfolgt unter <Badge color="primary">Verwaltung → Mitarbeiter → Personio-Sync</Badge>.
+            </p>
+
+            <SubHeading>Funktionsweise</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Edge Function" value="sync-personio-employees ruft die Personio-API auf und gleicht Profile ab" color="success" />
+              <Rule label="Secrets" value="PERSONIO_CLIENT_ID und PERSONIO_CLIENT_SECRET als Edge-Function-Secrets" color="success" />
+              <Rule label="Abgleich" value="Neue Mitarbeiter werden angelegt, bestehende aktualisiert (Name, Abteilung, E-Mail)" color="success" />
+              <Rule label="Manueller Trigger" value="Sync wird per Button gestartet — kein Auto-Cron" color="success" />
+            </div>
+
+            <Warning>
+              Vor dem ersten Sync müssen die Personio-API-Zugangsdaten als Secrets hinterlegt werden.
+              Ohne gültige Credentials antwortet die Function mit einer Fehlermeldung.
+            </Warning>
+          </Card>
+
           {/* ─── ADMIN-VERWALTUNG ─── */}
           <Card title="Admin-Verwaltung" id="admin">
             <p>
