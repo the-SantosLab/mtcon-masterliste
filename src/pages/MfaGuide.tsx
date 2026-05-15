@@ -45,9 +45,22 @@ export default function MfaGuide() {
   const startEnroll = async () => {
     if (enroll) { setStep(2); return; }
     setBusy(true);
+    // Clean up any existing unverified factors before enrolling
+    const { data: existing } = await supabase.auth.mfa.listFactors();
+    const verified = existing?.totp?.find(f => f.status === 'verified');
+    if (verified) {
+      setBusy(false);
+      setAlreadyEnrolled(true);
+      setStep(4);
+      return;
+    }
+    const unverified = existing?.totp?.filter(f => f.status !== 'verified') || [];
+    for (const f of unverified) await supabase.auth.mfa.unenroll({ factorId: f.id });
+
+    const friendlyName = `Masterliste (MTCON) ${Date.now()}`;
     const { data, error } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
-      friendlyName: `Masterliste (MTCON) (${new Date().toISOString().slice(0, 10)})`,
+      friendlyName,
       issuer: 'Masterliste (MTCON)',
     });
     setBusy(false);
