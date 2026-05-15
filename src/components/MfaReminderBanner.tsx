@@ -114,7 +114,6 @@ export function MfaReminderBanner() {
               Jetzt einrichten <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          </div>
         </div>
       </div>
     </>
