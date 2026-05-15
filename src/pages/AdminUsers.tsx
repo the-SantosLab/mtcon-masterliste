@@ -427,9 +427,6 @@ export default function AdminUsers() {
             </div>
           </TabsContent>
 
-          <TabsContent value="matrix" className="mt-0">
-            <PermissionMatrix />
-          </TabsContent>
         </Tabs>
 
         {/* Edit dialog */}
