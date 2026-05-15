@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
 import MfaChallenge from "./pages/MfaChallenge";
+import MfaGuide from "./pages/MfaGuide";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import PortalAuth from "./pages/portal/PortalAuth";
@@ -134,6 +135,7 @@ function AuthenticatedApp() {
         <Route path="/admin/papierkorb" element={<ProtectedRoute><AdminTrash /></ProtectedRoute>} />
         <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/2fa-anleitung" element={<ProtectedRoute><MfaGuide /></ProtectedRoute>} />
         <Route path="/modules" element={<ProtectedRoute><ModuleSelect /></ProtectedRoute>} />
         <Route path="/crm" element={<CrmProtectedRoute><CrmDashboard /></CrmProtectedRoute>} />
         <Route path="/crm/dashboard" element={<CrmProtectedRoute><CrmDashboard /></CrmProtectedRoute>} />
