@@ -38,7 +38,7 @@ export default function MfaChallenge() {
       setFactorId(verified.id);
       setNeedsMfa(true);
     })();
-  }, [session]);
+  }, [session, navigate]);
 
   if (signedOut) return <Navigate to="/auth" replace />;
   if (loading || needsMfa === null) {

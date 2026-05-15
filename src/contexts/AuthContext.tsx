@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       supabase.from('user_roles').select('role').eq('user_id', userId).limit(1).single(),
     ]);
 
-    let profileData: any = profileRes.data ?? null;
+    const profileData = profileRes.data ?? null;
     let roleData: AppRole | null = roleRes.data?.role ?? null;
 
     // Self-heal: protected main admin must always have admin role.
