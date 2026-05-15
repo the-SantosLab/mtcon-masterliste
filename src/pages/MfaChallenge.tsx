@@ -10,7 +10,7 @@ import { ShieldCheck } from 'lucide-react';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 export default function MfaChallenge() {
-  const { session, loading } = useAuth();
+  const { session, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState('');
@@ -31,15 +31,14 @@ export default function MfaChallenge() {
       const { data: f } = await supabase.auth.mfa.listFactors();
       const verified = f?.totp?.find(x => x.status === 'verified');
       if (!verified) {
-        toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte erneut anmelden und 2FA einrichten.');
-        await supabase.auth.signOut();
-        setSignedOut(true);
+        toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte 2FA einrichten.');
+        navigate('/2fa-anleitung', { replace: true });
         return;
       }
       setFactorId(verified.id);
       setNeedsMfa(true);
     })();
-  }, [session]);
+  }, [session, navigate]);
 
   if (signedOut) return <Navigate to="/auth" replace />;
   if (loading || needsMfa === null) {
@@ -60,8 +59,8 @@ export default function MfaChallenge() {
   };
 
   const cancel = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth', { replace: true });
+    await signOut();
+    setSignedOut(true);
   };
 
   return (

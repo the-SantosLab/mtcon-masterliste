@@ -76,7 +76,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (cancelled) return;
       if (data?.nextLevel === 'aal2' && data?.currentLevel !== 'aal2') {
-        setMfaState('required');
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        if (cancelled) return;
+        const hasVerifiedFactor = factors?.totp?.some(factor => factor.status === 'verified');
+        setMfaState(hasVerifiedFactor ? 'required' : 'ok');
       } else {
         setMfaState('ok');
       }
