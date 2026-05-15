@@ -10,6 +10,7 @@ import {
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
   KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
   Headphones, Globe, Network, Workflow, Lightbulb, FolderPlus, Plug,
+  ShieldCheck, Briefcase, Users2, RefreshCw,
 } from 'lucide-react';
 
 interface Section {
@@ -21,6 +22,8 @@ interface Section {
 const SECTIONS: Section[] = [
   { id: 'overview', label: 'Übersicht', icon: Layers },
   { id: 'login', label: 'Anmeldung & Zugang', icon: KeyRound },
+  { id: 'mfa', label: '2-Faktor-Authentifizierung', icon: ShieldCheck },
+  { id: 'modules', label: 'Module-Auswahl', icon: Layers },
   { id: 'navigation', label: 'Navigation & Layout', icon: LayoutDashboard },
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
   { id: 'cases', label: 'Vorgänge', icon: ClipboardList },
@@ -33,8 +36,11 @@ const SECTIONS: Section[] = [
   { id: 'attachments', label: 'Anhänge & Dokumente', icon: FileUp },
   { id: 'darkmode', label: 'Dark Mode & Tabellen', icon: Moon },
   { id: 'departments', label: 'Abteilungen', icon: Building2 },
+  { id: 'department-members', label: 'Abteilungs-Mitglieder', icon: Users2 },
   { id: 'numbering', label: 'Auto-Nummerierung', icon: Hash },
   { id: 'roles', label: 'Rollen & Rechte', icon: Shield },
+  { id: 'crm', label: 'CRM-Modul', icon: Briefcase },
+  { id: 'personio', label: 'Personio-Sync', icon: RefreshCw },
   { id: 'admin', label: 'Admin-Verwaltung', icon: Settings },
   { id: 'notifications', label: 'Benachrichtigungen', icon: Bell },
   { id: 'search', label: 'Suche & Kommandos', icon: Search },
@@ -107,7 +113,7 @@ export default function Documentation() {
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Masterliste — Dokumentation</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge color="primary">v3.0</Badge>
+                  <Badge color="primary">v3.1</Badge>
                   <span className="text-[11px] text-muted-foreground">Vollständige Benutzer- und Systemdokumentation</span>
                 </div>
               </div>
@@ -187,6 +193,61 @@ export default function Documentation() {
             <Warning>
               Es gibt keine Selbstregistrierung. Alle Benutzerkonten werden zentral vom Admin erstellt.
             </Warning>
+          </Card>
+
+          {/* ─── 2FA / MFA ─── */}
+          <Card title="2-Faktor-Authentifizierung (2FA)" id="mfa">
+            <p>
+              Zusätzlich zum Passwort kann jeder Benutzer eine zweite Stufe per <strong className="text-foreground">TOTP-Authenticator-App</strong> (Google Authenticator, Authy, 1Password etc.) aktivieren.
+              Die Einrichtung erfolgt im Profil unter <Badge color="primary">Profil → Sicherheit</Badge>.
+            </p>
+
+            <SubHeading>Einrichtung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="QR-Code scannen" value="Im Profil 2FA aktivieren → QR-Code mit Authenticator-App scannen" color="success" />
+              <Rule label="Code bestätigen" value="6-stelligen Code aus der App eingeben, um den Faktor zu verifizieren" color="success" />
+              <Rule label="Anleitung" value="Geführte Schritt-für-Schritt-Anleitung unter /2fa-anleitung" color="success" />
+              <Rule label="Deaktivieren" value="Im Profil jederzeit möglich (entfernt den verifizierten Faktor)" color="warn" />
+            </div>
+
+            <SubHeading>Login mit 2FA</SubHeading>
+            <p>
+              Nach erfolgreichem Passwort-Login wird der Benutzer automatisch auf <Badge>/mfa-challenge</Badge> umgeleitet und muss den
+              aktuellen 6-stelligen Code aus der Authenticator-App eingeben. Erst danach ist die volle Anwendung freigeschaltet
+              (AAL2-Niveau gemäß Supabase Auth).
+            </p>
+
+            <SubHeading>Erinnerungs-Banner</SubHeading>
+            <p>
+              Benutzer ohne aktiviertes 2FA sehen ein dezentes Banner, das zur Aktivierung auffordert. Es kann ausgeblendet werden,
+              taucht aber periodisch wieder auf, bis 2FA eingerichtet ist.
+            </p>
+
+            <Warning>
+              Geht das 2FA-Gerät verloren, kann ausschließlich ein Admin den verifizierten Faktor entfernen. Es gibt
+              bewusst keine Self-Service-Wiederherstellung über E-Mail.
+            </Warning>
+          </Card>
+
+          {/* ─── MODULE-AUSWAHL ─── */}
+          <Card title="Module-Auswahl" id="modules">
+            <p>
+              Die Plattform bündelt mehrere Module unter einem Login. Nach der Anmeldung kann der Benutzer auf
+              <Badge color="primary">/modules</Badge> zwischen den verfügbaren Modulen wählen.
+            </p>
+
+            <Table
+              headers={['Modul', 'Route', 'Beschreibung']}
+              rows={[
+                ['Operations / Masterliste', '/', 'Vorgänge, Projekte, Kanban, Support — Kernmodul'],
+                ['CRM', '/crm/dashboard', 'Leads, Deals, Angebote, Companies, Sequenzen'],
+              ]}
+            />
+
+            <p className="mt-2">
+              Die zuletzt verwendete Auswahl wird in <Badge>localStorage</Badge> (Schlüssel <Badge>mtcon.module</Badge>) gespeichert
+              und beim nächsten Login automatisch geöffnet. Über die Sidebar kann jederzeit zur Modulauswahl zurückgesprungen werden.
+            </p>
           </Card>
 
           {/* ─── NAVIGATION ─── */}
@@ -877,6 +938,29 @@ export default function Documentation() {
             />
           </Card>
 
+          {/* ─── DEPARTMENT-MITGLIEDER ─── */}
+          <Card title="Abteilungs-Mitglieder (Cross-Membership)" id="department-members">
+            <p>
+              Neben der primären Abteilungs-Zuordnung über <Badge>users_profile.department_id</Badge> kann ein Benutzer
+              <strong className="text-foreground"> zusätzlich Mitglied weiterer Abteilungen</strong> sein. Das ist sinnvoll für Personen,
+              die in mehreren Bereichen arbeiten (z.&nbsp;B. Vertrieb + Einkauf).
+            </p>
+
+            <SubHeading>Verwaltung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Tabelle" value="department_members (user_id, department_id, role)" color="success" />
+              <Rule label="Zugriff" value="Verwaltung → Abteilungen → Abteilung wählen → Mitglieder" color="success" />
+              <Rule label="Wer darf?" value="Nur Admins können Mitglieder hinzufügen/entfernen" color="success" />
+              <Rule label="Wirkung" value="Zusätzliche Mitglieder erscheinen in den Zuweisungs-Dropdowns dieser Abteilung" color="success" />
+            </div>
+
+            <Tip>
+              Die primäre Abteilung (department_id im Profil) bleibt für Reporting und Hierarchie maßgeblich. Cross-Membership
+              wirkt rein operativ — z.&nbsp;B. wenn ein Vorgang an die Abteilung weitergegeben wird, kann er allen primären
+              und zusätzlichen Mitgliedern zugewiesen werden.
+            </Tip>
+          </Card>
+
           {/* ─── AUTO-NUMMERIERUNG ─── */}
           <Card title="Auto-Nummerierung" id="numbering">
             <p>
@@ -947,6 +1031,73 @@ NEW.case_no := NEW.case_number; -- beide Felder synchron`}</Code>
             <Tip>
               Beim Anlegen eines neuen Users wird automatisch die Rolle «staff» vergeben. Admins können dies in der Mitarbeiterverwaltung ändern.
             </Tip>
+          </Card>
+
+          {/* ─── CRM-MODUL ─── */}
+          <Card title="CRM-Modul" id="crm">
+            <p>
+              Das CRM-Modul ist eine eigenständige Anwendung unter <Badge color="primary">/crm</Badge> für den vertrieblichen
+              Lead-zu-Kunde-Prozess. Es teilt sich Login, Benutzer und 2FA mit der Masterliste, hat aber eine
+              eigene Sidebar und eigene Berechtigungen.
+            </p>
+
+            <SubHeading>Hauptbereiche</SubHeading>
+            <Table
+              headers={['Bereich', 'Route', 'Zweck']}
+              rows={[
+                ['Dashboard', '/crm/dashboard', 'KPIs, Pipeline-Übersicht, anstehende Aktivitäten'],
+                ['Leads', '/crm/leads', 'Eingehende Interessenten, Qualifizierung'],
+                ['Companies', '/crm/companies', 'Firmenstammdaten + Kontakte'],
+                ['Deals', '/crm/deals', 'Verkaufschancen mit Pipeline-Stages'],
+                ['Angebote', '/crm/offers', 'Angebotserstellung inkl. PDF-Export'],
+                ['Sequenzen', '/crm/outbound', 'Outbound-E-Mail-Kadenzen mit Variablen'],
+                ['Aktivitäten', '/crm/activities', 'Anrufe, E-Mails, Termine'],
+                ['Kalender', '/crm/calendar', 'Termin- und Aktivitätenübersicht'],
+                ['Wiki', '/crm/wiki', 'Interne Vertriebs-Dokumentation'],
+                ['Einstellungen', '/crm/settings', 'Pipelines, Stages, Vorlagen, Projektschutz'],
+              ]}
+            />
+
+            <SubHeading>Berechtigungen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="CRM-Zugriff" value="Wird separat über crm_access / crm_roles gesteuert (Admin → CRM-Rollen)" color="success" />
+              <Rule label="Kein Zugriff" value="Benutzer ohne CRM-Rolle landen auf /crm/no-access" color="warn" />
+              <Rule label="Lead-Zuweisung" value="Leads können bestimmten Mitarbeitern zugewiesen werden (Lookalike-Vorschläge)" color="success" />
+              <Rule label="Projektschutz" value="Schutz von Deals/Angeboten vor versehentlichem Überschreiben" color="success" />
+            </div>
+
+            <SubHeading>Outbound-Sequenzen</SubHeading>
+            <p>
+              Mehrstufige E-Mail-Kadenzen mit Variablen-Substitution (siehe <Badge>src/lib/sequenceVars.ts</Badge>).
+              Empfänger können einzeln oder per Bulk-Enroll hinzugefügt werden. Versand erfolgt über
+              die <Badge>crm-send-email</Badge> Edge Function via Resend.
+            </p>
+
+            <Tip>
+              Das CRM-Modul wird über <Badge color="primary">/modules</Badge> oder direkt per URL aufgerufen.
+              Die letzte Modul-Auswahl wird gemerkt.
+            </Tip>
+          </Card>
+
+          {/* ─── PERSONIO-SYNC ─── */}
+          <Card title="Personio-Synchronisation" id="personio">
+            <p>
+              Mitarbeiterdaten können über die <strong className="text-foreground">Personio-API</strong> automatisch synchronisiert werden.
+              Die Konfiguration erfolgt unter <Badge color="primary">Verwaltung → Mitarbeiter → Personio-Sync</Badge>.
+            </p>
+
+            <SubHeading>Funktionsweise</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Edge Function" value="sync-personio-employees ruft die Personio-API auf und gleicht Profile ab" color="success" />
+              <Rule label="Secrets" value="PERSONIO_CLIENT_ID und PERSONIO_CLIENT_SECRET als Edge-Function-Secrets" color="success" />
+              <Rule label="Abgleich" value="Neue Mitarbeiter werden angelegt, bestehende aktualisiert (Name, Abteilung, E-Mail)" color="success" />
+              <Rule label="Manueller Trigger" value="Sync wird per Button gestartet — kein Auto-Cron" color="success" />
+            </div>
+
+            <Warning>
+              Vor dem ersten Sync müssen die Personio-API-Zugangsdaten als Secrets hinterlegt werden.
+              Ohne gültige Credentials antwortet die Function mit einer Fehlermeldung.
+            </Warning>
           </Card>
 
           {/* ─── ADMIN-VERWALTUNG ─── */}
