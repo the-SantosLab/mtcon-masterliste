@@ -111,6 +111,7 @@ function AuthenticatedApp() {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/mfa-challenge" element={<MfaChallenge />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
         <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
         <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
