@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
+import { TwoFactorSettings } from '@/components/TwoFactorSettings';
 
 export default function Profile() {
   const { profile, role } = useAuth();
