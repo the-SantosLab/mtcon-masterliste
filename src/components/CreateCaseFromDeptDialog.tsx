@@ -89,6 +89,8 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
         }
       }
 
+      try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: caseData?.id, actorId: user.id } }); } catch {}
+
       toast.success('Vorgang erstellt');
       setProjectName(''); setNote(''); setAssigneeId(''); setDueAt(''); setFiles([]);
       onClose();
