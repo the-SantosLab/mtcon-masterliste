@@ -10,6 +10,12 @@ interface Props {
 
 const RULES: Array<{ type: string; title: string; trigger: string; recipients: string }> = [
   {
+    type: 'vorgang_created',
+    title: 'Vorgang angelegt',
+    trigger: 'Neuer Vorgang wird erstellt',
+    recipients: 'Bearbeiter (falls gesetzt) – sonst alle Mitglieder der Ziel-Abteilung (außer Akteur)',
+  },
+  {
     type: 'task_created',
     title: 'Unteraufgabe angelegt',
     trigger: 'Neue Unteraufgabe wird zum Vorgang erstellt',
