@@ -167,16 +167,20 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   };
 
 
+  // Wenn ein Projekt verknüpft ist, dürfen Vorgänge auch in fremde Abteilungen
+  // angelegt werden (RLS erlaubt das). Nach Erstellung kann der Ersteller den
+  // Vorgang dann nicht mehr bearbeiten, sofern er kein Schreibrecht hat.
+  const crossDeptViaProject = !!form.project_id;
   const topLevel = useMemo(() => {
     const all = departments.filter(d => !d.parent_id);
-    if (!writableDeptIds) return all;
+    if (!writableDeptIds || crossDeptViaProject) return all;
     return all.filter(d => writableDeptIds.has(d.id) || departments.some(c => c.parent_id === d.id && writableDeptIds.has(c.id)));
-  }, [departments, writableDeptIds]);
+  }, [departments, writableDeptIds, crossDeptViaProject]);
   const teams = useMemo(() => {
     const all = departments.filter(d => d.parent_id === form.department_id);
-    if (!writableDeptIds) return all;
+    if (!writableDeptIds || crossDeptViaProject) return all;
     return all.filter(d => writableDeptIds.has(d.id));
-  }, [departments, form.department_id, writableDeptIds]);
+  }, [departments, form.department_id, writableDeptIds, crossDeptViaProject]);
   const effectiveDeptId = form.team_id || form.department_id;
 
   const deptProfiles = useMemo(() => {
