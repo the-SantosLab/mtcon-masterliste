@@ -113,13 +113,7 @@ export function MfaReminderBanner() {
             >
               Jetzt einrichten <ArrowRight className="h-3 w-3" />
             </Link>
-            <span className="text-[11px] text-muted-foreground">·</span>
-            <Link
-              to="/2fa-anleitung"
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-foreground hover:underline"
-            >
-              Anleitung öffnen
-            </Link>
+          </div>
           </div>
         </div>
       </div>
