@@ -195,6 +195,61 @@ export default function Documentation() {
             </Warning>
           </Card>
 
+          {/* ─── 2FA / MFA ─── */}
+          <Card title="2-Faktor-Authentifizierung (2FA)" id="mfa">
+            <p>
+              Zusätzlich zum Passwort kann jeder Benutzer eine zweite Stufe per <strong className="text-foreground">TOTP-Authenticator-App</strong> (Google Authenticator, Authy, 1Password etc.) aktivieren.
+              Die Einrichtung erfolgt im Profil unter <Badge color="primary">Profil → Sicherheit</Badge>.
+            </p>
+
+            <SubHeading>Einrichtung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="QR-Code scannen" value="Im Profil 2FA aktivieren → QR-Code mit Authenticator-App scannen" color="success" />
+              <Rule label="Code bestätigen" value="6-stelligen Code aus der App eingeben, um den Faktor zu verifizieren" color="success" />
+              <Rule label="Anleitung" value="Geführte Schritt-für-Schritt-Anleitung unter /2fa-anleitung" color="success" />
+              <Rule label="Deaktivieren" value="Im Profil jederzeit möglich (entfernt den verifizierten Faktor)" color="warn" />
+            </div>
+
+            <SubHeading>Login mit 2FA</SubHeading>
+            <p>
+              Nach erfolgreichem Passwort-Login wird der Benutzer automatisch auf <Badge>/mfa-challenge</Badge> umgeleitet und muss den
+              aktuellen 6-stelligen Code aus der Authenticator-App eingeben. Erst danach ist die volle Anwendung freigeschaltet
+              (AAL2-Niveau gemäß Supabase Auth).
+            </p>
+
+            <SubHeading>Erinnerungs-Banner</SubHeading>
+            <p>
+              Benutzer ohne aktiviertes 2FA sehen ein dezentes Banner, das zur Aktivierung auffordert. Es kann ausgeblendet werden,
+              taucht aber periodisch wieder auf, bis 2FA eingerichtet ist.
+            </p>
+
+            <Warning>
+              Geht das 2FA-Gerät verloren, kann ausschließlich ein Admin den verifizierten Faktor entfernen. Es gibt
+              bewusst keine Self-Service-Wiederherstellung über E-Mail.
+            </Warning>
+          </Card>
+
+          {/* ─── MODULE-AUSWAHL ─── */}
+          <Card title="Module-Auswahl" id="modules">
+            <p>
+              Die Plattform bündelt mehrere Module unter einem Login. Nach der Anmeldung kann der Benutzer auf
+              <Badge color="primary">/modules</Badge> zwischen den verfügbaren Modulen wählen.
+            </p>
+
+            <Table
+              headers={['Modul', 'Route', 'Beschreibung']}
+              rows={[
+                ['Operations / Masterliste', '/', 'Vorgänge, Projekte, Kanban, Support — Kernmodul'],
+                ['CRM', '/crm/dashboard', 'Leads, Deals, Angebote, Companies, Sequenzen'],
+              ]}
+            />
+
+            <p className="mt-2">
+              Die zuletzt verwendete Auswahl wird in <Badge>localStorage</Badge> (Schlüssel <Badge>mtcon.module</Badge>) gespeichert
+              und beim nächsten Login automatisch geöffnet. Über die Sidebar kann jederzeit zur Modulauswahl zurückgesprungen werden.
+            </p>
+          </Card>
+
           {/* ─── NAVIGATION ─── */}
           <Card title="Navigation & Layout" id="navigation">
             <p>
