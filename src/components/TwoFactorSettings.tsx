@@ -39,7 +39,8 @@ export function TwoFactorSettings() {
     setBusy(true);
     const { data, error } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
-      friendlyName: `KS Command (${new Date().toISOString().slice(0, 10)})`,
+      friendlyName: `Masterliste (MTCON) (${new Date().toISOString().slice(0, 10)})`,
+      issuer: 'Masterliste (MTCON)',
     });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
