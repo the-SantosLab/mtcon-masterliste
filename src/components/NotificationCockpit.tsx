@@ -54,6 +54,7 @@ const RULES: Array<{ type: string; title: string; trigger: string; recipients: s
 ];
 
 const TYPE_LABELS: Record<string, string> = {
+  vorgang_created: 'Vorgang angelegt',
   task_created: 'Aufgabe angelegt',
   task_assigned: 'Aufgabe zugewiesen',
   task_abgeschlossen: 'Aufgabe erledigt',
