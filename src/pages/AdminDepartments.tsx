@@ -173,34 +173,49 @@ export default function AdminDepartments() {
 
         {/* Team-Übersicht je Abteilung */}
         {!loading && departments.length > 0 && (() => {
-          const addExtraMember = async (deptId: string) => {
+          const ROLE_LABEL: Record<'read' | 'write' | 'lead', string> = {
+            read: 'Lesen', write: 'Schreiben', lead: 'Leitung',
+          };
+          const ROLE_CHIP: Record<'read' | 'write' | 'lead', string> = {
+            read: 'bg-muted text-muted-foreground',
+            write: 'bg-[hsl(var(--status-done))]/15 text-foreground',
+            lead: 'bg-primary/15 text-primary',
+          };
+          const addMember = async (deptId: string) => {
             if (!addMemberUserId) return;
             const { error } = await (supabase as any).from('department_members').insert({
-              department_id: deptId, user_id: addMemberUserId,
+              department_id: deptId, user_id: addMemberUserId, role: addMemberRole,
             });
             if (error) return toast.error(error.message);
             toast.success('Mitglied hinzugefügt');
-            setAddMemberFor(null);
-            setAddMemberUserId('');
+            setAddMemberFor(null); setAddMemberUserId(''); setAddMemberRole('write');
             fetchAll();
           };
-          const removeExtraMember = async (memberRowId: string) => {
+          const removeMember = async (memberRowId: string) => {
             const { error } = await (supabase as any).from('department_members').delete().eq('id', memberRowId);
             if (error) return toast.error(error.message);
             toast.success('Mitglied entfernt');
             fetchAll();
           };
+          const updateRole = async (memberRowId: string, role: 'read' | 'write' | 'lead') => {
+            const { error } = await (supabase as any).from('department_members').update({ role }).eq('id', memberRowId);
+            if (error) return toast.error(error.message);
+            fetchAll();
+          };
           return (
             <div className="space-y-4">
-              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams</h2>
+              <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams &amp; Rechte</h2>
               {departments.map(d => {
-                const primary = profiles.filter(p => p.department_id === d.id);
-                const extraRows = members.filter(m => m.department_id === d.id);
-                const extras = extraRows
+                const rows = members
+                  .filter(m => m.department_id === d.id)
                   .map(m => ({ row: m, profile: profiles.find(p => p.id === m.user_id) }))
-                  .filter(x => x.profile && !primary.some(p => p.id === x.profile!.id));
-                if (primary.length === 0 && extras.length === 0 && addMemberFor !== d.id) return null;
-                const assignedIds = new Set([...primary.map(p => p.id), ...extras.map(x => x.profile!.id)]);
+                  .filter(x => x.profile)
+                  .sort((a, b) => {
+                    const order = { lead: 0, write: 1, read: 2 } as const;
+                    return order[a.row.role] - order[b.row.role];
+                  });
+                if (rows.length === 0 && addMemberFor !== d.id) return null;
+                const assignedIds = new Set(rows.map(r => r.profile!.id));
                 const candidates = profiles.filter(p => !assignedIds.has(p.id));
                 return (
                   <div key={d.id} className="rounded-md border border-border bg-card p-4">
@@ -208,31 +223,32 @@ export default function AdminDepartments() {
                       <div className="flex items-center gap-2">
                         <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                         <h3 className="text-sm font-medium text-foreground">{d.name}</h3>
-                        <span className="text-[11px] text-muted-foreground">({primary.length + extras.length})</span>
+                        <span className="text-[11px] text-muted-foreground">({rows.length})</span>
                       </div>
                       <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1.5"
-                        onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); }}>
+                        onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); setAddMemberRole('write'); }}>
                         <UserPlus className="h-3 w-3" />Mitglied hinzufügen
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {primary.map(m => (
-                        <div key={m.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors">
-                          <UserAvatar user={m as any} size="lg" tooltip={false} />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground truncate">{m.display_name}</p>
-                            <p className="text-[11px] font-mono text-muted-foreground">{m.short_code}</p>
-                          </div>
-                        </div>
-                      ))}
-                      {extras.map(({ row, profile }) => (
-                        <div key={row.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors border border-dashed border-border/60">
+                      {rows.map(({ row, profile }) => (
+                        <div key={row.id} className="flex items-center gap-3 rounded-md p-2 hover:bg-muted/40 transition-colors border border-border/40">
                           <UserAvatar user={profile as any} size="lg" tooltip={false} />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-foreground truncate">{profile!.display_name}</p>
-                            <p className="text-[11px] font-mono text-muted-foreground">{profile!.short_code} · zusätzlich</p>
+                            <p className="text-[11px] font-mono text-muted-foreground">{profile!.short_code}</p>
                           </div>
-                          <button onClick={() => removeExtraMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
+                          <Select value={row.role} onValueChange={v => updateRole(row.id, v as any)}>
+                            <SelectTrigger className={`h-6 px-2 text-[10px] gap-1 border-0 w-auto min-w-0 ${ROLE_CHIP[row.role]}`}>
+                              <SelectValue>{ROLE_LABEL[row.role]}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="read" className="text-xs">Lesen</SelectItem>
+                              <SelectItem value="write" className="text-xs">Schreiben</SelectItem>
+                              <SelectItem value="lead" className="text-xs">Leitung</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <button onClick={() => removeMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
                             <X className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -251,7 +267,18 @@ export default function AdminDepartments() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <Button size="sm" className="h-8 text-xs" onClick={() => addExtraMember(d.id)} disabled={!addMemberUserId}>Hinzufügen</Button>
+                        <div className="space-y-1.5 w-32">
+                          <Label className="text-[11px] text-muted-foreground">Rolle</Label>
+                          <Select value={addMemberRole} onValueChange={v => setAddMemberRole(v as any)}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="read" className="text-xs">Lesen</SelectItem>
+                              <SelectItem value="write" className="text-xs">Schreiben</SelectItem>
+                              <SelectItem value="lead" className="text-xs">Leitung</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button size="sm" className="h-8 text-xs" onClick={() => addMember(d.id)} disabled={!addMemberUserId}>Hinzufügen</Button>
                         <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setAddMemberFor(null); setAddMemberUserId(''); }}>Abbrechen</Button>
                       </div>
                     )}
