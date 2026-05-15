@@ -3,8 +3,9 @@ import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDateTime } from '@/lib/case-utils';
-import { Trash2, Undo2 } from 'lucide-react';
+import { Trash2, Undo2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -89,13 +90,25 @@ export default function AdminDeletedCases() {
   return (
     <AppLayout>
       <div className="space-y-4 max-w-6xl">
-        <div className="flex items-center gap-2">
-          <Trash2 className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Gelöschte Vorgänge</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Audit-Protokoll aller endgültig gelöschten Vorgänge – mit Wiederherstellung</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Trash2 className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">Gelöschte Vorgänge</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Audit-Protokoll aller endgültig gelöschten Vorgänge – mit Wiederherstellung</p>
+            </div>
           </div>
+          <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+            <Link to="/admin/trash">
+              Papierkorb (Soft-Delete)
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
         </div>
+
+        <p className="text-[11px] text-muted-foreground -mt-2">
+          Hinweis: Soft-gelöschte Vorgänge (über „Löschen"-Button) liegen 90 Tage im <Link to="/admin/trash" className="underline hover:text-foreground">Papierkorb</Link> und erscheinen erst nach endgültiger Löschung hier.
+        </p>
 
         <div className="rounded-md border border-border bg-card overflow-x-auto">
           <table className="w-full">
