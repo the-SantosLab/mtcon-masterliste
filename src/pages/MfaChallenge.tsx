@@ -27,7 +27,13 @@ export default function MfaChallenge() {
       }
       const { data: f } = await supabase.auth.mfa.listFactors();
       const verified = f?.totp?.find(x => x.status === 'verified');
-      if (!verified) { setNeedsMfa(false); return; }
+      if (!verified) {
+        // No verified factor but aal2 required → cannot satisfy. Sign out to break redirect loop.
+        toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte erneut anmelden und 2FA einrichten.');
+        await supabase.auth.signOut();
+        navigate('/auth', { replace: true });
+        return;
+      }
       setFactorId(verified.id);
       setNeedsMfa(true);
     })();
