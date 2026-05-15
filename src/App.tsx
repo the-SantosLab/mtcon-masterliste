@@ -65,12 +65,13 @@ import { useCrmAccess } from "./hooks/useCrmAccess";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, enforceMfa = true }: { children: React.ReactNode; enforceMfa?: boolean }) {
   const { session, loading } = useAuth();
   const [mfaState, setMfaState] = useState<'unknown' | 'ok' | 'required'>('unknown');
 
   useEffect(() => {
     if (!session) { setMfaState('unknown'); return; }
+    if (!enforceMfa) { setMfaState('ok'); return; }
     let cancelled = false;
     (async () => {
       const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -85,7 +86,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [session]);
+  }, [session, enforceMfa]);
 
   if (loading || (session && mfaState === 'unknown')) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
   if (!session) return <Navigate to="/auth" replace />;
@@ -138,7 +139,7 @@ function AuthenticatedApp() {
         <Route path="/admin/papierkorb" element={<ProtectedRoute><AdminTrash /></ProtectedRoute>} />
         <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/2fa-anleitung" element={<ProtectedRoute><MfaGuide /></ProtectedRoute>} />
+        <Route path="/2fa-anleitung" element={<ProtectedRoute enforceMfa={false}><MfaGuide /></ProtectedRoute>} />
         <Route path="/modules" element={<ProtectedRoute><ModuleSelect /></ProtectedRoute>} />
         <Route path="/crm" element={<CrmProtectedRoute><CrmDashboard /></CrmProtectedRoute>} />
         <Route path="/crm/dashboard" element={<CrmProtectedRoute><CrmDashboard /></CrmProtectedRoute>} />
