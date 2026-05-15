@@ -10,6 +10,7 @@ import {
   FolderKanban, Settings, Bell, FileUp, UserPlus, Eye,
   KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
   Headphones, Globe, Network, Workflow, Lightbulb, FolderPlus, Plug,
+  ShieldCheck, Briefcase, Users2, RefreshCw,
 } from 'lucide-react';
 
 interface Section {
