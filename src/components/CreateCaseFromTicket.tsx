@@ -93,6 +93,8 @@ export function CreateCaseFromTicket({ ticket, messages, profiles }: CreateCaseF
         message: `Vorgang erstellt aus Ticket ${ticket.ticket_number}`,
       });
 
+      try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: user!.id } }); } catch {}
+
       toast.success('Vorgang erstellt');
       setOpen(false);
       navigate(`/cases/${newCase.id}`);
