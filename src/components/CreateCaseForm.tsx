@@ -361,6 +361,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         await (supabase as any).from('case_templates').update({ last_used_at: new Date().toISOString() }).eq('id', pendingTemplateId);
       }
     }
+    try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
     toast.success('Vorgang erstellt');
     onCreated();
   };
