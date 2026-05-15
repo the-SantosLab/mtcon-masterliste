@@ -80,16 +80,11 @@ export function MfaReminderBanner() {
             <Button variant="ghost" size="sm" onClick={dismissDialog} className="h-8 text-xs">
               Später erinnern
             </Button>
-            <div className="flex gap-2">
-              <Link to="/2fa-anleitung" onClick={dismissDialog}>
-                <Button variant="outline" size="sm" className="h-8 text-xs">Anleitung</Button>
-              </Link>
-              <Link to="/2fa-anleitung" onClick={dismissDialog}>
-                <Button size="sm" className="h-8 text-xs gap-1">
-                  Jetzt einrichten <ArrowRight className="h-3 w-3" />
-                </Button>
-              </Link>
-            </div>
+            <Link to="/2fa-anleitung" onClick={dismissDialog}>
+              <Button size="sm" className="h-8 text-xs gap-1">
+                Jetzt einrichten <ArrowRight className="h-3 w-3" />
+              </Button>
+            </Link>
           </DialogFooter>
         </DialogContent>
       </Dialog>
