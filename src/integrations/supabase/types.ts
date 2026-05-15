@@ -1159,18 +1159,21 @@ export type Database = {
           created_at: string
           department_id: string
           id: string
+          role: Database["public"]["Enums"]["dept_member_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
           department_id: string
           id?: string
+          role?: Database["public"]["Enums"]["dept_member_role"]
           user_id: string
         }
         Update: {
           created_at?: string
           department_id?: string
           id?: string
+          role?: Database["public"]["Enums"]["dept_member_role"]
           user_id?: string
         }
         Relationships: [
@@ -2599,6 +2602,10 @@ export type Database = {
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
+      dept_member_role: {
+        Args: { p_dept_id: string; p_uid: string }
+        Returns: Database["public"]["Enums"]["dept_member_role"]
+      }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
       has_crm_access: { Args: { uid?: string }; Returns: boolean }
       has_dept_read: {
@@ -2653,6 +2660,7 @@ export type Database = {
         | "verhandlung"
         | "won"
         | "lost"
+      dept_member_role: "read" | "write" | "lead"
       dept_permission: "none" | "read" | "write"
       enrollment_status:
         | "aktiv"
@@ -2837,6 +2845,7 @@ export const Constants = {
         "won",
         "lost",
       ],
+      dept_member_role: ["read", "write", "lead"],
       dept_permission: ["none", "read", "write"],
       enrollment_status: [
         "aktiv",
