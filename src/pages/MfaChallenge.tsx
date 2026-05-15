@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,9 +16,12 @@ export default function MfaChallenge() {
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [needsMfa, setNeedsMfa] = useState<boolean | null>(null);
+  const [signedOut, setSignedOut] = useState(false);
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session || ranRef.current) return;
+    ranRef.current = true;
     (async () => {
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aal?.currentLevel === 'aal2' || aal?.nextLevel !== 'aal2') {
@@ -28,10 +31,9 @@ export default function MfaChallenge() {
       const { data: f } = await supabase.auth.mfa.listFactors();
       const verified = f?.totp?.find(x => x.status === 'verified');
       if (!verified) {
-        // No verified factor but aal2 required → cannot satisfy. Sign out to break redirect loop.
         toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte erneut anmelden und 2FA einrichten.');
         await supabase.auth.signOut();
-        navigate('/auth', { replace: true });
+        setSignedOut(true);
         return;
       }
       setFactorId(verified.id);
@@ -39,6 +41,7 @@ export default function MfaChallenge() {
     })();
   }, [session]);
 
+  if (signedOut) return <Navigate to="/auth" replace />;
   if (loading || needsMfa === null) {
     return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   }
