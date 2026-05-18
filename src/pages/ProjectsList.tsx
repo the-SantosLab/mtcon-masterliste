@@ -338,9 +338,9 @@ export default function ProjectsList() {
                       </div>
                     </td>
                   </tr>
-                ))}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          )}
         </div>
         <p className="text-[11px] text-muted-foreground">{filtered.length} Projekt{filtered.length !== 1 ? 'e' : ''}</p>
       </div>
