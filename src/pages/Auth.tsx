@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { setLocalSessionToken } from '@/hooks/useSessionEnforcement';
+import { clearSessionEnforcementState, isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
@@ -26,8 +26,10 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmTakeover, setConfirmTakeover] = useState<{ userId: string } | null>(null);
 
+  const isBlockedSession = isCurrentTabSessionBlocked();
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
-  if (session && !confirmTakeover) {
+  if (session && !confirmTakeover && !isBlockedSession) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
     const isCrmBeta = session.user?.email === 'js@santoslab.de';
     if (!isCrmBeta) {
@@ -101,7 +103,7 @@ export default function Auth() {
   const confirmTakeoverNo = async () => {
     setConfirmTakeover(null);
     setLocalSessionToken(null);
-    await supabase.auth.signOut();
+    if (!isBlockedSession) await supabase.auth.signOut();
   };
 
   return (
