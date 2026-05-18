@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { setLocalSessionToken } from '@/hooks/useSessionEnforcement';
+import { getLocalSessionToken, isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
@@ -26,8 +26,11 @@ export default function Auth() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmTakeover, setConfirmTakeover] = useState<{ userId: string } | null>(null);
 
+  const isBlockedSession = isCurrentTabSessionBlocked();
+  const hasTabSessionToken = !!getLocalSessionToken();
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
-  if (session && !confirmTakeover) {
+  if (session && hasTabSessionToken && !confirmTakeover && !isBlockedSession) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
     const isCrmBeta = session.user?.email === 'js@santoslab.de';
     if (!isCrmBeta) {
@@ -39,7 +42,7 @@ export default function Auth() {
 
   const writeToken = async (userId: string) => {
     const token = crypto.randomUUID();
-    const { error } = await supabase.from('users_profile').update({ active_session_token: token } as any).eq('id', userId);
+    const { error } = await supabase.from('users_profile').update({ active_session_token: token }).eq('id', userId);
     if (error) throw error;
     setLocalSessionToken(token);
   };
@@ -60,7 +63,7 @@ export default function Auth() {
         if (!userId) return;
         const { data: prof } = await supabase
           .from('users_profile').select('active_session_token').eq('id', userId).maybeSingle();
-        const existing = (prof as any)?.active_session_token as string | null;
+        const existing = prof?.active_session_token;
         if (existing) {
           setConfirmTakeover({ userId });
           return;
@@ -93,15 +96,15 @@ export default function Auth() {
     try {
       await writeToken(confirmTakeover.userId);
       setConfirmTakeover(null);
-    } catch (e: any) {
-      toast.error('Fehler beim Anmelden: ' + (e?.message || ''));
+    } catch (e: unknown) {
+      toast.error('Fehler beim Anmelden: ' + (e instanceof Error ? e.message : ''));
     }
   };
 
   const confirmTakeoverNo = async () => {
     setConfirmTakeover(null);
     setLocalSessionToken(null);
-    await supabase.auth.signOut();
+    if (!isBlockedSession) await supabase.auth.signOut();
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 import { useSessionEnforcement } from '@/hooks/useSessionEnforcement';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
@@ -13,8 +14,10 @@ function formatMs(ms: number) {
 
 export function SessionTimeoutGuard() {
   const { session, user } = useAuth();
+  const location = useLocation();
+  const isAuthFlow = location.pathname === '/auth' || location.pathname === '/reset-password' || location.pathname === '/mfa-challenge';
   const { warningOpen, remainingMs, stayLoggedIn, logoutNow } = useSessionTimeout(!!session);
-  useSessionEnforcement(!!session, user?.id);
+  useSessionEnforcement(!!session && !isAuthFlow, user?.id);
 
   return (
     <Dialog open={warningOpen} onOpenChange={(o) => { if (!o) stayLoggedIn(); }} modal={false}>
