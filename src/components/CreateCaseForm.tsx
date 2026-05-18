@@ -37,7 +37,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
-    sop: '', quantity: '', project_duration: '',
+    sop: '', quantity: '', project_duration: '', description: '',
   });
 
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
@@ -338,6 +338,14 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     setSaving(false);
     if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
     await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
+    if (form.description && form.description.trim()) {
+      await (supabase as any).from('case_notes').insert({
+        case_id: newCase.id,
+        author_id: userId,
+        body: form.description.trim(),
+        pinned: true,
+      });
+    }
     if (form.note && form.note.trim()) {
       await (supabase as any).from('case_notes').insert({
         case_id: newCase.id,
@@ -412,52 +420,40 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {/* STEP 1: Projektname */}
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
-              {visibleTemplates.length > 0 && (
-                <div className="space-y-1 rounded-md border border-primary/30 bg-primary/5 p-2.5">
-                  <Label className="text-xs text-muted-foreground">Aus Template erstellen? (optional)</Label>
-                  <Select value={selectedTemplateId || '_none'} onValueChange={v => applyTemplate(v === '_none' ? '' : v)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Template wählen" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Ohne Template</SelectItem>
-                      {visibleTemplates.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.title} <span className="text-muted-foreground ml-1.5">({t.tasks.length})</span></SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {pendingTemplateTasks.length > 0 && (
-                    <p className="text-[10px] text-muted-foreground">{pendingTemplateTasks.length} Unteraufgaben werden mit angelegt.</p>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                <Textarea
+                  value={form.description}
+                  onChange={e => set('description', e.target.value)}
+                  rows={4}
+                  className="text-xs"
+                  placeholder={'Was möchte ich?\n z.B. Anpassung Abfragemasken bei Vorgangsanlage\n\nWas ist das Ziel?\n z.B. verbesserte / leichtere Eingabeführung systemseitig für MTCON-Masterlistennutzer'}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Vorgangsname bzw. Kurzbeschreibungs-Titel der neu anzulegenden Aufgabe *</Label>
+                <div className="relative">
+                  <Input
+                    value={form.project_name}
+                    onChange={e => set('project_name', e.target.value)}
+                    placeholder="Projekt Alpha"
+                    autoFocus
+                    className="h-8 text-xs"
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); next(); } }}
+                  />
+                  {suggestions.length > 0 && form.project_name.length >= 3 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-8 px-2 text-amber-500"
+                      onClick={() => setShowSuggestions(!showSuggestions)}
+                      title="Ähnliche Vorgänge gefunden"
+                    >
+                      <Lightbulb className="h-3.5 w-3.5" />
+                    </Button>
                   )}
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
-                  <Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Projektname *</Label>
-                  <div className="relative">
-                    <Input
-                      value={form.project_name}
-                      onChange={e => set('project_name', e.target.value)}
-                      placeholder="Projekt Alpha"
-                      autoFocus
-                      className="h-8 text-xs"
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); next(); } }}
-                    />
-                    {suggestions.length > 0 && form.project_name.length >= 3 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-8 px-2 text-amber-500"
-                        onClick={() => setShowSuggestions(!showSuggestions)}
-                        title="Ähnliche Vorgänge gefunden"
-                      >
-                        <Lightbulb className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
                 </div>
               </div>
 
@@ -481,18 +477,41 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
               )}
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Verknüpftes Projekt (optional)</Label>
+                <Label className="text-xs text-muted-foreground">Zuordnung und Integration auf bestehende Vorgänge + / Projekte (optional)</Label>
                 <Select value={form.project_id || '_none'} onValueChange={v => v === '_none' ? set('project_id', '') : handleProjectChange(v)}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">Kein Projekt</SelectItem>
                     {projects.map(p => (
-                      <SelectItem key={p.id} value={p.id}>
+                      <SelectItem key={p.id} value={p.id} className="text-left justify-start">
                         <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.project_number}</span>{p.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {visibleTemplates.length > 0 && (
+                <div className="space-y-1 rounded-md border border-primary/30 bg-primary/5 p-2.5">
+                  <Label className="text-xs text-muted-foreground">Aus Template erstellen? (optional)</Label>
+                  <Select value={selectedTemplateId || '_none'} onValueChange={v => applyTemplate(v === '_none' ? '' : v)}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Template wählen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Ohne Template</SelectItem>
+                      {visibleTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id} className="text-left justify-start">{t.title} <span className="text-muted-foreground ml-1.5">({t.tasks.length})</span></SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {pendingTemplateTasks.length > 0 && (
+                    <p className="text-[10px] text-muted-foreground">{pendingTemplateTasks.length} Unteraufgaben werden mit angelegt.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Vorgangsnummer</Label>
+                <Input value="wird automatisch vergeben" disabled className="h-8 text-xs bg-muted/50 text-muted-foreground" />
               </div>
             </div>
           )}
@@ -502,39 +521,45 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Abteilung</Label>
+                  <Label className="text-xs text-muted-foreground">MTCON Abteilung</Label>
                   <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">Keine Abteilung</SelectItem>
                       {topLevel.map(d => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                        <SelectItem key={d.id} value={d.id} className="text-left justify-start">
+                          <span className="flex items-center text-left w-full">
+                            {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Teilbereich</Label>
+                  <Label className="text-xs text-muted-foreground">MTCON Abteilungsteilbereich</Label>
                   <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine' : 'Wählen'} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">Kein Teilbereich</SelectItem>
-                      {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                      {teams.map(t => (
+                        <SelectItem key={t.id} value={t.id} className="text-left justify-start">
+                          {t.code ? `${t.code} – ${t.name}` : t.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Zuständiger Mitarbeiter (optional)</Label>
+                <Label className="text-xs text-muted-foreground">MTCON Teammitglied (optional)</Label>
                 <Select value={form.assignee_id || '_none'} onValueChange={v => set('assignee_id', v === '_none' ? '' : v)}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder={effectiveDeptId ? 'Mitarbeiter wählen' : 'Erst Abteilung wählen (optional)'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">Niemand – landet im Pool</SelectItem>
+                    <SelectItem value="_none">Keine direkte Zuordnung – Vorgang landet im Abteilungspool frei zur Abholung</SelectItem>
                     {(effectiveDeptId ? deptProfiles : profiles).map(p => (
                       <SelectItem key={p.id} value={p.id} className="text-xs">
                         <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
