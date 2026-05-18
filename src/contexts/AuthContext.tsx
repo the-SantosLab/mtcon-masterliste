@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, Enums } from '@/integrations/supabase/types';
+import { clearSessionEnforcementState } from '@/hooks/useSessionEnforcement';
 
 type UserProfile = Tables<'users_profile'>;
 type AppRole = Enums<'app_role'>;
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const uid = (await supabase.auth.getUser()).data.user?.id;
       if (uid) await supabase.from('users_profile').update({ active_session_token: null } as any).eq('id', uid);
     } catch {}
-    try { sessionStorage.removeItem('mtcon.session_token'); localStorage.removeItem('mtcon.session_token'); } catch {}
+    clearSessionEnforcementState();
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
