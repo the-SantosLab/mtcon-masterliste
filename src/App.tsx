@@ -115,6 +115,7 @@ function CrmProtectedRoute({ children }: { children: React.ReactNode }) {
 function AuthenticatedApp() {
   return (
     <PreferencesProvider>
+      <SessionTimeoutGuard />
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
