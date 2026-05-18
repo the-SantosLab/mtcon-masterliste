@@ -89,11 +89,22 @@ export default function ProjectsList() {
       .from('projects')
       .select('*')
       .order('created_at', { ascending: false });
+    const list = (data || []) as Project[];
+    const ownerIds = Array.from(new Set(list.map(p => p.owner_id).filter(Boolean))) as string[];
+    let ownerMap: Record<string, string> = {};
+    if (ownerIds.length) {
+      const { data: profs } = await supabase
+        .from('users_profile')
+        .select('id, short_code')
+        .in('id', ownerIds);
+      ownerMap = Object.fromEntries((profs || []).map((u: any) => [u.id, u.short_code]));
+    }
     const deptMap = Object.fromEntries(departments.map(d => [d.id, d.name]));
     setProjects(
-      ((data || []) as Project[]).map(p => ({
+      list.map(p => ({
         ...p,
         dept_name: deptMap[p.department_id ?? ''] ?? null,
+        owner_code: p.owner_id ? ownerMap[p.owner_id] ?? null : null,
       }))
     );
     setLoading(false);
