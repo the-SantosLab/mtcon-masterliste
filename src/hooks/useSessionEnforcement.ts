@@ -5,13 +5,17 @@ import { toast } from 'sonner';
 const LS_KEY = 'mtcon.session_token';
 const POLL_MS = 60_000;
 
+// WICHTIG: sessionStorage statt localStorage, damit jeder Tab seinen
+// eigenen Token hat. localStorage wird zwischen Tabs desselben Browsers
+// geteilt — dann würde Single-Session-Enforcement nicht greifen, wenn der
+// Nutzer in mehreren Tabs eingeloggt ist.
 export function getLocalSessionToken(): string | null {
-  try { return localStorage.getItem(LS_KEY); } catch { return null; }
+  try { return sessionStorage.getItem(LS_KEY); } catch { return null; }
 }
 export function setLocalSessionToken(t: string | null) {
   try {
-    if (t) localStorage.setItem(LS_KEY, t);
-    else localStorage.removeItem(LS_KEY);
+    if (t) sessionStorage.setItem(LS_KEY, t);
+    else sessionStorage.removeItem(LS_KEY);
   } catch {}
 }
 
