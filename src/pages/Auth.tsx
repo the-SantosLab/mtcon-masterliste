@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
+import { getLocalSessionToken, isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
@@ -27,9 +27,10 @@ export default function Auth() {
   const [confirmTakeover, setConfirmTakeover] = useState<{ userId: string } | null>(null);
 
   const isBlockedSession = isCurrentTabSessionBlocked();
+  const hasTabSessionToken = !!getLocalSessionToken();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
-  if (session && !confirmTakeover && !isBlockedSession) {
+  if (session && hasTabSessionToken && !confirmTakeover && !isBlockedSession) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
     const isCrmBeta = session.user?.email === 'js@santoslab.de';
     if (!isCrmBeta) {
