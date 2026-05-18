@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PortalAuthProvider, usePortalAuth } from "@/contexts/PortalAuthContext";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
+import { isCurrentTabSessionBlocked } from "@/hooks/useSessionEnforcement";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import CasesList from "./pages/CasesList";
@@ -91,7 +92,7 @@ function ProtectedRoute({ children, enforceMfa = true }: { children: React.React
   }, [session, enforceMfa]);
 
   if (loading || (session && mfaState === 'unknown')) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session) return <Navigate to="/auth" replace />;
+  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace />;
   if (mfaState === 'required') return <Navigate to="/mfa-challenge" replace />;
   return <>{children}</>;
 }
@@ -107,7 +108,7 @@ function CrmProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   const { allowed, loading: accessLoading } = useCrmAccess();
   if (loading || accessLoading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session) return <Navigate to="/auth" replace />;
+  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace />;
   if (!allowed) return <CrmNoAccess />;
   return <>{children}</>;
 }
