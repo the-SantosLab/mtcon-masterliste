@@ -96,7 +96,7 @@ export default function Auth() {
     try {
       await writeToken(confirmTakeover.userId);
       setConfirmTakeover(null);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error('Fehler beim Anmelden: ' + (e instanceof Error ? e.message : ''));
     }
   };
