@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const uid = (await supabase.auth.getUser()).data.user?.id;
       if (uid) await supabase.from('users_profile').update({ active_session_token: null }).eq('id', uid);
-    } catch { return; }
+    } catch { void 0; }
     clearSessionEnforcementState();
     await supabase.auth.signOut();
     setSession(null);
