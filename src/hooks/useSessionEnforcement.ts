@@ -120,11 +120,16 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
     check();
     const id = window.setInterval(check, POLL_MS);
     const onFocus = () => check();
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === BROWSER_TOKEN_KEY && event.newValue !== getLocalSessionToken()) check();
+    };
     window.addEventListener('focus', onFocus);
+    window.addEventListener('storage', onStorage);
     return () => {
       cancelled = true;
       window.clearInterval(id);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('storage', onStorage);
     };
   }, [enabled, userId]);
 }
