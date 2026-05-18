@@ -102,6 +102,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOutFn = async () => {
+    try {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (uid) await supabase.from('users_profile').update({ active_session_token: null } as any).eq('id', uid);
+    } catch {}
+    try { localStorage.removeItem('mtcon.session_token'); } catch {}
     await supabase.auth.signOut();
     setSession(null);
     setUser(null);
