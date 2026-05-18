@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { setLocalSessionToken } from '@/hooks/useSessionEnforcement';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 const loginSchema = z.object({
@@ -21,9 +24,10 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [confirmTakeover, setConfirmTakeover] = useState<{ userId: string } | null>(null);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
-  if (session) {
+  if (session && !confirmTakeover) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
     const isCrmBeta = session.user?.email === 'js@santoslab.de';
     if (!isCrmBeta) {
@@ -33,6 +37,13 @@ export default function Auth() {
     return <Navigate to={mod === 'crm' ? '/crm/dashboard' : mod === 'ops' ? '/' : '/modules'} replace />;
   }
 
+  const writeToken = async (userId: string) => {
+    const token = crypto.randomUUID();
+    const { error } = await supabase.from('users_profile').update({ active_session_token: token } as any).eq('id', userId);
+    if (error) throw error;
+    setLocalSessionToken(token);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -40,7 +51,21 @@ export default function Auth() {
       if (view === 'login') {
         loginSchema.parse({ email, password });
         const { error } = await signIn(email, password);
-        if (error) toast.error(error.message.includes('Invalid login') ? 'Ungültige E-Mail oder Passwort' : error.message);
+        if (error) {
+          toast.error(error.message.includes('Invalid login') ? 'Ungültige E-Mail oder Passwort' : error.message);
+          return;
+        }
+        const { data: u } = await supabase.auth.getUser();
+        const userId = u.user?.id;
+        if (!userId) return;
+        const { data: prof } = await supabase
+          .from('users_profile').select('active_session_token').eq('id', userId).maybeSingle();
+        const existing = (prof as any)?.active_session_token as string | null;
+        if (existing) {
+          setConfirmTakeover({ userId });
+          return;
+        }
+        await writeToken(userId);
       } else {
         if (!email) { toast.error('Bitte E-Mail eingeben'); setSubmitting(false); return; }
         const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset`, {
@@ -61,6 +86,22 @@ export default function Auth() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const confirmTakeoverYes = async () => {
+    if (!confirmTakeover) return;
+    try {
+      await writeToken(confirmTakeover.userId);
+      setConfirmTakeover(null);
+    } catch (e: any) {
+      toast.error('Fehler beim Anmelden: ' + (e?.message || ''));
+    }
+  };
+
+  const confirmTakeoverNo = async () => {
+    setConfirmTakeover(null);
+    setLocalSessionToken(null);
+    await supabase.auth.signOut();
   };
 
   return (
@@ -109,6 +150,21 @@ export default function Auth() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!confirmTakeover}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bereits angemeldet</AlertDialogTitle>
+            <AlertDialogDescription>
+              Du bist bereits in einem anderen Browser angemeldet. Möchtest du diese Sitzung beenden und hier fortfahren?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={confirmTakeoverNo}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmTakeoverYes}>Ja, hier anmelden</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

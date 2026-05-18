@@ -2416,6 +2416,7 @@ export type Database = {
       users_profile: {
         Row: {
           active: boolean
+          active_session_token: string | null
           avatar_url: string | null
           created_at: string
           department_id: string | null
@@ -2429,6 +2430,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          active_session_token?: string | null
           avatar_url?: string | null
           created_at?: string
           department_id?: string | null
@@ -2442,6 +2444,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          active_session_token?: string | null
           avatar_url?: string | null
           created_at?: string
           department_id?: string | null
