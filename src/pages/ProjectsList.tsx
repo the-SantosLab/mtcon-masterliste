@@ -32,7 +32,9 @@ interface Project {
   visibility: string;
   created_at: string;
   department_id: string | null;
+  owner_id: string | null;
   dept_name?: string | null;
+  owner_code?: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
