@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const LS_KEY = 'mtcon.session_token';
+const TAB_TOKEN_KEY = 'mtcon.session_token';
+const BROWSER_TOKEN_KEY = 'mtcon.browser_session_token';
+const BLOCKED_KEY = 'mtcon.session_blocked';
 const POLL_MS = 60_000;
 
 // WICHTIG: sessionStorage statt localStorage, damit jeder Tab seinen
@@ -10,13 +12,46 @@ const POLL_MS = 60_000;
 // geteilt — dann würde Single-Session-Enforcement nicht greifen, wenn der
 // Nutzer in mehreren Tabs eingeloggt ist.
 export function getLocalSessionToken(): string | null {
-  try { return sessionStorage.getItem(LS_KEY); } catch { return null; }
+  try { return sessionStorage.getItem(TAB_TOKEN_KEY); } catch { return null; }
 }
 export function setLocalSessionToken(t: string | null) {
   try {
-    if (t) sessionStorage.setItem(LS_KEY, t);
-    else sessionStorage.removeItem(LS_KEY);
+    if (t) {
+      sessionStorage.setItem(TAB_TOKEN_KEY, t);
+      sessionStorage.removeItem(BLOCKED_KEY);
+      localStorage.setItem(BROWSER_TOKEN_KEY, t);
+    } else {
+      sessionStorage.removeItem(TAB_TOKEN_KEY);
+    }
   } catch {}
+}
+
+export function isCurrentTabSessionBlocked(): boolean {
+  try { return sessionStorage.getItem(BLOCKED_KEY) === '1'; } catch { return false; }
+}
+
+export function clearSessionEnforcementState() {
+  try {
+    sessionStorage.removeItem(TAB_TOKEN_KEY);
+    sessionStorage.removeItem(BLOCKED_KEY);
+    localStorage.removeItem(BROWSER_TOKEN_KEY);
+    localStorage.removeItem(TAB_TOKEN_KEY);
+  } catch {}
+}
+
+function blockCurrentTab() {
+  try {
+    sessionStorage.removeItem(TAB_TOKEN_KEY);
+    sessionStorage.setItem(BLOCKED_KEY, '1');
+  } catch {}
+}
+
+function getBrowserSessionToken(): string | null {
+  try { return localStorage.getItem(BROWSER_TOKEN_KEY); } catch { return null; }
+}
+
+function goToAuth() {
+  if (window.location.pathname !== '/auth') window.location.href = '/auth';
 }
 
 export function useSessionEnforcement(enabled: boolean, userId: string | undefined) {
@@ -31,7 +66,6 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
       checkingRef.current = true;
       try {
         const local = getLocalSessionToken();
-        if (!local) return; // not yet established by login flow
         const { data, error } = await supabase
           .from('users_profile')
           .select('active_session_token')
@@ -39,11 +73,43 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
           .maybeSingle();
         if (cancelled || error || !data) return;
         const remote = (data as any).active_session_token as string | null;
-        if (remote && remote !== local) {
-          setLocalSessionToken(null);
+
+        if (!local) {
+          if (remote) {
+            blockCurrentTab();
+            toast.error('Diese Sitzung ist bereits in einem anderen Tab aktiv. Bitte melde dich hier erneut an, um sie zu übernehmen.');
+            goToAuth();
+            return;
+          }
+
+          const token = crypto.randomUUID();
+          const { error: updateError } = await supabase
+            .from('users_profile')
+            .update({ active_session_token: token } as any)
+            .eq('id', userId);
+          if (!updateError && !cancelled) setLocalSessionToken(token);
+          return;
+        }
+
+        if (!remote) {
+          blockCurrentTab();
+          clearSessionEnforcementState();
           await supabase.auth.signOut();
+          toast.error('Deine Sitzung wurde beendet. Bitte melde dich erneut an.');
+          goToAuth();
+          return;
+        }
+
+        if (remote !== local) {
+          const sameBrowserTakeover = getBrowserSessionToken() === remote;
+          setLocalSessionToken(null);
+          blockCurrentTab();
+          if (!sameBrowserTakeover) {
+            clearSessionEnforcementState();
+            await supabase.auth.signOut();
+          }
           toast.error('Du wurdest abgemeldet, da dein Konto in einem anderen Browser geöffnet wurde.');
-          window.location.href = '/auth';
+          goToAuth();
         }
       } finally {
         checkingRef.current = false;
