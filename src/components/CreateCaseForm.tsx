@@ -338,6 +338,14 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     setSaving(false);
     if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
     await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
+    if (form.description && form.description.trim()) {
+      await (supabase as any).from('case_notes').insert({
+        case_id: newCase.id,
+        author_id: userId,
+        body: form.description.trim(),
+        pinned: true,
+      });
+    }
     if (form.note && form.note.trim()) {
       await (supabase as any).from('case_notes').insert({
         case_id: newCase.id,
