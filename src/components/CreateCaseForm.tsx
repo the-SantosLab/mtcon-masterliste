@@ -521,39 +521,45 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Abteilung</Label>
+                  <Label className="text-xs text-muted-foreground">MTCON Abteilung</Label>
                   <Select value={form.department_id || '_none'} onValueChange={handleDeptChange}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">Keine Abteilung</SelectItem>
                       {topLevel.map(d => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                        <SelectItem key={d.id} value={d.id} className="text-left justify-start">
+                          <span className="flex items-center text-left w-full">
+                            {d.code ? <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{d.code}</span> : null}{d.name}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Teilbereich</Label>
+                  <Label className="text-xs text-muted-foreground">MTCON Abteilungsteilbereich</Label>
                   <Select value={form.team_id || '_none'} onValueChange={v => set('team_id', v === '_none' ? '' : v)} disabled={!form.department_id || teams.length === 0}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={!form.department_id ? '–' : teams.length === 0 ? 'Keine' : 'Wählen'} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">Kein Teilbereich</SelectItem>
-                      {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                      {teams.map(t => (
+                        <SelectItem key={t.id} value={t.id} className="text-left justify-start">
+                          {t.code ? `${t.code} – ${t.name}` : t.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Zuständiger Mitarbeiter (optional)</Label>
+                <Label className="text-xs text-muted-foreground">MTCON Teammitglied (optional)</Label>
                 <Select value={form.assignee_id || '_none'} onValueChange={v => set('assignee_id', v === '_none' ? '' : v)}>
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder={effectiveDeptId ? 'Mitarbeiter wählen' : 'Erst Abteilung wählen (optional)'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">Niemand – landet im Pool</SelectItem>
+                    <SelectItem value="_none">Keine direkte Zuordnung – Vorgang landet im Abteilungspool frei zur Abholung</SelectItem>
                     {(effectiveDeptId ? deptProfiles : profiles).map(p => (
                       <SelectItem key={p.id} value={p.id} className="text-xs">
                         <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.short_code}</span>{p.display_name}
