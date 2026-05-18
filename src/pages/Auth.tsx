@@ -42,7 +42,7 @@ export default function Auth() {
 
   const writeToken = async (userId: string) => {
     const token = crypto.randomUUID();
-    const { error } = await supabase.from('users_profile').update({ active_session_token: token } as any).eq('id', userId);
+    const { error } = await supabase.from('users_profile').update({ active_session_token: token }).eq('id', userId);
     if (error) throw error;
     setLocalSessionToken(token);
   };
@@ -63,7 +63,7 @@ export default function Auth() {
         if (!userId) return;
         const { data: prof } = await supabase
           .from('users_profile').select('active_session_token').eq('id', userId).maybeSingle();
-        const existing = (prof as any)?.active_session_token as string | null;
+        const existing = prof?.active_session_token;
         if (existing) {
           setConfirmTakeover({ userId });
           return;
@@ -97,7 +97,7 @@ export default function Auth() {
       await writeToken(confirmTakeover.userId);
       setConfirmTakeover(null);
     } catch (e: any) {
-      toast.error('Fehler beim Anmelden: ' + (e?.message || ''));
+      toast.error('Fehler beim Anmelden: ' + (e instanceof Error ? e.message : ''));
     }
   };
 
