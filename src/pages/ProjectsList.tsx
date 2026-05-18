@@ -13,10 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import {
   Plus, Search, Folder, ChevronRight, CheckCircle2,
-  Clock, Archive, FolderOpen,
+  Clock, Archive, FolderOpen, Rows3, Rows2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+
+type ViewMode = 'compact' | 'normal';
+const VIEW_KEY = 'projekt_list_view_mode';
 
 interface Department { id: string; name: string; code: string; }
 interface Project {
