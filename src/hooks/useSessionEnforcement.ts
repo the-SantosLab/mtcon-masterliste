@@ -63,6 +63,7 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
 
     const check = async () => {
       if (checkingRef.current) return;
+      if (isCurrentTabSessionBlocked()) return;
       checkingRef.current = true;
       try {
         const local = getLocalSessionToken();
