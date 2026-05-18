@@ -23,7 +23,7 @@ export function setLocalSessionToken(t: string | null) {
     } else {
       sessionStorage.removeItem(TAB_TOKEN_KEY);
     }
-  } catch {}
+  } catch { return; }
 }
 
 export function isCurrentTabSessionBlocked(): boolean {
@@ -36,14 +36,14 @@ export function clearSessionEnforcementState() {
     sessionStorage.removeItem(BLOCKED_KEY);
     localStorage.removeItem(BROWSER_TOKEN_KEY);
     localStorage.removeItem(TAB_TOKEN_KEY);
-  } catch {}
+  } catch { return; }
 }
 
 function blockCurrentTab() {
   try {
     sessionStorage.removeItem(TAB_TOKEN_KEY);
     sessionStorage.setItem(BLOCKED_KEY, '1');
-  } catch {}
+  } catch { return; }
 }
 
 function getBrowserSessionToken(): string | null {
@@ -73,7 +73,7 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
           .eq('id', userId)
           .maybeSingle();
         if (cancelled || error || !data) return;
-        const remote = (data as any).active_session_token as string | null;
+        const remote = data.active_session_token;
 
         if (!local) {
           if (remote) {
@@ -86,7 +86,7 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
           const token = crypto.randomUUID();
           const { error: updateError } = await supabase
             .from('users_profile')
-            .update({ active_session_token: token } as any)
+            .update({ active_session_token: token })
             .eq('id', userId);
           if (!updateError && !cancelled) setLocalSessionToken(token);
           return;
