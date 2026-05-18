@@ -37,7 +37,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
-    sop: '', quantity: '', project_duration: '',
+    sop: '', quantity: '', project_duration: '', description: '',
   });
 
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
