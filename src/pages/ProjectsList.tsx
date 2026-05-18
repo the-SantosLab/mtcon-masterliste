@@ -237,69 +237,108 @@ export default function ProjectsList() {
 
         {/* Table */}
         <div className="rounded-md border border-border bg-card overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt-Nr.</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Abteilung</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Sichtbarkeit</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Erstellt</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
-                <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className={cn(cellCls, 'py-12 text-center')}>
-                    <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                    <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
-                  </td>
+          {viewMode === 'compact' ? (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground w-6')}></th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Endtermin</th>
                 </tr>
-              ) : filtered.map(p => (
-                <tr key={p.id} className="hover:bg-muted/40 transition-colors">
-                  <td className={cn(cellCls, 'font-mono')}>
-                    <Link to={`/projects/${p.id}`} className="text-primary hover:underline">{p.project_number}</Link>
-                  </td>
-                  <td className={cellCls}>
-                    <div>
-                      <Link to={`/projects/${p.id}`} className="text-foreground font-medium hover:text-primary transition-colors">{p.name}</Link>
-                      {p.description && (
-                        <p className="text-muted-foreground text-[11px] mt-0.5 truncate max-w-xs">{p.description}</p>
-                      )}
-                    </div>
-                  </td>
-                  <td className={cn(cellCls, 'text-muted-foreground')}>{p.dept_name || '–'}</td>
-                  <td className={cellCls}><StatusDot status={p.status} /></td>
-                  <td className={cn(cellCls, 'text-muted-foreground capitalize')}>
-                    {p.visibility === 'project_members' ? 'Team' : p.visibility === 'department' ? 'Abteilung' : 'Privat'}
-                  </td>
-                  <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>
-                    {format(new Date(p.created_at), 'dd.MM.yyyy')}
-                  </td>
-                  <td className={cellCls}>
-                    <div className="flex items-center gap-3">
-                      <Link
-                        to={`/projects/${p.id}`}
-                        className="text-muted-foreground hover:text-foreground transition-colors text-[11px]"
-                      >
-                        Details
-                      </Link>
-                      <Link
-                        to={`/projects/${p.id}/files`}
-                        className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-[11px]"
-                      >
-                        <FolderOpen className="h-3.5 w-3.5" />
-                        Dateien
-                        <ChevronRight className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </td>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loading ? (
+                  <tr><td colSpan={5} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className={cn(cellCls, 'py-12 text-center')}>
+                      <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                      <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
+                    </td>
+                  </tr>
+                ) : filtered.map(p => (
+                  <tr key={p.id} className="hover:bg-muted/40 transition-colors">
+                    <td className={cellCls}>
+                      <span className={cn('inline-block h-1.5 w-1.5 rounded-full', STATUS_COLORS[p.status] ?? 'bg-muted-foreground')} />
+                    </td>
+                    <td className={cn(cellCls, 'font-mono')}>
+                      <Link to={`/projects/${p.id}`} className="text-primary hover:underline">{p.project_number}</Link>
+                    </td>
+                    <td className={cellCls}>
+                      <Link to={`/projects/${p.id}`} className="text-foreground hover:text-primary transition-colors truncate">{p.name}</Link>
+                    </td>
+                    <td className={cn(cellCls, 'text-muted-foreground font-mono')}>{p.owner_code || '–'}</td>
+                    <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>–</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt-Nr.</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Abteilung</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Sichtbarkeit</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Erstellt</th>
+                  <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}></th>
                 </tr>
-              ))}
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loading ? (
+                  <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className={cn(cellCls, 'py-12 text-center')}>
+                      <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                      <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
+                    </td>
+                  </tr>
+                ) : filtered.map(p => (
+                  <tr key={p.id} className="hover:bg-muted/40 transition-colors">
+                    <td className={cn(cellCls, 'font-mono')}>
+                      <Link to={`/projects/${p.id}`} className="text-primary hover:underline">{p.project_number}</Link>
+                    </td>
+                    <td className={cellCls}>
+                      <div>
+                        <Link to={`/projects/${p.id}`} className="text-foreground font-medium hover:text-primary transition-colors">{p.name}</Link>
+                        {p.description && (
+                          <p className="text-muted-foreground text-[11px] mt-0.5 truncate max-w-xs">{p.description}</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className={cn(cellCls, 'text-muted-foreground')}>{p.dept_name || '–'}</td>
+                    <td className={cellCls}><StatusDot status={p.status} /></td>
+                    <td className={cn(cellCls, 'text-muted-foreground capitalize')}>
+                      {p.visibility === 'project_members' ? 'Team' : p.visibility === 'department' ? 'Abteilung' : 'Privat'}
+                    </td>
+                    <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>
+                      {format(new Date(p.created_at), 'dd.MM.yyyy')}
+                    </td>
+                    <td className={cellCls}>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/projects/${p.id}`}
+                          className="text-muted-foreground hover:text-foreground transition-colors text-[11px]"
+                        >
+                          Details
+                        </Link>
+                        <Link
+                          to={`/projects/${p.id}/files`}
+                          className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-[11px]"
+                        >
+                          <FolderOpen className="h-3.5 w-3.5" />
+                          Dateien
+                          <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
