@@ -338,6 +338,7 @@ export default function ProjectsList() {
                       </div>
                     </td>
                   </tr>
+                ))}
               </tbody>
             </table>
           )}
