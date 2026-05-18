@@ -58,8 +58,18 @@ function StatusDot({ status }: { status: string }) {
 export default function ProjectsList() {
   const { user, isAdmin, isViewer } = useAuth();
   const { preferences } = usePreferences();
-  const compact = preferences.compactTables;
-  const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === 'undefined') return 'normal';
+    const v = window.localStorage.getItem(VIEW_KEY);
+    return v === 'compact' ? 'compact' : 'normal';
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(VIEW_KEY, viewMode); } catch {}
+  }, [viewMode]);
+  const compact = viewMode === 'compact' || preferences.compactTables;
+  const cellCls = viewMode === 'compact'
+    ? 'px-2 py-1 text-sm'
+    : compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
