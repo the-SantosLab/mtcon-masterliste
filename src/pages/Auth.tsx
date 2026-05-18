@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { clearSessionEnforcementState, isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
+import { isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
