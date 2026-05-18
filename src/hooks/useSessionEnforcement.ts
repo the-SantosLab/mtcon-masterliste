@@ -23,7 +23,7 @@ export function setLocalSessionToken(t: string | null) {
     } else {
       sessionStorage.removeItem(TAB_TOKEN_KEY);
     }
-  } catch { return; }
+  } catch { void 0; }
 }
 
 export function isCurrentTabSessionBlocked(): boolean {
@@ -36,14 +36,14 @@ export function clearSessionEnforcementState() {
     sessionStorage.removeItem(BLOCKED_KEY);
     localStorage.removeItem(BROWSER_TOKEN_KEY);
     localStorage.removeItem(TAB_TOKEN_KEY);
-  } catch { return; }
+  } catch { void 0; }
 }
 
 function blockCurrentTab() {
   try {
     sessionStorage.removeItem(TAB_TOKEN_KEY);
     sessionStorage.setItem(BLOCKED_KEY, '1');
-  } catch { return; }
+  } catch { void 0; }
 }
 
 function getBrowserSessionToken(): string | null {
