@@ -82,7 +82,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Auto-Logout beim Schließen des Tabs / Reload: alle Supabase-Auth-Tokens
+    // und die Session-Enforcement-Marker aus dem Storage entfernen. Beim nächsten
+    // Öffnen muss sich der Nutzer neu anmelden.
+    const handlePageHide = () => {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('sb-') || k.startsWith('mtcon.'))) keysToRemove.push(k);
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        sessionStorage.clear();
+      } catch { void 0; }
+    };
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('pagehide', handlePageHide);
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
