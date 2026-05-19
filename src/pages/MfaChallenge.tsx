@@ -28,12 +28,26 @@ export default function MfaChallenge() {
         setNeedsMfa(false);
         return;
       }
-      const { data: f } = await supabase.auth.mfa.listFactors();
-      const verified = f?.totp?.find(x => x.status === 'verified');
+      // Try listFactors with a retry — right after sign-in the factor list
+      // can occasionally come back empty even though a verified factor exists.
+      const findVerified = async () => {
+        const { data: f } = await supabase.auth.mfa.listFactors();
+        // Use both `totp` and `all` since SDK versions differ
+        const fromTotp = f?.totp?.find(x => x.status === 'verified' && x.factor_type === 'totp');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const fromAll = (f as any)?.all?.find?.((x: any) => x.status === 'verified' && x.factor_type === 'totp');
+        return fromTotp || fromAll || null;
+      };
+      let verified = await findVerified();
       if (!verified) {
+        await new Promise(r => setTimeout(r, 600));
+        verified = await findVerified();
+      }
+      if (!verified) {
+        // AAL says aal2 is required, which only happens when a verified factor exists.
+        // Don't bounce the user to the setup guide — surface the issue and let them retry.
         setNeedsMfa(false);
-        toast.error('Kein verifizierter 2FA-Faktor gefunden. Bitte 2FA einrichten.');
-        navigate('/2fa-anleitung', { replace: true });
+        toast.error('2FA-Faktor konnte nicht geladen werden. Bitte Seite neu laden.');
         return;
       }
       setFactorId(verified.id);
