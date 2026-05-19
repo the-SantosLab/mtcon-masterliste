@@ -9,7 +9,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const { email, password, login_url, user_id } = await req.json();
-  const ALLOWED = ['js@santoslab.de'];
+  const ALLOWED = [
+    'js@santoslab.de',
+    'anja.magnussen@mtcon.eu','marco.tolj@mtcon.eu','marvin.beug@mtcon.eu',
+    'vivien.sirca@mtcon.eu','natalie.lutz@mtcon.eu','marcel.santana@mtcon.eu',
+  ];
   if (!email || !password || !user_id || !ALLOWED.includes(String(email).toLowerCase())) {
     return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: corsHeaders });
   }
