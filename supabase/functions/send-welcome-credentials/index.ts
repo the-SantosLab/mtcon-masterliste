@@ -1,0 +1,79 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-key',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const key = req.headers.get('x-admin-key');
+  if (!key || key !== Deno.env.get('DASHBOARD_API_KEY')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+  }
+
+  const { email, password, login_url } = await req.json();
+  if (!email || !password) {
+    return new Response(JSON.stringify({ error: 'email und password erforderlich' }), { status: 400, headers: corsHeaders });
+  }
+
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+  // Find user by email
+  let userId: string | null = null;
+  let page = 1;
+  while (!userId) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
+    const u = data.users.find((x) => x.email?.toLowerCase() === String(email).toLowerCase());
+    if (u) { userId = u.id; break; }
+    if (data.users.length < 200) break;
+    page++;
+  }
+  if (!userId) return new Response(JSON.stringify({ error: 'User nicht gefunden' }), { status: 404, headers: corsHeaders });
+
+  const { error: upErr } = await admin.auth.admin.updateUserById(userId, { password });
+  if (upErr) return new Response(JSON.stringify({ error: upErr.message }), { status: 500, headers: corsHeaders });
+
+  const url = login_url || 'https://mtcon.kscommand.com';
+  const html = `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;color:#1a1a1a;background:#ffffff;">
+      <h2 style="font-size:18px;font-weight:600;margin:0 0 12px;">Willkommen bei der MTCON Masterliste</h2>
+      <p style="font-size:14px;color:#444;line-height:1.6;margin:0 0 20px;">
+        Dein Zugang wurde eingerichtet. Du kannst dich ab sofort mit den folgenden Zugangsdaten anmelden:
+      </p>
+      <table style="font-size:14px;border-collapse:collapse;margin:0 0 20px;">
+        <tr><td style="padding:6px 12px 6px 0;color:#666;">E-Mail</td><td style="padding:6px 0;font-weight:600;">${email}</td></tr>
+        <tr><td style="padding:6px 12px 6px 0;color:#666;">Passwort</td><td style="padding:6px 0;font-family:monospace;font-weight:600;">${password}</td></tr>
+      </table>
+      <a href="${url}" style="display:inline-block;background:#1a1a1a;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-size:14px;font-weight:500;">Zur Anmeldung</a>
+      <p style="font-size:12px;color:#888;line-height:1.5;margin:24px 0 0;">
+        Bitte ändere dein Passwort nach der ersten Anmeldung im Profilbereich.
+      </p>
+      <hr style="border:none;border-top:1px solid #eee;margin:28px 0 12px;" />
+      <p style="font-size:11px;color:#bbb;margin:0;">Masterliste · MTCON</p>
+    </div>`;
+
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendKey) return new Response(JSON.stringify({ error: 'RESEND_API_KEY fehlt' }), { status: 500, headers: corsHeaders });
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Masterliste <noreply@kscommand.com>',
+      to: [email],
+      subject: 'Willkommen bei der MTCON Masterliste – Deine Zugangsdaten',
+      html,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    return new Response(JSON.stringify({ error: 'Resend Fehler: ' + t }), { status: 500, headers: corsHeaders });
+  }
+
+  return new Response(JSON.stringify({ success: true, user_id: userId }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+});
