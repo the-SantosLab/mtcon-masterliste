@@ -14,20 +14,17 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: corsHeaders });
   }
 
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const SUPA_URL = Deno.env.get('SUPABASE_URL')!;
+  const SRK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const admin = createClient(SUPA_URL, SRK);
 
-  // Find user by email
-  let userId: string | null = null;
-  let page = 1;
-  while (!userId) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
-    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: corsHeaders });
-    const u = data.users.find((x) => x.email?.toLowerCase() === String(email).toLowerCase());
-    if (u) { userId = u.id; break; }
-    if (data.users.length < 200) break;
-    page++;
-  }
-  if (!userId) return new Response(JSON.stringify({ error: 'User nicht gefunden' }), { status: 404, headers: corsHeaders });
+  // Find user via GoTrue admin API
+  const lookup = await fetch(`${SUPA_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
+    headers: { 'apikey': SRK, 'Authorization': `Bearer ${SRK}` },
+  });
+  const lookupJson = await lookup.json();
+  const userId: string | null = lookupJson?.users?.[0]?.id ?? null;
+  if (!userId) return new Response(JSON.stringify({ error: 'User nicht gefunden', detail: lookupJson }), { status: 404, headers: corsHeaders });
 
   const { error: upErr } = await admin.auth.admin.updateUserById(userId, { password });
   if (upErr) return new Response(JSON.stringify({ error: upErr.message }), { status: 500, headers: corsHeaders });
