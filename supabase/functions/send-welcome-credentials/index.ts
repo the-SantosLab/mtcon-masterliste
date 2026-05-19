@@ -8,14 +8,10 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  const key = req.headers.get('x-admin-key');
-  if (!key || key !== Deno.env.get('DASHBOARD_API_KEY')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
-  }
-
   const { email, password, login_url } = await req.json();
-  if (!email || !password) {
-    return new Response(JSON.stringify({ error: 'email und password erforderlich' }), { status: 400, headers: corsHeaders });
+  const ALLOWED = ['js@santoslab.de'];
+  if (!email || !password || !ALLOWED.includes(String(email).toLowerCase())) {
+    return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: corsHeaders });
   }
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
