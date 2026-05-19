@@ -9,7 +9,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   const { email, password, login_url, user_id } = await req.json();
-  const ALLOWED = ['js@santoslab.de'];
+  const ALLOWED = [
+    'js@santoslab.de',
+    'anja.magnussen@mtcon.eu','marco.tolj@mtcon.eu','marvin.beug@mtcon.eu',
+    'vivien.sirca@mtcon.eu','natalie.lutz@mtcon.eu','marcel.santana@mtcon.eu',
+  ];
   if (!email || !password || !user_id || !ALLOWED.includes(String(email).toLowerCase())) {
     return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: corsHeaders });
   }
@@ -19,8 +23,15 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPA_URL, SRK);
   const userId = user_id as string;
 
-  const { error: upErr } = await admin.auth.admin.updateUserById(userId, { password });
-  if (upErr) return new Response(JSON.stringify({ error: upErr.message }), { status: 500, headers: corsHeaders });
+  const putRes = await fetch(`${SUPA_URL}/auth/v1/admin/users/${userId}`, {
+    method: 'PUT',
+    headers: { 'apikey': SRK, 'Authorization': `Bearer ${SRK}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (!putRes.ok) {
+    const t = await putRes.text();
+    return new Response(JSON.stringify({ error: 'updateUser fehlgeschlagen', detail: t }), { status: 500, headers: corsHeaders });
+  }
 
   const url = login_url || 'https://mtcon.kscommand.com';
   const html = `
