@@ -8,23 +8,16 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  const { email, password, login_url } = await req.json();
+  const { email, password, login_url, user_id } = await req.json();
   const ALLOWED = ['js@santoslab.de'];
-  if (!email || !password || !ALLOWED.includes(String(email).toLowerCase())) {
+  if (!email || !password || !user_id || !ALLOWED.includes(String(email).toLowerCase())) {
     return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: corsHeaders });
   }
 
   const SUPA_URL = Deno.env.get('SUPABASE_URL')!;
   const SRK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const admin = createClient(SUPA_URL, SRK);
-
-  // Find user via GoTrue admin API
-  const lookup = await fetch(`${SUPA_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`, {
-    headers: { 'apikey': SRK, 'Authorization': `Bearer ${SRK}` },
-  });
-  const lookupJson = await lookup.json();
-  const userId: string | null = lookupJson?.users?.[0]?.id ?? null;
-  if (!userId) return new Response(JSON.stringify({ error: 'User nicht gefunden', detail: lookupJson }), { status: 404, headers: corsHeaders });
+  const userId = user_id as string;
 
   const { error: upErr } = await admin.auth.admin.updateUserById(userId, { password });
   if (upErr) return new Response(JSON.stringify({ error: upErr.message }), { status: 500, headers: corsHeaders });
