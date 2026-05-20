@@ -74,6 +74,9 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
   const [noteTouched, setNoteTouched] = useState(false);
   const [mtiqLoading, setMtiqLoading] = useState(false);
+  const [mtiqHintDismissed, setMtiqHintDismissed] = useState(false);
+  const [mtiqApplied, setMtiqApplied] = useState(false);
+  const [descBlurred, setDescBlurred] = useState(false);
   const [productSectionOpen, setProductSectionOpen] = useState(true);
   const [projectInfoOpen, setProjectInfoOpen] = useState(true);
 
@@ -477,6 +480,8 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                         if (data?.error) throw new Error(data.error);
                         if (data?.text) {
                           set('description', data.text);
+                          setMtiqApplied(true);
+                          setMtiqHintDismissed(true);
                           toast.success('Mit MTIQ formuliert');
                         }
                       } catch (e: any) {
@@ -490,9 +495,57 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                     Mit MTIQ formulieren
                   </Button>
                 </div>
+                {descBlurred && !mtiqHintDismissed && !mtiqApplied && !mtiqLoading && form.description.trim().length >= 20 && (
+                  <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-2 py-1.5 text-[11px] text-foreground/80 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                      <span className="truncate">Tipp: MTIQ kann den Text klarer und verständlicher formulieren.</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[11px] text-primary hover:text-primary"
+                        onClick={async () => {
+                          setMtiqLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
+                              body: { text: form.description },
+                            });
+                            if (error) throw error;
+                            if (data?.error) throw new Error(data.error);
+                            if (data?.text) {
+                              set('description', data.text);
+                              setMtiqApplied(true);
+                              setMtiqHintDismissed(true);
+                              toast.success('Mit MTIQ formuliert');
+                            }
+                          } catch (e: any) {
+                            toast.error(e?.message || 'Fehler bei MTIQ');
+                          } finally {
+                            setMtiqLoading(false);
+                          }
+                        }}
+                      >
+                        Verbessern
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[11px] text-muted-foreground"
+                        onClick={() => setMtiqHintDismissed(true)}
+                      >
+                        Schließen
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <Textarea
                   value={form.description}
-                  onChange={e => set('description', e.target.value)}
+                  onChange={e => { set('description', e.target.value); if (mtiqApplied) setMtiqApplied(false); }}
+                  onBlur={() => setDescBlurred(true)}
                   rows={4}
                   className="text-xs"
                   placeholder={'Was möchte ich?\n z.B. Anpassung Abfragemasken bei Vorgangsanlage\nWas ist das Ziel?\n z.B. verbesserte / leichtere Eingabeführung systemseitig für MTCON-Masterlistennutzer'}
