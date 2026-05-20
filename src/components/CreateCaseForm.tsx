@@ -658,61 +658,75 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Produkt</Label>
-                  <Popover open={productOpen} onOpenChange={setProductOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
-                        {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
-                        <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[280px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
-                        <CommandList>
-                          <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
-                            {productSearch.trim() ? (
-                              <button
-                                type="button"
-                                onClick={() => selectProductOrCreate(productSearch.trim())}
-                                className="text-primary hover:underline"
-                              >
-                                {userIsAdmin ? `„${productSearch.trim()}" als neues Produkt erstellen` : `„${productSearch.trim()}" als Produktvorschlag einreichen`}
-                              </button>
-                            ) : 'Kein Produkt gefunden'}
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {filteredProducts.map(p => (
-                              <CommandItem
-                                key={p.id}
-                                value={`${p.code} ${p.name}`}
-                                onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
-                                className="text-xs"
-                              >
-                                <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
-                                <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Bereich intern</Label>
-                  <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-                    <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <div className="rounded-md border border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setProductSectionOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+                >
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Produktinformationen</span>
+                  <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', productSectionOpen && 'rotate-180')} />
+                </button>
+                {productSectionOpen && (
+                  <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/60">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Produkt</Label>
+                        <Popover open={productOpen} onOpenChange={setProductOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                              {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
+                              <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[280px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
+                              <CommandList>
+                                <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
+                                  {productSearch.trim() ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => selectProductOrCreate(productSearch.trim())}
+                                      className="text-primary hover:underline"
+                                    >
+                                      {userIsAdmin ? `„${productSearch.trim()}" als neues Produkt erstellen` : `„${productSearch.trim()}" als Produktvorschlag einreichen`}
+                                    </button>
+                                  ) : 'Kein Produkt gefunden'}
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {filteredProducts.map(p => (
+                                    <CommandItem
+                                      key={p.id}
+                                      value={`${p.code} ${p.name}`}
+                                      onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
+                                      className="text-xs"
+                                    >
+                                      <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
+                                      <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Bereich intern</Label>
+                        <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+                          <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
-                <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
+                      <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
