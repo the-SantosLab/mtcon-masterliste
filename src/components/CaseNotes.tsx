@@ -117,7 +117,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
             onChange={e => setText(e.target.value)}
             rows={2}
             placeholder="Notiz hinzufügen"
-            className="text-xs"
+            className="text-xs font-mono"
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
           />
           <div className="flex justify-end">
@@ -152,7 +152,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
                 </div>
                 {isEditing ? (
                   <div className="space-y-2">
-                    <Textarea value={editText} onChange={e => setEditText(e.target.value)} rows={2} className="text-xs" />
+                    <Textarea value={editText} onChange={e => setEditText(e.target.value)} rows={2} className="text-xs font-mono" />
                     <div className="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setEditingId(null); setEditText(''); }}>
                         <X className="h-3 w-3 mr-1" />Abbrechen
@@ -164,7 +164,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
                   </div>
                 ) : (
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed flex-1">{n.body}</p>
+                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed flex-1 font-mono">{n.body}</p>
                     {canModify && canEdit && (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
