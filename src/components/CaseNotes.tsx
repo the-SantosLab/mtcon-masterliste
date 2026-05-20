@@ -117,7 +117,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
             onChange={e => setText(e.target.value)}
             rows={2}
             placeholder="Notiz hinzufügen"
-            className="text-xs"
+            className="text-xs font-mono"
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
           />
           <div className="flex justify-end">
