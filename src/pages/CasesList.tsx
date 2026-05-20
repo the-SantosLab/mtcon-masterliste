@@ -237,7 +237,7 @@ export default function CasesList() {
         </div>
 
         {/* Table */}
-        <div className={cn('rounded-md border border-border bg-card overflow-x-auto', compact && 'cases-table-compact')}>
+        <div className={cn('rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-260px)]', compact && 'cases-table-compact')}>
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
