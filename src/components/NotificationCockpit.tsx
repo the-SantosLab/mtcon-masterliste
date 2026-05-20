@@ -263,22 +263,31 @@ export function NotificationCockpit({ caseId, refreshKey = 0 }: Props) {
 
           {/* Rules */}
           <div className="space-y-1">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Auslöser & Empfänger</p>
-            <div className="rounded-md border border-border/60 divide-y divide-border/60">
-              {RULES.map((r) => {
-                const last = formatLastSent(lastByType[r.type]);
-                return (
-                  <div key={r.type} className="grid grid-cols-1 sm:grid-cols-12 gap-2 px-3 py-2 text-[11px]">
-                    <div className="sm:col-span-3 font-medium text-foreground">{r.title}</div>
-                    <div className="sm:col-span-4 text-muted-foreground">{r.trigger}</div>
-                    <div className="sm:col-span-3 text-muted-foreground">{r.recipients}</div>
-                    <div className="sm:col-span-2 text-right text-muted-foreground tabular-nums">
-                      {last ? `Zuletzt: ${last}` : '–'}
+            <button
+              type="button"
+              onClick={() => setRulesOpen((o) => !o)}
+              className="w-full flex items-center justify-between gap-2 text-left hover:opacity-80 transition-opacity"
+            >
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Auslöser & Empfänger</p>
+              <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', rulesOpen && 'rotate-180')} />
+            </button>
+            {rulesOpen && (
+              <div className="rounded-md border border-border/60 divide-y divide-border/60">
+                {RULES.map((r) => {
+                  const last = formatLastSent(lastByType[r.type]);
+                  return (
+                    <div key={r.type} className="grid grid-cols-1 sm:grid-cols-12 gap-2 px-3 py-2 text-[11px]">
+                      <div className="sm:col-span-3 font-medium text-foreground">{r.title}</div>
+                      <div className="sm:col-span-4 text-muted-foreground">{r.trigger}</div>
+                      <div className="sm:col-span-3 text-muted-foreground">{r.recipients}</div>
+                      <div className="sm:col-span-2 text-right text-muted-foreground tabular-nums">
+                        {last ? `Zuletzt: ${last}` : '–'}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Recent log */}
