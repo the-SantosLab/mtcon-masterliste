@@ -457,13 +457,13 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
                 <Textarea
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
                   rows={4}
                   className="text-xs"
-                  placeholder={'Was möchte ich?\n z.B. Anpassung Abfragemasken bei Vorgangsanlage\n\nWas ist das Ziel?\n z.B. verbesserte / leichtere Eingabeführung systemseitig für MTCON-Masterlistennutzer'}
+                  placeholder={'Was möchte ich?\n z.B. Anpassung Abfragemasken bei Vorgangsanlage\nWas ist das Ziel?\n z.B. verbesserte / leichtere Eingabeführung systemseitig für MTCON-Masterlistennutzer'}
                 />
               </div>
 
