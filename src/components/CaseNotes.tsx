@@ -164,7 +164,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
                   </div>
                 ) : (
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed flex-1">{n.body}</p>
+                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed flex-1 font-mono">{n.body}</p>
                     {canModify && canEdit && (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
