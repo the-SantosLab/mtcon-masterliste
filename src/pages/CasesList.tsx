@@ -237,19 +237,19 @@ export default function CasesList() {
         </div>
 
         {/* Table */}
-        <div className={cn('rounded-md border border-border bg-card overflow-x-auto', compact && 'cases-table-compact')}>
+        <div className={cn('rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-260px)]', compact && 'cases-table-compact')}>
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projektname</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Projekt</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Abteilung</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Endtermin</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Aktionen</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projekt</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Kunde</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</th>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Aktionen</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
