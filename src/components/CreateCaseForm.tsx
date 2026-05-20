@@ -457,7 +457,38 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary"
+                    disabled={mtiqLoading || !form.description.trim()}
+                    onClick={async () => {
+                      if (!form.description.trim()) return;
+                      setMtiqLoading(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
+                          body: { text: form.description },
+                        });
+                        if (error) throw error;
+                        if (data?.error) throw new Error(data.error);
+                        if (data?.text) {
+                          set('description', data.text);
+                          toast.success('Mit MTIQ formuliert');
+                        }
+                      } catch (e: any) {
+                        toast.error(e?.message || 'Fehler bei MTIQ');
+                      } finally {
+                        setMtiqLoading(false);
+                      }
+                    }}
+                  >
+                    {mtiqLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    Mit MTIQ formulieren
+                  </Button>
+                </div>
                 <Textarea
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
