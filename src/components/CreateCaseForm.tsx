@@ -72,6 +72,9 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [userDeptId, setUserDeptId] = useState<string | null>(null);
   const [pendingTemplateTasks, setPendingTemplateTasks] = useState<{ title: string; description: string | null; department_id: string | null }[]>([]);
   const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
+  const [noteTouched, setNoteTouched] = useState(false);
+  const [productSectionOpen, setProductSectionOpen] = useState(true);
+  const [projectInfoOpen, setProjectInfoOpen] = useState(true);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
