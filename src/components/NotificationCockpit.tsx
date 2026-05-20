@@ -83,6 +83,7 @@ interface Participant {
 
 export function NotificationCockpit({ caseId, refreshKey = 0 }: Props) {
   const [open, setOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const { lastByType, recent, loading } = useNotificationLog(caseId, refreshKey);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [partLoading, setPartLoading] = useState(true);
