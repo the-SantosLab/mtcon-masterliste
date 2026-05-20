@@ -236,7 +236,7 @@ export default function ProjectsList() {
         </div>
 
         {/* Table */}
-        <div className="rounded-md border border-border bg-card overflow-x-auto">
+        <div className="rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-260px)]">
           {viewMode === 'compact' ? (
             <table className="w-full">
               <thead>
