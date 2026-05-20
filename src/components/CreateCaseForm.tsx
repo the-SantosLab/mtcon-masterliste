@@ -740,13 +740,24 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                 <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
               </div>
 
-              <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
-                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
-                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
-                </div>
+              <div className="rounded-md border border-border bg-muted/20">
+                <button
+                  type="button"
+                  onClick={() => setProjectInfoOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/40 transition-colors"
+                >
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</span>
+                  <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', projectInfoOpen && 'rotate-180')} />
+                </button>
+                {projectInfoOpen && (
+                  <div className="px-3 pb-3 pt-1 border-t border-border/60">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -755,8 +766,18 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 5 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Bemerkung (wird als angepinnte Notiz gespeichert)</Label>
-                <Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={3} className="text-xs" />
+                <Label className="text-xs text-muted-foreground">
+                  Bemerkung (wird als angepinnte Notiz gespeichert)
+                  {!noteTouched && form.description.trim() && (
+                    <span className="ml-1 text-[10px] text-muted-foreground/80">– aus Beschreibung übernommen</span>
+                  )}
+                </Label>
+                <Textarea
+                  value={noteTouched ? form.note : (form.note || form.description)}
+                  onChange={e => { setNoteTouched(true); set('note', e.target.value); }}
+                  rows={3}
+                  className="text-xs"
+                />
               </div>
 
               <div className="rounded-md border border-border bg-muted/20 p-3 space-y-1.5">
