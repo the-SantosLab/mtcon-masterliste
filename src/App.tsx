@@ -75,6 +75,8 @@ function ProtectedRoute({ children, enforceMfa = true }: { children: React.React
   useEffect(() => {
     if (!session) { setMfaState('unknown'); return; }
     if (!enforceMfa) { setMfaState('ok'); return; }
+    // 2FA-Enforcement deaktiviert für js@santoslab.de (Dev-Account).
+    if (session.user?.email === 'js@santoslab.de') { setMfaState('ok'); return; }
     let cancelled = false;
     (async () => {
       const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();

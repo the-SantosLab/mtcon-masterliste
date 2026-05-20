@@ -16,8 +16,10 @@ export function SessionTimeoutGuard() {
   const { session, user } = useAuth();
   const location = useLocation();
   const isAuthFlow = location.pathname === '/auth' || location.pathname === '/reset-password' || location.pathname === '/mfa-challenge';
+  // Single-Session-Enforcement deaktiviert für js@santoslab.de (Dev-Account).
+  const enforcementExempt = user?.email === 'js@santoslab.de';
   const { warningOpen, remainingMs, stayLoggedIn, logoutNow } = useSessionTimeout(!!session);
-  useSessionEnforcement(!!session && !isAuthFlow, user?.id);
+  useSessionEnforcement(!!session && !isAuthFlow && !enforcementExempt, user?.id);
 
   return (
     <Dialog open={warningOpen} onOpenChange={(o) => { if (!o) stayLoggedIn(); }} modal={false}>

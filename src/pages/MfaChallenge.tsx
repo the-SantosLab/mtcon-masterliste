@@ -23,6 +23,11 @@ export default function MfaChallenge() {
     if (!session || ranRef.current) return;
     ranRef.current = true;
     (async () => {
+      // 2FA-Enforcement deaktiviert für js@santoslab.de (Dev-Account).
+      if (session.user?.email === 'js@santoslab.de') {
+        setNeedsMfa(false);
+        return;
+      }
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aal?.currentLevel === 'aal2' || aal?.nextLevel !== 'aal2') {
         setNeedsMfa(false);
