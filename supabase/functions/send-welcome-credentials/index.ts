@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     'js@santoslab.de',
     'anja.magnussen@mtcon.eu','marco.tolj@mtcon.eu','marvin.beug@mtcon.eu',
     'vivien.sirca@mtcon.eu','natalie.lutz@mtcon.eu','marcel.santana@mtcon.eu',
-    'michele.richter@mtcon.eu',
+    'michele.richter@mtcon.eu','pascal.petreski@mtcon.eu',
   ];
   if (!email || !password || !user_id || !ALLOWED.includes(String(email).toLowerCase())) {
     return new Response(JSON.stringify({ error: 'not allowed' }), { status: 403, headers: corsHeaders });
