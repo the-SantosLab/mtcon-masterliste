@@ -13,13 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import {
   Plus, Search, Folder, ChevronRight, CheckCircle2,
-  Clock, Archive, FolderOpen, Rows3, Rows2,
+  Clock, Archive, FolderOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 type ViewMode = 'compact' | 'normal';
-const VIEW_KEY = 'projekt_list_view_mode';
 
 interface Department { id: string; name: string; code: string; }
 interface Project {
@@ -60,18 +59,9 @@ function StatusDot({ status }: { status: string }) {
 export default function ProjectsList() {
   const { user, isAdmin, isViewer } = useAuth();
   const { preferences } = usePreferences();
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    if (typeof window === 'undefined') return 'normal';
-    const v = window.localStorage.getItem(VIEW_KEY);
-    return v === 'compact' ? 'compact' : 'normal';
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem(VIEW_KEY, viewMode); } catch {}
-  }, [viewMode]);
-  const compact = viewMode === 'compact' || preferences.compactTables;
-  const cellCls = viewMode === 'compact'
-    ? 'px-2 py-1 text-sm'
-    : compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
+  const viewMode: ViewMode = preferences.compactTables ? 'compact' : 'normal';
+  const compact = preferences.compactTables;
+  const cellCls = compact ? 'px-2 py-1 text-sm' : 'px-4 py-2.5 text-xs';
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -184,32 +174,6 @@ export default function ProjectsList() {
             <p className="text-xs text-muted-foreground mt-0.5">Alle abteilungsübergreifenden Vorgänge und Dateiablagen</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="inline-flex items-center rounded-md border border-border bg-card p-0.5">
-              <button
-                type="button"
-                onClick={() => setViewMode('compact')}
-                title="Tabelle kompakt"
-                aria-label="Tabelle kompakt"
-                className={cn(
-                  'inline-flex items-center justify-center h-7 w-7 rounded-sm transition-colors',
-                  viewMode === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Rows3 className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('normal')}
-                title="Tabelle normal"
-                aria-label="Tabelle normal"
-                className={cn(
-                  'inline-flex items-center justify-center h-7 w-7 rounded-sm transition-colors',
-                  viewMode === 'normal' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Rows2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
             {!isViewer && (
               <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 text-xs gap-1.5">
                 <Plus className="h-3.5 w-3.5" />Neues Projekt
