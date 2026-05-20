@@ -129,7 +129,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       (supabase as any).from('case_templates').select('id, title, description, sequential_mode, due_required, lock_mode').order('title'),
       (supabase as any).from('case_template_departments').select('template_id, department_id'),
       (supabase as any).from('case_template_tasks').select('template_id, title, description, department_id, order_index').order('order_index'),
-      supabase.from('users_profile').select('department_id').eq('id', userId).maybeSingle(),
+      supabase.from('users_profile').select('department_id, display_name').eq('id', userId).maybeSingle(),
     ]).then(([tplRes, joinRes, taskRes, profRes]: any[]) => {
       const joins = (joinRes.data || []) as { template_id: string; department_id: string }[];
       const tasks = (taskRes.data || []) as any[];
@@ -142,7 +142,15 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         tasks: tasks.filter(x => x.template_id === t.id),
       }));
       setTemplates(tpls);
-      setUserDeptId((profRes.data as any)?.department_id ?? null);
+      const myDeptId = (profRes.data as any)?.department_id ?? null;
+      const myDisplayName = (profRes.data as any)?.display_name ?? '';
+      setUserDeptId(myDeptId);
+      // Prefill defaults: MTCON Abteilung = users own dept; Auftraggeber = Ersteller
+      setForm(f => ({
+        ...f,
+        department_id: f.department_id || myDeptId || '',
+        client_name: f.client_name || myDisplayName,
+      }));
     });
   }, [defaultProjectId, userId]);
 
