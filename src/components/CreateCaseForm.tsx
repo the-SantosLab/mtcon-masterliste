@@ -382,7 +382,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         pinned: true,
       });
     }
-    if (form.note && form.note.trim()) {
+    if (form.note && form.note.trim() && form.note.trim() !== form.description.trim()) {
       await (supabase as any).from('case_notes').insert({
         case_id: newCase.id,
         author_id: userId,
