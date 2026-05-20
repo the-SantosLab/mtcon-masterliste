@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
+import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
@@ -73,6 +73,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [pendingTemplateTasks, setPendingTemplateTasks] = useState<{ title: string; description: string | null; department_id: string | null }[]>([]);
   const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
   const [noteTouched, setNoteTouched] = useState(false);
+  const [mtiqLoading, setMtiqLoading] = useState(false);
   const [productSectionOpen, setProductSectionOpen] = useState(true);
   const [projectInfoOpen, setProjectInfoOpen] = useState(true);
 
@@ -457,7 +458,38 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary"
+                    disabled={mtiqLoading || !form.description.trim()}
+                    onClick={async () => {
+                      if (!form.description.trim()) return;
+                      setMtiqLoading(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
+                          body: { text: form.description },
+                        });
+                        if (error) throw error;
+                        if (data?.error) throw new Error(data.error);
+                        if (data?.text) {
+                          set('description', data.text);
+                          toast.success('Mit MTIQ formuliert');
+                        }
+                      } catch (e: any) {
+                        toast.error(e?.message || 'Fehler bei MTIQ');
+                      } finally {
+                        setMtiqLoading(false);
+                      }
+                    }}
+                  >
+                    {mtiqLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    Mit MTIQ formulieren
+                  </Button>
+                </div>
                 <Textarea
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
