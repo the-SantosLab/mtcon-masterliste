@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
@@ -72,6 +72,9 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [userDeptId, setUserDeptId] = useState<string | null>(null);
   const [pendingTemplateTasks, setPendingTemplateTasks] = useState<{ title: string; description: string | null; department_id: string | null }[]>([]);
   const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
+  const [noteTouched, setNoteTouched] = useState(false);
+  const [productSectionOpen, setProductSectionOpen] = useState(true);
+  const [projectInfoOpen, setProjectInfoOpen] = useState(true);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -126,7 +129,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       (supabase as any).from('case_templates').select('id, title, description, sequential_mode, due_required, lock_mode').order('title'),
       (supabase as any).from('case_template_departments').select('template_id, department_id'),
       (supabase as any).from('case_template_tasks').select('template_id, title, description, department_id, order_index').order('order_index'),
-      supabase.from('users_profile').select('department_id').eq('id', userId).maybeSingle(),
+      supabase.from('users_profile').select('department_id, display_name').eq('id', userId).maybeSingle(),
     ]).then(([tplRes, joinRes, taskRes, profRes]: any[]) => {
       const joins = (joinRes.data || []) as { template_id: string; department_id: string }[];
       const tasks = (taskRes.data || []) as any[];
@@ -139,9 +142,42 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         tasks: tasks.filter(x => x.template_id === t.id),
       }));
       setTemplates(tpls);
-      setUserDeptId((profRes.data as any)?.department_id ?? null);
+      const myDeptId = (profRes.data as any)?.department_id ?? null;
+      const myDisplayName = (profRes.data as any)?.display_name ?? '';
+      setUserDeptId(myDeptId);
+      // Prefill defaults: MTCON Abteilung = users own dept; Auftraggeber = Ersteller
+      setForm(f => ({
+        ...f,
+        department_id: f.department_id || myDeptId || '',
+        client_name: f.client_name || myDisplayName,
+      }));
     });
   }, [defaultProjectId, userId]);
+
+  // Map user's department to top-level + team if it's a sub-department.
+  useEffect(() => {
+    if (!userDeptId || departments.length === 0) return;
+    setForm(f => {
+      if (f.department_id && f.department_id !== userDeptId) return f;
+      const own = departments.find(d => d.id === userDeptId);
+      if (!own) return f;
+      if (own.parent_id) {
+        return { ...f, department_id: own.parent_id, team_id: f.team_id || own.id };
+      }
+      return { ...f, department_id: own.id };
+    });
+  }, [userDeptId, departments]);
+
+  // Default-collapse Produkt / Projektinfos for HR / Marketing departments.
+  useEffect(() => {
+    const dept = departments.find(d => d.id === (form.department_id || ''));
+    if (!dept) return;
+    const haystack = `${dept.name} ${dept.code || ''}`.toLowerCase();
+    const noProductFocus = /\b(hr|human resources|personal|marketing)\b/.test(haystack);
+    setProductSectionOpen(!noProductFocus);
+    setProjectInfoOpen(!noProductFocus);
+  }, [form.department_id, departments]);
+
 
   const visibleTemplates = useMemo(() => {
     if (!userDeptId) return templates;
@@ -346,7 +382,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
         pinned: true,
       });
     }
-    if (form.note && form.note.trim()) {
+    if (form.note && form.note.trim() && form.note.trim() !== form.description.trim()) {
       await (supabase as any).from('case_notes').insert({
         case_id: newCase.id,
         author_id: userId,
@@ -421,13 +457,13 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 1 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
                 <Textarea
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
                   rows={4}
                   className="text-xs"
-                  placeholder={'Was möchte ich?\n z.B. Anpassung Abfragemasken bei Vorgangsanlage\n\nWas ist das Ziel?\n z.B. verbesserte / leichtere Eingabeführung systemseitig für MTCON-Masterlistennutzer'}
+                  placeholder={'Was möchte ich?\n z.B. Anpassung Abfragemasken bei Vorgangsanlage\nWas ist das Ziel?\n z.B. verbesserte / leichtere Eingabeführung systemseitig für MTCON-Masterlistennutzer'}
                 />
               </div>
 
@@ -622,61 +658,75 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Produkt</Label>
-                  <Popover open={productOpen} onOpenChange={setProductOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
-                        {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
-                        <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[280px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
-                        <CommandList>
-                          <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
-                            {productSearch.trim() ? (
-                              <button
-                                type="button"
-                                onClick={() => selectProductOrCreate(productSearch.trim())}
-                                className="text-primary hover:underline"
-                              >
-                                {userIsAdmin ? `„${productSearch.trim()}" als neues Produkt erstellen` : `„${productSearch.trim()}" als Produktvorschlag einreichen`}
-                              </button>
-                            ) : 'Kein Produkt gefunden'}
-                          </CommandEmpty>
-                          <CommandGroup>
-                            {filteredProducts.map(p => (
-                              <CommandItem
-                                key={p.id}
-                                value={`${p.code} ${p.name}`}
-                                onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
-                                className="text-xs"
-                              >
-                                <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
-                                <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Bereich intern</Label>
-                  <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
-                    <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <div className="rounded-md border border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setProductSectionOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+                >
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Produktinformationen</span>
+                  <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', productSectionOpen && 'rotate-180')} />
+                </button>
+                {productSectionOpen && (
+                  <div className="px-3 pb-3 pt-1 space-y-3 border-t border-border/60">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Produkt</Label>
+                        <Popover open={productOpen} onOpenChange={setProductOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                              {selectedProduct ? `${selectedProduct.code} – ${selectedProduct.name}` : 'Produkt wählen…'}
+                              <ChevronsUpDown className="ml-1 h-3 w-3 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[280px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Suchen oder neues eingeben…" value={productSearch} onValueChange={setProductSearch} className="text-xs" />
+                              <CommandList>
+                                <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">
+                                  {productSearch.trim() ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => selectProductOrCreate(productSearch.trim())}
+                                      className="text-primary hover:underline"
+                                    >
+                                      {userIsAdmin ? `„${productSearch.trim()}" als neues Produkt erstellen` : `„${productSearch.trim()}" als Produktvorschlag einreichen`}
+                                    </button>
+                                  ) : 'Kein Produkt gefunden'}
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {filteredProducts.map(p => (
+                                    <CommandItem
+                                      key={p.id}
+                                      value={`${p.code} ${p.name}`}
+                                      onSelect={() => { set('product_code', p.code); setProductOpen(false); }}
+                                      className="text-xs"
+                                    >
+                                      <Check className={cn('mr-2 h-3 w-3', form.product_code === p.code ? 'opacity-100' : 'opacity-0')} />
+                                      <span className="font-mono text-[11px] text-muted-foreground mr-1.5">{p.code}</span>{p.name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Bereich intern</Label>
+                        <Select value={form.internal_area_code} onValueChange={v => set('internal_area_code', v)}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen" /></SelectTrigger>
+                          <SelectContent>{areas.map(a => <SelectItem key={a.id} value={a.code}>{a.code} – {a.name}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
-                <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
+                      <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -690,13 +740,24 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
                 <div className="space-y-1"><Label className="text-xs text-muted-foreground">Geschätzte Std.</Label><Input type="number" value={form.estimated_hours} onChange={e => set('estimated_hours', e.target.value)} className="h-8 text-xs" /></div>
               </div>
 
-              <div className="rounded-md border border-border bg-muted/20 p-3 space-y-3">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</p>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
-                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
-                  <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
-                </div>
+              <div className="rounded-md border border-border bg-muted/20">
+                <button
+                  type="button"
+                  onClick={() => setProjectInfoOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/40 transition-colors"
+                >
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Projektinformationen</span>
+                  <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', projectInfoOpen && 'rotate-180')} />
+                </button>
+                {projectInfoOpen && (
+                  <div className="px-3 pb-3 pt-1 border-t border-border/60">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1"><Label className="text-xs text-muted-foreground">SOP</Label><Input value={form.sop} onChange={e => set('sop', e.target.value)} placeholder="z.B. KW 26/2026" className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><Label className="text-xs text-muted-foreground">Stückzahl</Label><Input type="number" value={form.quantity} onChange={e => set('quantity', e.target.value)} className="h-8 text-xs" /></div>
+                      <div className="space-y-1"><Label className="text-xs text-muted-foreground">Projektdauer</Label><Input value={form.project_duration} onChange={e => set('project_duration', e.target.value)} placeholder="z.B. 6 Wochen" className="h-8 text-xs" /></div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -705,8 +766,18 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
           {step === 5 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Bemerkung (wird als angepinnte Notiz gespeichert)</Label>
-                <Textarea value={form.note} onChange={e => set('note', e.target.value)} rows={3} className="text-xs" />
+                <Label className="text-xs text-muted-foreground">
+                  Bemerkung (wird als angepinnte Notiz gespeichert)
+                  {!noteTouched && form.description.trim() && (
+                    <span className="ml-1 text-[10px] text-muted-foreground/80">– aus Beschreibung übernommen</span>
+                  )}
+                </Label>
+                <Textarea
+                  value={noteTouched ? form.note : (form.note || form.description)}
+                  onChange={e => { setNoteTouched(true); set('note', e.target.value); }}
+                  rows={3}
+                  className="text-xs"
+                />
               </div>
 
               <div className="rounded-md border border-border bg-muted/20 p-3 space-y-1.5">
