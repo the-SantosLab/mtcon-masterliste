@@ -73,6 +73,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
   const [pendingTemplateTasks, setPendingTemplateTasks] = useState<{ title: string; description: string | null; department_id: string | null }[]>([]);
   const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
   const [noteTouched, setNoteTouched] = useState(false);
+  const [mtiqLoading, setMtiqLoading] = useState(false);
   const [productSectionOpen, setProductSectionOpen] = useState(true);
   const [projectInfoOpen, setProjectInfoOpen] = useState(true);
 
