@@ -152,7 +152,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
                 </div>
                 {isEditing ? (
                   <div className="space-y-2">
-                    <Textarea value={editText} onChange={e => setEditText(e.target.value)} rows={2} className="text-xs" />
+                    <Textarea value={editText} onChange={e => setEditText(e.target.value)} rows={2} className="text-xs font-mono" />
                     <div className="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setEditingId(null); setEditText(''); }}>
                         <X className="h-3 w-3 mr-1" />Abbrechen
