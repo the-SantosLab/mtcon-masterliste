@@ -154,6 +154,31 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
     });
   }, [defaultProjectId, userId]);
 
+  // Map user's department to top-level + team if it's a sub-department.
+  useEffect(() => {
+    if (!userDeptId || departments.length === 0) return;
+    setForm(f => {
+      if (f.department_id && f.department_id !== userDeptId) return f;
+      const own = departments.find(d => d.id === userDeptId);
+      if (!own) return f;
+      if (own.parent_id) {
+        return { ...f, department_id: own.parent_id, team_id: f.team_id || own.id };
+      }
+      return { ...f, department_id: own.id };
+    });
+  }, [userDeptId, departments]);
+
+  // Default-collapse Produkt / Projektinfos for HR / Marketing departments.
+  useEffect(() => {
+    const dept = departments.find(d => d.id === (form.department_id || ''));
+    if (!dept) return;
+    const haystack = `${dept.name} ${dept.code || ''}`.toLowerCase();
+    const noProductFocus = /\b(hr|human resources|personal|marketing)\b/.test(haystack);
+    setProductSectionOpen(!noProductFocus);
+    setProjectInfoOpen(!noProductFocus);
+  }, [form.department_id, departments]);
+
+
   const visibleTemplates = useMemo(() => {
     if (!userDeptId) return templates;
     const matching = templates.filter(t => t.department_ids.length === 0 || t.department_ids.includes(userDeptId));
