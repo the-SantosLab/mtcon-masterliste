@@ -184,32 +184,6 @@ export default function ProjectsList() {
             <p className="text-xs text-muted-foreground mt-0.5">Alle abteilungsübergreifenden Vorgänge und Dateiablagen</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="inline-flex items-center rounded-md border border-border bg-card p-0.5">
-              <button
-                type="button"
-                onClick={() => setViewMode('compact')}
-                title="Tabelle kompakt"
-                aria-label="Tabelle kompakt"
-                className={cn(
-                  'inline-flex items-center justify-center h-7 w-7 rounded-sm transition-colors',
-                  viewMode === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Rows3 className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('normal')}
-                title="Tabelle normal"
-                aria-label="Tabelle normal"
-                className={cn(
-                  'inline-flex items-center justify-center h-7 w-7 rounded-sm transition-colors',
-                  viewMode === 'normal' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Rows2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
             {!isViewer && (
               <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 text-xs gap-1.5">
                 <Plus className="h-3.5 w-3.5" />Neues Projekt
