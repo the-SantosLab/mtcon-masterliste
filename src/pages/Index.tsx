@@ -296,7 +296,7 @@ export default function Dashboard() {
 
             {/* KPI cards (bottom overlay) */}
             <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5 z-10">
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid kpi-grid grid-cols-5 gap-2">
                 {KPI_DEFS.map(({ key, title, icon: Icon }) => {
                   const isActive = activeFilters.includes(key);
                   const accent = FILTER_COLORS[key];
