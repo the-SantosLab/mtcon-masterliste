@@ -53,6 +53,47 @@ export default function Notes() {
   const activeBoard = boards.find(b => b.id === activeBoardId) || null;
   const canEdit = !!(activeBoard && user && (activeBoard.owner_id === user.id || activeBoard.scope === 'shared'));
 
+  const activeFilterCount = colorFilters.size + markerFilters.size + (pinnedOnly ? 1 : 0);
+  const hasFilter = !!search.trim() || activeFilterCount > 0;
+
+  const matchedIds = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const stripHtml = (html: string) =>
+      html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+    return new Set(
+      notes
+        .filter(n => {
+          if (pinnedOnly && !n.pinned) return false;
+          if (colorFilters.size > 0 && !colorFilters.has(n.color)) return false;
+          if (markerFilters.size > 0) {
+            const hasAny = Array.from(markerFilters).some(hex =>
+              (n.content || '').includes(`data-color="${hex}"`) ||
+              (n.content || '').includes(`background-color: ${hex}`)
+            );
+            if (!hasAny) return false;
+          }
+          if (q && !stripHtml(n.content || '').includes(q)) return false;
+          return true;
+        })
+        .map(n => n.id),
+    );
+  }, [notes, search, colorFilters, markerFilters, pinnedOnly]);
+
+  function toggleColor(c: NoteColor) {
+    setColorFilters(prev => {
+      const n = new Set(prev); n.has(c) ? n.delete(c) : n.add(c); return n;
+    });
+  }
+  function toggleMarker(hex: string) {
+    setMarkerFilters(prev => {
+      const n = new Set(prev); n.has(hex) ? n.delete(hex) : n.add(hex); return n;
+    });
+  }
+  function clearFilters() {
+    setSearch(''); setColorFilters(new Set()); setMarkerFilters(new Set()); setPinnedOnly(false);
+  }
+
+
   useEffect(() => {
     loadBoards();
   }, []);
