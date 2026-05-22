@@ -228,6 +228,50 @@ export type Database = {
           },
         ]
       }
+      case_note_attachments: {
+        Row: {
+          case_id: string
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          note_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          note_id: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          note_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_note_attachments_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "case_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_notes: {
         Row: {
           author_id: string
