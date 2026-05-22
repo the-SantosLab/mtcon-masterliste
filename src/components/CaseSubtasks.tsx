@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { NotifyToggle } from '@/components/NotifyToggle';
+import { MtiqButton } from '@/components/MtiqButton';
 import { useNotificationLog } from '@/hooks/useNotificationLog';
 
 interface Subtask {
