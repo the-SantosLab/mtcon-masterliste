@@ -10,7 +10,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import {
   Paperclip, Smile, Send, Loader2, X, Trash2, Pencil, Check, Download, FileText,
   Reply, Pin, PinOff, MoreHorizontal, ListChecks, Search, ArrowDown, Bell, BellOff,
-  Settings2,
+  Settings2, Circle,
 } from 'lucide-react';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -24,6 +24,29 @@ const BUCKET = 'case-attachments';
 const MAX_BYTES = 20 * 1024 * 1024;
 const QUICK_REACTIONS = ['👍','❤️','✅','🎉','🤔','😂'];
 const ALL_EMOJIS = ['👍','👌','✅','❌','❤️','🔥','🎉','🙌','👀','🙏','💡','⚠️','📌','📎','✏️','🚀','😀','😂','😊','😉','😍','🤔','😅','😢','😡','🙃','👏','💯','✨','📷'];
+
+const DEPT_PALETTE = [
+  'bg-purple-500/15 text-purple-300 border-purple-500/30',
+  'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  'bg-pink-500/15 text-pink-300 border-pink-500/30',
+  'bg-blue-500/15 text-blue-300 border-blue-500/30',
+  'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+  'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  'bg-amber-500/15 text-amber-300 border-amber-500/30',
+];
+function deptColor(name?: string | null) {
+  if (!name) return DEPT_PALETTE[3];
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return DEPT_PALETTE[h % DEPT_PALETTE.length];
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  open: 'Offen', new: 'Neu', in_progress: 'In Bearbeitung', ready_for_review: 'Zur Prüfung',
+  blocked: 'Blockiert', waiting: 'Wartet', done: 'Erledigt', completed: 'Abgeschlossen', closed: 'Geschlossen',
+};
+
+interface CaseMeta { case_no: string | null; status: string | null; project_name: string | null; department_name: string | null }
 
 interface ChatAttachment {
   id: string; message_id: string; case_id: string; storage_path: string;
@@ -71,6 +94,8 @@ export function CaseChat({ caseId, canWrite }: Props) {
   const [presentUsers, setPresentUsers] = useState<Record<string, { display_name: string; typing: boolean }>>({});
   const [showJump, setShowJump] = useState(false);
   const [caseNumberMap, setCaseNumberMap] = useState<Record<string, string>>({});
+  const [caseMeta, setCaseMeta] = useState<CaseMeta>({ case_no: null, status: null, project_name: null, department_name: null });
+  const [userDepts, setUserDepts] = useState<Record<string, string>>({});
 
   // mention state
   const [mentionState, setMentionState] = useState<{ start: number; query: string } | null>(null);
@@ -103,7 +128,14 @@ export function CaseChat({ caseId, canWrite }: Props) {
   // Load department members for @mentions: prefer dept members of this case, fallback all profiles
   useEffect(() => {
     (async () => {
-      const { data: cs } = await (supabase as any).from('cases').select('department_id').eq('id', caseId).maybeSingle();
+      const { data: cs } = await (supabase as any).from('cases')
+        .select('case_no, status, project_name, department_id, departments:department_id(name)').eq('id', caseId).maybeSingle();
+      setCaseMeta({
+        case_no: cs?.case_no || null,
+        status: cs?.status || null,
+        project_name: cs?.project_name || null,
+        department_name: (cs as any)?.departments?.name || null,
+      });
       let userIds: string[] | null = null;
       if (cs?.department_id) {
         const { data: dm } = await (supabase as any).from('department_members').select('user_id').eq('department_id', cs.department_id);
@@ -140,11 +172,26 @@ export function CaseChat({ caseId, canWrite }: Props) {
     }
     const authorIds = Array.from(new Set(rows.map(r => r.author_id).filter(Boolean)));
     if (authorIds.length) {
-      const { data: profs } = await (supabase as any).from('users_profile')
-        .select('id, display_name, short_code, avatar_url').in('id', authorIds);
+      const [{ data: profs }, { data: dm }] = await Promise.all([
+        (supabase as any).from('users_profile').select('id, display_name, short_code, avatar_url, department_id').in('id', authorIds),
+        (supabase as any).from('department_members').select('user_id, departments:department_id(name)').in('user_id', authorIds),
+      ]);
       const map: Record<string, any> = {};
       (profs || []).forEach((p: any) => { map[p.id] = p; });
       rows.forEach(r => { r.author = map[r.author_id] || null; });
+      // Pick first department per user; prefer department_members entries, fallback to profile's own dept
+      const deptMap: Record<string, string> = {};
+      (dm || []).forEach((x: any) => { if (!deptMap[x.user_id] && x.departments?.name) deptMap[x.user_id] = x.departments.name; });
+      if (Object.keys(deptMap).length < authorIds.length) {
+        const profDeptIds = Array.from(new Set((profs || []).map((p: any) => p.department_id).filter(Boolean)));
+        if (profDeptIds.length) {
+          const { data: deps } = await (supabase as any).from('departments').select('id, name').in('id', profDeptIds);
+          const dn: Record<string, string> = {};
+          (deps || []).forEach((d: any) => { dn[d.id] = d.name; });
+          (profs || []).forEach((p: any) => { if (!deptMap[p.id] && p.department_id && dn[p.department_id]) deptMap[p.id] = dn[p.department_id]; });
+        }
+      }
+      setUserDepts(prev => ({ ...prev, ...deptMap }));
     }
     setMessages(rows);
     setLoading(false);
@@ -500,47 +547,101 @@ export function CaseChat({ caseId, canWrite }: Props) {
 
   const typingOthers = Object.values(presentUsers).filter(p => p.typing).map(p => p.display_name);
 
+  const participantStack = useMemo(() => {
+    const seen = new Set<string>();
+    const list: MentionUser[] = [];
+    for (let i = messages.length - 1; i >= 0 && list.length < 5; i--) {
+      const a = messages[i].author;
+      if (a && !seen.has(a.id)) { seen.add(a.id); list.push(a); }
+    }
+    return list;
+  }, [messages]);
+  const onlineCount = Object.keys(presentUsers).length + 1;
+  const statusLabel = caseMeta.status ? (STATUS_LABEL[caseMeta.status] || caseMeta.status) : null;
+
   return (
-    <div className="rounded-md border border-border bg-card flex flex-col relative" style={{ maxHeight: '60vh' }}>
-      <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chat</h3>
-        <span className="text-[10px] text-muted-foreground">{messages.length} Nachrichten</span>
-        <div className="ml-auto flex items-center gap-1">
-          <button title="Suche" onClick={() => setShowSearch(v => !v)} className={cn('h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted', showSearch && 'bg-muted')}>
-            <Search className="h-3.5 w-3.5" />
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button title="Filter" className={cn('h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted', filter !== 'all' && 'bg-muted')}>
-                <Settings2 className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="text-xs">
-              <DropdownMenuItem onClick={() => setFilter('all')}>Alle Nachrichten</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('nosystem')}>Ohne Systemereignisse</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('attachments')}>Nur mit Anhängen</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('mentions')} disabled={!meShortCode}>Nur Erwähnungen</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('system')}>Nur Systemereignisse</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button title={isMuted ? 'Stummschaltung aufheben' : 'Stummschalten'} onClick={toggleMute} className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted">
-            {isMuted ? <BellOff className="h-3.5 w-3.5 text-muted-foreground" /> : <Bell className="h-3.5 w-3.5" />}
+    <div className="rounded-2xl border border-border bg-card flex flex-col relative overflow-hidden" style={{ maxHeight: '70vh' }}>
+      {/* Premium header with case meta */}
+      <div className="px-4 py-3 border-b border-border/60 bg-gradient-to-b from-muted/30 to-transparent">
+        <div className="flex items-start gap-3">
+          <div className="h-2 w-2 rounded-full bg-amber-400 mt-2 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-semibold text-foreground tracking-tight">{caseMeta.case_no || 'Chat'}</h2>
+              {statusLabel && (
+                <span className="text-[11px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">{statusLabel}</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {caseMeta.project_name || '—'}{caseMeta.department_name ? ` · ${caseMeta.department_name}` : ''}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {participantStack.length > 0 && (
+              <div className="flex -space-x-2">
+                {participantStack.slice(0, 3).map(p => (
+                  <div key={p.id} className="ring-2 ring-card rounded-full"><UserAvatar user={p} size="sm" /></div>
+                ))}
+                {participantStack.length > 3 && (
+                  <div className="h-6 px-1.5 min-w-[1.5rem] inline-flex items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground ring-2 ring-card">+{participantStack.length - 3}</div>
+                )}
+              </div>
+            )}
+            <button title="Suche" onClick={() => setShowSearch(v => !v)} className={cn('h-8 w-8 inline-flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground', showSearch && 'bg-muted text-foreground')}>
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="px-4 py-2 border-b border-border/60 flex items-center gap-1.5">
+        <button onClick={() => setFilter('all')}
+          className={cn('text-xs px-3 py-1 rounded-md transition-colors', filter === 'all' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
+          Alle
+        </button>
+        <button onClick={() => setFilter('mentions')} disabled={!meShortCode}
+          className={cn('text-xs px-3 py-1 rounded-md transition-colors disabled:opacity-50', filter === 'mentions' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
+          @Erwähnungen
+        </button>
+        <button onClick={() => setFilter('system')}
+          className={cn('text-xs px-3 py-1 rounded-md transition-colors', filter === 'system' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
+          Ereignisse
+        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button title="Weitere Filter" className={cn('h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50', (filter === 'attachments' || filter === 'nosystem') && 'bg-muted text-foreground')}>
+              <Settings2 className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="text-xs">
+            <DropdownMenuItem onClick={() => setFilter('nosystem')}>Ohne Systemereignisse</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter('attachments')}>Nur mit Anhängen</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Circle className="h-2 w-2 fill-emerald-400 text-emerald-400" />
+            {onlineCount} online
+          </span>
+          <button title={isMuted ? 'Stummschaltung aufheben' : 'Stummschalten'} onClick={toggleMute} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50">
+            {isMuted ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>
 
       {showSearch && (
-        <div className="px-3 py-2 border-b border-border">
-          <Input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="In Nachrichten suchen…" className="h-7 text-xs" autoFocus />
+        <div className="px-4 py-2 border-b border-border/60">
+          <Input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="In Nachrichten suchen…" className="h-8 text-xs" autoFocus />
         </div>
       )}
 
       {pinned.length > 0 && (
-        <div className="px-3 py-1.5 border-b border-border bg-muted/30 flex items-center gap-2 overflow-x-auto">
-          <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
+        <div className="px-4 py-2 border-b border-border/60 bg-amber-500/5 flex items-center gap-2 overflow-x-auto">
+          <span className="text-sm shrink-0">📌</span>
           {pinned.map(p => (
-            <button key={p.id} onClick={() => scrollToMessage(p.id)} className="text-[11px] text-muted-foreground hover:text-foreground truncate max-w-[260px]">
-              <span className="font-medium">{p.author?.display_name}:</span> {p.body || '(Anhang)'}
+            <button key={p.id} onClick={() => scrollToMessage(p.id)} className="text-xs text-muted-foreground hover:text-foreground truncate max-w-[420px]">
+              <span className="font-medium text-foreground">{p.author?.display_name}:</span> {p.body || '(Anhang)'}
             </button>
           ))}
         </div>
@@ -582,14 +683,19 @@ export function CaseChat({ caseId, canWrite }: Props) {
               return (
                 <div key={m.id} ref={el => { messageRefs.current[m.id] = el; }}>
                   {isUnreadDivider && <UnreadDivider />}
-                  <div className={cn('flex gap-2 group rounded px-1 py-0.5 -mx-1', m.pinned && 'bg-amber-500/5')}>
-                    <UserAvatar user={m.author} size="sm" />
+                  <div className={cn('flex gap-3 group rounded-lg px-2 py-1.5 -mx-2', m.pinned && 'bg-amber-500/5')}>
+                    <div className="shrink-0"><UserAvatar user={m.author} size="md" /></div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-foreground">{m.author?.display_name || '—'}</span>
-                        <span className="text-[10px] text-muted-foreground">{time}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-foreground">{m.author?.display_name || '—'}</span>
+                        {userDepts[m.author_id] && (
+                          <span className={cn('text-[10px] px-1.5 py-0.5 rounded border font-medium', deptColor(userDepts[m.author_id]))}>
+                            {userDepts[m.author_id]}
+                          </span>
+                        )}
+                        {m.pinned && <span className="text-[10px] text-amber-500 flex items-center gap-0.5 font-medium">📌 Angeheftet</span>}
                         {m.edited_at && <span className="text-[10px] text-muted-foreground italic">(bearbeitet)</span>}
-                        {m.pinned && <span className="text-[10px] text-amber-600 flex items-center gap-0.5"><Pin className="h-2.5 w-2.5" />angepinnt</span>}
+                        <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{time}</span>
                         {editId !== m.id && (
                           <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                             <Popover>
@@ -666,7 +772,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
                       ) : (
                         <>
                           {m.body && (
-                            <p className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed mt-0.5">
+                            <p className="text-sm text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed mt-1">
                               <MessageContent body={m.body} caseNumberMap={caseNumberMap} mentionMap={mentionMap} currentUserShortCode={meShortCode} />
                             </p>
                           )}
@@ -707,8 +813,8 @@ export function CaseChat({ caseId, canWrite }: Props) {
                                     key={emoji}
                                     onClick={() => toggleReaction(m, emoji)}
                                     className={cn(
-                                      'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] transition-colors',
-                                      mineReacted ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border bg-muted/30 hover:bg-muted',
+                                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs transition-colors',
+                                      mineReacted ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border bg-muted/40 hover:bg-muted',
                                     )}
                                   >
                                     <span>{emoji}</span>
@@ -744,7 +850,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
       )}
 
       {canWrite && (
-        <div className="border-t border-border p-2 space-y-2 relative">
+        <div className="border-t border-border/60 p-3 space-y-2 relative bg-gradient-to-b from-transparent to-muted/20">
           {replyTo && (
             <div className="flex items-start gap-2 rounded bg-muted/40 px-2 py-1 border-l-2 border-primary/40">
               <div className="flex-1 min-w-0">
@@ -775,7 +881,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
             </div>
           )}
           <div
-            className={cn('relative rounded border border-input bg-background', dragOver && 'ring-2 ring-primary')}
+            className={cn('relative rounded-2xl border border-border bg-background/50 shadow-sm transition-all', dragOver && 'ring-2 ring-primary border-primary')}
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
@@ -795,19 +901,19 @@ export function CaseChat({ caseId, canWrite }: Props) {
               onChange={handleTextChange}
               onPaste={onPaste}
               onKeyDown={onKeyDown}
-              placeholder="Nachricht… @ für Erwähnung, **fett** *kursiv* `code`, ↑ um letzte Nachricht zu bearbeiten"
-              className="text-xs min-h-[56px] max-h-[200px] border-0 focus-visible:ring-0 resize-none"
+              placeholder="Nachricht schreiben… (@Mention, #VOR-Nummer)"
+              className="text-sm min-h-[88px] max-h-[240px] border-0 focus-visible:ring-0 resize-none bg-transparent px-4 pt-3"
               disabled={sending}
             />
-            <div className="flex items-center justify-between px-2 pb-1.5">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center justify-between px-3 pb-2">
+              <div className="flex items-center gap-0.5">
                 <input ref={fileRef} type="file" multiple className="hidden" onChange={e => { if (e.target.files) addFiles(e.target.files); e.target.value=''; }} />
-                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => fileRef.current?.click()} title="Datei anhängen">
-                  <Paperclip className="h-3.5 w-3.5" />
+                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" onClick={() => fileRef.current?.click()} title="Datei anhängen">
+                  <Paperclip className="h-4 w-4" />
                 </Button>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button type="button" size="icon" variant="ghost" className="h-7 w-7" title="Emoji"><Smile className="h-3.5 w-3.5" /></Button>
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" title="Emoji"><Smile className="h-4 w-4" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-2" align="start">
                     <div className="grid grid-cols-8 gap-1">
@@ -818,8 +924,13 @@ export function CaseChat({ caseId, canWrite }: Props) {
                   </PopoverContent>
                 </Popover>
               </div>
-              <Button type="button" size="sm" className="h-7 text-xs" onClick={send} disabled={sending || (!text.trim() && pending.length === 0)}>
-                {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Send className="h-3 w-3 mr-1" />Senden</>}
+              <Button
+                type="button"
+                onClick={send}
+                disabled={sending || (!text.trim() && pending.length === 0)}
+                className="h-9 px-5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-1.5" />Senden</>}
               </Button>
             </div>
           </div>
