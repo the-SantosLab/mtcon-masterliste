@@ -1,39 +1,55 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Paperclip, Smile, Send, Loader2, X, Trash2, Pencil, Check, Download, FileText } from 'lucide-react';
+import {
+  Paperclip, Smile, Send, Loader2, X, Trash2, Pencil, Check, Download, FileText,
+  Reply, Pin, PinOff, MoreHorizontal, ListChecks, Search, ArrowDown, Bell, BellOff,
+  Settings2,
+} from 'lucide-react';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { toast } from 'sonner';
+import { MessageContent } from '@/components/chat/MessageContent';
+import { MentionPopover, getActiveMention, type MentionUser } from '@/components/chat/MentionPopover';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 const BUCKET = 'case-attachments';
 const MAX_BYTES = 20 * 1024 * 1024;
-
-const EMOJIS = ['👍','👌','✅','❌','❤️','🔥','🎉','🙌','👀','🙏','💡','⚠️','📌','📎','✏️','🚀','😀','😂','😊','😉','😍','🤔','😅','😢','😡','🙃','👏','💯','✨','📷'];
+const QUICK_REACTIONS = ['👍','❤️','✅','🎉','🤔','😂'];
+const ALL_EMOJIS = ['👍','👌','✅','❌','❤️','🔥','🎉','🙌','👀','🙏','💡','⚠️','📌','📎','✏️','🚀','😀','😂','😊','😉','😍','🤔','😅','😢','😡','🙃','👏','💯','✨','📷'];
 
 interface ChatAttachment {
   id: string; message_id: string; case_id: string; storage_path: string;
   file_name: string; mime_type: string | null; size_bytes: number | null;
   uploaded_by: string; created_at: string;
 }
+interface Reaction { id: string; message_id: string; user_id: string; emoji: string }
 interface ChatMessage {
   id: string; case_id: string; author_id: string; body: string;
   created_at: string; edited_at: string | null; deleted_at: string | null;
-  author?: { display_name: string; short_code: string; avatar_url: string | null } | null;
+  reply_to_id: string | null;
+  pinned: boolean; pinned_at: string | null; pinned_by: string | null;
+  system_kind: string | null;
+  author?: MentionUser | null;
   attachments: ChatAttachment[];
+  reactions: Reaction[];
 }
 interface PendingFile { id: string; file: File; previewUrl?: string }
 
-interface Props {
-  caseId: string;
-  canWrite: boolean;
-}
+type FilterMode = 'all' | 'attachments' | 'mentions' | 'system' | 'nosystem';
+
+interface Props { caseId: string; canWrite: boolean }
 
 export function CaseChat({ caseId, canWrite }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
@@ -44,37 +60,83 @@ export function CaseChat({ caseId, canWrite }: Props) {
   const [signed, setSigned] = useState<Record<string, string>>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [members, setMembers] = useState<MentionUser[]>([]);
+  const [meShortCode, setMeShortCode] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQ, setSearchQ] = useState('');
+  const [filter, setFilter] = useState<FilterMode>('all');
+  const [isMuted, setIsMuted] = useState(false);
+  const [lastReadAt, setLastReadAt] = useState<string | null>(null);
+  const [presentUsers, setPresentUsers] = useState<Record<string, { display_name: string; typing: boolean }>>({});
+  const [showJump, setShowJump] = useState(false);
+  const [caseNumberMap, setCaseNumberMap] = useState<Record<string, string>>({});
+
+  // mention state
+  const [mentionState, setMentionState] = useState<{ start: number; query: string } | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
+
   const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const typingDebounce = useRef<number | null>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  // Check admin once
+  // ---------- bootstrap ----------
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
-      const { data } = await (supabase as any).from('user_roles').select('role').eq('user_id', user.id).eq('role','admin').maybeSingle();
-      setIsAdmin(!!data);
+      const [roleRes, profRes, muteRes, readRes] = await Promise.all([
+        (supabase as any).from('user_roles').select('role').eq('user_id', user.id).eq('role','admin').maybeSingle(),
+        (supabase as any).from('users_profile').select('short_code').eq('id', user.id).maybeSingle(),
+        (supabase as any).from('case_chat_mutes').select('case_id').eq('case_id', caseId).eq('user_id', user.id).maybeSingle(),
+        (supabase as any).from('case_chat_reads').select('last_read_at').eq('case_id', caseId).eq('user_id', user.id).maybeSingle(),
+      ]);
+      setIsAdmin(!!roleRes.data);
+      setMeShortCode(profRes.data?.short_code || null);
+      setIsMuted(!!muteRes.data);
+      setLastReadAt(readRes.data?.last_read_at || null);
     })();
-  }, [user?.id]);
+  }, [user?.id, caseId]);
 
+  // Load department members for @mentions: prefer dept members of this case, fallback all profiles
+  useEffect(() => {
+    (async () => {
+      const { data: cs } = await (supabase as any).from('cases').select('department_id').eq('id', caseId).maybeSingle();
+      let userIds: string[] | null = null;
+      if (cs?.department_id) {
+        const { data: dm } = await (supabase as any).from('department_members').select('user_id').eq('department_id', cs.department_id);
+        userIds = (dm || []).map((x: any) => x.user_id);
+      }
+      let q = (supabase as any).from('users_profile').select('id, display_name, short_code, avatar_url').order('display_name');
+      if (userIds && userIds.length) q = q.in('id', userIds);
+      const { data } = await q;
+      setMembers((data || []) as MentionUser[]);
+    })();
+  }, [caseId]);
+
+  // ---------- fetch messages ----------
   const fetchMessages = useCallback(async () => {
     const { data: msgs, error } = await (supabase as any)
       .from('case_chat_messages')
       .select('*')
       .eq('case_id', caseId)
       .order('created_at', { ascending: true })
-      .limit(500);
+      .limit(800);
     if (error) { console.error(error); setLoading(false); return; }
-    const rows: ChatMessage[] = (msgs || []).map((m: any) => ({ ...m, attachments: [] }));
+    const rows: ChatMessage[] = (msgs || []).map((m: any) => ({ ...m, attachments: [], reactions: [] }));
     const ids = rows.map(r => r.id);
     if (ids.length) {
-      const { data: atts } = await (supabase as any)
-        .from('case_chat_attachments')
-        .select('*')
-        .in('message_id', ids);
-      const byMsg: Record<string, ChatAttachment[]> = {};
-      (atts || []).forEach((a: any) => { (byMsg[a.message_id] ||= []).push(a); });
-      rows.forEach(r => { r.attachments = byMsg[r.id] || []; });
+      const [{ data: atts }, { data: rxs }] = await Promise.all([
+        (supabase as any).from('case_chat_attachments').select('*').in('message_id', ids),
+        (supabase as any).from('case_chat_reactions').select('*').in('message_id', ids),
+      ]);
+      const byA: Record<string, ChatAttachment[]> = {};
+      (atts || []).forEach((a: any) => { (byA[a.message_id] ||= []).push(a); });
+      const byR: Record<string, Reaction[]> = {};
+      (rxs || []).forEach((r: any) => { (byR[r.message_id] ||= []).push(r); });
+      rows.forEach(r => { r.attachments = byA[r.id] || []; r.reactions = byR[r.id] || []; });
     }
     const authorIds = Array.from(new Set(rows.map(r => r.author_id).filter(Boolean)));
     if (authorIds.length) {
@@ -86,32 +148,95 @@ export function CaseChat({ caseId, canWrite }: Props) {
     }
     setMessages(rows);
     setLoading(false);
-    // sign image attachments
+
+    // Sign image attachments
     const toSign = rows.flatMap(r => r.attachments).filter(a => (a.mime_type || '').startsWith('image/'));
     if (toSign.length) {
       const { data: sd } = await (supabase as any).storage.from(BUCKET).createSignedUrls(toSign.map(a => a.storage_path), 300);
-      const map: Record<string, string> = {};
-      (sd || []).forEach((s: any, i: number) => { if (s?.signedUrl) map[toSign[i].id] = s.signedUrl; });
-      setSigned(prev => ({ ...prev, ...map }));
+      const sm: Record<string, string> = {};
+      (sd || []).forEach((s: any, i: number) => { if (s?.signedUrl) sm[toSign[i].id] = s.signedUrl; });
+      setSigned(prev => ({ ...prev, ...sm }));
+    }
+
+    // Resolve case_no autolinks from message bodies
+    const caseNos = new Set<string>();
+    rows.forEach(r => {
+      const re = /#VOR-\d{4}-\d{4}/g;
+      const matches = r.body?.match(re);
+      matches?.forEach(m => caseNos.add(m.slice(1)));
+    });
+    if (caseNos.size > 0) {
+      const { data: cs } = await (supabase as any).from('cases').select('id, case_no').in('case_no', Array.from(caseNos));
+      const cm: Record<string, string> = {};
+      (cs || []).forEach((c: any) => { cm[c.case_no] = c.id; });
+      setCaseNumberMap(prev => ({ ...prev, ...cm }));
     }
   }, [caseId]);
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
-  // Realtime
+  // ---------- realtime + presence ----------
   useEffect(() => {
-    const ch = supabase.channel(`case-chat-${caseId}`)
+    if (!user?.id) return;
+    const ch = supabase.channel(`case-chat-${caseId}`, { config: { presence: { key: user.id } } })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_messages', filter: `case_id=eq.${caseId}` }, () => fetchMessages())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_attachments', filter: `case_id=eq.${caseId}` }, () => fetchMessages())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [caseId, fetchMessages]);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_reactions', filter: `case_id=eq.${caseId}` }, () => fetchMessages())
+      .on('presence', { event: 'sync' }, () => {
+        const state = ch.presenceState() as Record<string, any[]>;
+        const acc: Record<string, { display_name: string; typing: boolean }> = {};
+        Object.entries(state).forEach(([uid, metas]) => {
+          if (uid === user.id) return;
+          const last = metas[metas.length - 1];
+          acc[uid] = { display_name: last?.display_name || 'Jemand', typing: !!last?.typing };
+        });
+        setPresentUsers(acc);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await ch.track({ display_name: user.email?.split('@')[0] || 'User', typing: false, at: Date.now() });
+        }
+      });
+    channelRef.current = ch;
+    return () => { channelRef.current = null; supabase.removeChannel(ch); };
+  }, [caseId, user?.id, user?.email, fetchMessages]);
 
-  // Auto-scroll on new messages
+  // ---------- mark read ----------
+  const markRead = useCallback(async () => {
+    if (!user?.id) return;
+    const nowIso = new Date().toISOString();
+    await (supabase as any).from('case_chat_reads').upsert({ case_id: caseId, user_id: user.id, last_read_at: nowIso }, { onConflict: 'case_id,user_id' });
+  }, [caseId, user?.id]);
+
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages.length]);
+    if (loading) return;
+    const t = setTimeout(() => { markRead(); }, 800);
+    return () => clearTimeout(t);
+  }, [loading, messages.length, markRead]);
 
+  // ---------- scroll behavior ----------
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setShowJump(distFromBottom > 200);
+    };
+    el.addEventListener('scroll', onScroll);
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const lastMsgId = messages[messages.length - 1]?.id;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distFromBottom < 250) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [lastMsgId]);
+
+  // ---------- file handling ----------
   const addFiles = (files: FileList | File[]) => {
     const arr = Array.from(files);
     const added: PendingFile[] = [];
@@ -123,7 +248,6 @@ export function CaseChat({ caseId, canWrite }: Props) {
     }
     setPending(prev => [...prev, ...added]);
   };
-
   const onPaste = (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -141,12 +265,12 @@ export function CaseChat({ caseId, canWrite }: Props) {
     }
     if (files.length) { e.preventDefault(); addFiles(files); }
   };
-
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault(); setDragOver(false);
     if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files);
   };
 
+  // ---------- send ----------
   const send = async () => {
     if (!user?.id) return;
     const body = text.trim();
@@ -155,7 +279,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
     try {
       const { data: ins, error } = await (supabase as any)
         .from('case_chat_messages')
-        .insert({ case_id: caseId, author_id: user.id, body })
+        .insert({ case_id: caseId, author_id: user.id, body, reply_to_id: replyTo?.id || null })
         .select('id').single();
       if (error) throw error;
       const msgId = ins.id;
@@ -169,14 +293,32 @@ export function CaseChat({ caseId, canWrite }: Props) {
           uploaded_by: user.id,
         });
       }
-      // cleanup
+      // Notifications for mentions
+      const mentioned = Array.from(new Set((body.match(/(^|\s)@([A-Za-z0-9._-]{2,})/g) || []).map(s => s.trim().slice(1).toLowerCase())));
+      if (mentioned.length) {
+        const targets = members.filter(m => mentioned.includes(m.short_code.toLowerCase()) && m.id !== user.id);
+        if (targets.length) {
+          await (supabase as any).from('notifications').insert(
+            targets.map(t => ({
+              user_id: t.id,
+              type: 'mention',
+              title: 'Du wurdest erwähnt',
+              body: body.slice(0, 160),
+              href: `/cases/${caseId}`,
+            }))
+          );
+        }
+      }
       pending.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
-      setPending([]); setText('');
+      setPending([]); setText(''); setReplyTo(null);
+      // ensure scroll to bottom
+      requestAnimationFrame(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; });
     } catch (e: any) {
       toast.error(e.message || 'Senden fehlgeschlagen');
     } finally { setSending(false); }
   };
 
+  // ---------- per-message actions ----------
   const saveEdit = async (id: string) => {
     const body = editText.trim();
     if (!body) return;
@@ -185,20 +327,137 @@ export function CaseChat({ caseId, canWrite }: Props) {
     if (error) toast.error(error.message);
     setEditId(null); setEditText('');
   };
-
   const deleteMsg = async (m: ChatMessage) => {
     if (!confirm('Nachricht löschen?')) return;
-    // try storage cleanup
     if (m.attachments.length) {
       await supabase.storage.from(BUCKET).remove(m.attachments.map(a => a.storage_path)).catch(() => {});
     }
     const { error } = await (supabase as any).from('case_chat_messages').delete().eq('id', m.id);
     if (error) toast.error(error.message);
   };
+  const togglePin = async (m: ChatMessage) => {
+    const { error } = await (supabase as any).from('case_chat_messages')
+      .update({ pinned: !m.pinned, pinned_at: !m.pinned ? new Date().toISOString() : null, pinned_by: !m.pinned ? user?.id : null })
+      .eq('id', m.id);
+    if (error) toast.error(error.message);
+  };
+  const toggleReaction = async (m: ChatMessage, emoji: string) => {
+    if (!user?.id) return;
+    const existing = m.reactions.find(r => r.user_id === user.id && r.emoji === emoji);
+    if (existing) {
+      await (supabase as any).from('case_chat_reactions').delete().eq('id', existing.id);
+    } else {
+      await (supabase as any).from('case_chat_reactions').insert({
+        message_id: m.id, case_id: caseId, user_id: user.id, emoji,
+      });
+    }
+  };
+  const createSubtask = async (m: ChatMessage) => {
+    if (!user?.id) return;
+    const title = (m.body || 'Aus Chat').replace(/\n+/g, ' ').slice(0, 120);
+    const { error } = await (supabase as any).from('case_tasks').insert({
+      case_id: caseId, title, description: m.body || null,
+      assigned_to: user.id, created_by: user.id, status: 'open',
+    });
+    if (error) toast.error(error.message);
+    else toast.success('Unteraufgabe erstellt');
+  };
+  const toggleMute = async () => {
+    if (!user?.id) return;
+    if (isMuted) {
+      await (supabase as any).from('case_chat_mutes').delete().eq('case_id', caseId).eq('user_id', user.id);
+      setIsMuted(false); toast.success('Benachrichtigungen aktiviert');
+    } else {
+      await (supabase as any).from('case_chat_mutes').insert({ case_id: caseId, user_id: user.id });
+      setIsMuted(true); toast.success('Stummgeschaltet');
+    }
+  };
+
+  // ---------- input handling: mentions + shortcuts ----------
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const v = e.target.value;
+    setText(v);
+    const caret = e.target.selectionStart ?? v.length;
+    const m = getActiveMention(v, caret);
+    setMentionState(m);
+    setMentionIndex(0);
+    // presence typing
+    const ch = channelRef.current;
+    if (ch && user?.id) {
+      ch.track({ display_name: user.email?.split('@')[0] || 'User', typing: true, at: Date.now() }).catch(() => {});
+      if (typingDebounce.current) window.clearTimeout(typingDebounce.current);
+      typingDebounce.current = window.setTimeout(() => {
+        ch.track({ display_name: user.email?.split('@')[0] || 'User', typing: false, at: Date.now() }).catch(() => {});
+      }, 1500);
+    }
+  };
+
+  const filteredMentionUsers = useMemo(() => {
+    if (!mentionState) return [];
+    const q = mentionState.query.toLowerCase();
+    return members.filter(u => !q || u.short_code.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q)).slice(0, 6);
+  }, [mentionState, members]);
+
+  const pickMention = (u: MentionUser) => {
+    if (!mentionState || !taRef.current) return;
+    const before = text.slice(0, mentionState.start);
+    const after = text.slice((taRef.current.selectionStart ?? text.length));
+    const inserted = `@${u.short_code} `;
+    const next = before + inserted + after;
+    setText(next);
+    setMentionState(null);
+    requestAnimationFrame(() => {
+      const pos = (before + inserted).length;
+      taRef.current?.focus();
+      taRef.current?.setSelectionRange(pos, pos);
+    });
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mentionState && filteredMentionUsers.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIndex(i => Math.min(i + 1, filteredMentionUsers.length - 1)); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setMentionIndex(i => Math.max(0, i - 1)); return; }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pickMention(filteredMentionUsers[mentionIndex]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); setMentionState(null); return; }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); void send(); return;
+    }
+    if (e.key === 'ArrowUp' && text === '' && !editId) {
+      const mine = [...messages].reverse().find(m => m.author_id === user?.id && !m.system_kind && !m.deleted_at);
+      if (mine) {
+        e.preventDefault();
+        setEditId(mine.id); setEditText(mine.body);
+      }
+    }
+  };
+
+  // ---------- derived: grouping, filter, search ----------
+  const mentionMap = useMemo(() => {
+    const map: Record<string, { id: string; display_name: string }> = {};
+    members.forEach(m => { map[m.short_code.toLowerCase()] = { id: m.id, display_name: m.display_name }; });
+    return map;
+  }, [members]);
+
+  const visibleMessages = useMemo(() => {
+    let arr = messages;
+    if (filter === 'attachments') arr = arr.filter(m => m.attachments.length > 0);
+    else if (filter === 'system') arr = arr.filter(m => !!m.system_kind);
+    else if (filter === 'nosystem') arr = arr.filter(m => !m.system_kind);
+    else if (filter === 'mentions' && meShortCode) {
+      const tag = `@${meShortCode.toLowerCase()}`;
+      arr = arr.filter(m => m.body?.toLowerCase().includes(tag));
+    }
+    if (searchQ.trim()) {
+      const q = searchQ.toLowerCase();
+      arr = arr.filter(m => m.body?.toLowerCase().includes(q) || m.author?.display_name.toLowerCase().includes(q));
+    }
+    return arr;
+  }, [messages, filter, searchQ, meShortCode]);
 
   const grouped = useMemo(() => {
     const out: { day: string; items: ChatMessage[] }[] = [];
-    for (const m of messages) {
+    for (const m of visibleMessages) {
       const d = new Date(m.created_at);
       const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
       const last = out[out.length - 1];
@@ -206,6 +465,19 @@ export function CaseChat({ caseId, canWrite }: Props) {
       else out.push({ day, items: [m] });
     }
     return out;
+  }, [visibleMessages]);
+
+  const pinned = useMemo(() => messages.filter(m => m.pinned && !m.deleted_at && !m.system_kind), [messages]);
+  const unreadCutoff = lastReadAt ? new Date(lastReadAt).getTime() : 0;
+  const firstUnreadId = useMemo(() => {
+    if (!unreadCutoff) return null;
+    return visibleMessages.find(m => m.author_id !== user?.id && new Date(m.created_at).getTime() > unreadCutoff)?.id || null;
+  }, [visibleMessages, unreadCutoff, user?.id]);
+
+  const messageById = useMemo(() => {
+    const m: Record<string, ChatMessage> = {};
+    messages.forEach(x => { m[x.id] = x; });
+    return m;
   }, [messages]);
 
   const insertEmoji = (e: string) => {
@@ -213,18 +485,72 @@ export function CaseChat({ caseId, canWrite }: Props) {
     requestAnimationFrame(() => taRef.current?.focus());
   };
 
+  const jumpToBottom = () => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+  const scrollToMessage = (id: string) => {
+    const el = messageRefs.current[id];
+    if (el && scrollRef.current) {
+      scrollRef.current.scrollTo({ top: el.offsetTop - 40, behavior: 'smooth' });
+      el.classList.add('ring-2','ring-primary/40','rounded');
+      setTimeout(() => el.classList.remove('ring-2','ring-primary/40','rounded'), 1200);
+    }
+  };
+
+  const typingOthers = Object.values(presentUsers).filter(p => p.typing).map(p => p.display_name);
+
   return (
-    <div className="rounded-md border border-border bg-card flex flex-col" style={{ maxHeight: '60vh' }}>
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+    <div className="rounded-md border border-border bg-card flex flex-col relative" style={{ maxHeight: '60vh' }}>
+      <div className="px-3 py-2 border-b border-border flex items-center gap-2">
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chat</h3>
         <span className="text-[10px] text-muted-foreground">{messages.length} Nachrichten</span>
+        <div className="ml-auto flex items-center gap-1">
+          <button title="Suche" onClick={() => setShowSearch(v => !v)} className={cn('h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted', showSearch && 'bg-muted')}>
+            <Search className="h-3.5 w-3.5" />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button title="Filter" className={cn('h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted', filter !== 'all' && 'bg-muted')}>
+                <Settings2 className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="text-xs">
+              <DropdownMenuItem onClick={() => setFilter('all')}>Alle Nachrichten</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilter('nosystem')}>Ohne Systemereignisse</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilter('attachments')}>Nur mit Anhängen</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilter('mentions')} disabled={!meShortCode}>Nur Erwähnungen</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilter('system')}>Nur Systemereignisse</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button title={isMuted ? 'Stummschaltung aufheben' : 'Stummschalten'} onClick={toggleMute} className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted">
+            {isMuted ? <BellOff className="h-3.5 w-3.5 text-muted-foreground" /> : <Bell className="h-3.5 w-3.5" />}
+          </button>
+        </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4 min-h-[200px]">
+      {showSearch && (
+        <div className="px-3 py-2 border-b border-border">
+          <Input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="In Nachrichten suchen…" className="h-7 text-xs" autoFocus />
+        </div>
+      )}
+
+      {pinned.length > 0 && (
+        <div className="px-3 py-1.5 border-b border-border bg-muted/30 flex items-center gap-2 overflow-x-auto">
+          <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
+          {pinned.map(p => (
+            <button key={p.id} onClick={() => scrollToMessage(p.id)} className="text-[11px] text-muted-foreground hover:text-foreground truncate max-w-[260px]">
+              <span className="font-medium">{p.author?.display_name}:</span> {p.body || '(Anhang)'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-[200px]">
         {loading ? (
           <div className="flex items-center justify-center py-6"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
-        ) : messages.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-6">Noch keine Nachrichten. Starte das Gespräch.</p>
+        ) : visibleMessages.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-6">Keine Nachrichten.</p>
         ) : grouped.map(g => (
           <div key={g.day} className="space-y-2">
             <div className="flex items-center gap-2 my-2">
@@ -233,80 +559,201 @@ export function CaseChat({ caseId, canWrite }: Props) {
               <div className="h-px flex-1 bg-border" />
             </div>
             {g.items.map(m => {
+              const isUnreadDivider = firstUnreadId === m.id;
+              if (m.system_kind) {
+                return (
+                  <div key={m.id} ref={el => { messageRefs.current[m.id] = el; }}>
+                    {isUnreadDivider && <UnreadDivider />}
+                    <div className="flex items-center gap-2 my-1">
+                      <div className="h-px flex-1 bg-border/60" />
+                      <span className="text-[10px] text-muted-foreground italic">{m.body}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <div className="h-px flex-1 bg-border/60" />
+                    </div>
+                  </div>
+                );
+              }
               const mine = m.author_id === user?.id;
               const time = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+              const parentMsg = m.reply_to_id ? messageById[m.reply_to_id] : null;
+              // group reactions by emoji
+              const rxGroups: Record<string, Reaction[]> = {};
+              m.reactions.forEach(r => { (rxGroups[r.emoji] ||= []).push(r); });
               return (
-                <div key={m.id} className="flex gap-2 group">
-                  <UserAvatar user={m.author} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-xs font-medium text-foreground">{m.author?.display_name || '—'}</span>
-                      <span className="text-[10px] text-muted-foreground">{time}</span>
-                      {m.edited_at && <span className="text-[10px] text-muted-foreground italic">(bearbeitet)</span>}
-                      {(mine || isAdmin) && editId !== m.id && (
-                        <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                          {mine && (
-                            <button onClick={() => { setEditId(m.id); setEditText(m.body); }} className="text-muted-foreground hover:text-foreground" title="Bearbeiten">
-                              <Pencil className="h-3 w-3" />
-                            </button>
-                          )}
-                          <button onClick={() => deleteMsg(m)} className="text-muted-foreground hover:text-destructive" title="Löschen">
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </span>
-                      )}
-                    </div>
-                    {editId === m.id ? (
-                      <div className="mt-1 space-y-1">
-                        <Textarea value={editText} onChange={e => setEditText(e.target.value)} className="text-xs min-h-[50px]" autoFocus />
-                        <div className="flex gap-1">
-                          <Button size="sm" className="h-6 text-xs" onClick={() => saveEdit(m.id)}><Check className="h-3 w-3 mr-1" />Speichern</Button>
-                          <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setEditId(null); setEditText(''); }}><X className="h-3 w-3 mr-1" />Abbrechen</Button>
-                        </div>
+                <div key={m.id} ref={el => { messageRefs.current[m.id] = el; }}>
+                  {isUnreadDivider && <UnreadDivider />}
+                  <div className={cn('flex gap-2 group rounded px-1 py-0.5 -mx-1', m.pinned && 'bg-amber-500/5')}>
+                    <UserAvatar user={m.author} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-xs font-medium text-foreground">{m.author?.display_name || '—'}</span>
+                        <span className="text-[10px] text-muted-foreground">{time}</span>
+                        {m.edited_at && <span className="text-[10px] text-muted-foreground italic">(bearbeitet)</span>}
+                        {m.pinned && <span className="text-[10px] text-amber-600 flex items-center gap-0.5"><Pin className="h-2.5 w-2.5" />angepinnt</span>}
+                        {editId !== m.id && (
+                          <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="text-muted-foreground hover:text-foreground" title="Reaktion"><Smile className="h-3 w-3" /></button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-1" align="end">
+                                <div className="flex gap-0.5">
+                                  {QUICK_REACTIONS.map(e => (
+                                    <button key={e} type="button" onClick={() => toggleReaction(m, e)} className="text-base hover:bg-muted rounded p-1">{e}</button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            {canWrite && (
+                              <button onClick={() => { setReplyTo(m); taRef.current?.focus(); }} className="text-muted-foreground hover:text-foreground" title="Antworten">
+                                <Reply className="h-3 w-3" />
+                              </button>
+                            )}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="text-muted-foreground hover:text-foreground" title="Mehr"><MoreHorizontal className="h-3 w-3" /></button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="text-xs">
+                                {canWrite && (
+                                  <DropdownMenuItem onClick={() => createSubtask(m)}>
+                                    <ListChecks className="h-3 w-3 mr-2" />Als Unteraufgabe
+                                  </DropdownMenuItem>
+                                )}
+                                {(isAdmin || mine) && (
+                                  <DropdownMenuItem onClick={() => togglePin(m)}>
+                                    {m.pinned ? <><PinOff className="h-3 w-3 mr-2" />Lösen</> : <><Pin className="h-3 w-3 mr-2" />Anpinnen</>}
+                                  </DropdownMenuItem>
+                                )}
+                                {mine && (
+                                  <DropdownMenuItem onClick={() => { setEditId(m.id); setEditText(m.body); }}>
+                                    <Pencil className="h-3 w-3 mr-2" />Bearbeiten
+                                  </DropdownMenuItem>
+                                )}
+                                {(isAdmin || mine) && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => deleteMsg(m)} className="text-destructive">
+                                      <Trash2 className="h-3 w-3 mr-2" />Löschen
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <>
-                        {m.body && <p className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed mt-0.5">{m.body}</p>}
-                        {m.attachments.length > 0 && (
-                          <div className="mt-1.5 flex flex-wrap gap-2">
-                            {m.attachments.map(a => {
-                              const isImg = (a.mime_type || '').startsWith('image/');
-                              if (isImg && signed[a.id]) {
+
+                      {parentMsg && (
+                        <button
+                          onClick={() => scrollToMessage(parentMsg.id)}
+                          className="mt-1 mb-1 flex items-stretch gap-2 text-left rounded bg-muted/40 hover:bg-muted/60 px-2 py-1 border-l-2 border-primary/40 max-w-full"
+                        >
+                          <div className="text-[10px] text-muted-foreground truncate">
+                            <span className="font-medium text-foreground">{parentMsg.author?.display_name || '—'}: </span>
+                            {(parentMsg.body || '(Anhang)').slice(0, 140)}
+                          </div>
+                        </button>
+                      )}
+
+                      {editId === m.id ? (
+                        <div className="mt-1 space-y-1">
+                          <Textarea value={editText} onChange={e => setEditText(e.target.value)} className="text-xs min-h-[50px]" autoFocus />
+                          <div className="flex gap-1">
+                            <Button size="sm" className="h-6 text-xs" onClick={() => saveEdit(m.id)}><Check className="h-3 w-3 mr-1" />Speichern</Button>
+                            <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setEditId(null); setEditText(''); }}><X className="h-3 w-3 mr-1" />Abbrechen</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {m.body && (
+                            <p className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed mt-0.5">
+                              <MessageContent body={m.body} caseNumberMap={caseNumberMap} mentionMap={mentionMap} currentUserShortCode={meShortCode} />
+                            </p>
+                          )}
+                          {m.attachments.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-2">
+                              {m.attachments.map(a => {
+                                const isImg = (a.mime_type || '').startsWith('image/');
+                                if (isImg && signed[a.id]) {
+                                  return (
+                                    <a key={a.id} href={signed[a.id]} target="_blank" rel="noreferrer" className="block">
+                                      <img src={signed[a.id]} alt={a.file_name} className="max-h-48 max-w-[260px] rounded border border-border object-contain bg-muted" />
+                                    </a>
+                                  );
+                                }
                                 return (
-                                  <a key={a.id} href={signed[a.id]} target="_blank" rel="noreferrer" className="block">
-                                    <img src={signed[a.id]} alt={a.file_name} className="max-h-48 max-w-[260px] rounded border border-border object-contain bg-muted" />
+                                  <a key={a.id} href={signed[a.id] || '#'} target="_blank" rel="noreferrer"
+                                     onClick={async (e) => {
+                                       if (!signed[a.id]) {
+                                         e.preventDefault();
+                                         const { data } = await (supabase as any).storage.from(BUCKET).createSignedUrl(a.storage_path, 300);
+                                         if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                       }
+                                     }}
+                                     className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-muted/30 text-xs hover:bg-muted">
+                                    <FileText className="h-3 w-3" /> <span className="truncate max-w-[180px]">{a.file_name}</span>
+                                    <Download className="h-3 w-3 text-muted-foreground" />
                                   </a>
                                 );
-                              }
-                              return (
-                                <a key={a.id} href={signed[a.id] || '#'} target="_blank" rel="noreferrer"
-                                   onClick={async (e) => {
-                                     if (!signed[a.id]) {
-                                       e.preventDefault();
-                                       const { data } = await (supabase as any).storage.from(BUCKET).createSignedUrl(a.storage_path, 300);
-                                       if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                     }
-                                   }}
-                                   className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-muted/30 text-xs hover:bg-muted">
-                                  <FileText className="h-3 w-3" /> <span className="truncate max-w-[180px]">{a.file_name}</span>
-                                  <Download className="h-3 w-3 text-muted-foreground" />
-                                </a>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </>
-                    )}
+                              })}
+                            </div>
+                          )}
+                          {Object.keys(rxGroups).length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {Object.entries(rxGroups).map(([emoji, rs]) => {
+                                const mineReacted = rs.some(r => r.user_id === user?.id);
+                                return (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => toggleReaction(m, emoji)}
+                                    className={cn(
+                                      'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] transition-colors',
+                                      mineReacted ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border bg-muted/30 hover:bg-muted',
+                                    )}
+                                  >
+                                    <span>{emoji}</span>
+                                    <span className="font-medium">{rs.length}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
         ))}
+        {typingOthers.length > 0 && (
+          <div className="text-[10px] text-muted-foreground italic px-1">
+            {typingOthers.slice(0, 3).join(', ')} {typingOthers.length === 1 ? 'schreibt' : 'schreiben'}…
+          </div>
+        )}
       </div>
 
+      {showJump && (
+        <button
+          onClick={jumpToBottom}
+          className="absolute bottom-[110px] right-4 h-8 px-3 rounded-full bg-primary text-primary-foreground shadow-md text-xs inline-flex items-center gap-1.5 hover:bg-primary/90"
+        >
+          <ArrowDown className="h-3 w-3" /> Neueste
+        </button>
+      )}
+
       {canWrite && (
-        <div className="border-t border-border p-2 space-y-2">
+        <div className="border-t border-border p-2 space-y-2 relative">
+          {replyTo && (
+            <div className="flex items-start gap-2 rounded bg-muted/40 px-2 py-1 border-l-2 border-primary/40">
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] text-muted-foreground">Antwort an <span className="font-medium text-foreground">{replyTo.author?.display_name}</span></div>
+                <div className="text-[11px] text-foreground truncate">{(replyTo.body || '(Anhang)').slice(0, 160)}</div>
+              </div>
+              <button onClick={() => setReplyTo(null)} className="text-muted-foreground hover:text-foreground"><X className="h-3 w-3" /></button>
+            </div>
+          )}
           {pending.length > 0 && (
             <div className="flex flex-wrap gap-2 px-1">
               {pending.map(p => (
@@ -333,13 +780,22 @@ export function CaseChat({ caseId, canWrite }: Props) {
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
           >
+            {mentionState && filteredMentionUsers.length > 0 && (
+              <MentionPopover
+                query={mentionState.query}
+                users={members}
+                activeIndex={mentionIndex}
+                onPick={pickMention}
+                onHover={setMentionIndex}
+              />
+            )}
             <Textarea
               ref={taRef}
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={handleTextChange}
               onPaste={onPaste}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
-              placeholder="Nachricht schreiben… (Strg+V für Screenshot, Enter zum Senden)"
+              onKeyDown={onKeyDown}
+              placeholder="Nachricht… @ für Erwähnung, **fett** *kursiv* `code`, ↑ um letzte Nachricht zu bearbeiten"
               className="text-xs min-h-[56px] max-h-[200px] border-0 focus-visible:ring-0 resize-none"
               disabled={sending}
             />
@@ -355,15 +811,15 @@ export function CaseChat({ caseId, canWrite }: Props) {
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-2" align="start">
                     <div className="grid grid-cols-8 gap-1">
-                      {EMOJIS.map(e => (
+                      {ALL_EMOJIS.map(e => (
                         <button key={e} type="button" onClick={() => insertEmoji(e)} className="text-lg hover:bg-muted rounded p-1">{e}</button>
                       ))}
                     </div>
                   </PopoverContent>
                 </Popover>
               </div>
-              <Button size="sm" className="h-7 text-xs gap-1.5" onClick={send} disabled={sending || (!text.trim() && pending.length === 0)}>
-                {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />} Senden
+              <Button type="button" size="sm" className="h-7 text-xs" onClick={send} disabled={sending || (!text.trim() && pending.length === 0)}>
+                {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Send className="h-3 w-3 mr-1" />Senden</>}
               </Button>
             </div>
           </div>
@@ -373,4 +829,12 @@ export function CaseChat({ caseId, canWrite }: Props) {
   );
 }
 
-export default CaseChat;
+function UnreadDivider() {
+  return (
+    <div className="flex items-center gap-2 my-2">
+      <div className="h-px flex-1 bg-primary/40" />
+      <span className="text-[10px] uppercase tracking-wide text-primary font-medium">Neu</span>
+      <div className="h-px flex-1 bg-primary/40" />
+    </div>
+  );
+}
