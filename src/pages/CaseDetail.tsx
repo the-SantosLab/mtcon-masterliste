@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { CaseChat } from '@/components/CaseChat';
+import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseEmails } from '@/components/CaseEmails';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
