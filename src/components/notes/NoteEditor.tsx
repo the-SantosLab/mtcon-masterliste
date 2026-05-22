@@ -1,12 +1,51 @@
-import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import { useEditor, EditorContent, type Editor, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, List, ListChecks, Highlighter } from 'lucide-react';
+import TextAlign from '@tiptap/extension-text-align';
+import TextStyle from '@tiptap/extension-text-style';
+import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+
+// Custom mark attribute to set inline font-size on TextStyle
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.style.fontSize || null,
+            renderHTML: (attrs: any) => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: string | null) => ({ chain }: any) =>
+        size
+          ? chain().setMark('textStyle', { fontSize: size }).run()
+          : chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run(),
+    } as any;
+  },
+});
+
+export const FONT_SIZES = [
+  { label: 'XS', value: '10px' },
+  { label: 'S', value: '12px' },
+  { label: 'M', value: '14px' },
+  { label: 'L', value: '18px' },
+  { label: 'XL', value: '24px' },
+  { label: 'XXL', value: '32px' },
+];
+
 
 export const MARKER_COLORS = [
   { name: 'yellow', hex: 'hsl(50 95% 65% / 0.55)' },
