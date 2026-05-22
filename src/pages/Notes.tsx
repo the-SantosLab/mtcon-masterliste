@@ -49,6 +49,7 @@ export default function Notes() {
   const [markerFilters, setMarkerFilters] = useState<Set<string>>(new Set());
   const [pinnedOnly, setPinnedOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
