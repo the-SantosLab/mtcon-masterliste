@@ -267,7 +267,7 @@ export default function Dashboard() {
         {/* Hero zone — Left 60% / Right 40% */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* LEFT: Hero image with greeting + KPIs overlay */}
-          <div className="lg:col-span-3 relative rounded-2xl overflow-hidden border border-border/50 bg-gradient-to-br from-muted/40 to-background min-h-[480px] lg:min-h-[560px]">
+          <div className="lg:col-span-3 relative rounded-2xl overflow-hidden border border-border/50 bg-gradient-to-br from-muted/40 to-background min-h-[640px] lg:min-h-[560px]">
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -296,7 +296,7 @@ export default function Dashboard() {
 
             {/* KPI cards (bottom overlay) */}
             <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5 z-10">
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid kpi-grid grid-cols-5 gap-2">
                 {KPI_DEFS.map(({ key, title, icon: Icon }) => {
                   const isActive = activeFilters.includes(key);
                   const accent = FILTER_COLORS[key];

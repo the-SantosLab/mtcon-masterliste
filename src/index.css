@@ -463,6 +463,14 @@
     max-width: 85vw;
   }
 
-  /* Prevent overflow of long mono codes / case numbers */
+  /* Prevent long mono codes / case numbers blowing out width */
   .font-mono { word-break: break-all; }
+
+  /* Prevent any page from causing horizontal viewport scroll */
+  html, body { overflow-x: hidden; }
+  main { max-width: 100vw; overflow-x: hidden; }
+
+  /* Inline badges should never force overflow */
+  [class*="rounded"][class*="border"] .whitespace-nowrap,
+  .badge, [data-badge] { max-width: 100%; }
 }
