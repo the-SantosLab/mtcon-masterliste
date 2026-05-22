@@ -403,6 +403,9 @@ export default function CasesList() {
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
                   <td className={cellCls}>
+                    <UrgencyPicker value={(c as any).urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" />
+                  </td>
+                  <td className={cellCls}>
                     <div className="flex gap-1">
                       {!isViewer && canClaim(c.status, c.assignee_id) && (
                         <button onClick={() => claimCase(c.id)} className="text-primary hover:underline text-xs font-medium">Abholen</button>
