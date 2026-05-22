@@ -340,10 +340,10 @@ export default function ProjectsList() {
               </thead>
               <tbody className="divide-y divide-border">
                 {loading ? (
-                  <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
+                  <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={cn(cellCls, 'py-12 text-center')}>
+                    <td colSpan={8} className={cn(cellCls, 'py-12 text-center')}>
                       <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                       <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
                     </td>
