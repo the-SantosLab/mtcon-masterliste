@@ -310,18 +310,18 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
       {/* Content area */}
       {kind === 'postit' && (
         <div className="px-2 pt-1 pb-2 h-full">
-          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
+          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} hideToolbar onEditorReady={setEditor} />
         </div>
       )}
       {kind === 'text' && (
         <div className="px-1 py-0.5 h-full">
-          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
+          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} hideToolbar onEditorReady={setEditor} />
         </div>
       )}
       {(kind === 'rect' || kind === 'rounded' || kind === 'circle' || kind === 'triangle') && (
         <div className="relative h-full w-full flex items-center justify-center px-3 py-2 text-center">
           <div className="w-full">
-            <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
+            <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} hideToolbar onEditorReady={setEditor} />
           </div>
         </div>
       )}
