@@ -303,17 +303,17 @@ export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onB
 
       {/* Content area */}
       {kind === 'postit' && (
-        <div data-no-drag className="px-2 pt-1 pb-2 h-full cursor-text">
+        <div className="px-2 pt-1 pb-2 h-full">
           <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
         </div>
       )}
       {kind === 'text' && (
-        <div data-no-drag className="px-1 py-0.5 h-full cursor-text">
+        <div className="px-1 py-0.5 h-full">
           <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
         </div>
       )}
       {(kind === 'rect' || kind === 'rounded' || kind === 'circle' || kind === 'triangle') && (
-        <div data-no-drag className="relative h-full w-full flex items-center justify-center px-3 py-2 text-center cursor-text">
+        <div className="relative h-full w-full flex items-center justify-center px-3 py-2 text-center">
           <div className="w-full">
             <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
           </div>
