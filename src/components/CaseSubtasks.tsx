@@ -799,7 +799,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); moveTask(task.id, -1); }}
-                                  disabled={index === 1}
+                                  disabled={index === 0}
                                   aria-label="Nach oben"
                                   className="h-3.5 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
