@@ -6,6 +6,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
@@ -47,6 +51,7 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [inviteRole, setInviteRole] = useState<'view' | 'edit'>('edit');
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const isOwner = user?.id === ownerId;
 
   useEffect(() => {
@@ -75,8 +80,13 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
     );
   }
 
-  async function inviteSelected() {
+  function openConfirm() {
     if (selectedIds.length === 0) return;
+    setConfirmOpen(true);
+  }
+
+  async function doInvite() {
+    setConfirmOpen(false);
     setAdding(true);
     const rows = selectedIds.map(uid => ({ board_id: boardId, user_id: uid, role: inviteRole }));
     const { error } = await supabase.from('note_board_members').insert(rows);
@@ -171,7 +181,7 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
                     </Select>
                     <Button
                       size="sm"
-                      onClick={inviteSelected}
+                      onClick={openConfirm}
                       disabled={selectedIds.length === 0 || adding}
                       className="h-7 text-xs gap-1.5"
                     >
@@ -257,6 +267,34 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-sm">Einladung bestätigen</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <p>Folgende Nutzer erhalten die Rolle <strong>{inviteRole === 'edit' ? 'Bearbeiten' : 'Lesen'}</strong>:</p>
+              <ul className="space-y-1 max-h-40 overflow-y-auto border border-border rounded p-2 bg-muted/30">
+                {selectedIds.map(id => {
+                  const p = profiles.find(x => x.id === id);
+                  return (
+                    <li key={id} className="text-xs flex justify-between">
+                      <span className="truncate">{p?.display_name || id}</span>
+                      <span className="text-muted-foreground ml-2">{p?.short_code}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="h-8 text-xs">Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={doInvite} className="h-8 text-xs">
+              {selectedIds.length} Einladung{selectedIds.length > 1 ? 'en' : ''} senden
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
