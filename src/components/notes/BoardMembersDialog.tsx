@@ -148,7 +148,27 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
               <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
                 <Command shouldFilter>
                   <CommandInput placeholder="Nach Name oder Kürzel suchen…" className="h-8 text-xs" />
-                  <CommandList className="max-h-60">
+                  <div className="flex items-center gap-1 px-2 py-1 border-b border-border">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[10px] gap-1 px-1.5"
+                      onClick={() => setSelectedIds(candidates.map(c => c.id))}
+                      disabled={candidates.length === 0}
+                    >
+                      <ListChecks className="h-3 w-3" /> Alle auswählen
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[10px] gap-1 px-1.5"
+                      onClick={() => setSelectedIds([])}
+                      disabled={selectedIds.length === 0}
+                    >
+                      <X className="h-3 w-3" /> Auswahl leeren
+                    </Button>
+                  </div>
+                  <CommandList className="max-h-52">
                     <CommandEmpty className="text-xs py-3 px-2 text-muted-foreground">Keine Nutzer gefunden.</CommandEmpty>
                     <CommandGroup>
                       {candidates.map(p => {
