@@ -117,6 +117,80 @@ export type Database = {
           },
         ]
       }
+      case_chat_attachments: {
+        Row: {
+          case_id: string
+          created_at: string
+          file_name: string
+          id: string
+          message_id: string
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          file_name: string
+          id?: string
+          message_id: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          message_id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_chat_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "case_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_chat_messages: {
+        Row: {
+          author_id: string
+          body: string
+          case_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body?: string
+          case_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          case_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       case_email_attachments: {
         Row: {
           case_id: string
