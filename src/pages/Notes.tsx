@@ -37,6 +37,7 @@ export default function Notes() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newBoard, setNewBoard] = useState({ name: '', description: '', scope: 'private' as 'private' | 'shared' });
   const [loading, setLoading] = useState(true);
+  const [membersBoard, setMembersBoard] = useState<Board | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
