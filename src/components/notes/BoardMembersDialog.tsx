@@ -120,31 +120,56 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
 
         <div className="space-y-3">
           {isOwner && (
-            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <Popover open={pickerOpen} onOpenChange={(v) => { setPickerOpen(v); if (!v) setSelectedIds([]); }}>
               <PopoverTrigger asChild>
                 <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 w-full justify-start" disabled={adding}>
-                  <UserPlus className="h-3.5 w-3.5" /> Mitglied hinzufügen
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Nutzer einladen{candidates.length > 0 ? ` (${candidates.length} verfügbar)` : ''}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-                <Command>
-                  <CommandInput placeholder="Nutzer suchen…" className="h-8 text-xs" />
-                  <CommandList>
+                <Command shouldFilter>
+                  <CommandInput placeholder="Nach Name oder Kürzel suchen…" className="h-8 text-xs" />
+                  <CommandList className="max-h-60">
                     <CommandEmpty className="text-xs py-3 px-2 text-muted-foreground">Keine Nutzer gefunden.</CommandEmpty>
                     <CommandGroup>
-                      {candidates.map(p => (
-                        <CommandItem
-                          key={p.id}
-                          value={`${p.display_name} ${p.short_code}`}
-                          onSelect={() => addMember(p.id)}
-                          className="text-xs"
-                        >
-                          <span className="flex-1 truncate">{p.display_name}</span>
-                          <span className="text-muted-foreground ml-2">{p.short_code}</span>
-                        </CommandItem>
-                      ))}
+                      {candidates.map(p => {
+                        const checked = selectedIds.includes(p.id);
+                        return (
+                          <CommandItem
+                            key={p.id}
+                            value={`${p.display_name} ${p.short_code}`}
+                            onSelect={() => toggleSelect(p.id)}
+                            className="text-xs gap-2"
+                          >
+                            <Checkbox checked={checked} className="h-3.5 w-3.5" />
+                            <span className="flex-1 truncate">{p.display_name}</span>
+                            <span className="text-muted-foreground ml-2">{p.short_code}</span>
+                          </CommandItem>
+                        );
+                      })}
                     </CommandGroup>
                   </CommandList>
+                  <div className="flex items-center gap-2 border-t border-border p-2 bg-muted/30">
+                    <span className="text-[10px] text-muted-foreground">
+                      {selectedIds.length} ausgewählt
+                    </span>
+                    <Select value={inviteRole} onValueChange={(v: 'view' | 'edit') => setInviteRole(v)}>
+                      <SelectTrigger className="h-7 w-[110px] text-xs ml-auto"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="edit" className="text-xs">Bearbeiten</SelectItem>
+                        <SelectItem value="view" className="text-xs">Lesen</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      onClick={inviteSelected}
+                      disabled={selectedIds.length === 0 || adding}
+                      className="h-7 text-xs gap-1.5"
+                    >
+                      <Check className="h-3 w-3" /> Einladen
+                    </Button>
+                  </div>
                 </Command>
               </PopoverContent>
             </Popover>
