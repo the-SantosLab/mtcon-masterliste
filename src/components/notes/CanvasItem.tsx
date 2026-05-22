@@ -295,17 +295,17 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
             onChange={(extra) => onChange({ extra })}
           />
         )}
-        {canEdit && (
-          <>
-            <button onClick={onDuplicate} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted" title="Duplizieren">
-              <Copy className="h-3 w-3" />
-            </button>
-            <button onClick={onDelete} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-destructive/20 text-destructive" title="Löschen">
-              <Trash2 className="h-3 w-3" />
-            </button>
-          </>
-        )}
+        <>
+          <button onClick={onDuplicate} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted" title="Duplizieren">
+            <Copy className="h-3 w-3" />
+          </button>
+          <button onClick={onDelete} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-destructive/20 text-destructive" title="Löschen">
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </>
+        {kind !== 'arrow' && kind !== 'table' && <FormattingToolbar editor={editor} />}
       </div>
+      )}
 
       {/* Content area */}
       {kind === 'postit' && (
