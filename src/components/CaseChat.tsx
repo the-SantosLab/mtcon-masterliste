@@ -547,47 +547,101 @@ export function CaseChat({ caseId, canWrite }: Props) {
 
   const typingOthers = Object.values(presentUsers).filter(p => p.typing).map(p => p.display_name);
 
+  const participantStack = useMemo(() => {
+    const seen = new Set<string>();
+    const list: MentionUser[] = [];
+    for (let i = messages.length - 1; i >= 0 && list.length < 5; i--) {
+      const a = messages[i].author;
+      if (a && !seen.has(a.id)) { seen.add(a.id); list.push(a); }
+    }
+    return list;
+  }, [messages]);
+  const onlineCount = Object.keys(presentUsers).length + 1;
+  const statusLabel = caseMeta.status ? (STATUS_LABEL[caseMeta.status] || caseMeta.status) : null;
+
   return (
-    <div className="rounded-md border border-border bg-card flex flex-col relative" style={{ maxHeight: '60vh' }}>
-      <div className="px-3 py-2 border-b border-border flex items-center gap-2">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Chat</h3>
-        <span className="text-[10px] text-muted-foreground">{messages.length} Nachrichten</span>
-        <div className="ml-auto flex items-center gap-1">
-          <button title="Suche" onClick={() => setShowSearch(v => !v)} className={cn('h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted', showSearch && 'bg-muted')}>
-            <Search className="h-3.5 w-3.5" />
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button title="Filter" className={cn('h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted', filter !== 'all' && 'bg-muted')}>
-                <Settings2 className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="text-xs">
-              <DropdownMenuItem onClick={() => setFilter('all')}>Alle Nachrichten</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('nosystem')}>Ohne Systemereignisse</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('attachments')}>Nur mit Anhängen</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('mentions')} disabled={!meShortCode}>Nur Erwähnungen</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter('system')}>Nur Systemereignisse</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button title={isMuted ? 'Stummschaltung aufheben' : 'Stummschalten'} onClick={toggleMute} className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted">
-            {isMuted ? <BellOff className="h-3.5 w-3.5 text-muted-foreground" /> : <Bell className="h-3.5 w-3.5" />}
+    <div className="rounded-2xl border border-border bg-card flex flex-col relative overflow-hidden" style={{ maxHeight: '70vh' }}>
+      {/* Premium header with case meta */}
+      <div className="px-4 py-3 border-b border-border/60 bg-gradient-to-b from-muted/30 to-transparent">
+        <div className="flex items-start gap-3">
+          <div className="h-2 w-2 rounded-full bg-amber-400 mt-2 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-semibold text-foreground tracking-tight">{caseMeta.case_no || 'Chat'}</h2>
+              {statusLabel && (
+                <span className="text-[11px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">{statusLabel}</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {caseMeta.project_name || '—'}{caseMeta.department_name ? ` · ${caseMeta.department_name}` : ''}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {participantStack.length > 0 && (
+              <div className="flex -space-x-2">
+                {participantStack.slice(0, 3).map(p => (
+                  <div key={p.id} className="ring-2 ring-card rounded-full"><UserAvatar user={p} size="sm" /></div>
+                ))}
+                {participantStack.length > 3 && (
+                  <div className="h-6 px-1.5 min-w-[1.5rem] inline-flex items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground ring-2 ring-card">+{participantStack.length - 3}</div>
+                )}
+              </div>
+            )}
+            <button title="Suche" onClick={() => setShowSearch(v => !v)} className={cn('h-8 w-8 inline-flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground', showSearch && 'bg-muted text-foreground')}>
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="px-4 py-2 border-b border-border/60 flex items-center gap-1.5">
+        <button onClick={() => setFilter('all')}
+          className={cn('text-xs px-3 py-1 rounded-md transition-colors', filter === 'all' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
+          Alle
+        </button>
+        <button onClick={() => setFilter('mentions')} disabled={!meShortCode}
+          className={cn('text-xs px-3 py-1 rounded-md transition-colors disabled:opacity-50', filter === 'mentions' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
+          @Erwähnungen
+        </button>
+        <button onClick={() => setFilter('system')}
+          className={cn('text-xs px-3 py-1 rounded-md transition-colors', filter === 'system' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
+          Ereignisse
+        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button title="Weitere Filter" className={cn('h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50', (filter === 'attachments' || filter === 'nosystem') && 'bg-muted text-foreground')}>
+              <Settings2 className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="text-xs">
+            <DropdownMenuItem onClick={() => setFilter('nosystem')}>Ohne Systemereignisse</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter('attachments')}>Nur mit Anhängen</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Circle className="h-2 w-2 fill-emerald-400 text-emerald-400" />
+            {onlineCount} online
+          </span>
+          <button title={isMuted ? 'Stummschaltung aufheben' : 'Stummschalten'} onClick={toggleMute} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50">
+            {isMuted ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
           </button>
         </div>
       </div>
 
       {showSearch && (
-        <div className="px-3 py-2 border-b border-border">
-          <Input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="In Nachrichten suchen…" className="h-7 text-xs" autoFocus />
+        <div className="px-4 py-2 border-b border-border/60">
+          <Input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="In Nachrichten suchen…" className="h-8 text-xs" autoFocus />
         </div>
       )}
 
       {pinned.length > 0 && (
-        <div className="px-3 py-1.5 border-b border-border bg-muted/30 flex items-center gap-2 overflow-x-auto">
-          <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
+        <div className="px-4 py-2 border-b border-border/60 bg-amber-500/5 flex items-center gap-2 overflow-x-auto">
+          <span className="text-sm shrink-0">📌</span>
           {pinned.map(p => (
-            <button key={p.id} onClick={() => scrollToMessage(p.id)} className="text-[11px] text-muted-foreground hover:text-foreground truncate max-w-[260px]">
-              <span className="font-medium">{p.author?.display_name}:</span> {p.body || '(Anhang)'}
+            <button key={p.id} onClick={() => scrollToMessage(p.id)} className="text-xs text-muted-foreground hover:text-foreground truncate max-w-[420px]">
+              <span className="font-medium text-foreground">{p.author?.display_name}:</span> {p.body || '(Anhang)'}
             </button>
           ))}
         </div>
