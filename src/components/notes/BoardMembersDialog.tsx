@@ -44,6 +44,8 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [inviteRole, setInviteRole] = useState<'view' | 'edit'>('edit');
   const isOwner = user?.id === ownerId;
 
   useEffect(() => {
