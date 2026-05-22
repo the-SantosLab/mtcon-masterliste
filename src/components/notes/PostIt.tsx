@@ -169,7 +169,11 @@ export function PostIt({ note, canEdit, onChange, onDelete, onDuplicate, onBring
           </div>
         )}
       </div>
-      <div data-no-drag className="px-2 pb-2 h-[calc(100%-1.5rem)] cursor-text">
+      <div
+        data-no-drag
+        className="px-2 pb-2 h-[calc(100%-1.5rem)] cursor-text select-text"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <NoteEditor
           content={note.content}
           onUpdate={(html) => onChange({ content: html })}
