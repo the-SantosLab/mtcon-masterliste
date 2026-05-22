@@ -43,6 +43,10 @@ export default function Notes() {
   const [newBoard, setNewBoard] = useState({ name: '', description: '', scope: 'private' as 'private' | 'shared' });
   const [loading, setLoading] = useState(true);
   const [membersBoard, setMembersBoard] = useState<Board | null>(null);
+  const [search, setSearch] = useState('');
+  const [colorFilters, setColorFilters] = useState<Set<NoteColor>>(new Set());
+  const [markerFilters, setMarkerFilters] = useState<Set<string>>(new Set());
+  const [pinnedOnly, setPinnedOnly] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
