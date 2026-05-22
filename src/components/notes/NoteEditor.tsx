@@ -6,9 +6,10 @@ import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
-import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type } from 'lucide-react';
+import { Color } from '@tiptap/extension-color';
+import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type, Palette, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Custom mark attribute to set inline font-size on TextStyle
 const FontSize = Extension.create({
@@ -54,6 +55,16 @@ export const MARKER_COLORS = [
   { name: 'green', hex: 'hsl(140 60% 65% / 0.55)' },
 ] as const;
 
+export const TEXT_COLORS = [
+  { name: 'black', hex: '#111827' },
+  { name: 'red', hex: '#dc2626' },
+  { name: 'blue', hex: '#2563eb' },
+  { name: 'green', hex: '#16a34a' },
+  { name: 'yellow', hex: '#ca8a04' },
+  { name: 'gray', hex: '#6b7280' },
+  { name: 'white', hex: '#ffffff' },
+] as const;
+
 interface Props {
   content: string;
   onUpdate: (html: string) => void;
@@ -71,6 +82,7 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder: 'Notiz schreiben…' }),
       TextStyle,
+      Color.configure({ types: ['textStyle'] }),
       FontSize,
       TextAlign.configure({ types: ['paragraph', 'heading'], alignments: ['left', 'center', 'right', 'justify'] }),
     ],
@@ -126,6 +138,8 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
           >
             <Highlighter className="h-2.5 w-2.5" />
           </button>
+          <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+          <TextColorPicker editor={editor} />
         </div>
       )}
       <div className="flex-1 overflow-auto text-xs">
@@ -184,6 +198,8 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
       >
         <Highlighter className="h-2.5 w-2.5" />
       </button>
+      <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+      <TextColorPicker editor={editor} />
     </div>
   );
 }
@@ -207,6 +223,44 @@ function FontSizeSelect({ editor }: { editor: Editor }) {
           <option key={s.value} value={s.value}>{s.label}</option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function TextColorPicker({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const current = editor.getAttributes('textStyle')?.color as string | undefined;
+  return (
+    <div className="relative">
+      <ToolBtn active={!!current} onClick={() => setOpen(!open)}><Palette className="h-3 w-3" /></ToolBtn>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 flex items-center gap-0.5 bg-popover border border-border rounded-md shadow-md p-1 z-50">
+          {TEXT_COLORS.map(c => (
+            <button
+              key={c.name}
+              type="button"
+              onClick={() => {
+                editor.chain().focus().setColor(c.hex).run();
+                setOpen(false);
+              }}
+              title={c.name}
+              className="h-4 w-4 rounded-full border border-foreground/20"
+              style={{ background: c.hex }}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().unsetColor().run();
+              setOpen(false);
+            }}
+            title="Farbe entfernen"
+            className="h-4 w-4 rounded-full border border-foreground/20 flex items-center justify-center text-foreground/60"
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
