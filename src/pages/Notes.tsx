@@ -12,10 +12,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, StickyNote, Trash2, Users, Lock, UserCog, Search, Filter, Pin, X } from 'lucide-react';
+import { Plus, StickyNote, Trash2, Users, Lock, UserCog, Search, Filter, Pin, X, Type, Square, Circle, Triangle, ArrowRight, Table as TableIcon, Sticker } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { PostIt, NOTE_COLORS, type NoteColor, type NoteData } from '@/components/notes/PostIt';
+import { NOTE_COLORS, type NoteColor, type NoteData } from '@/components/notes/PostIt';
+import { CanvasItem, type ItemKind } from '@/components/notes/CanvasItem';
 import { BoardMembersDialog } from '@/components/notes/BoardMembersDialog';
 import { MARKER_COLORS } from '@/components/notes/NoteEditor';
 import {
@@ -164,25 +165,45 @@ export default function Notes() {
     setNewBoard({ name: '', description: '', scope: 'private' });
   }
 
-  async function addNote() {
+  function defaultsFor(kind: ItemKind): { width: number; height: number; fill_color: string | null; stroke_color: string | null; extra: any; color: NoteColor } {
+    const color = COLOR_CYCLE[notes.length % COLOR_CYCLE.length];
+    switch (kind) {
+      case 'postit': return { width: 200, height: 180, fill_color: null, stroke_color: null, extra: {}, color };
+      case 'text': return { width: 220, height: 60, fill_color: null, stroke_color: null, extra: {}, color };
+      case 'rect': return { width: 220, height: 140, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'rounded': return { width: 220, height: 140, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'circle': return { width: 160, height: 160, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'triangle': return { width: 180, height: 160, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'arrow': return { width: 180, height: 80, fill_color: null, stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'table': return { width: 280, height: 140, fill_color: null, stroke_color: null, extra: { rows: 2, cols: 2, cells: [['',''],['','']] }, color };
+    }
+  }
+
+  async function addItem(kind: ItemKind) {
     if (!user || !activeBoardId) return;
     const maxZ = notes.reduce((m, n) => Math.max(m, n.z_index), 0);
     const offset = (notes.length % 6) * 24;
     const scroll = canvasRef.current;
     const cx = (scroll?.scrollLeft || 0) + 40 + offset;
     const cy = (scroll?.scrollTop || 0) + 40 + offset;
-    const color = COLOR_CYCLE[notes.length % COLOR_CYCLE.length];
+    const d = defaultsFor(kind);
     const { data, error } = await supabase
       .from('notes')
       .insert({
         board_id: activeBoardId,
         author_id: user.id,
         content: '',
-        color,
+        color: d.color,
         position_x: cx,
         position_y: cy,
+        width: d.width,
+        height: d.height,
         z_index: maxZ + 1,
-      })
+        kind,
+        fill_color: d.fill_color,
+        stroke_color: d.stroke_color,
+        extra: d.extra,
+      } as any)
       .select()
       .single();
     if (error) { toast.error(error.message); return; }
@@ -211,7 +232,7 @@ export default function Notes() {
     if (error) toast.error(error.message);
   }
 
-  async function duplicateNote(n: NoteData) {
+  async function duplicateNote(n: NoteData & any) {
     if (!user || !activeBoardId) return;
     const maxZ = notes.reduce((m, x) => Math.max(m, x.z_index), 0);
     const { data, error } = await supabase
@@ -226,7 +247,11 @@ export default function Notes() {
         width: n.width,
         height: n.height,
         z_index: maxZ + 1,
-      })
+        kind: n.kind || 'postit',
+        fill_color: n.fill_color || null,
+        stroke_color: n.stroke_color || null,
+        extra: n.extra || {},
+      } as any)
       .select()
       .single();
     if (error) { toast.error(error.message); return; }
@@ -414,9 +439,28 @@ export default function Notes() {
                   <UserCog className="h-3 w-3" /> Mitglieder
                 </Button>
               )}
-              <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
-                <Plus className="h-3 w-3" /> Post-it
-              </Button>
+              <div className="flex items-center gap-0.5 rounded border border-border bg-card/60 p-0.5">
+                {([
+                  { k: 'postit' as ItemKind, icon: Sticker, title: 'Post-it' },
+                  { k: 'text' as ItemKind, icon: Type, title: 'Textfeld' },
+                  { k: 'rect' as ItemKind, icon: Square, title: 'Rechteck' },
+                  { k: 'rounded' as ItemKind, icon: Square, title: 'Abgerundetes Rechteck', rounded: true },
+                  { k: 'circle' as ItemKind, icon: Circle, title: 'Kreis' },
+                  { k: 'triangle' as ItemKind, icon: Triangle, title: 'Dreieck' },
+                  { k: 'arrow' as ItemKind, icon: ArrowRight, title: 'Pfeil' },
+                  { k: 'table' as ItemKind, icon: TableIcon, title: 'Tabelle' },
+                ]).map(({ k, icon: Icon, title, rounded }) => (
+                  <button
+                    key={k}
+                    onClick={() => addItem(k)}
+                    disabled={!canEdit}
+                    className="h-6 w-6 flex items-center justify-center rounded-sm hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent text-muted-foreground hover:text-foreground"
+                    title={title}
+                  >
+                    <Icon className="h-3.5 w-3.5" strokeWidth={rounded ? 1.4 : undefined} />
+                  </button>
+                ))}
+              </div>
             </div>
             <div
               ref={canvasRef}
@@ -434,7 +478,7 @@ export default function Notes() {
                       key={n.id}
                       style={{ opacity: dimmed ? 0.15 : 1, pointerEvents: dimmed ? 'none' : 'auto', transition: 'opacity 0.15s' }}
                     >
-                      <PostIt
+                      <CanvasItem
                         note={n}
                         canEdit={canEdit}
                         onChange={(p) => patchNote(n.id, p)}
@@ -447,7 +491,7 @@ export default function Notes() {
                 })}
                 {activeBoard && notes.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground pointer-events-none">
-                    Noch keine Post-its – über "+ Post-it" hinzufügen
+                    Noch keine Elemente – über die Toolbar oben Post-it, Textfeld, Form, Pfeil oder Tabelle einfügen
                   </div>
                 )}
                 {activeBoard && notes.length > 0 && hasFilter && matchedIds.size === 0 && (
