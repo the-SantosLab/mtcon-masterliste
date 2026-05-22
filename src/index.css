@@ -377,3 +377,92 @@
     color: #6b7280;
   }
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE (≤767px) — additive only, does not affect tablet/desktop
+============================================================ */
+@media (max-width: 767px) {
+  /* Main content padding compaction */
+  main {
+    padding: 0.75rem !important;
+  }
+
+  /* Dialogs: full-width on small screens with safe height */
+  [role="dialog"][data-state="open"].fixed,
+  [data-radix-dialog-content] {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 1rem !important;
+  }
+
+  /* Any horizontal table becomes scrollable inside its bordered wrapper */
+  .rounded-md.border > table,
+  .rounded-lg.border > table,
+  .border.bg-card > table {
+    min-width: 640px;
+  }
+  /* Wrap any direct table parent to allow horizontal scroll on mobile */
+  .overflow-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Toolbar / filter rows: allow wrapping */
+  .flex.items-center.justify-between,
+  .flex.items-end,
+  .flex.items-center.gap-4,
+  .flex.items-center.gap-3,
+  .flex.items-center.gap-2 {
+    flex-wrap: wrap;
+  }
+
+  /* Grids: collapse multi-column to single column on phone */
+  .grid.grid-cols-2,
+  .grid.grid-cols-3,
+  .grid.grid-cols-4,
+  .grid.grid-cols-5,
+  .grid.grid-cols-6 {
+    grid-template-columns: 1fr !important;
+  }
+  /* Allow 2-col KPI grids to remain 2-col when explicitly small */
+  .grid.mobile-2col,
+  .grid.kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Headlines lighter on mobile */
+  h1.text-2xl, h1.text-3xl { font-size: 1.125rem !important; line-height: 1.5rem !important; }
+
+  /* Tabs: scroll horizontally */
+  [role="tablist"] {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    max-width: 100%;
+  }
+  [role="tablist"]::-webkit-scrollbar { display: none; }
+
+  /* Sheet / drawer content max width */
+  [data-radix-sheet-content] {
+    max-width: 92vw !important;
+  }
+
+  /* Quick settings overlay hidden on mobile (mobile header has equivalents) */
+  [aria-label="Schnelleinstellungen"] {
+    display: none !important;
+  }
+
+  /* Cards padding compaction */
+  .p-8 { padding: 1rem !important; }
+  .p-6 { padding: 0.875rem !important; }
+
+  /* Sidebar drawer when open: ensure full height + scroll */
+  aside.glass-sidebar {
+    width: 17rem !important;
+    max-width: 85vw;
+  }
+
+  /* Prevent overflow of long mono codes / case numbers */
+  .font-mono { word-break: break-all; }
+}

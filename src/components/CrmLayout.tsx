@@ -121,7 +121,7 @@ export function CrmLayout({ children }: { children: React.ReactNode }) {
           <button onClick={() => setOpen(true)}><Menu className="h-5 w-5 text-foreground" /></button>
           <span className="text-sm font-semibold text-foreground flex-1">CRM</span>
         </header>
-        <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]">{children}</main>
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 relative z-[1]">{children}</main>
       </div>
     </div>
   );

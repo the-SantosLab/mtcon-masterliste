@@ -10,7 +10,7 @@ export function QuickSettings() {
   return (
     <TooltipProvider delayDuration={300}>
       <div
-      className="fixed bottom-4 left-[14.5rem] z-40 flex items-center gap-3 px-3 py-2 rounded-xl border border-border/40 bg-card/70 backdrop-blur-sm shadow-sm"
+      className="hidden lg:flex fixed bottom-4 left-[14.5rem] z-40 items-center gap-3 px-3 py-2 rounded-xl border border-border/40 bg-card/70 backdrop-blur-sm shadow-sm"
         role="region"
         aria-label="Schnelleinstellungen"
       >
