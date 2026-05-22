@@ -12,10 +12,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, StickyNote, Trash2, Users, Lock } from 'lucide-react';
+import { Plus, StickyNote, Trash2, Users, Lock, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { PostIt, NOTE_COLORS, type NoteColor, type NoteData } from '@/components/notes/PostIt';
+import { BoardMembersDialog } from '@/components/notes/BoardMembersDialog';
 
 interface Board {
   id: string;
@@ -36,6 +37,7 @@ export default function Notes() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newBoard, setNewBoard] = useState({ name: '', description: '', scope: 'private' as 'private' | 'shared' });
   const [loading, setLoading] = useState(true);
+  const [membersBoard, setMembersBoard] = useState<Board | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -227,6 +229,15 @@ export default function Notes() {
                 >
                   {b.scope === 'shared' ? <Users className="h-3 w-3 shrink-0" /> : <Lock className="h-3 w-3 shrink-0" />}
                   <span className="flex-1 truncate">{b.name}</span>
+                  {b.scope === 'shared' && user?.id === b.owner_id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMembersBoard(b); }}
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                      title="Mitglieder verwalten"
+                    >
+                      <UserCog className="h-3 w-3" />
+                    </button>
+                  )}
                   {user?.id === b.owner_id && (
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteBoard(b); }}
@@ -242,13 +253,20 @@ export default function Notes() {
 
           {/* Canvas */}
           <div className="flex-1 flex flex-col min-w-0 rounded border border-border bg-card/30 overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/50">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/50 gap-2">
               <div className="text-xs text-muted-foreground truncate">
                 {activeBoard ? activeBoard.name : 'Kein Board ausgewählt'}
               </div>
-              <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
-                <Plus className="h-3 w-3" /> Post-it
-              </Button>
+              <div className="flex items-center gap-1.5">
+                {activeBoard?.scope === 'shared' && activeBoard.owner_id === user?.id && (
+                  <Button size="sm" variant="outline" onClick={() => setMembersBoard(activeBoard)} className="h-7 text-xs gap-1.5">
+                    <UserCog className="h-3 w-3" /> Mitglieder
+                  </Button>
+                )}
+                <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
+                  <Plus className="h-3 w-3" /> Post-it
+                </Button>
+              </div>
             </div>
             <div
               ref={canvasRef}
@@ -315,6 +333,16 @@ export default function Notes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {membersBoard && (
+        <BoardMembersDialog
+          boardId={membersBoard.id}
+          boardName={membersBoard.name}
+          ownerId={membersBoard.owner_id}
+          open={!!membersBoard}
+          onOpenChange={(v) => { if (!v) setMembersBoard(null); }}
+        />
+      )}
     </AppLayout>
   );
 }

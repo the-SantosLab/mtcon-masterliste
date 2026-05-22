@@ -2983,10 +2983,9 @@ export type Database = {
         Args: { p_dept_id: string; p_uid?: string }
         Returns: boolean
       }
-      can_write_board: {
-        Args: { p_board_id: string; p_uid?: string }
-        Returns: boolean
-      }
+      can_write_board:
+        | { Args: { _board_id: string }; Returns: boolean }
+        | { Args: { p_board_id: string; p_uid?: string }; Returns: boolean }
       can_write_dept: {
         Args: { p_dept_id: string; p_uid?: string }
         Returns: boolean
