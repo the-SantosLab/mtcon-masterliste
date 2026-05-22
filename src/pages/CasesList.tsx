@@ -377,7 +377,12 @@ export default function CasesList() {
                     </span>
                   </td>
                   <td className={cn(cellCls, 'font-mono min-w-[120px] whitespace-nowrap')}>
-                    <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
+                    <Link to={`/cases/${c.id}`} className="text-primary hover:underline inline-flex items-center gap-1.5">
+                      {(unreadMap[c.id] ?? 0) > 0 && (
+                        <span title={`${unreadMap[c.id]} ungelesene Nachricht(en)`} className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold leading-none">{unreadMap[c.id] > 9 ? '9+' : unreadMap[c.id]}</span>
+                      )}
+                      {c.case_no}
+                    </Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
                     <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>
