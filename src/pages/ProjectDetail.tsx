@@ -498,6 +498,37 @@ export default function ProjectDetail() {
                   <Plus className="h-3 w-3" />Vorgang hinzufügen
                 </button>
               </div>
+              {cases.length > 0 && (() => {
+                const assignees = Array.from(new Map(
+                  cases.filter(c => c.assignee_id && c.assignee).map(c => [c.assignee_id!, c.assignee!])
+                ).entries());
+                const statuses = Array.from(new Set(cases.map(c => c.status)));
+                return (
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Input
+                      value={caseSearch}
+                      onChange={e => setCaseSearch(e.target.value)}
+                      placeholder="Suche Nr. / Name"
+                      className="h-7 text-xs max-w-[180px]"
+                    />
+                    <Select value={caseStatusFilter} onValueChange={setCaseStatusFilter}>
+                      <SelectTrigger className="w-[140px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Status</SelectItem>
+                        {statuses.map(s => <SelectItem key={s} value={s}>{CASE_STATUS_LABELS[s] ?? s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Select value={caseAssigneeFilter} onValueChange={setCaseAssigneeFilter}>
+                      <SelectTrigger className="w-[140px] h-7 text-xs"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Bearbeiter</SelectItem>
+                        <SelectItem value="_none">Nicht zugewiesen</SelectItem>
+                        {assignees.map(([id, a]) => <SelectItem key={id} value={id}>{a.short_code}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })()}
               <div className="rounded-md border border-border bg-card overflow-hidden">
                 {cases.length === 0 ? (
                   <div className="py-10 text-center">
@@ -505,34 +536,60 @@ export default function ProjectDetail() {
                     <p className="text-xs text-muted-foreground">Keine Vorgänge verknüpft</p>
                     <button onClick={() => setCreateOpen(true)} className="text-[11px] text-primary hover:underline mt-1 inline-block">Vorgang anlegen</button>
                   </div>
-                ) : (
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
-                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
-                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</th>
-                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
-                        <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Termin</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {cases.map(c => (
-                        <tr key={c.id} className="hover:bg-muted/40 transition-colors">
-                          <td className={cellCls}><StatusBadge status={c.status as any} /></td>
-                          <td className={cn(cellCls, 'font-mono')}>
-                            <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
-                          </td>
-                          <td className={cn(cellCls, 'text-foreground')}>
-                            <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
-                          </td>
-                          <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
-                          <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
+                ) : (() => {
+                  const filteredCases = cases.filter(c => {
+                    if (caseStatusFilter !== 'all' && c.status !== caseStatusFilter) return false;
+                    if (caseAssigneeFilter === '_none' && c.assignee_id) return false;
+                    if (caseAssigneeFilter !== 'all' && caseAssigneeFilter !== '_none' && c.assignee_id !== caseAssigneeFilter) return false;
+                    if (caseSearch) {
+                      const s = caseSearch.toLowerCase();
+                      if (![c.case_no, c.project_name].some(v => v?.toLowerCase().includes(s))) return false;
+                    }
+                    return true;
+                  });
+                  const sortedCases = caseSort.column && caseSort.direction
+                    ? sortBy(filteredCases, (c) => {
+                        switch (caseSort.column) {
+                          case 'status': return c.status;
+                          case 'case_no': return c.case_no;
+                          case 'project_name': return c.project_name;
+                          case 'assignee': return c.assignee?.short_code ?? null;
+                          case 'due_at': return c.due_at ? new Date(c.due_at).getTime() : null;
+                          default: return null;
+                        }
+                      }, caseSort.direction)
+                    : filteredCases;
+                  return (
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <SortableHeader column="status" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</SortableHeader>
+                          <SortableHeader column="case_no" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</SortableHeader>
+                          <SortableHeader column="project_name" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</SortableHeader>
+                          <SortableHeader column="assignee" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
+                          <SortableHeader column="due_at" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Termin</SortableHeader>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {sortedCases.length === 0 ? (
+                          <tr><td colSpan={5} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
+                        ) : sortedCases.map(c => (
+                          <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                            <td className={cellCls}><StatusBadge status={c.status as any} /></td>
+                            <td className={cn(cellCls, 'font-mono')}>
+                              <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
+                            </td>
+                            <td className={cn(cellCls, 'text-foreground')}>
+                              <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
+                            </td>
+                            <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
+                            <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </div>
           </div>
