@@ -315,7 +315,7 @@ export default function ProjectsList() {
                       <Link to={`/projects/${p.id}`} className="text-foreground hover:text-primary transition-colors truncate">{p.name}</Link>
                     </td>
                     <td className={cn(cellCls, 'text-muted-foreground font-mono')}>{p.owner_code || '–'}</td>
-                    <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>–</td>
+                    <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{format(new Date(p.created_at), 'dd.MM.yyyy')}</td>
                   </tr>
                 ))}
               </tbody>
