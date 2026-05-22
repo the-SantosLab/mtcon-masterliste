@@ -590,7 +590,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
       </div>
 
       {/* Filter tabs */}
-      <div className="px-4 py-2 border-b border-border/60 flex items-center gap-1.5">
+      <div className="px-4 py-2 border-b border-border/60 flex items-center gap-1.5 flex-wrap">
         <button onClick={() => setFilter('all')}
           className={cn('text-xs px-3 py-1 rounded-md transition-colors', filter === 'all' ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50')}>
           Alle
@@ -614,8 +614,8 @@ export function CaseChat({ caseId, canWrite }: Props) {
             <DropdownMenuItem onClick={() => setFilter('attachments')}>Nur mit Anhängen</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground whitespace-nowrap">
             <Circle className="h-2 w-2 fill-emerald-400 text-emerald-400" />
             {onlineCount} online
           </span>
