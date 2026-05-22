@@ -153,6 +153,7 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
         hasShadow && (dragging || resizing ? 'shadow-xl' : 'hover:shadow-lg shadow-md'),
         kind === 'postit' && 'rounded-sm',
         canEdit && !note.pinned && 'cursor-grab active:cursor-grabbing',
+        selected && 'outline outline-2 outline-primary/60 outline-offset-2 rounded-sm',
       )}
       style={{
         transform: `translate(${note.position_x}px, ${note.position_y}px)`,
