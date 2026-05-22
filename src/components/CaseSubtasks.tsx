@@ -219,6 +219,21 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [sendCompleteEmail, setSendCompleteEmail] = useState(true);
   const [sendAssignEmail, setSendAssignEmail] = useState(true);
   const [subtaskSort, setSubtaskSort] = useState<SortState<'urgency'>>({ column: null, direction: null });
+  const isSortActive = !!subtaskSort.column;
+
+  const displayTasks = useMemo(() => {
+    if (!subtaskSort.column || !subtaskSort.direction) return tasks;
+    const copy = [...tasks];
+    copy.sort((a, b) => {
+      const av = a.urgency ?? 0;
+      const bv = b.urgency ?? 1;
+      const aVal = av === 0 ? -1 : av;
+      const bVal = bv === 0 ? -1 : bv;
+      if (aVal === bVal) return a.sort_order - b.sort_order;
+      return subtaskSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    return copy;
+  }, [tasks, subtaskSort]);
 
   const sortedDisplayTasks = useMemo(() => {
     if (!subtaskSort.column || !subtaskSort.direction) return tasks;
