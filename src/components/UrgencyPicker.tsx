@@ -28,18 +28,44 @@ const SIZE = {
 export function UrgencyPicker({ value, table, rowId, onChange, readOnly, size = 'sm', className, compact }: Props) {
   const [hover, setHover] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  const current = value ?? 0;
+  const [localValue, setLocalValue] = useState<number>(value ?? 0);
+
+  useEffect(() => { setLocalValue(value ?? 0); }, [value]);
+
+  // Realtime: live-update when somebody else changes urgency on this row
+  useEffect(() => {
+    if (!table || !rowId) return;
+    const channel = supabase
+      .channel(`urgency-${table}-${rowId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table, filter: `id=eq.${rowId}` },
+        (payload) => {
+          const next = (payload.new as any)?.urgency;
+          if (typeof next === 'number') setLocalValue(next);
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [table, rowId]);
+
+  const current = localValue;
   const display = hover ?? current;
 
   const set = async (v: number) => {
     if (readOnly || saving) return;
     const next = current === v ? 0 : v; // click same again -> clear
+    const prev = current;
+    setLocalValue(next);
     onChange?.(next);
     if (table && rowId) {
       setSaving(true);
       const { error } = await (supabase as any).from(table).update({ urgency: next }).eq('id', rowId);
       setSaving(false);
-      if (error) toast.error('Dringlichkeit speichern fehlgeschlagen');
+      if (error) {
+        setLocalValue(prev);
+        toast.error('Dringlichkeit speichern fehlgeschlagen');
+      }
     }
   };
 
