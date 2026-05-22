@@ -316,6 +316,18 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
       </div>
       )}
 
+      {/* Drag handle — visible when selected; essential for tables/full-input items */}
+      {selected && canEdit && !note.pinned && (
+        <div
+          data-drag-handle
+          className="absolute -top-2 left-1/2 -translate-x-1/2 h-3 px-2 flex items-center justify-center rounded-full bg-card border border-border shadow-sm cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+          title="Verschieben"
+        >
+          <GripHorizontal className="h-2.5 w-2.5" />
+        </div>
+      )}
+
+
       {/* Content area */}
       {kind === 'postit' && (
         <div className="px-2 pt-1 pb-2 h-full">
