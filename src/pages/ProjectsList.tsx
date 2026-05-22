@@ -68,9 +68,20 @@ export default function ProjectsList() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [owners, setOwners] = useState<{ id: string; short_code: string; display_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [ownerFilter, setOwnerFilter] = useState('all');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [sort, setSort] = useState<SortState<ProjectSortKey>>(() => {
+    try {
+      const col = localStorage.getItem('projectsSort_column') as ProjectSortKey | null;
+      const dir = localStorage.getItem('projectsSort_direction') as 'asc' | 'desc' | null;
+      if (col && dir) return { column: col, direction: dir };
+    } catch {}
+    return { column: 'created_at', direction: 'desc' };
+  });
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
@@ -88,9 +99,10 @@ export default function ProjectsList() {
     if (ownerIds.length) {
       const { data: profs } = await supabase
         .from('users_profile')
-        .select('id, short_code')
+        .select('id, short_code, display_name')
         .in('id', ownerIds);
       ownerMap = Object.fromEntries((profs || []).map((u: any) => [u.id, u.short_code]));
+      setOwners((profs || []) as any);
     }
     const deptMap = Object.fromEntries(departments.map(d => [d.id, d.name]));
     setProjects(
@@ -110,14 +122,56 @@ export default function ProjectsList() {
 
   useEffect(() => { fetchProjects(); }, [departments]);
 
-  const filtered = projects.filter(p => {
+  const handleSort = (col: ProjectSortKey) => {
+    setSort(prev => {
+      const next = nextSort(prev, col);
+      try {
+        if (next.column && next.direction) {
+          localStorage.setItem('projectsSort_column', next.column);
+          localStorage.setItem('projectsSort_direction', next.direction);
+        } else {
+          localStorage.removeItem('projectsSort_column');
+          localStorage.removeItem('projectsSort_direction');
+        }
+      } catch {}
+      return next;
+    });
+  };
+
+  const resetFilters = () => {
+    setSearch(''); setStatusFilter('all'); setOwnerFilter('all'); setDeptFilter('all');
+  };
+  const filtersActive = !!search || statusFilter !== 'all' || ownerFilter !== 'all' || deptFilter !== 'all';
+
+  const filteredRaw = projects.filter(p => {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+    if (ownerFilter !== 'all') {
+      if (ownerFilter === '_none' && p.owner_id) return false;
+      if (ownerFilter !== '_none' && p.owner_id !== ownerFilter) return false;
+    }
+    if (deptFilter !== 'all') {
+      if (deptFilter === '_none' && p.department_id) return false;
+      if (deptFilter !== '_none' && p.department_id !== deptFilter) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       if (![p.name, p.project_number, p.project_code, p.description].some(v => v?.toLowerCase().includes(s))) return false;
     }
     return true;
   });
+
+  const filtered = sort.column && sort.direction ? sortBy(filteredRaw, (p) => {
+    switch (sort.column) {
+      case 'project_number': return p.project_number;
+      case 'name': return p.name;
+      case 'status': return p.status;
+      case 'owner': return p.owner_code ?? null;
+      case 'dept': return p.dept_name ?? null;
+      case 'created_at': return new Date(p.created_at).getTime();
+      default: return null;
+    }
+  }, sort.direction) : filteredRaw;
+
 
   const createProject = async () => {
     if (!form.name.trim()) return toast.error('Projektname erforderlich');
