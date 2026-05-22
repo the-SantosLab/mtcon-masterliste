@@ -10,8 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote,
 } from 'lucide-react';
+import { NotesFab } from '@/components/notes/NotesFab';
 import mtconLogo from '@/assets/mtcon_logo.png';
 import mtconErpLabel from '@/assets/mtcon-erp-label.png';
 import mtconErpLabelLight from '@/assets/mtcon-erp-label-light.png';
@@ -55,6 +56,7 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
+  { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
@@ -289,6 +291,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 relative z-[1]"><MfaReminderBanner />{children}</main>
+        <NotesFab />
       </div>
 
       <Dialog open={pwDialogOpen} onOpenChange={o => { if (!o) { setPwDialogOpen(false); setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false); } }}>

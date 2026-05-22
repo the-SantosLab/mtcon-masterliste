@@ -1605,6 +1605,144 @@ export type Database = {
         }
         Relationships: []
       }
+      note_board_members: {
+        Row: {
+          board_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_board_members_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "note_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_boards: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          scope?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_boards_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          archived_at: string | null
+          author_id: string
+          board_id: string
+          checklist: Json
+          color: string
+          content: string
+          created_at: string
+          height: number
+          highlights: Json
+          id: string
+          pinned: boolean
+          position_x: number
+          position_y: number
+          updated_at: string
+          width: number
+          z_index: number
+        }
+        Insert: {
+          archived_at?: string | null
+          author_id: string
+          board_id: string
+          checklist?: Json
+          color?: string
+          content?: string
+          created_at?: string
+          height?: number
+          highlights?: Json
+          id?: string
+          pinned?: boolean
+          position_x?: number
+          position_y?: number
+          updated_at?: string
+          width?: number
+          z_index?: number
+        }
+        Update: {
+          archived_at?: string | null
+          author_id?: string
+          board_id?: string
+          checklist?: Json
+          color?: string
+          content?: string
+          created_at?: string
+          height?: number
+          highlights?: Json
+          id?: string
+          pinned?: boolean
+          position_x?: number
+          position_y?: number
+          updated_at?: string
+          width?: number
+          z_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "note_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -2837,8 +2975,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_read_board: {
+        Args: { p_board_id: string; p_uid?: string }
+        Returns: boolean
+      }
       can_read_dept: {
         Args: { p_dept_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      can_write_board: {
+        Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
       }
       can_write_dept: {
