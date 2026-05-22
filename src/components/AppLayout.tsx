@@ -12,7 +12,7 @@ import {
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
   FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote,
 } from 'lucide-react';
-import { NotesFab } from '@/components/notes/NotesFab';
+
 import mtconLogo from '@/assets/mtcon_logo.png';
 import mtconErpLabel from '@/assets/mtcon-erp-label.png';
 import mtconErpLabelLight from '@/assets/mtcon-erp-label-light.png';
@@ -291,7 +291,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <NotificationBell />
         </header>
         <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 relative z-[1]"><MfaReminderBanner />{children}</main>
-        <NotesFab />
+        
       </div>
 
       <Dialog open={pwDialogOpen} onOpenChange={o => { if (!o) { setPwDialogOpen(false); setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false); } }}>
