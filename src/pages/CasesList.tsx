@@ -116,7 +116,49 @@ export default function CasesList() {
     });
   };
 
+  const handleSort = (col: CaseSortKey) => {
+    setSort(prev => {
+      const next = nextSort(prev, col);
+      try {
+        if (next.column && next.direction) {
+          localStorage.setItem('casesSort_column', next.column);
+          localStorage.setItem('casesSort_direction', next.direction);
+        } else {
+          localStorage.removeItem('casesSort_column');
+          localStorage.removeItem('casesSort_direction');
+        }
+      } catch {}
+      return next;
+    });
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter([...allStatuses]);
+    setAssigneeFilter('all');
+    setProjectFilter('all');
+    setDeptFilter('all');
+    setDueFilter('all');
+    setOnlyMine(false);
+    try {
+      localStorage.removeItem('casesFilter_statuses');
+      localStorage.setItem('casesFilter_onlyMine', 'false');
+    } catch {}
+  };
+
+  const filtersActive =
+    !!search ||
+    statusFilter.length !== allStatuses.length ||
+    assigneeFilter !== 'all' ||
+    projectFilter !== 'all' ||
+    deptFilter !== 'all' ||
+    dueFilter !== 'all' ||
+    onlyMine;
+
   const creatorDeptMap = Object.fromEntries(profiles.map(p => [p.id, p.department_id]));
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const inDays = (d: Date, n: number) => { const x = new Date(today); x.setDate(x.getDate() + n); return d <= x; };
 
   const filtered = cases.filter(c => {
     if (onlyMine && c.assignee_id !== user?.id) return false;
@@ -136,12 +178,44 @@ export default function CasesList() {
         if (!caseMatchesDept(c, deptFilter, childIds, creatorDeptMap)) return false;
       }
     }
+    if (dueFilter !== 'all') {
+      if (dueFilter === 'none') {
+        if (c.due_at) return false;
+      } else {
+        if (!c.due_at) return false;
+        const d = new Date(c.due_at); d.setHours(0, 0, 0, 0);
+        if (dueFilter === 'overdue' && d >= today) return false;
+        if (dueFilter === 'today' && d.getTime() !== today.getTime()) return false;
+        if (dueFilter === 'week' && (d < today || !inDays(d, 7))) return false;
+        if (dueFilter === 'next14' && (d < today || !inDays(d, 14))) return false;
+      }
+    }
     if (search) {
       const s = search.toLowerCase();
       if (![c.case_no, c.project_name, c.client_name, c.project_article_no, c.project?.project_number, c.project?.name].some(v => v?.toLowerCase().includes(s))) return false;
     }
     return true;
   });
+
+  const statusOrder = allStatuses as readonly string[];
+  const sorted = sort.column && sort.direction ? sortBy(filtered, (c) => {
+    switch (sort.column) {
+      case 'status': return statusOrder.indexOf(c.status);
+      case 'case_no': return c.case_no;
+      case 'project_name': return c.project_name;
+      case 'project': return c.project?.project_number ?? null;
+      case 'assignee': return c.assignee?.short_code ?? null;
+      case 'department': {
+        if (c.department?.name) return c.department.name;
+        const { effectiveId } = resolveEffectiveDeptId(c, creatorDeptMap);
+        return effectiveId ? departments.find(d => d.id === effectiveId)?.name ?? null : null;
+      }
+      case 'customer': return c.customer_no;
+      case 'due_at': return c.due_at ? new Date(c.due_at).getTime() : null;
+      default: return null;
+    }
+  }, sort.direction) : filtered;
+
 
   return (
     <AppLayout>
