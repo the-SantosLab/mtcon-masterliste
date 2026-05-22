@@ -2855,6 +2855,14 @@ export type Database = {
         Returns: Database["public"]["Enums"]["dept_member_role"]
       }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      get_case_chat_unread: {
+        Args: { p_case_ids: string[] }
+        Returns: {
+          case_id: string
+          last_message_at: string
+          unread_count: number
+        }[]
+      }
       has_crm_access: { Args: { uid?: string }; Returns: boolean }
       has_dept_read: {
         Args: { p_dept_id: string; p_uid: string }
