@@ -357,6 +357,7 @@ export default function CasesList() {
                 <SortableHeader column="department" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</SortableHeader>
                 <SortableHeader column="customer" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Kunde</SortableHeader>
                 <SortableHeader column="due_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</SortableHeader>
+                <SortableHeader column="urgency" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
                 <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Aktionen</th>
               </tr>
             </thead>
