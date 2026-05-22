@@ -267,7 +267,7 @@ export default function Dashboard() {
         {/* Hero zone — Left 60% / Right 40% */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* LEFT: Hero image with greeting + KPIs overlay */}
-          <div className="lg:col-span-3 relative rounded-2xl overflow-hidden border border-border/50 bg-gradient-to-br from-muted/40 to-background min-h-[480px] lg:min-h-[560px]">
+          <div className="lg:col-span-3 relative rounded-2xl overflow-hidden border border-border/50 bg-gradient-to-br from-muted/40 to-background min-h-[640px] lg:min-h-[560px]">
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
