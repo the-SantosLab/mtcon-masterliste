@@ -128,7 +128,14 @@ export function CaseChat({ caseId, canWrite }: Props) {
   // Load department members for @mentions: prefer dept members of this case, fallback all profiles
   useEffect(() => {
     (async () => {
-      const { data: cs } = await (supabase as any).from('cases').select('department_id').eq('id', caseId).maybeSingle();
+      const { data: cs } = await (supabase as any).from('cases')
+        .select('case_no, status, project_name, department_id, departments:department_id(name)').eq('id', caseId).maybeSingle();
+      setCaseMeta({
+        case_no: cs?.case_no || null,
+        status: cs?.status || null,
+        project_name: cs?.project_name || null,
+        department_name: (cs as any)?.departments?.name || null,
+      });
       let userIds: string[] | null = null;
       if (cs?.department_id) {
         const { data: dm } = await (supabase as any).from('department_members').select('user_id').eq('department_id', cs.department_id);
