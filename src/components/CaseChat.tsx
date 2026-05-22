@@ -10,7 +10,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import {
   Paperclip, Smile, Send, Loader2, X, Trash2, Pencil, Check, Download, FileText,
   Reply, Pin, PinOff, MoreHorizontal, ListChecks, Search, ArrowDown, Bell, BellOff,
-  Settings2,
+  Settings2, Circle,
 } from 'lucide-react';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { toast } from 'sonner';
