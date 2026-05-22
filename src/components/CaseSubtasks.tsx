@@ -744,12 +744,12 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
         <>
         {loading ? (
           <p className="text-xs text-muted-foreground py-2">Laden…</p>
-        ) : tasks.length === 0 && !canEdit ? (
+        ) : displayTasks.length === 0 && !canEdit ? (
           <p className="text-xs text-muted-foreground py-2">Keine Unteraufgaben</p>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={tasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {tasks.slice(0, visibleCount).map((task, index) => {
+            <SortableContext items={displayTasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {displayTasks.slice(0, visibleCount).map((task, index) => {
                 const isExpanded = expandedId === task.id;
                 const st = STATUS_MAP[task.status] || STATUS_MAP.open;
                 const canEditTask = canEdit;
@@ -761,9 +761,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                   <SortableSubtaskRow
                     key={task.id}
                     id={task.id}
-                    canReorder={canEdit}
+                    canReorder={canEdit && !isSortActive}
                     isFirst={index === 0}
-                    isLast={index === tasks.length - 1}
+                    isLast={index === displayTasks.length - 1}
                     onMoveUp={() => moveTask(task.id, -1)}
                     onMoveDown={() => moveTask(task.id, 1)}
                   >
@@ -783,7 +783,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
                           onClick={() => setExpandedId(isExpanded ? null : task.id)}
                         >
-                          {canEdit && (
+                          {canEdit && !isSortActive && (
                             <>
                               <button
                                 type="button"
@@ -799,7 +799,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); moveTask(task.id, -1); }}
-                                  disabled={index === 0}
+                                  disabled={index === 1}
                                   aria-label="Nach oben"
                                   className="h-3.5 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
@@ -808,7 +808,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); moveTask(task.id, 1); }}
-                                  disabled={index === tasks.length - 1}
+                                  disabled={index === displayTasks.length - 1}
                                   aria-label="Nach unten"
                                   className="h-3.5 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
