@@ -80,8 +80,13 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
     );
   }
 
-  async function inviteSelected() {
+  function openConfirm() {
     if (selectedIds.length === 0) return;
+    setConfirmOpen(true);
+  }
+
+  async function doInvite() {
+    setConfirmOpen(false);
     setAdding(true);
     const rows = selectedIds.map(uid => ({ board_id: boardId, user_id: uid, role: inviteRole }));
     const { error } = await supabase.from('note_board_members').insert(rows);
