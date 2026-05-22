@@ -186,8 +186,8 @@ export default function Notes() {
     const maxZ = notes.reduce((m, n) => Math.max(m, n.z_index), 0);
     const offset = (notes.length % 6) * 24;
     const scroll = canvasRef.current;
-    const cx = (scroll?.scrollLeft || 0) + 40 + offset;
-    const cy = (scroll?.scrollTop || 0) + 40 + offset;
+    const cx = ((scroll?.scrollLeft || 1) / zoom) + 40 + offset;
+    const cy = ((scroll?.scrollTop || 1) / zoom) + 40 + offset;
     const d = defaultsFor(kind);
     const { data, error } = await supabase
       .from('notes')
