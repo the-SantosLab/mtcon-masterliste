@@ -172,11 +172,26 @@ export function CaseChat({ caseId, canWrite }: Props) {
     }
     const authorIds = Array.from(new Set(rows.map(r => r.author_id).filter(Boolean)));
     if (authorIds.length) {
-      const { data: profs } = await (supabase as any).from('users_profile')
-        .select('id, display_name, short_code, avatar_url').in('id', authorIds);
+      const [{ data: profs }, { data: dm }] = await Promise.all([
+        (supabase as any).from('users_profile').select('id, display_name, short_code, avatar_url, department_id').in('id', authorIds),
+        (supabase as any).from('department_members').select('user_id, departments:department_id(name)').in('user_id', authorIds),
+      ]);
       const map: Record<string, any> = {};
       (profs || []).forEach((p: any) => { map[p.id] = p; });
       rows.forEach(r => { r.author = map[r.author_id] || null; });
+      // Pick first department per user; prefer department_members entries, fallback to profile's own dept
+      const deptMap: Record<string, string> = {};
+      (dm || []).forEach((x: any) => { if (!deptMap[x.user_id] && x.departments?.name) deptMap[x.user_id] = x.departments.name; });
+      if (Object.keys(deptMap).length < authorIds.length) {
+        const profDeptIds = Array.from(new Set((profs || []).map((p: any) => p.department_id).filter(Boolean)));
+        if (profDeptIds.length) {
+          const { data: deps } = await (supabase as any).from('departments').select('id, name').in('id', profDeptIds);
+          const dn: Record<string, string> = {};
+          (deps || []).forEach((d: any) => { dn[d.id] = d.name; });
+          (profs || []).forEach((p: any) => { if (!deptMap[p.id] && p.department_id && dn[p.department_id]) deptMap[p.id] = dn[p.department_id]; });
+        }
+      }
+      setUserDepts(prev => ({ ...prev, ...deptMap }));
     }
     setMessages(rows);
     setLoading(false);
