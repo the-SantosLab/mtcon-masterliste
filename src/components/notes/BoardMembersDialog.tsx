@@ -86,13 +86,15 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
   }
 
   async function doInvite() {
+    if (selectedIds.length === 0) { setConfirmOpen(false); return; }
+    const ids = [...selectedIds];
     setConfirmOpen(false);
     setAdding(true);
-    const rows = selectedIds.map(uid => ({ board_id: boardId, user_id: uid, role: inviteRole }));
+    const rows = ids.map(uid => ({ board_id: boardId, user_id: uid, role: inviteRole }));
     const { error } = await supabase.from('note_board_members').insert(rows);
     setAdding(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(`${selectedIds.length} Mitglied(er) eingeladen`);
+    toast.success(`${ids.length} Mitglied(er) eingeladen`);
     setSelectedIds([]);
     setPickerOpen(false);
     load();
