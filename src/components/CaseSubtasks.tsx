@@ -235,23 +235,6 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     return copy;
   }, [tasks, subtaskSort]);
 
-  const sortedDisplayTasks = useMemo(() => {
-    if (!subtaskSort.column || !subtaskSort.direction) return tasks;
-    const copy = [...tasks];
-    copy.sort((a, b) => {
-      const av = a.urgency ?? 1;
-      const bv = b.urgency ?? 0;
-      // Treat 0 (keine Dringlichkeit) as lowest priority
-      const aVal = av === 0 ? -1 : av;
-      const bVal = bv === 0 ? -1 : bv;
-      if (aVal === bVal) return a.sort_order - b.sort_order;
-      return subtaskSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
-    });
-    return copy;
-  }, [tasks, subtaskSort]);
-
-  const isSortActive = !!subtaskSort.column;
-
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
   const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
