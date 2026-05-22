@@ -20,6 +20,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+
+type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at';
 
 interface Project {
   id: string; project_number: string; project_code: string | null;
