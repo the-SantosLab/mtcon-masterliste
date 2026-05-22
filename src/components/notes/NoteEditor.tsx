@@ -1,12 +1,51 @@
-import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import { useEditor, EditorContent, type Editor, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Bold, Italic, List, ListChecks, Highlighter } from 'lucide-react';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+
+// Custom mark attribute to set inline font-size on TextStyle
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el: HTMLElement) => el.style.fontSize || null,
+            renderHTML: (attrs: any) => attrs.fontSize ? { style: `font-size: ${attrs.fontSize}` } : {},
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize: (size: string | null) => ({ chain }: any) =>
+        size
+          ? chain().setMark('textStyle', { fontSize: size }).run()
+          : chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run(),
+    } as any;
+  },
+});
+
+export const FONT_SIZES = [
+  { label: 'XS', value: '10px' },
+  { label: 'S', value: '12px' },
+  { label: 'M', value: '14px' },
+  { label: 'L', value: '18px' },
+  { label: 'XL', value: '24px' },
+  { label: 'XXL', value: '32px' },
+];
+
 
 export const MARKER_COLORS = [
   { name: 'yellow', hex: 'hsl(50 95% 65% / 0.55)' },
@@ -31,6 +70,9 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
       TaskList,
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder: 'Notiz schreiben…' }),
+      TextStyle,
+      FontSize,
+      TextAlign.configure({ types: ['paragraph', 'heading'], alignments: ['left', 'center', 'right', 'justify'] }),
     ],
     content: content || '',
     editable: !readOnly,
@@ -117,6 +159,13 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
       <ToolBtn active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List className="h-3 w-3" /></ToolBtn>
       <ToolBtn active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()}><ListChecks className="h-3 w-3" /></ToolBtn>
       <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+      <ToolBtn active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft className="h-3 w-3" /></ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="h-3 w-3" /></ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="h-3 w-3" /></ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}><AlignJustify className="h-3 w-3" /></ToolBtn>
+      <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+      <FontSizeSelect editor={editor} />
+      <div className="w-px h-3 bg-foreground/20 mx-0.5" />
       {MARKER_COLORS.map(c => (
         <button
           key={c.name}
@@ -138,4 +187,28 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
     </div>
   );
 }
+
+function FontSizeSelect({ editor }: { editor: Editor }) {
+  const current = (editor.getAttributes('textStyle') as any)?.fontSize || '';
+  return (
+    <div className="flex items-center gap-1">
+      <Type className="h-3 w-3 text-foreground/60" />
+      <select
+        value={current}
+        onChange={(e) => {
+          const v = e.target.value;
+          (editor.chain().focus() as any).setFontSize(v || null).run();
+        }}
+        className="h-5 text-[10px] bg-transparent border border-border rounded-sm px-1 focus:outline-none cursor-pointer"
+        title="Schriftgröße"
+      >
+        <option value="">Auto</option>
+        {FONT_SIZES.map(s => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 
