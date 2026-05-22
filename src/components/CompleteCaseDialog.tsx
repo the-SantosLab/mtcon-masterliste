@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { NotifyToggle } from '@/components/NotifyToggle';
+import { MtiqButton } from '@/components/MtiqButton';
 
 interface Props {
   open: boolean;
@@ -51,9 +52,12 @@ export function CompleteCaseDialog({ open, onOpenChange, onConfirm, lastSentAt }
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <label className="text-xs font-medium text-foreground">
-            Abschlussnotiz <span className="text-destructive">(Pflichtfeld)</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-foreground">
+              Abschlussnotiz <span className="text-destructive">(Pflichtfeld)</span>
+            </label>
+            <MtiqButton text={note} onResult={setNote} />
+          </div>
           <Textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}

@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { NotifyToggle } from '@/components/NotifyToggle';
+import { MtiqButton } from '@/components/MtiqButton';
 import { useNotificationLog } from '@/hooks/useNotificationLog';
 
 interface Subtask {
@@ -1023,7 +1024,10 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </DialogHeader>
           <div className="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1">
             <p className="text-xs text-muted-foreground">{completingTask?.title}</p>
-            <label className="text-xs font-medium text-foreground">Was wurde gemacht?</label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-foreground">Was wurde gemacht?</label>
+              <MtiqButton text={completionNote} onResult={setCompletionNote} />
+            </div>
             <Textarea
               value={completionNote}
               onChange={e => setCompletionNote(e.target.value)}
