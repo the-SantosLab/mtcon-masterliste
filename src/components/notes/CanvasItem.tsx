@@ -77,8 +77,11 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
     onSelect();
     if (note.pinned) return;
     const tgt = e.target as HTMLElement;
-    if (tgt.closest('[data-no-drag]')) return;
-    if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
+    const isHandle = !!tgt.closest('[data-drag-handle]');
+    if (!isHandle) {
+      if (tgt.closest('[data-no-drag]')) return;
+      if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
+    }
     onBringToFront();
     setDragging(true);
     startRef.current = { x: e.clientX, y: e.clientY, nx: note.position_x, ny: note.position_y, w: 0, h: 0 };
