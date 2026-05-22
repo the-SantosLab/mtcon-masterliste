@@ -20,6 +20,7 @@ import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
+import { useChatUnread } from '@/hooks/useChatUnread';
 
 type CaseSortKey = 'status' | 'case_no' | 'project_name' | 'project' | 'assignee' | 'department' | 'customer' | 'due_at' | 'urgency';
 type DueFilter = 'all' | 'overdue' | 'today' | 'week' | 'next14' | 'none';
@@ -100,6 +101,7 @@ export default function CasesList() {
   }, [searchParams, user]);
 
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, fetchCases);
+  const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   const toggleOnlyMine = () => {
     setOnlyMine(v => {
@@ -375,7 +377,12 @@ export default function CasesList() {
                     </span>
                   </td>
                   <td className={cn(cellCls, 'font-mono min-w-[120px] whitespace-nowrap')}>
-                    <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
+                    <Link to={`/cases/${c.id}`} className="text-primary hover:underline inline-flex items-center gap-1.5">
+                      {(unreadMap[c.id] ?? 0) > 0 && (
+                        <span title={`${unreadMap[c.id]} ungelesene Nachricht(en)`} className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold leading-none">{unreadMap[c.id] > 9 ? '9+' : unreadMap[c.id]}</span>
+                      )}
+                      {c.case_no}
+                    </Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
                     <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors">{c.project_name}</Link>

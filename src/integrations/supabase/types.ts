@@ -170,6 +170,12 @@ export type Database = {
           deleted_at: string | null
           edited_at: string | null
           id: string
+          pinned: boolean
+          pinned_at: string | null
+          pinned_by: string | null
+          reply_to_id: string | null
+          system_kind: string | null
+          system_payload: Json | null
         }
         Insert: {
           author_id: string
@@ -179,6 +185,12 @@ export type Database = {
           deleted_at?: string | null
           edited_at?: string | null
           id?: string
+          pinned?: boolean
+          pinned_at?: string | null
+          pinned_by?: string | null
+          reply_to_id?: string | null
+          system_kind?: string | null
+          system_payload?: Json | null
         }
         Update: {
           author_id?: string
@@ -188,6 +200,91 @@ export type Database = {
           deleted_at?: string | null
           edited_at?: string | null
           id?: string
+          pinned?: boolean
+          pinned_at?: string | null
+          pinned_by?: string | null
+          reply_to_id?: string | null
+          system_kind?: string | null
+          system_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "case_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_chat_mutes: {
+        Row: {
+          case_id: string
+          muted_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          muted_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          muted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      case_chat_reactions: {
+        Row: {
+          case_id: string
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_chat_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "case_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_chat_reads: {
+        Row: {
+          case_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          last_read_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2758,6 +2855,14 @@ export type Database = {
         Returns: Database["public"]["Enums"]["dept_member_role"]
       }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      get_case_chat_unread: {
+        Args: { p_case_ids: string[] }
+        Returns: {
+          case_id: string
+          last_message_at: string
+          unread_count: number
+        }[]
+      }
       has_crm_access: { Args: { uid?: string }; Returns: boolean }
       has_dept_read: {
         Args: { p_dept_id: string; p_uid: string }
