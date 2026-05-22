@@ -69,10 +69,14 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
   const startRef = useRef({ x: 0, y: 0, nx: 0, ny: 0, w: 0, h: 0 });
 
   const onPointerDownDrag = (e: React.PointerEvent) => {
-    if (!canEdit || note.pinned) return;
+    if (!canEdit) {
+      onSelect();
+      return;
+    }
+    onSelect();
+    if (note.pinned) return;
     const tgt = e.target as HTMLElement;
     if (tgt.closest('[data-no-drag]')) return;
-    // Don't start drag on actual interactive content (text editing, inputs, buttons)
     if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
     onBringToFront();
     setDragging(true);
