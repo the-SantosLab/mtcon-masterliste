@@ -246,7 +246,7 @@ export default function ProjectsList() {
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche nach Name, Nummer…" className="pl-9 h-8 text-xs" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Status</SelectItem>
               <SelectItem value="active">Aktiv</SelectItem>
@@ -254,6 +254,30 @@ export default function ProjectsList() {
               <SelectItem value="archived">Archiviert</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Verantwortlich" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Verantwortlichen</SelectItem>
+              <SelectItem value="_none">Ohne Verantwortlichen</SelectItem>
+              {owners.map(o => <SelectItem key={o.id} value={o.id}>{o.short_code}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Abteilung" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Abteilungen</SelectItem>
+              <SelectItem value="_none">Ohne Abteilung</SelectItem>
+              {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {filtersActive && (
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-md border border-input bg-background text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />Zurücksetzen
+            </button>
+          )}
         </div>
 
         {/* Table */}
