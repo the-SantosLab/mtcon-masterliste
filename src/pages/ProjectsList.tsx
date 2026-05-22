@@ -287,10 +287,10 @@ export default function ProjectsList() {
               <thead>
                 <tr className="border-b border-border">
                   <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground w-6')}></th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Nr.</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</th>
+                  <SortableHeader column="project_number" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Nr.</SortableHeader>
+                  <SortableHeader column="name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</SortableHeader>
+                  <SortableHeader column="owner" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
+                  <SortableHeader column="created_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Erstellt</SortableHeader>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
