@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { NotifyToggle } from '@/components/NotifyToggle';
+import { MtiqButton } from '@/components/MtiqButton';
 
 interface Props {
   open: boolean;
