@@ -68,19 +68,22 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
     setLoading(false);
   }
 
-  async function addMember(userId: string) {
-    if (members.some(m => m.user_id === userId) || userId === ownerId) {
-      toast.info('Nutzer ist bereits Mitglied oder Besitzer.');
-      return;
-    }
+  function toggleSelect(userId: string) {
+    setSelectedIds(prev =>
+      prev.includes(userId) ? prev.filter(x => x !== userId) : [...prev, userId],
+    );
+  }
+
+  async function inviteSelected() {
+    if (selectedIds.length === 0) return;
     setAdding(true);
-    const { error } = await supabase
-      .from('note_board_members')
-      .insert({ board_id: boardId, user_id: userId, role: 'edit' });
+    const rows = selectedIds.map(uid => ({ board_id: boardId, user_id: uid, role: inviteRole }));
+    const { error } = await supabase.from('note_board_members').insert(rows);
     setAdding(false);
-    setPickerOpen(false);
     if (error) { toast.error(error.message); return; }
-    toast.success('Mitglied hinzugefügt');
+    toast.success(`${selectedIds.length} Mitglied(er) eingeladen`);
+    setSelectedIds([]);
+    setPickerOpen(false);
     load();
   }
 
