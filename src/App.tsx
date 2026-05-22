@@ -38,6 +38,7 @@ import MfaChallenge from "./pages/MfaChallenge";
 import MfaGuide from "./pages/MfaGuide";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
+import Notes from "./pages/Notes";
 import PortalAuth from "./pages/portal/PortalAuth";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
@@ -132,6 +133,7 @@ function AuthenticatedApp() {
         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
         <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
+        <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
         <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
         <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
