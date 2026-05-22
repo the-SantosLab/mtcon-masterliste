@@ -101,6 +101,7 @@ export default function CasesList() {
   }, [searchParams, user]);
 
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, fetchCases);
+  const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   const toggleOnlyMine = () => {
     setOnlyMine(v => {
