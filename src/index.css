@@ -473,4 +473,17 @@
   /* Inline badges should never force overflow */
   [class*="rounded"][class*="border"] .whitespace-nowrap,
   .badge, [data-badge] { max-width: 100%; }
+
+  /* Case detail (and general detail views): no horizontal scroll, wrap everything */
+  main * { min-width: 0 !important; }
+  main input, main textarea, main select { max-width: 100%; }
+  main pre, main code { white-space: pre-wrap !important; word-break: break-word !important; }
+  main .whitespace-nowrap { white-space: normal !important; }
+  /* Tables on detail views should not force min-width; let cells wrap */
+  main table { min-width: 0 !important; width: 100% !important; table-layout: auto; }
+  main table td, main table th { white-space: normal !important; word-break: break-word; }
+  /* Cancel earlier min-width:640 rule from this same media query for detail content */
+  main .rounded-md.border > table,
+  main .rounded-lg.border > table,
+  main .border.bg-card > table { min-width: 0 !important; }
 }
