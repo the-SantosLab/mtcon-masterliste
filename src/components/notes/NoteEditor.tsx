@@ -159,6 +159,13 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
       <ToolBtn active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List className="h-3 w-3" /></ToolBtn>
       <ToolBtn active={editor.isActive('taskList')} onClick={() => editor.chain().focus().toggleTaskList().run()}><ListChecks className="h-3 w-3" /></ToolBtn>
       <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+      <ToolBtn active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft className="h-3 w-3" /></ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="h-3 w-3" /></ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="h-3 w-3" /></ToolBtn>
+      <ToolBtn active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}><AlignJustify className="h-3 w-3" /></ToolBtn>
+      <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+      <FontSizeSelect editor={editor} />
+      <div className="w-px h-3 bg-foreground/20 mx-0.5" />
       {MARKER_COLORS.map(c => (
         <button
           key={c.name}
