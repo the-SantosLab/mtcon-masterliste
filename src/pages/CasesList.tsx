@@ -54,8 +54,17 @@ export default function CasesList() {
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [deptFilter, setDeptFilter] = useState<string>('all');
+  const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [onlyMine, setOnlyMine] = useState<boolean>(() => {
     try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
+  });
+  const [sort, setSort] = useState<SortState<CaseSortKey>>(() => {
+    try {
+      const col = localStorage.getItem('casesSort_column') as CaseSortKey | null;
+      const dir = localStorage.getItem('casesSort_direction') as 'asc' | 'desc' | null;
+      if (col && dir) return { column: col, direction: dir };
+    } catch {}
+    return { column: 'due_at', direction: 'asc' };
   });
   const [searchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
