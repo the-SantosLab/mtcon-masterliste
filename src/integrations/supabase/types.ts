@@ -3025,6 +3025,14 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_board_member: {
+        Args: { p_board_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      is_board_owner: {
+        Args: { p_board_id: string; p_uid?: string }
+        Returns: boolean
+      }
       is_direct_report: {
         Args: { manager_uid: string; target_uid: string }
         Returns: boolean
