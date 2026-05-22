@@ -191,36 +191,62 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
             {!loading && members.length === 0 && (
               <div className="text-xs text-muted-foreground px-3 py-3">Noch keine zusätzlichen Mitglieder.</div>
             )}
-            {members.map(m => (
-              <div key={m.id} className="flex items-center gap-2 px-3 py-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs truncate">{m.profile?.display_name || m.user_id}</div>
-                  {m.profile?.short_code && (
-                    <div className="text-[10px] text-muted-foreground">{m.profile.short_code}</div>
+            {members.map(m => {
+              const isSaving = savingMemberId === m.id;
+              return (
+                <div key={m.id} className="flex items-center gap-2 px-3 py-2">
+                  <div className="flex-1 min-w-2">
+                    <div className="text-xs truncate">{m.profile?.display_name || m.user_id}</div>
+                    {m.profile?.short_code && (
+                      <div className="text-[10px] text-muted-foreground">{m.profile.short_code}</div>
+                    )}
+                  </div>
+                  {isOwner ? (
+                    <div className="inline-flex rounded border border-border overflow-hidden bg-muted/40">
+                      <button
+                        onClick={() => changeRole(m.id, 'edit')}
+                        disabled={isSaving}
+                        className={cn(
+                          'text-[10px] px-2 py-1 transition-colors',
+                          m.role === 'edit'
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                          isSaving && 'opacity-50 cursor-wait',
+                        )}
+                      >
+                        Bearbeiten
+                      </button>
+                      <button
+                        onClick={() => changeRole(m.id, 'view')}
+                        disabled={isSaving}
+                        className={cn(
+                          'text-[10px] px-2 py-1 transition-colors border-l border-border',
+                          m.role === 'view'
+                            ? 'bg-primary text-primary-foreground font-medium'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                          isSaving && 'opacity-50 cursor-wait',
+                        )}
+                      >
+                        Lesen
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground px-2 py-1">
+                      {m.role === 'edit' ? 'Bearbeiten' : 'Lesen'}
+                    </span>
+                  )}
+                  {isOwner && (
+                    <button
+                      onClick={() => removeMember(m.id)}
+                      className="p-1 text-muted-foreground hover:text-destructive"
+                      aria-label="Entfernen"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   )}
                 </div>
-                <Select
-                  value={m.role}
-                  onValueChange={(v: 'view' | 'edit') => changeRole(m.id, v)}
-                  disabled={!isOwner}
-                >
-                  <SelectTrigger className="h-7 w-[110px] text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="edit" className="text-xs">Bearbeiten</SelectItem>
-                    <SelectItem value="view" className="text-xs">Lesen</SelectItem>
-                  </SelectContent>
-                </Select>
-                {isOwner && (
-                  <button
-                    onClick={() => removeMember(m.id)}
-                    className="p-1 text-muted-foreground hover:text-destructive"
-                    aria-label="Entfernen"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
