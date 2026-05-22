@@ -169,6 +169,7 @@ export default function ProjectsList() {
       case 'owner': return p.owner_code ?? null;
       case 'dept': return p.dept_name ?? null;
       case 'created_at': return new Date(p.created_at).getTime();
+      case 'urgency': return (p as any).urgency ?? 0;
       default: return null;
     }
   }, sort.direction) : filteredRaw;
