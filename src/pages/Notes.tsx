@@ -478,7 +478,7 @@ export default function Notes() {
                       key={n.id}
                       style={{ opacity: dimmed ? 0.15 : 1, pointerEvents: dimmed ? 'none' : 'auto', transition: 'opacity 0.15s' }}
                     >
-                      <PostIt
+                      <CanvasItem
                         note={n}
                         canEdit={canEdit}
                         onChange={(p) => patchNote(n.id, p)}
