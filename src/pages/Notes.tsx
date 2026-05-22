@@ -253,13 +253,20 @@ export default function Notes() {
 
           {/* Canvas */}
           <div className="flex-1 flex flex-col min-w-0 rounded border border-border bg-card/30 overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/50">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/50 gap-2">
               <div className="text-xs text-muted-foreground truncate">
                 {activeBoard ? activeBoard.name : 'Kein Board ausgewählt'}
               </div>
-              <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
-                <Plus className="h-3 w-3" /> Post-it
-              </Button>
+              <div className="flex items-center gap-1.5">
+                {activeBoard?.scope === 'shared' && activeBoard.owner_id === user?.id && (
+                  <Button size="sm" variant="outline" onClick={() => setMembersBoard(activeBoard)} className="h-7 text-xs gap-1.5">
+                    <UserCog className="h-3 w-3" /> Mitglieder
+                  </Button>
+                )}
+                <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
+                  <Plus className="h-3 w-3" /> Post-it
+                </Button>
+              </div>
             </div>
             <div
               ref={canvasRef}
