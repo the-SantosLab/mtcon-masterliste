@@ -333,6 +333,16 @@ export default function Notes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {membersBoard && (
+        <BoardMembersDialog
+          boardId={membersBoard.id}
+          boardName={membersBoard.name}
+          ownerId={membersBoard.owner_id}
+          open={!!membersBoard}
+          onOpenChange={(v) => { if (!v) setMembersBoard(null); }}
+        />
+      )}
     </AppLayout>
   );
 }
