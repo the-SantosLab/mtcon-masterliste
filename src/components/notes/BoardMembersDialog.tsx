@@ -138,14 +138,19 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
 
         <div className="space-y-3">
           {isOwner && (
-            <Popover open={pickerOpen} onOpenChange={(v) => { setPickerOpen(v); if (!v) setSelectedIds([]); }}>
+            <Popover open={pickerOpen} onOpenChange={(v) => { if (!v && confirmOpen) return; setPickerOpen(v); if (!v) setSelectedIds([]); }}>
               <PopoverTrigger asChild>
                 <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 w-full justify-start" disabled={adding}>
                   <UserPlus className="h-3.5 w-3.5" />
                   Nutzer einladen{candidates.length > 0 ? ` (${candidates.length} verfügbar)` : ''}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+              <PopoverContent
+                className="p-0 w-[--radix-popover-trigger-width]"
+                align="start"
+                onInteractOutside={(e) => { if (confirmOpen) e.preventDefault(); }}
+                onEscapeKeyDown={(e) => { if (confirmOpen) e.preventDefault(); }}
+              >
                 <Command shouldFilter>
                   <CommandInput placeholder="Nach Name oder Kürzel suchen…" className="h-8 text-xs" />
                   <div className="flex items-center gap-1 px-2 py-1 border-b border-border">
