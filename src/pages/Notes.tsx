@@ -303,20 +303,120 @@ export default function Notes() {
 
           {/* Canvas */}
           <div className="flex-1 flex flex-col min-w-0 rounded border border-border bg-card/30 overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/50 gap-2">
-              <div className="text-xs text-muted-foreground truncate">
+            <div className="flex items-center px-3 py-2 border-b border-border bg-card/50 gap-2 flex-wrap">
+              <div className="text-xs text-muted-foreground truncate mr-auto">
                 {activeBoard ? activeBoard.name : 'Kein Board ausgewählt'}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {activeBoard?.scope === 'shared' && activeBoard.owner_id === user?.id && (
-                  <Button size="sm" variant="outline" onClick={() => setMembersBoard(activeBoard)} className="h-7 text-xs gap-1.5">
-                    <UserCog className="h-3 w-3" /> Mitglieder
-                  </Button>
+                {hasFilter && activeBoard && (
+                  <span className="ml-2 text-[10px] text-muted-foreground">
+                    · {matchedIds.size} von {notes.length}
+                  </span>
                 )}
-                <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
-                  <Plus className="h-3 w-3" /> Post-it
-                </Button>
               </div>
+
+              <div className="relative">
+                <Search className="h-3 w-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Suchen…"
+                  className="h-7 text-xs pl-7 pr-7 w-44"
+                  disabled={!activeBoard}
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Suche leeren"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" disabled={!activeBoard}>
+                    <Filter className="h-3 w-3" /> Filter
+                    {activeFilterCount > 0 && (
+                      <Badge variant="secondary" className="h-4 px-1 text-[10px]">{activeFilterCount}</Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64 p-3 space-y-3">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Post-it Farbe</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(Object.keys(NOTE_COLORS) as NoteColor[]).map(c => {
+                        const active = colorFilters.has(c);
+                        return (
+                          <button
+                            key={c}
+                            onClick={() => toggleColor(c)}
+                            className={cn(
+                              'h-6 w-6 rounded-sm border-2 transition-all',
+                              active ? 'border-foreground scale-110' : 'border-transparent opacity-70 hover:opacity-100',
+                            )}
+                            style={{ background: NOTE_COLORS[c] }}
+                            title={c}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Marker</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {MARKER_COLORS.map(m => {
+                        const active = markerFilters.has(m.hex);
+                        return (
+                          <button
+                            key={m.name}
+                            onClick={() => toggleMarker(m.hex)}
+                            className={cn(
+                              'h-6 w-6 rounded-sm border-2 transition-all',
+                              active ? 'border-foreground scale-110' : 'border-transparent opacity-70 hover:opacity-100',
+                            )}
+                            style={{ background: m.hex }}
+                            title={`Marker ${m.name}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => setPinnedOnly(p => !p)}
+                      className={cn(
+                        'w-full h-7 rounded-sm border text-xs flex items-center justify-center gap-1.5 transition-colors',
+                        pinnedOnly ? 'border-foreground bg-muted text-foreground' : 'border-border text-muted-foreground hover:bg-muted/50',
+                      )}
+                    >
+                      <Pin className={cn('h-3 w-3', pinnedOnly && 'fill-current')} />
+                      Nur angeheftete
+                    </button>
+                  </div>
+                  {activeFilterCount > 0 && (
+                    <Button size="sm" variant="ghost" onClick={() => { setColorFilters(new Set()); setMarkerFilters(new Set()); setPinnedOnly(false); }} className="w-full h-7 text-xs">
+                      Filter zurücksetzen
+                    </Button>
+                  )}
+                </PopoverContent>
+              </Popover>
+
+              {hasFilter && (
+                <Button size="sm" variant="ghost" onClick={clearFilters} className="h-7 text-xs gap-1.5 px-2">
+                  <X className="h-3 w-3" /> Alle
+                </Button>
+              )}
+
+              {activeBoard?.scope === 'shared' && activeBoard.owner_id === user?.id && (
+                <Button size="sm" variant="outline" onClick={() => setMembersBoard(activeBoard)} className="h-7 text-xs gap-1.5">
+                  <UserCog className="h-3 w-3" /> Mitglieder
+                </Button>
+              )}
+              <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
+                <Plus className="h-3 w-3" /> Post-it
+              </Button>
             </div>
             <div
               ref={canvasRef}
