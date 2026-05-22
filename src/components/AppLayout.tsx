@@ -288,7 +288,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0 relative z-[100]">
           <NotificationBell />
         </header>
-        <main className="flex-1 overflow-y-auto p-5 lg:p-8 relative z-[1]"><MfaReminderBanner />{children}</main>
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 relative z-[1]"><MfaReminderBanner />{children}</main>
       </div>
 
       <Dialog open={pwDialogOpen} onOpenChange={o => { if (!o) { setPwDialogOpen(false); setOldPw(''); setNewPw(''); setNewPwConfirm(''); setPwShowNew(false); } }}>
