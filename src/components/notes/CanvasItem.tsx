@@ -65,7 +65,10 @@ export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onB
 
   const onPointerDownDrag = (e: React.PointerEvent) => {
     if (!canEdit || note.pinned) return;
-    if ((e.target as HTMLElement).closest('[data-no-drag]')) return;
+    const tgt = e.target as HTMLElement;
+    if (tgt.closest('[data-no-drag]')) return;
+    // Don't start drag on actual interactive content (text editing, inputs, buttons)
+    if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
     onBringToFront();
     setDragging(true);
     startRef.current = { x: e.clientX, y: e.clientY, nx: note.position_x, ny: note.position_y, w: 0, h: 0 };
@@ -300,17 +303,17 @@ export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onB
 
       {/* Content area */}
       {kind === 'postit' && (
-        <div data-no-drag className="px-2 pt-1 pb-2 h-full cursor-text">
+        <div className="px-2 pt-1 pb-2 h-full">
           <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
         </div>
       )}
       {kind === 'text' && (
-        <div data-no-drag className="px-1 py-0.5 h-full cursor-text">
+        <div className="px-1 py-0.5 h-full">
           <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
         </div>
       )}
       {(kind === 'rect' || kind === 'rounded' || kind === 'circle' || kind === 'triangle') && (
-        <div data-no-drag className="relative h-full w-full flex items-center justify-center px-3 py-2 text-center cursor-text">
+        <div className="relative h-full w-full flex items-center justify-center px-3 py-2 text-center">
           <div className="w-full">
             <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
           </div>
