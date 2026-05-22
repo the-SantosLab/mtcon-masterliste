@@ -241,6 +241,11 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
+  const [caseSearch, setCaseSearch] = useState('');
+  const [caseStatusFilter, setCaseStatusFilter] = useState<string>('all');
+  const [caseAssigneeFilter, setCaseAssigneeFilter] = useState<string>('all');
+  const [caseSort, setCaseSort] = useState<SortState<PdCaseSortKey>>({ column: 'due_at', direction: 'asc' });
+  const handleCaseSort = (col: PdCaseSortKey) => setCaseSort(prev => nextSort(prev, col));
 
   const loadProject = async () => {
     if (!id) return;
