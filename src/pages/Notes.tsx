@@ -491,7 +491,7 @@ export default function Notes() {
                 })}
                 {activeBoard && notes.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground pointer-events-none">
-                    Noch keine Post-its – über "+ Post-it" hinzufügen
+                    Noch keine Elemente – über die Toolbar oben Post-it, Textfeld, Form, Pfeil oder Tabelle einfügen
                   </div>
                 )}
                 {activeBoard && notes.length > 0 && hasFilter && matchedIds.size === 0 && (
