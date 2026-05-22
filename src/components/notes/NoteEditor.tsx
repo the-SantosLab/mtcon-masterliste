@@ -9,7 +9,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type, Palette, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Custom mark attribute to set inline font-size on TextStyle
 const FontSize = Extension.create({
