@@ -461,6 +461,7 @@ export default function Notes() {
                   </button>
                 ))}
               </div>
+            </div>
             <div
               ref={canvasRef}
               className="flex-1 relative overflow-auto"
