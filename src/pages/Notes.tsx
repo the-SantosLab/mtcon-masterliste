@@ -12,11 +12,16 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, StickyNote, Trash2, Users, Lock, UserCog } from 'lucide-react';
+import { Plus, StickyNote, Trash2, Users, Lock, UserCog, Search, Filter, Pin, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { PostIt, NOTE_COLORS, type NoteColor, type NoteData } from '@/components/notes/PostIt';
 import { BoardMembersDialog } from '@/components/notes/BoardMembersDialog';
+import { MARKER_COLORS } from '@/components/notes/NoteEditor';
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 
 interface Board {
   id: string;
