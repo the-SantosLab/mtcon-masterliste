@@ -427,20 +427,32 @@ export default function Notes() {
               }}
             >
               <div className="relative" style={{ width: 3000, height: 2000 }}>
-                {notes.map(n => (
-                  <PostIt
-                    key={n.id}
-                    note={n}
-                    canEdit={canEdit}
-                    onChange={(p) => patchNote(n.id, p)}
-                    onDelete={() => deleteNote(n.id)}
-                    onDuplicate={() => duplicateNote(n)}
-                    onBringToFront={() => bringToFront(n.id)}
-                  />
-                ))}
+                {notes.map(n => {
+                  const dimmed = hasFilter && !matchedIds.has(n.id);
+                  return (
+                    <div
+                      key={n.id}
+                      style={{ opacity: dimmed ? 0.15 : 1, pointerEvents: dimmed ? 'none' : 'auto', transition: 'opacity 0.15s' }}
+                    >
+                      <PostIt
+                        note={n}
+                        canEdit={canEdit}
+                        onChange={(p) => patchNote(n.id, p)}
+                        onDelete={() => deleteNote(n.id)}
+                        onDuplicate={() => duplicateNote(n)}
+                        onBringToFront={() => bringToFront(n.id)}
+                      />
+                    </div>
+                  );
+                })}
                 {activeBoard && notes.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground pointer-events-none">
                     Noch keine Post-its – über "+ Post-it" hinzufügen
+                  </div>
+                )}
+                {activeBoard && notes.length > 0 && hasFilter && matchedIds.size === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground pointer-events-none">
+                    Keine Treffer – Filter anpassen
                   </div>
                 )}
               </div>
