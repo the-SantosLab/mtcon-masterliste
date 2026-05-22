@@ -54,6 +54,7 @@ interface Props {
   };
   canEdit: boolean;
   selected: boolean;
+  zoom?: number;
   onSelect: () => void;
   onChange: (patch: Partial<NoteData> & { kind?: ItemKind; fill_color?: string | null; stroke_color?: string | null; extra?: any }) => void;
   onDelete: () => void;
@@ -61,7 +62,7 @@ interface Props {
   onBringToFront: () => void;
 }
 
-export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDelete, onDuplicate, onBringToFront }: Props) {
+export function CanvasItem({ note, canEdit, selected, zoom = 1, onSelect, onChange, onDelete, onDuplicate, onBringToFront }: Props) {
   const kind: ItemKind = (note.kind as ItemKind) || 'postit';
   const ref = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
