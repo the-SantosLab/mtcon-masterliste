@@ -25,6 +25,29 @@ const MAX_BYTES = 20 * 1024 * 1024;
 const QUICK_REACTIONS = ['👍','❤️','✅','🎉','🤔','😂'];
 const ALL_EMOJIS = ['👍','👌','✅','❌','❤️','🔥','🎉','🙌','👀','🙏','💡','⚠️','📌','📎','✏️','🚀','😀','😂','😊','😉','😍','🤔','😅','😢','😡','🙃','👏','💯','✨','📷'];
 
+const DEPT_PALETTE = [
+  'bg-purple-500/15 text-purple-300 border-purple-500/30',
+  'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  'bg-pink-500/15 text-pink-300 border-pink-500/30',
+  'bg-blue-500/15 text-blue-300 border-blue-500/30',
+  'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+  'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  'bg-amber-500/15 text-amber-300 border-amber-500/30',
+];
+function deptColor(name?: string | null) {
+  if (!name) return DEPT_PALETTE[3];
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return DEPT_PALETTE[h % DEPT_PALETTE.length];
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  open: 'Offen', new: 'Neu', in_progress: 'In Bearbeitung', ready_for_review: 'Zur Prüfung',
+  blocked: 'Blockiert', waiting: 'Wartet', done: 'Erledigt', completed: 'Abgeschlossen', closed: 'Geschlossen',
+};
+
+interface CaseMeta { case_no: string | null; status: string | null; project_name: string | null; department_name: string | null }
+
 interface ChatAttachment {
   id: string; message_id: string; case_id: string; storage_path: string;
   file_name: string; mime_type: string | null; size_bytes: number | null;
