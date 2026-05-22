@@ -623,6 +623,30 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </div>
           )}
           {totalCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setSubtaskSort(prev => nextSort(prev, 'urgency'))}
+              className={cn(
+                'inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors',
+                isSortActive
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'border-border text-muted-foreground hover:text-foreground'
+              )}
+              title={
+                subtaskSort.direction === 'asc'
+                  ? 'Dringlichkeit: Niedrig → Hoch'
+                  : subtaskSort.direction === 'desc'
+                    ? 'Dringlichkeit: Hoch → Niedrig'
+                    : 'Nach Dringlichkeit sortieren'
+              }
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Dringlichkeit
+              {subtaskSort.direction === 'asc' && <ArrowUp className="h-3 w-3" />}
+              {subtaskSort.direction === 'desc' && <ArrowDown className="h-3 w-3" />}
+            </button>
+          )}
+          {totalCount > 0 && (
             <span className="text-[11px] text-muted-foreground">
               {completedCount}/{totalCount} erledigt
             </span>
