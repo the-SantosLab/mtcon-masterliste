@@ -329,7 +329,7 @@ export default function Notes() {
           </aside>
 
           {/* Canvas */}
-          <div className="flex-1 flex flex-col min-w-0 rounded border border-border bg-card/30 overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 rounded border border-border bg-card/30 overflow-hidden relative">
             <div className="flex items-center px-3 py-2 border-b border-border bg-card/50 gap-2 flex-wrap">
               <div className="text-xs text-muted-foreground truncate mr-auto">
                 {activeBoard ? activeBoard.name : 'Kein Board ausgewählt'}
@@ -511,34 +511,34 @@ export default function Notes() {
                   </div>
                 )}
               </div>
-              {/* Zoom controls */}
-              {activeBoard && (
-                <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg border border-border bg-card/90 shadow-md px-1.5 py-1 backdrop-blur-sm z-50">
-                  <button
-                    onClick={() => setZoom(z => Math.max(0.25, Math.round((z - 0.25) * 100) / 100))}
-                    className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                    title="Herauszoomen"
-                  >
-                    −
-                  </button>
-                  <span className="text-[10px] text-muted-foreground w-10 text-center select-none">{Math.round(zoom * 100)}%</span>
-                  <button
-                    onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.25) * 100) / 100))}
-                    className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                    title="Reinzoomen"
-                  >
-                    +
-                  </button>
-                  <button
-                    onClick={() => setZoom(1)}
-                    className="h-6 px-1.5 flex items-center justify-center rounded hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground border-l border-border ml-0.5"
-                    title="Zoom zurücksetzen"
-                  >
-                    100%
-                  </button>
-                </div>
-              )}
             </div>
+            {/* Zoom controls */}
+            {activeBoard && (
+              <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg border border-border bg-card/90 shadow-md px-1.5 py-1 backdrop-blur-sm z-50">
+                <button
+                  onClick={() => setZoom(z => Math.max(0.25, Math.round((z - 0.25) * 100) / 100))}
+                  className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                  title="Herauszoomen"
+                >
+                  −
+                </button>
+                <span className="text-[10px] text-muted-foreground w-10 text-center select-none">{Math.round(zoom * 100)}%</span>
+                <button
+                  onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.25) * 100) / 100))}
+                  className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                  title="Reinzoomen"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => setZoom(1)}
+                  className="h-6 px-1.5 flex items-center justify-center rounded hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground border-l border-border ml-0.5"
+                  title="Zoom zurücksetzen"
+                >
+                  100%
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
