@@ -82,6 +82,7 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
       TaskItem.configure({ nested: true }),
       Placeholder.configure({ placeholder: 'Notiz schreiben…' }),
       TextStyle,
+      Color.configure({ types: ['textStyle'] }),
       FontSize,
       TextAlign.configure({ types: ['paragraph', 'heading'], alignments: ['left', 'center', 'right', 'justify'] }),
     ],
