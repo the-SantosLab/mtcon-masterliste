@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import type { Editor } from '@tiptap/react';
+import { FormattingToolbar } from './NoteEditor';
 import { Pin, Trash2, Copy, Palette, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NoteEditor } from './NoteEditor';
