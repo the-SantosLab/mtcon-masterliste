@@ -813,8 +813,8 @@ export function CaseChat({ caseId, canWrite }: Props) {
                                     key={emoji}
                                     onClick={() => toggleReaction(m, emoji)}
                                     className={cn(
-                                      'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] transition-colors',
-                                      mineReacted ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border bg-muted/30 hover:bg-muted',
+                                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs transition-colors',
+                                      mineReacted ? 'border-primary/40 bg-primary/10 text-primary' : 'border-border bg-muted/40 hover:bg-muted',
                                     )}
                                   >
                                     <span>{emoji}</span>
