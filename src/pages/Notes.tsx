@@ -439,10 +439,28 @@ export default function Notes() {
                   <UserCog className="h-3 w-3" /> Mitglieder
                 </Button>
               )}
-              <Button size="sm" onClick={addNote} disabled={!canEdit} className="h-7 text-xs gap-1.5">
-                <Plus className="h-3 w-3" /> Post-it
-              </Button>
-            </div>
+              <div className="flex items-center gap-0.5 rounded border border-border bg-card/60 p-0.5">
+                {([
+                  { k: 'postit' as ItemKind, icon: Sticker, title: 'Post-it' },
+                  { k: 'text' as ItemKind, icon: Type, title: 'Textfeld' },
+                  { k: 'rect' as ItemKind, icon: Square, title: 'Rechteck' },
+                  { k: 'rounded' as ItemKind, icon: Square, title: 'Abgerundetes Rechteck', rounded: true },
+                  { k: 'circle' as ItemKind, icon: Circle, title: 'Kreis' },
+                  { k: 'triangle' as ItemKind, icon: Triangle, title: 'Dreieck' },
+                  { k: 'arrow' as ItemKind, icon: ArrowRight, title: 'Pfeil' },
+                  { k: 'table' as ItemKind, icon: TableIcon, title: 'Tabelle' },
+                ]).map(({ k, icon: Icon, title, rounded }) => (
+                  <button
+                    key={k}
+                    onClick={() => addItem(k)}
+                    disabled={!canEdit}
+                    className="h-6 w-6 flex items-center justify-center rounded-sm hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent text-muted-foreground hover:text-foreground"
+                    title={title}
+                  >
+                    <Icon className="h-3.5 w-3.5" strokeWidth={rounded ? 1.4 : undefined} />
+                  </button>
+                ))}
+              </div>
             <div
               ref={canvasRef}
               className="flex-1 relative overflow-auto"
