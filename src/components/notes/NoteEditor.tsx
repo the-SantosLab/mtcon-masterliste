@@ -227,4 +227,42 @@ function FontSizeSelect({ editor }: { editor: Editor }) {
   );
 }
 
+function TextColorPicker({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const current = editor.getAttributes('textStyle')?.color as string | undefined;
+  return (
+    <div className="relative">
+      <ToolBtn active={!!current} onClick={() => setOpen(!open)}><Palette className="h-3 w-3" /></ToolBtn>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 flex items-center gap-0.5 bg-popover border border-border rounded-md shadow-md p-1 z-50">
+          {TEXT_COLORS.map(c => (
+            <button
+              key={c.name}
+              type="button"
+              onClick={() => {
+                editor.chain().focus().setColor(c.hex).run();
+                setOpen(false);
+              }}
+              title={c.name}
+              className="h-4 w-4 rounded-full border border-foreground/20"
+              style={{ background: c.hex }}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().unsetColor().run();
+              setOpen(false);
+            }}
+            title="Farbe entfernen"
+            className="h-4 w-4 rounded-full border border-foreground/20 flex items-center justify-center text-foreground/60"
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
