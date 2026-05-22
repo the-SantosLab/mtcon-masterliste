@@ -55,6 +55,16 @@ export const MARKER_COLORS = [
   { name: 'green', hex: 'hsl(140 60% 65% / 0.55)' },
 ] as const;
 
+export const TEXT_COLORS = [
+  { name: 'black', hex: '#111827' },
+  { name: 'red', hex: '#dc2626' },
+  { name: 'blue', hex: '#2563eb' },
+  { name: 'green', hex: '#16a34a' },
+  { name: 'yellow', hex: '#ca8a04' },
+  { name: 'gray', hex: '#6b7280' },
+  { name: 'white', hex: '#ffffff' },
+] as const;
+
 interface Props {
   content: string;
   onUpdate: (html: string) => void;
