@@ -857,6 +857,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                               </span>
                             );
                           })()}
+                          <span onClick={(e) => e.stopPropagation()} className="ml-auto">
+                            <UrgencyPicker value={(task as any).urgency} table="case_tasks" rowId={task.id} readOnly={!canEditTask} size="xs" />
+                          </span>
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
