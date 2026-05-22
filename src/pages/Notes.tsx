@@ -465,6 +465,7 @@ export default function Notes() {
             </div>
             <div
               ref={canvasRef}
+              onPointerDown={(e) => { if (e.target === e.currentTarget || (e.target as HTMLElement).dataset?.canvasBg) setSelectedId(null); }}
               className="flex-1 relative overflow-auto"
               style={{
                 backgroundImage: 'radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)',
