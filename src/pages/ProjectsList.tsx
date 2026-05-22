@@ -13,10 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import {
   Plus, Search, Folder, ChevronRight, CheckCircle2,
-  Clock, Archive, FolderOpen,
+  Clock, Archive, FolderOpen, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+
+type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at';
 
 type ViewMode = 'compact' | 'normal';
 
