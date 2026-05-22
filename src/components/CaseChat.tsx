@@ -683,14 +683,19 @@ export function CaseChat({ caseId, canWrite }: Props) {
               return (
                 <div key={m.id} ref={el => { messageRefs.current[m.id] = el; }}>
                   {isUnreadDivider && <UnreadDivider />}
-                  <div className={cn('flex gap-2 group rounded px-1 py-0.5 -mx-1', m.pinned && 'bg-amber-500/5')}>
-                    <UserAvatar user={m.author} size="sm" />
+                  <div className={cn('flex gap-3 group rounded-lg px-2 py-1.5 -mx-2', m.pinned && 'bg-amber-500/5')}>
+                    <div className="shrink-0"><UserAvatar user={m.author} size="md" /></div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-foreground">{m.author?.display_name || '—'}</span>
-                        <span className="text-[10px] text-muted-foreground">{time}</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-foreground">{m.author?.display_name || '—'}</span>
+                        {userDepts[m.author_id] && (
+                          <span className={cn('text-[10px] px-1.5 py-0.5 rounded border font-medium', deptColor(userDepts[m.author_id]))}>
+                            {userDepts[m.author_id]}
+                          </span>
+                        )}
+                        {m.pinned && <span className="text-[10px] text-amber-500 flex items-center gap-0.5 font-medium">📌 Angeheftet</span>}
                         {m.edited_at && <span className="text-[10px] text-muted-foreground italic">(bearbeitet)</span>}
-                        {m.pinned && <span className="text-[10px] text-amber-600 flex items-center gap-0.5"><Pin className="h-2.5 w-2.5" />angepinnt</span>}
+                        <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">{time}</span>
                         {editId !== m.id && (
                           <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                             <Popover>
