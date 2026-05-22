@@ -1687,12 +1687,16 @@ export type Database = {
           color: string
           content: string
           created_at: string
+          extra: Json
+          fill_color: string | null
           height: number
           highlights: Json
           id: string
+          kind: string
           pinned: boolean
           position_x: number
           position_y: number
+          stroke_color: string | null
           updated_at: string
           width: number
           z_index: number
@@ -1705,12 +1709,16 @@ export type Database = {
           color?: string
           content?: string
           created_at?: string
+          extra?: Json
+          fill_color?: string | null
           height?: number
           highlights?: Json
           id?: string
+          kind?: string
           pinned?: boolean
           position_x?: number
           position_y?: number
+          stroke_color?: string | null
           updated_at?: string
           width?: number
           z_index?: number
@@ -1723,12 +1731,16 @@ export type Database = {
           color?: string
           content?: string
           created_at?: string
+          extra?: Json
+          fill_color?: string | null
           height?: number
           highlights?: Json
           id?: string
+          kind?: string
           pinned?: boolean
           position_x?: number
           position_y?: number
+          stroke_color?: string | null
           updated_at?: string
           width?: number
           z_index?: number
