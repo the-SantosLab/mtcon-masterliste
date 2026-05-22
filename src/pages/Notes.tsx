@@ -48,6 +48,7 @@ export default function Notes() {
   const [colorFilters, setColorFilters] = useState<Set<NoteColor>>(new Set());
   const [markerFilters, setMarkerFilters] = useState<Set<string>>(new Set());
   const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
