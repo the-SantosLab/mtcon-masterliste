@@ -198,6 +198,8 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
       >
         <Highlighter className="h-2.5 w-2.5" />
       </button>
+      <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+      <TextColorPicker editor={editor} />
     </div>
   );
 }
