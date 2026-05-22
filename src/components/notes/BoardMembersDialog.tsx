@@ -181,7 +181,7 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
                     </Select>
                     <Button
                       size="sm"
-                      onClick={inviteSelected}
+                      onClick={openConfirm}
                       disabled={selectedIds.length === 0 || adding}
                       className="h-7 text-xs gap-1.5"
                     >
