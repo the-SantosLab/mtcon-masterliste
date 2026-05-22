@@ -48,6 +48,7 @@ export default function Notes() {
   const [colorFilters, setColorFilters] = useState<Set<NoteColor>>(new Set());
   const [markerFilters, setMarkerFilters] = useState<Set<string>>(new Set());
   const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -464,13 +465,17 @@ export default function Notes() {
             </div>
             <div
               ref={canvasRef}
+              onPointerDown={(e) => { if (e.target === e.currentTarget || (e.target as HTMLElement).dataset?.canvasBg) setSelectedId(null); }}
               className="flex-1 relative overflow-auto"
               style={{
                 backgroundImage: 'radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)',
                 backgroundSize: '24px 24px',
               }}
             >
-              <div className="relative" style={{ width: 3000, height: 2000 }}>
+              <div
+                data-canvas-bg
+                onPointerDown={(e) => { if (e.target === e.currentTarget) setSelectedId(null); }}
+                className="relative" style={{ width: 3000, height: 2000 }}>
                 {notes.map(n => {
                   const dimmed = hasFilter && !matchedIds.has(n.id);
                   return (
@@ -479,6 +484,8 @@ export default function Notes() {
                       style={{ opacity: dimmed ? 0.15 : 1, pointerEvents: dimmed ? 'none' : 'auto', transition: 'opacity 0.15s' }}
                     >
                       <CanvasItem
+                        selected={selectedId === n.id}
+                        onSelect={() => setSelectedId(n.id)}
                         note={n}
                         canEdit={canEdit}
                         onChange={(p) => patchNote(n.id, p)}

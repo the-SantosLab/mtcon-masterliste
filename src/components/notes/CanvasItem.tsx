@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import type { Editor } from '@tiptap/react';
+import { FormattingToolbar } from './NoteEditor';
 import { Pin, Trash2, Copy, Palette, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NoteEditor } from './NoteEditor';
@@ -50,24 +52,31 @@ interface Props {
     extra?: any;
   };
   canEdit: boolean;
+  selected: boolean;
+  onSelect: () => void;
   onChange: (patch: Partial<NoteData> & { kind?: ItemKind; fill_color?: string | null; stroke_color?: string | null; extra?: any }) => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onBringToFront: () => void;
 }
 
-export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onBringToFront }: Props) {
+export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDelete, onDuplicate, onBringToFront }: Props) {
   const kind: ItemKind = (note.kind as ItemKind) || 'postit';
   const ref = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const startRef = useRef({ x: 0, y: 0, nx: 0, ny: 0, w: 0, h: 0 });
 
   const onPointerDownDrag = (e: React.PointerEvent) => {
-    if (!canEdit || note.pinned) return;
+    if (!canEdit) {
+      onSelect();
+      return;
+    }
+    onSelect();
+    if (note.pinned) return;
     const tgt = e.target as HTMLElement;
     if (tgt.closest('[data-no-drag]')) return;
-    // Don't start drag on actual interactive content (text editing, inputs, buttons)
     if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
     onBringToFront();
     setDragging(true);
@@ -144,6 +153,7 @@ export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onB
         hasShadow && (dragging || resizing ? 'shadow-xl' : 'hover:shadow-lg shadow-md'),
         kind === 'postit' && 'rounded-sm',
         canEdit && !note.pinned && 'cursor-grab active:cursor-grabbing',
+        selected && 'outline outline-2 outline-primary/60 outline-offset-2 rounded-sm',
       )}
       style={{
         transform: `translate(${note.position_x}px, ${note.position_y}px)`,
@@ -195,17 +205,18 @@ export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onB
         </svg>
       )}
 
-      {/* Toolbar */}
+      {/* Toolbar — only when selected */}
+      {selected && canEdit && (
       <div
         data-no-drag
+        onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          'absolute -top-7 left-0 right-0 flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-card/95 border border-border shadow-sm transition-opacity',
-          'opacity-0 group-hover/item:opacity-100',
+          'absolute -top-8 left-0 flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-card border border-border shadow-md whitespace-nowrap',
         )}
       >
         <button
           type="button"
-          onClick={() => canEdit && onChange({ pinned: !note.pinned })}
+          onClick={() => onChange({ pinned: !note.pinned })}
           className={cn('h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted', note.pinned && 'text-foreground')}
           title={note.pinned ? 'Lösen' : 'Anheften'}
         >
@@ -289,33 +300,33 @@ export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onB
             onChange={(extra) => onChange({ extra })}
           />
         )}
-        {canEdit && (
-          <>
-            <button onClick={onDuplicate} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted" title="Duplizieren">
-              <Copy className="h-3 w-3" />
-            </button>
-            <button onClick={onDelete} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-destructive/20 text-destructive" title="Löschen">
-              <Trash2 className="h-3 w-3" />
-            </button>
-          </>
-        )}
+        <>
+          <button onClick={onDuplicate} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted" title="Duplizieren">
+            <Copy className="h-3 w-3" />
+          </button>
+          <button onClick={onDelete} className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-destructive/20 text-destructive" title="Löschen">
+            <Trash2 className="h-3 w-3" />
+          </button>
+        </>
+        {kind !== 'arrow' && kind !== 'table' && <FormattingToolbar editor={editor} />}
       </div>
+      )}
 
       {/* Content area */}
       {kind === 'postit' && (
         <div className="px-2 pt-1 pb-2 h-full">
-          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
+          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} hideToolbar onEditorReady={setEditor} />
         </div>
       )}
       {kind === 'text' && (
         <div className="px-1 py-0.5 h-full">
-          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
+          <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} hideToolbar onEditorReady={setEditor} />
         </div>
       )}
       {(kind === 'rect' || kind === 'rounded' || kind === 'circle' || kind === 'triangle') && (
         <div className="relative h-full w-full flex items-center justify-center px-3 py-2 text-center">
           <div className="w-full">
-            <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} />
+            <NoteEditor content={note.content} onUpdate={(html) => onChange({ content: html })} readOnly={!canEdit} hideToolbar onEditorReady={setEditor} />
           </div>
         </div>
       )}
