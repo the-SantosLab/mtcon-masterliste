@@ -10,7 +10,7 @@ import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, STATUS_DOT_COLOR
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { Search, Plus, UserCheck } from 'lucide-react';
+import { Search, Plus, UserCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { cn } from '@/lib/utils';
 import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
+import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+
+type CaseSortKey = 'status' | 'case_no' | 'project_name' | 'project' | 'assignee' | 'department' | 'customer' | 'due_at';
+type DueFilter = 'all' | 'overdue' | 'today' | 'week' | 'next14' | 'none';
 
 type CaseRow = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
@@ -50,8 +54,17 @@ export default function CasesList() {
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [deptFilter, setDeptFilter] = useState<string>('all');
+  const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [onlyMine, setOnlyMine] = useState<boolean>(() => {
     try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
+  });
+  const [sort, setSort] = useState<SortState<CaseSortKey>>(() => {
+    try {
+      const col = localStorage.getItem('casesSort_column') as CaseSortKey | null;
+      const dir = localStorage.getItem('casesSort_direction') as 'asc' | 'desc' | null;
+      if (col && dir) return { column: col, direction: dir };
+    } catch {}
+    return { column: 'due_at', direction: 'asc' };
   });
   const [searchParams] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
@@ -103,7 +116,49 @@ export default function CasesList() {
     });
   };
 
+  const handleSort = (col: CaseSortKey) => {
+    setSort(prev => {
+      const next = nextSort(prev, col);
+      try {
+        if (next.column && next.direction) {
+          localStorage.setItem('casesSort_column', next.column);
+          localStorage.setItem('casesSort_direction', next.direction);
+        } else {
+          localStorage.removeItem('casesSort_column');
+          localStorage.removeItem('casesSort_direction');
+        }
+      } catch {}
+      return next;
+    });
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setStatusFilter([...allStatuses]);
+    setAssigneeFilter('all');
+    setProjectFilter('all');
+    setDeptFilter('all');
+    setDueFilter('all');
+    setOnlyMine(false);
+    try {
+      localStorage.removeItem('casesFilter_statuses');
+      localStorage.setItem('casesFilter_onlyMine', 'false');
+    } catch {}
+  };
+
+  const filtersActive =
+    !!search ||
+    statusFilter.length !== allStatuses.length ||
+    assigneeFilter !== 'all' ||
+    projectFilter !== 'all' ||
+    deptFilter !== 'all' ||
+    dueFilter !== 'all' ||
+    onlyMine;
+
   const creatorDeptMap = Object.fromEntries(profiles.map(p => [p.id, p.department_id]));
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const inDays = (d: Date, n: number) => { const x = new Date(today); x.setDate(x.getDate() + n); return d <= x; };
 
   const filtered = cases.filter(c => {
     if (onlyMine && c.assignee_id !== user?.id) return false;
@@ -123,12 +178,44 @@ export default function CasesList() {
         if (!caseMatchesDept(c, deptFilter, childIds, creatorDeptMap)) return false;
       }
     }
+    if (dueFilter !== 'all') {
+      if (dueFilter === 'none') {
+        if (c.due_at) return false;
+      } else {
+        if (!c.due_at) return false;
+        const d = new Date(c.due_at); d.setHours(0, 0, 0, 0);
+        if (dueFilter === 'overdue' && d >= today) return false;
+        if (dueFilter === 'today' && d.getTime() !== today.getTime()) return false;
+        if (dueFilter === 'week' && (d < today || !inDays(d, 7))) return false;
+        if (dueFilter === 'next14' && (d < today || !inDays(d, 14))) return false;
+      }
+    }
     if (search) {
       const s = search.toLowerCase();
       if (![c.case_no, c.project_name, c.client_name, c.project_article_no, c.project?.project_number, c.project?.name].some(v => v?.toLowerCase().includes(s))) return false;
     }
     return true;
   });
+
+  const statusOrder = allStatuses as readonly string[];
+  const sorted = sort.column && sort.direction ? sortBy(filtered, (c) => {
+    switch (sort.column) {
+      case 'status': return statusOrder.indexOf(c.status);
+      case 'case_no': return c.case_no;
+      case 'project_name': return c.project_name;
+      case 'project': return c.project?.project_number ?? null;
+      case 'assignee': return c.assignee?.short_code ?? null;
+      case 'department': {
+        if (c.department?.name) return c.department.name;
+        const { effectiveId } = resolveEffectiveDeptId(c, creatorDeptMap);
+        return effectiveId ? departments.find(d => d.id === effectiveId)?.name ?? null : null;
+      }
+      case 'customer': return c.customer_no;
+      case 'due_at': return c.due_at ? new Date(c.due_at).getTime() : null;
+      default: return null;
+    }
+  }, sort.direction) : filtered;
+
 
   return (
     <AppLayout>
@@ -212,6 +299,17 @@ export default function CasesList() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={dueFilter} onValueChange={(v) => setDueFilter(v as DueFilter)}>
+            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Termin" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Termine</SelectItem>
+              <SelectItem value="overdue">Überfällig</SelectItem>
+              <SelectItem value="today">Heute fällig</SelectItem>
+              <SelectItem value="week">≤ 7 Tage</SelectItem>
+              <SelectItem value="next14">≤ 14 Tage</SelectItem>
+              <SelectItem value="none">Ohne Termin</SelectItem>
+            </SelectContent>
+          </Select>
           <button
             onClick={toggleOnlyMine}
             className={cn(
@@ -225,6 +323,14 @@ export default function CasesList() {
             Nur meine
             {onlyMine && <span className="ml-0.5 bg-primary text-primary-foreground text-[10px] rounded-full px-1 leading-none py-0.5">{filtered.length}</span>}
           </button>
+          {filtersActive && (
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-md border border-input bg-background text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />Filter zurücksetzen
+            </button>
+          )}
         </div>
 
         {/* Legend */}
@@ -241,23 +347,23 @@ export default function CasesList() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projekt</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Kunde</th>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</th>
+                <SortableHeader column="status" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</SortableHeader>
+                <SortableHeader column="case_no" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</SortableHeader>
+                <SortableHeader column="project_name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</SortableHeader>
+                <SortableHeader column="project" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projekt</SortableHeader>
+                <SortableHeader column="assignee" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
+                <SortableHeader column="department" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</SortableHeader>
+                <SortableHeader column="customer" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Kunde</SortableHeader>
+                <SortableHeader column="due_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</SortableHeader>
                 <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Aktionen</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
-              ) : filtered.length === 0 ? (
+              ) : sorted.length === 0 ? (
                 <tr><td colSpan={9} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
-              ) : filtered.map(c => (
+              ) : sorted.map(c => (
                 <tr key={c.id} className="hover:bg-muted/40 transition-colors">
                   <td className={cellCls}>
                     <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">

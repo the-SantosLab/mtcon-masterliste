@@ -13,10 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import {
   Plus, Search, Folder, ChevronRight, CheckCircle2,
-  Clock, Archive, FolderOpen,
+  Clock, Archive, FolderOpen, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+
+type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at';
 
 type ViewMode = 'compact' | 'normal';
 
@@ -65,9 +68,20 @@ export default function ProjectsList() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [owners, setOwners] = useState<{ id: string; short_code: string; display_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [ownerFilter, setOwnerFilter] = useState('all');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [sort, setSort] = useState<SortState<ProjectSortKey>>(() => {
+    try {
+      const col = localStorage.getItem('projectsSort_column') as ProjectSortKey | null;
+      const dir = localStorage.getItem('projectsSort_direction') as 'asc' | 'desc' | null;
+      if (col && dir) return { column: col, direction: dir };
+    } catch {}
+    return { column: 'created_at', direction: 'desc' };
+  });
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
@@ -85,9 +99,10 @@ export default function ProjectsList() {
     if (ownerIds.length) {
       const { data: profs } = await supabase
         .from('users_profile')
-        .select('id, short_code')
+        .select('id, short_code, display_name')
         .in('id', ownerIds);
       ownerMap = Object.fromEntries((profs || []).map((u: any) => [u.id, u.short_code]));
+      setOwners((profs || []) as any);
     }
     const deptMap = Object.fromEntries(departments.map(d => [d.id, d.name]));
     setProjects(
@@ -107,14 +122,56 @@ export default function ProjectsList() {
 
   useEffect(() => { fetchProjects(); }, [departments]);
 
-  const filtered = projects.filter(p => {
+  const handleSort = (col: ProjectSortKey) => {
+    setSort(prev => {
+      const next = nextSort(prev, col);
+      try {
+        if (next.column && next.direction) {
+          localStorage.setItem('projectsSort_column', next.column);
+          localStorage.setItem('projectsSort_direction', next.direction);
+        } else {
+          localStorage.removeItem('projectsSort_column');
+          localStorage.removeItem('projectsSort_direction');
+        }
+      } catch {}
+      return next;
+    });
+  };
+
+  const resetFilters = () => {
+    setSearch(''); setStatusFilter('all'); setOwnerFilter('all'); setDeptFilter('all');
+  };
+  const filtersActive = !!search || statusFilter !== 'all' || ownerFilter !== 'all' || deptFilter !== 'all';
+
+  const filteredRaw = projects.filter(p => {
     if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+    if (ownerFilter !== 'all') {
+      if (ownerFilter === '_none' && p.owner_id) return false;
+      if (ownerFilter !== '_none' && p.owner_id !== ownerFilter) return false;
+    }
+    if (deptFilter !== 'all') {
+      if (deptFilter === '_none' && p.department_id) return false;
+      if (deptFilter !== '_none' && p.department_id !== deptFilter) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       if (![p.name, p.project_number, p.project_code, p.description].some(v => v?.toLowerCase().includes(s))) return false;
     }
     return true;
   });
+
+  const filtered = sort.column && sort.direction ? sortBy(filteredRaw, (p) => {
+    switch (sort.column) {
+      case 'project_number': return p.project_number;
+      case 'name': return p.name;
+      case 'status': return p.status;
+      case 'owner': return p.owner_code ?? null;
+      case 'dept': return p.dept_name ?? null;
+      case 'created_at': return new Date(p.created_at).getTime();
+      default: return null;
+    }
+  }, sort.direction) : filteredRaw;
+
 
   const createProject = async () => {
     if (!form.name.trim()) return toast.error('Projektname erforderlich');
@@ -189,7 +246,7 @@ export default function ProjectsList() {
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche nach Name, Nummer…" className="pl-9 h-8 text-xs" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Status</SelectItem>
               <SelectItem value="active">Aktiv</SelectItem>
@@ -197,6 +254,30 @@ export default function ProjectsList() {
               <SelectItem value="archived">Archiviert</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Verantwortlich" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Verantwortlichen</SelectItem>
+              <SelectItem value="_none">Ohne Verantwortlichen</SelectItem>
+              {owners.map(o => <SelectItem key={o.id} value={o.id}>{o.short_code}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Abteilung" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Abteilungen</SelectItem>
+              <SelectItem value="_none">Ohne Abteilung</SelectItem>
+              {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {filtersActive && (
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-md border border-input bg-background text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />Zurücksetzen
+            </button>
+          )}
         </div>
 
         {/* Table */}
@@ -206,10 +287,10 @@ export default function ProjectsList() {
               <thead>
                 <tr className="border-b border-border">
                   <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground w-6')}></th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Nr.</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</th>
+                  <SortableHeader column="project_number" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Nr.</SortableHeader>
+                  <SortableHeader column="name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</SortableHeader>
+                  <SortableHeader column="owner" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
+                  <SortableHeader column="created_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Erstellt</SortableHeader>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -234,7 +315,7 @@ export default function ProjectsList() {
                       <Link to={`/projects/${p.id}`} className="text-foreground hover:text-primary transition-colors truncate">{p.name}</Link>
                     </td>
                     <td className={cn(cellCls, 'text-muted-foreground font-mono')}>{p.owner_code || '–'}</td>
-                    <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>–</td>
+                    <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{format(new Date(p.created_at), 'dd.MM.yyyy')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -243,12 +324,12 @@ export default function ProjectsList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projekt-Nr.</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Name</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</th>
+                  <SortableHeader column="project_number" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projekt-Nr.</SortableHeader>
+                  <SortableHeader column="name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Name</SortableHeader>
+                  <SortableHeader column="dept" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</SortableHeader>
+                  <SortableHeader column="status" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</SortableHeader>
                   <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Sichtbarkeit</th>
-                  <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Erstellt</th>
+                  <SortableHeader column="created_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Erstellt</SortableHeader>
                   <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}></th>
                 </tr>
               </thead>
