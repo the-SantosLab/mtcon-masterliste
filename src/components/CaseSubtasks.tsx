@@ -748,12 +748,6 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           <p className="text-xs text-muted-foreground py-2">Laden…</p>
         ) : tasks.length === 0 && !canEdit ? (
           <p className="text-xs text-muted-foreground py-2">Keine Unteraufgaben</p>
-        ) : isSortActive ? (
-          <div className="space-y-1">
-            {sortedDisplayTasks.slice(0, visibleCount).map((task) => (
-              <SubtaskListItem key={task.id} task={task} />
-            ))}
-          </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={tasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
