@@ -299,6 +299,17 @@ export default function CasesList() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={dueFilter} onValueChange={(v) => setDueFilter(v as DueFilter)}>
+            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Termin" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Termine</SelectItem>
+              <SelectItem value="overdue">Überfällig</SelectItem>
+              <SelectItem value="today">Heute fällig</SelectItem>
+              <SelectItem value="week">≤ 7 Tage</SelectItem>
+              <SelectItem value="next14">≤ 14 Tage</SelectItem>
+              <SelectItem value="none">Ohne Termin</SelectItem>
+            </SelectContent>
+          </Select>
           <button
             onClick={toggleOnlyMine}
             className={cn(
@@ -312,6 +323,14 @@ export default function CasesList() {
             Nur meine
             {onlyMine && <span className="ml-0.5 bg-primary text-primary-foreground text-[10px] rounded-full px-1 leading-none py-0.5">{filtered.length}</span>}
           </button>
+          {filtersActive && (
+            <button
+              onClick={resetFilters}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-md border border-input bg-background text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors shrink-0"
+            >
+              <X className="h-3.5 w-3.5" />Filter zurücksetzen
+            </button>
+          )}
         </div>
 
         {/* Legend */}
