@@ -87,11 +87,18 @@ export function BoardMembersDialog({ boardId, boardName, ownerId, open, onOpenCh
     load();
   }
 
+  const [savingMemberId, setSavingMemberId] = useState<string | null>(null);
+
   async function changeRole(memberId: string, role: 'view' | 'edit') {
+    const target = members.find(m => m.id === memberId);
+    if (!target || target.role === role) return;
+    setSavingMemberId(memberId);
     const prev = members;
     setMembers(arr => arr.map(m => m.id === memberId ? { ...m, role } : m));
     const { error } = await supabase.from('note_board_members').update({ role }).eq('id', memberId);
-    if (error) { setMembers(prev); toast.error(error.message); }
+    setSavingMemberId(null);
+    if (error) { setMembers(prev); toast.error(error.message); return; }
+    toast.success(`Berechtigung auf „${role === 'edit' ? 'Bearbeiten' : 'Lesen'}" geändert`);
   }
 
   async function removeMember(memberId: string) {
