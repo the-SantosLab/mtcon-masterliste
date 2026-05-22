@@ -121,7 +121,8 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
             className="text-xs font-mono"
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
           />
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center gap-2">
+            <MtiqButton text={text} onResult={setText} />
             <Button size="sm" onClick={submit} disabled={!text.trim() || sending} className="h-7 text-xs">
               <Send className="h-3 w-3 mr-1" />Hinzufügen
             </Button>
