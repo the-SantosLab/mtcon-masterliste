@@ -881,7 +881,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
             </div>
           )}
           <div
-            className={cn('relative rounded border border-input bg-background', dragOver && 'ring-2 ring-primary')}
+            className={cn('relative rounded-2xl border border-border bg-background/50 shadow-sm transition-all', dragOver && 'ring-2 ring-primary border-primary')}
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
@@ -901,19 +901,19 @@ export function CaseChat({ caseId, canWrite }: Props) {
               onChange={handleTextChange}
               onPaste={onPaste}
               onKeyDown={onKeyDown}
-              placeholder="Nachricht… @ für Erwähnung, **fett** *kursiv* `code`, ↑ um letzte Nachricht zu bearbeiten"
-              className="text-xs min-h-[56px] max-h-[200px] border-0 focus-visible:ring-0 resize-none"
+              placeholder="Nachricht schreiben… (@Mention, #VOR-Nummer)"
+              className="text-sm min-h-[88px] max-h-[240px] border-0 focus-visible:ring-0 resize-none bg-transparent px-4 pt-3"
               disabled={sending}
             />
-            <div className="flex items-center justify-between px-2 pb-1.5">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center justify-between px-3 pb-2">
+              <div className="flex items-center gap-0.5">
                 <input ref={fileRef} type="file" multiple className="hidden" onChange={e => { if (e.target.files) addFiles(e.target.files); e.target.value=''; }} />
-                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => fileRef.current?.click()} title="Datei anhängen">
-                  <Paperclip className="h-3.5 w-3.5" />
+                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" onClick={() => fileRef.current?.click()} title="Datei anhängen">
+                  <Paperclip className="h-4 w-4" />
                 </Button>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button type="button" size="icon" variant="ghost" className="h-7 w-7" title="Emoji"><Smile className="h-3.5 w-3.5" /></Button>
+                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" title="Emoji"><Smile className="h-4 w-4" /></Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-2" align="start">
                     <div className="grid grid-cols-8 gap-1">
@@ -924,8 +924,13 @@ export function CaseChat({ caseId, canWrite }: Props) {
                   </PopoverContent>
                 </Popover>
               </div>
-              <Button type="button" size="sm" className="h-7 text-xs" onClick={send} disabled={sending || (!text.trim() && pending.length === 0)}>
-                {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Send className="h-3 w-3 mr-1" />Senden</>}
+              <Button
+                type="button"
+                onClick={send}
+                disabled={sending || (!text.trim() && pending.length === 0)}
+                className="h-9 px-5 rounded-full text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20"
+              >
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-3.5 w-3.5 mr-1.5" />Senden</>}
               </Button>
             </div>
           </div>
