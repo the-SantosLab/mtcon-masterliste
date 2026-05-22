@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch } from 'lucide-react';
+import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch, ArrowUpDown } from 'lucide-react';
+import { nextSort, type SortState }    from '@/components/SortableHeader';
 import {
   DndContext,
   closestCenter,
@@ -51,6 +52,7 @@ interface Subtask {
   assigned_to: string | null;
   status: string;
   due_at: string | null;
+  urgency: number | null;
 }
 
 interface Dept { id: string; name: string; code: string | null; parent_id: string | null; }
@@ -216,6 +218,22 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [sendCreateEmail, setSendCreateEmail] = useState(true);
   const [sendCompleteEmail, setSendCompleteEmail] = useState(true);
   const [sendAssignEmail, setSendAssignEmail] = useState(true);
+  const [subtaskSort, setSubtaskSort] = useState<SortState<'urgency'>>({ column: null, direction: null });
+  const isSortActive = !!subtaskSort.column;
+
+  const displayTasks = useMemo(() => {
+    if (!subtaskSort.column || !subtaskSort.direction) return tasks;
+    const copy = [...tasks];
+    copy.sort((a, b) => {
+      const av = a.urgency ?? 0;
+      const bv = b.urgency ?? 1;
+      const aVal = av === 0 ? -1 : av;
+      const bVal = bv === 0 ? -1 : bv;
+      if (aVal === bVal) return a.sort_order - b.sort_order;
+      return subtaskSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    return copy;
+  }, [tasks, subtaskSort]);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
@@ -603,6 +621,30 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </div>
           )}
           {totalCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setSubtaskSort(prev => nextSort(prev, 'urgency'))}
+              className={cn(
+                'inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded border transition-colors',
+                isSortActive
+                  ? 'bg-primary/10 text-primary border-primary/30'
+                  : 'border-border text-muted-foreground hover:text-foreground'
+              )}
+              title={
+                subtaskSort.direction === 'asc'
+                  ? 'Dringlichkeit: Niedrig → Hoch'
+                  : subtaskSort.direction === 'desc'
+                    ? 'Dringlichkeit: Hoch → Niedrig'
+                    : 'Nach Dringlichkeit sortieren'
+              }
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              Dringlichkeit
+              {subtaskSort.direction === 'asc' && <ArrowUp className="h-3 w-3" />}
+              {subtaskSort.direction === 'desc' && <ArrowDown className="h-3 w-3" />}
+            </button>
+          )}
+          {totalCount > 0 && (
             <span className="text-[11px] text-muted-foreground">
               {completedCount}/{totalCount} erledigt
             </span>
@@ -702,12 +744,12 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
         <>
         {loading ? (
           <p className="text-xs text-muted-foreground py-2">Laden…</p>
-        ) : tasks.length === 0 && !canEdit ? (
+        ) : displayTasks.length === 0 && !canEdit ? (
           <p className="text-xs text-muted-foreground py-2">Keine Unteraufgaben</p>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={tasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {tasks.slice(0, visibleCount).map((task, index) => {
+            <SortableContext items={displayTasks.slice(0, visibleCount).map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {displayTasks.slice(0, visibleCount).map((task, index) => {
                 const isExpanded = expandedId === task.id;
                 const st = STATUS_MAP[task.status] || STATUS_MAP.open;
                 const canEditTask = canEdit;
@@ -719,9 +761,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                   <SortableSubtaskRow
                     key={task.id}
                     id={task.id}
-                    canReorder={canEdit}
+                    canReorder={canEdit && !isSortActive}
                     isFirst={index === 0}
-                    isLast={index === tasks.length - 1}
+                    isLast={index === displayTasks.length - 1}
                     onMoveUp={() => moveTask(task.id, -1)}
                     onMoveDown={() => moveTask(task.id, 1)}
                   >
@@ -741,7 +783,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
                           onClick={() => setExpandedId(isExpanded ? null : task.id)}
                         >
-                          {canEdit && (
+                          {canEdit && !isSortActive && (
                             <>
                               <button
                                 type="button"
@@ -766,7 +808,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); moveTask(task.id, 1); }}
-                                  disabled={index === tasks.length - 1}
+                                  disabled={index === displayTasks.length - 1}
                                   aria-label="Nach unten"
                                   className="h-3.5 w-4 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
                                 >
