@@ -52,17 +52,20 @@ interface Props {
     extra?: any;
   };
   canEdit: boolean;
+  selected: boolean;
+  onSelect: () => void;
   onChange: (patch: Partial<NoteData> & { kind?: ItemKind; fill_color?: string | null; stroke_color?: string | null; extra?: any }) => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onBringToFront: () => void;
 }
 
-export function CanvasItem({ note, canEdit, onChange, onDelete, onDuplicate, onBringToFront }: Props) {
+export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDelete, onDuplicate, onBringToFront }: Props) {
   const kind: ItemKind = (note.kind as ItemKind) || 'postit';
   const ref = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const startRef = useRef({ x: 0, y: 0, nx: 0, ny: 0, w: 0, h: 0 });
 
   const onPointerDownDrag = (e: React.PointerEvent) => {
