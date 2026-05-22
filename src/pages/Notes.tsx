@@ -165,25 +165,45 @@ export default function Notes() {
     setNewBoard({ name: '', description: '', scope: 'private' });
   }
 
-  async function addNote() {
+  function defaultsFor(kind: ItemKind): { width: number; height: number; fill_color: string | null; stroke_color: string | null; extra: any; color: NoteColor } {
+    const color = COLOR_CYCLE[notes.length % COLOR_CYCLE.length];
+    switch (kind) {
+      case 'postit': return { width: 200, height: 180, fill_color: null, stroke_color: null, extra: {}, color };
+      case 'text': return { width: 220, height: 60, fill_color: null, stroke_color: null, extra: {}, color };
+      case 'rect': return { width: 220, height: 140, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'rounded': return { width: 220, height: 140, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'circle': return { width: 160, height: 160, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'triangle': return { width: 180, height: 160, fill_color: 'transparent', stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'arrow': return { width: 180, height: 80, fill_color: null, stroke_color: 'hsl(0 0% 20%)', extra: {}, color };
+      case 'table': return { width: 280, height: 140, fill_color: null, stroke_color: null, extra: { rows: 2, cols: 2, cells: [['',''],['','']] }, color };
+    }
+  }
+
+  async function addItem(kind: ItemKind) {
     if (!user || !activeBoardId) return;
     const maxZ = notes.reduce((m, n) => Math.max(m, n.z_index), 0);
     const offset = (notes.length % 6) * 24;
     const scroll = canvasRef.current;
     const cx = (scroll?.scrollLeft || 0) + 40 + offset;
     const cy = (scroll?.scrollTop || 0) + 40 + offset;
-    const color = COLOR_CYCLE[notes.length % COLOR_CYCLE.length];
+    const d = defaultsFor(kind);
     const { data, error } = await supabase
       .from('notes')
       .insert({
         board_id: activeBoardId,
         author_id: user.id,
         content: '',
-        color,
+        color: d.color,
         position_x: cx,
         position_y: cy,
+        width: d.width,
+        height: d.height,
         z_index: maxZ + 1,
-      })
+        kind,
+        fill_color: d.fill_color,
+        stroke_color: d.stroke_color,
+        extra: d.extra,
+      } as any)
       .select()
       .single();
     if (error) { toast.error(error.message); return; }
