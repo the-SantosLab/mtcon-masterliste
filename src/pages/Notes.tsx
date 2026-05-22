@@ -484,6 +484,8 @@ export default function Notes() {
                       style={{ opacity: dimmed ? 0.15 : 1, pointerEvents: dimmed ? 'none' : 'auto', transition: 'opacity 0.15s' }}
                     >
                       <CanvasItem
+                        selected={selectedId === n.id}
+                        onSelect={() => setSelectedId(n.id)}
                         note={n}
                         canEdit={canEdit}
                         onChange={(p) => patchNote(n.id, p)}
