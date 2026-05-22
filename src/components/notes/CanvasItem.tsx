@@ -175,6 +175,7 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
           className="absolute inset-0 w-full h-full pointer-events-none"
           preserveAspectRatio="none"
           viewBox={`0 0 ${Math.max(1, note.width)} ${Math.max(1, note.height)}`}
+          style={kind === 'arrow' ? { transform: `rotate(${note.extra?.rotation ?? 0}deg)`, transformOrigin: 'center' } : undefined}
         >
           {kind === 'rect' && (
             <rect x={1} y={1} width={Math.max(1, note.width - 2)} height={Math.max(1, note.height - 2)} fill={fill} stroke={stroke} strokeWidth={2} />
@@ -290,13 +291,35 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
           </DropdownMenu>
         )}
         {canEdit && kind === 'arrow' && (
-          <button
-            onClick={() => onChange({ extra: { ...(note.extra || {}), flipped: !note.extra?.flipped } })}
-            className="h-5 px-1 text-[10px] rounded-sm hover:bg-muted"
-            title="Richtung umkehren"
-          >
-            ↔
-          </button>
+          <>
+            <button
+              onClick={() => onChange({ extra: { ...(note.extra || {}), flipped: !note.extra?.flipped } })}
+              className="h-5 px-1 text-[10px] rounded-sm hover:bg-muted"
+              title="Richtung umkehren"
+            >
+              ↔
+            </button>
+            <div className="flex items-center gap-1 border-l border-border ml-0.5 pl-1" data-no-drag>
+              <span className="text-[9px] text-muted-foreground">↻</span>
+              <input
+                type="range"
+                min={0}
+                max={360}
+                value={note.extra?.rotation ?? 0}
+                onChange={(e) => onChange({ extra: { ...(note.extra || {}), rotation: Number(e.target.value) } })}
+                className="w-20 h-3 cursor-pointer"
+                title="Drehen"
+              />
+              <input
+                type="number"
+                min={0}
+                max={360}
+                value={note.extra?.rotation ?? 0}
+                onChange={(e) => onChange({ extra: { ...(note.extra || {}), rotation: Number(e.target.value) } })}
+                className="w-10 h-5 text-[10px] px-1 rounded-sm bg-background border border-border"
+              />
+            </div>
+          </>
         )}
         {canEdit && kind === 'table' && (
           <TableControls
