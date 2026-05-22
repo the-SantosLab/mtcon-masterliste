@@ -772,7 +772,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
                       ) : (
                         <>
                           {m.body && (
-                            <p className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed mt-0.5">
+                            <p className="text-sm text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed mt-1">
                               <MessageContent body={m.body} caseNumberMap={caseNumberMap} mentionMap={mentionMap} currentUserShortCode={meShortCode} />
                             </p>
                           )}
