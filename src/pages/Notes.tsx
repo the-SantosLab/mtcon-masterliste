@@ -49,6 +49,7 @@ export default function Notes() {
   const [markerFilters, setMarkerFilters] = useState<Set<string>>(new Set());
   const [pinnedOnly, setPinnedOnly] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -185,8 +186,8 @@ export default function Notes() {
     const maxZ = notes.reduce((m, n) => Math.max(m, n.z_index), 0);
     const offset = (notes.length % 6) * 24;
     const scroll = canvasRef.current;
-    const cx = (scroll?.scrollLeft || 0) + 40 + offset;
-    const cy = (scroll?.scrollTop || 0) + 40 + offset;
+    const cx = ((scroll?.scrollLeft ?? 0) / zoom) + 40 + offset;
+    const cy = ((scroll?.scrollTop ?? 0) / zoom) + 40 + offset;
     const d = defaultsFor(kind);
     const { data, error } = await supabase
       .from('notes')
@@ -469,13 +470,15 @@ export default function Notes() {
               className="flex-1 relative overflow-auto"
               style={{
                 backgroundImage: 'radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)',
-                backgroundSize: '24px 24px',
+                backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
               }}
             >
               <div
                 data-canvas-bg
                 onPointerDown={(e) => { if (e.target === e.currentTarget) setSelectedId(null); }}
-                className="relative" style={{ width: 3000, height: 2000 }}>
+                className="relative"
+                style={{ width: 3000 * zoom, height: 2000 * zoom, transform: `scale(${zoom})`, transformOrigin: '0 0' }}
+              >
                 {notes.map(n => {
                   const dimmed = hasFilter && !matchedIds.has(n.id);
                   return (
@@ -488,6 +491,7 @@ export default function Notes() {
                         onSelect={() => setSelectedId(n.id)}
                         note={n}
                         canEdit={canEdit}
+                        zoom={zoom}
                         onChange={(p) => patchNote(n.id, p)}
                         onDelete={() => deleteNote(n.id)}
                         onDuplicate={() => duplicateNote(n)}
@@ -507,6 +511,33 @@ export default function Notes() {
                   </div>
                 )}
               </div>
+              {/* Zoom controls */}
+              {activeBoard && (
+                <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-lg border border-border bg-card/90 shadow-md px-1.5 py-1 backdrop-blur-sm z-50">
+                  <button
+                    onClick={() => setZoom(z => Math.max(0.25, Math.round((z - 0.25) * 100) / 100))}
+                    className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                    title="Herauszoomen"
+                  >
+                    −
+                  </button>
+                  <span className="text-[10px] text-muted-foreground w-10 text-center select-none">{Math.round(zoom * 100)}%</span>
+                  <button
+                    onClick={() => setZoom(z => Math.min(3, Math.round((z + 0.25) * 100) / 100))}
+                    className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                    title="Reinzoomen"
+                  >
+                    +
+                  </button>
+                  <button
+                    onClick={() => setZoom(1)}
+                    className="h-6 px-1.5 flex items-center justify-center rounded hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground border-l border-border ml-0.5"
+                    title="Zoom zurücksetzen"
+                  >
+                    100%
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
