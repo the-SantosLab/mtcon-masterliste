@@ -138,6 +138,8 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
           >
             <Highlighter className="h-2.5 w-2.5" />
           </button>
+          <div className="w-px h-3 bg-foreground/20 mx-0.5" />
+          <TextColorPicker editor={editor} />
         </div>
       )}
       <div className="flex-1 overflow-auto text-xs">
