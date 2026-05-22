@@ -188,3 +188,27 @@ export function FormattingToolbar({ editor }: { editor: Editor | null }) {
   );
 }
 
+function FontSizeSelect({ editor }: { editor: Editor }) {
+  const current = (editor.getAttributes('textStyle') as any)?.fontSize || '';
+  return (
+    <div className="flex items-center gap-1">
+      <Type className="h-3 w-3 text-foreground/60" />
+      <select
+        value={current}
+        onChange={(e) => {
+          const v = e.target.value;
+          (editor.chain().focus() as any).setFontSize(v || null).run();
+        }}
+        className="h-5 text-[10px] bg-transparent border border-border rounded-sm px-1 focus:outline-none cursor-pointer"
+        title="Schriftgröße"
+      >
+        <option value="">Auto</option>
+        {FONT_SIZES.map(s => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+
