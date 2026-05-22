@@ -10,7 +10,7 @@ import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, STATUS_DOT_COLOR
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
-import { Search, Plus, UserCheck } from 'lucide-react';
+import { Search, Plus, UserCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { cn } from '@/lib/utils';
 import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
+import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+
+type CaseSortKey = 'status' | 'case_no' | 'project_name' | 'project' | 'assignee' | 'department' | 'customer' | 'due_at';
+type DueFilter = 'all' | 'overdue' | 'today' | 'week' | 'next14' | 'none';
 
 type CaseRow = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
