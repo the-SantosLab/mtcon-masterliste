@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
 import { FormattingToolbar } from './NoteEditor';
+import { GripHorizontal } from 'lucide-react';
 import { Pin, Trash2, Copy, Palette, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NoteEditor } from './NoteEditor';
@@ -76,8 +77,11 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
     onSelect();
     if (note.pinned) return;
     const tgt = e.target as HTMLElement;
-    if (tgt.closest('[data-no-drag]')) return;
-    if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
+    const isHandle = !!tgt.closest('[data-drag-handle]');
+    if (!isHandle) {
+      if (tgt.closest('[data-no-drag]')) return;
+      if (tgt.closest('input, textarea, button, [contenteditable="true"], .ProseMirror, a, select')) return;
+    }
     onBringToFront();
     setDragging(true);
     startRef.current = { x: e.clientX, y: e.clientY, nx: note.position_x, ny: note.position_y, w: 0, h: 0 };
@@ -311,6 +315,18 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
         {kind !== 'arrow' && kind !== 'table' && <FormattingToolbar editor={editor} />}
       </div>
       )}
+
+      {/* Drag handle — visible when selected; essential for tables/full-input items */}
+      {selected && canEdit && !note.pinned && (
+        <div
+          data-drag-handle
+          className="absolute -top-2 left-1/2 -translate-x-1/2 h-3 px-2 flex items-center justify-center rounded-full bg-card border border-border shadow-sm cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+          title="Verschieben"
+        >
+          <GripHorizontal className="h-2.5 w-2.5" />
+        </div>
+      )}
+
 
       {/* Content area */}
       {kind === 'postit' && (
