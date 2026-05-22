@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
+import { CaseChat } from '@/components/CaseChat';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseEmails } from '@/components/CaseEmails';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
@@ -851,6 +852,7 @@ export default function CaseDetail() {
           </div>
 
           <div className="space-y-4">
+            <CaseChat caseId={c.id} canWrite={!isViewer && !isTerminalStatus(c.status)} />
             <div className="rounded-md border border-border bg-card">
               <div className="px-4 py-3 border-b border-border">
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Aktivitäten</h3>
