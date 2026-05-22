@@ -8,12 +8,12 @@ import { Bold, Italic, List, ListChecks, Highlighter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 
-const MARKER_COLORS = [
+export const MARKER_COLORS = [
   { name: 'yellow', hex: 'hsl(50 95% 65% / 0.55)' },
   { name: 'pink', hex: 'hsl(330 80% 75% / 0.55)' },
   { name: 'blue', hex: 'hsl(210 90% 70% / 0.55)' },
   { name: 'green', hex: 'hsl(140 60% 65% / 0.55)' },
-];
+] as const;
 
 interface Props {
   content: string;
