@@ -229,6 +229,15 @@ export default function Notes() {
                 >
                   {b.scope === 'shared' ? <Users className="h-3 w-3 shrink-0" /> : <Lock className="h-3 w-3 shrink-0" />}
                   <span className="flex-1 truncate">{b.name}</span>
+                  {b.scope === 'shared' && user?.id === b.owner_id && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMembersBoard(b); }}
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground"
+                      title="Mitglieder verwalten"
+                    >
+                      <UserCog className="h-3 w-3" />
+                    </button>
+                  )}
                   {user?.id === b.owner_id && (
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteBoard(b); }}
