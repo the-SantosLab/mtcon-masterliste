@@ -850,7 +850,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
       )}
 
       {canWrite && (
-        <div className="border-t border-border p-2 space-y-2 relative">
+        <div className="border-t border-border/60 p-3 space-y-2 relative bg-gradient-to-b from-transparent to-muted/20">
           {replyTo && (
             <div className="flex items-start gap-2 rounded bg-muted/40 px-2 py-1 border-l-2 border-primary/40">
               <div className="flex-1 min-w-0">
