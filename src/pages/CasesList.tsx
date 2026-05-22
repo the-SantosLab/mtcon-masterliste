@@ -20,6 +20,7 @@ import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
+import { useChatUnread } from '@/hooks/useChatUnread';
 
 type CaseSortKey = 'status' | 'case_no' | 'project_name' | 'project' | 'assignee' | 'department' | 'customer' | 'due_at' | 'urgency';
 type DueFilter = 'all' | 'overdue' | 'today' | 'week' | 'next14' | 'none';
