@@ -232,7 +232,7 @@ export default function Notes() {
     if (error) toast.error(error.message);
   }
 
-  async function duplicateNote(n: NoteData) {
+  async function duplicateNote(n: NoteData & any) {
     if (!user || !activeBoardId) return;
     const maxZ = notes.reduce((m, x) => Math.max(m, x.z_index), 0);
     const { data, error } = await supabase
@@ -247,7 +247,11 @@ export default function Notes() {
         width: n.width,
         height: n.height,
         z_index: maxZ + 1,
-      })
+        kind: n.kind || 'postit',
+        fill_color: n.fill_color || null,
+        stroke_color: n.stroke_color || null,
+        extra: n.extra || {},
+      } as any)
       .select()
       .single();
     if (error) { toast.error(error.message); return; }
