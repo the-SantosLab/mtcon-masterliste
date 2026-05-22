@@ -200,17 +200,18 @@ export function CanvasItem({ note, canEdit, selected, onSelect, onChange, onDele
         </svg>
       )}
 
-      {/* Toolbar */}
+      {/* Toolbar — only when selected */}
+      {selected && canEdit && (
       <div
         data-no-drag
+        onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          'absolute -top-7 left-0 right-0 flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-card/95 border border-border shadow-sm transition-opacity',
-          'opacity-0 group-hover/item:opacity-100',
+          'absolute -top-8 left-0 flex items-center gap-0.5 px-1 py-0.5 rounded-sm bg-card border border-border shadow-md whitespace-nowrap',
         )}
       >
         <button
           type="button"
-          onClick={() => canEdit && onChange({ pinned: !note.pinned })}
+          onClick={() => onChange({ pinned: !note.pinned })}
           className={cn('h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted', note.pinned && 'text-foreground')}
           title={note.pinned ? 'Lösen' : 'Anheften'}
         >
