@@ -472,7 +472,10 @@ export default function Notes() {
                 backgroundSize: '24px 24px',
               }}
             >
-              <div className="relative" style={{ width: 3000, height: 2000 }}>
+              <div
+                data-canvas-bg
+                onPointerDown={(e) => { if (e.target === e.currentTarget) setSelectedId(null); }}
+                className="relative" style={{ width: 3000, height: 2000 }}>
                 {notes.map(n => {
                   const dimmed = hasFilter && !matchedIds.has(n.id);
                   return (
