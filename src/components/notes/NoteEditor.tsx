@@ -6,7 +6,8 @@ import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
-import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type } from 'lucide-react';
+import { Color } from '@tiptap/extension-color';
+import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type, Palette, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
 
