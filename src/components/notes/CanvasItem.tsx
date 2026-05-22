@@ -99,40 +99,40 @@ export function CanvasItem({ note, canEdit, selected, zoom = 1, onSelect, onChan
 
   const onPointerMove = useCallback((e: PointerEvent) => {
     if (dragging) {
-      const dx = e.clientX - startRef.current.x;
-      const dy = e.clientY - startRef.current.y;
+      const dx = (e.clientX - startRef.current.x) / zoom;
+      const dy = (e.clientY - startRef.current.y) / zoom;
       if (ref.current) {
         ref.current.style.transform = `translate(${startRef.current.nx + dx}px, ${startRef.current.ny + dy}px)`;
       }
     } else if (resizing) {
-      const dx = e.clientX - startRef.current.x;
-      const dy = e.clientY - startRef.current.y;
+      const dx = (e.clientX - startRef.current.x) / zoom;
+      const dy = (e.clientY - startRef.current.y) / zoom;
       if (ref.current) {
         ref.current.style.width = `${Math.max(60, startRef.current.w + dx)}px`;
         ref.current.style.height = `${Math.max(40, startRef.current.h + dy)}px`;
       }
     }
-  }, [dragging, resizing]);
+  }, [dragging, resizing, zoom]);
 
   const onPointerUp = useCallback((e: PointerEvent) => {
     if (dragging) {
-      const dx = e.clientX - startRef.current.x;
-      const dy = e.clientY - startRef.current.y;
+      const dx = (e.clientX - startRef.current.x) / zoom;
+      const dy = (e.clientY - startRef.current.y) / zoom;
       setDragging(false);
       onChange({
         position_x: Math.max(0, startRef.current.nx + dx),
         position_y: Math.max(0, startRef.current.ny + dy),
       });
     } else if (resizing) {
-      const dx = e.clientX - startRef.current.x;
-      const dy = e.clientY - startRef.current.y;
+      const dx = (e.clientX - startRef.current.x) / zoom;
+      const dy = (e.clientY - startRef.current.y) / zoom;
       setResizing(false);
       onChange({
         width: Math.max(60, startRef.current.w + dx),
         height: Math.max(40, startRef.current.h + dy),
       });
     }
-  }, [dragging, resizing, onChange]);
+  }, [dragging, resizing, onChange, zoom]);
 
   useEffect(() => {
     if (!dragging && !resizing) return;
