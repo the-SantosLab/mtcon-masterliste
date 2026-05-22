@@ -213,6 +213,7 @@ export default function CasesList() {
       }
       case 'customer': return c.customer_no;
       case 'due_at': return c.due_at ? new Date(c.due_at).getTime() : null;
+      case 'urgency': return (c as any).urgency ?? 0;
       default: return null;
     }
   }, sort.direction) : filtered;
