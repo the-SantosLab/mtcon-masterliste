@@ -406,6 +406,7 @@ export type Database = {
           sort_order: number
           status: string
           title: string
+          urgency: number
         }
         Insert: {
           assigned_to?: string | null
@@ -422,6 +423,7 @@ export type Database = {
           sort_order?: number
           status?: string
           title: string
+          urgency?: number
         }
         Update: {
           assigned_to?: string | null
@@ -438,6 +440,7 @@ export type Database = {
           sort_order?: number
           status?: string
           title?: string
+          urgency?: number
         }
         Relationships: [
           {
@@ -638,6 +641,7 @@ export type Database = {
           sop: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
+          urgency: number
           visibility: string
           watchers: string[]
         }
@@ -681,6 +685,7 @@ export type Database = {
           sop?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
+          urgency?: number
           visibility?: string
           watchers?: string[]
         }
@@ -724,6 +729,7 @@ export type Database = {
           sop?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
+          urgency?: number
           visibility?: string
           watchers?: string[]
         }
@@ -2095,6 +2101,7 @@ export type Database = {
           project_number: string | null
           status: string
           updated_at: string
+          urgency: number
           visibility: string
         }
         Insert: {
@@ -2109,6 +2116,7 @@ export type Database = {
           project_number?: string | null
           status?: string
           updated_at?: string
+          urgency?: number
           visibility?: string
         }
         Update: {
@@ -2123,6 +2131,7 @@ export type Database = {
           project_number?: string | null
           status?: string
           updated_at?: string
+          urgency?: number
           visibility?: string
         }
         Relationships: [

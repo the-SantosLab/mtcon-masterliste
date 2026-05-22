@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
 import { CaseChat } from '@/components/CaseChat';
+import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseEmails } from '@/components/CaseEmails';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
@@ -447,7 +448,11 @@ export default function CaseDetail() {
               )}
               <StatusBadge status={c.status} />
             </div>
-            <p className="text-xs text-muted-foreground font-mono">{c.case_no}</p>
+            <div className="flex items-center gap-3 mt-0.5">
+              <p className="text-xs text-muted-foreground font-mono">{c.case_no}</p>
+              <span className="text-[10px] text-muted-foreground">Dringlichkeit:</span>
+              <UrgencyPicker value={(c as any).urgency} table="cases" rowId={c.id} readOnly={isViewer || isTerminalStatus(c.status)} size="sm" />
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             {!isViewer && canClaim(c.status, c.assignee_id) && (

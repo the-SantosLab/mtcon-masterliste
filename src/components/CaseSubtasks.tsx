@@ -27,6 +27,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
@@ -856,6 +857,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                               </span>
                             );
                           })()}
+                          <span onClick={(e) => e.stopPropagation()} className="ml-auto">
+                            <UrgencyPicker value={(task as any).urgency} table="case_tasks" rowId={task.id} readOnly={!canEditTask} size="xs" />
+                          </span>
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 

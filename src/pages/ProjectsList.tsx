@@ -18,8 +18,9 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+import { UrgencyPicker } from '@/components/UrgencyPicker';
 
-type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at';
+type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at' | 'urgency';
 
 type ViewMode = 'compact' | 'normal';
 
@@ -168,6 +169,7 @@ export default function ProjectsList() {
       case 'owner': return p.owner_code ?? null;
       case 'dept': return p.dept_name ?? null;
       case 'created_at': return new Date(p.created_at).getTime();
+      case 'urgency': return (p as any).urgency ?? 0;
       default: return null;
     }
   }, sort.direction) : filteredRaw;
@@ -291,14 +293,15 @@ export default function ProjectsList() {
                   <SortableHeader column="name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</SortableHeader>
                   <SortableHeader column="owner" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
                   <SortableHeader column="created_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Erstellt</SortableHeader>
+                  <SortableHeader column="urgency" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Dringlichkeit</SortableHeader>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loading ? (
-                  <tr><td colSpan={5} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
+                  <tr><td colSpan={6} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className={cn(cellCls, 'py-12 text-center')}>
+                    <td colSpan={6} className={cn(cellCls, 'py-12 text-center')}>
                       <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                       <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
                     </td>
@@ -316,6 +319,7 @@ export default function ProjectsList() {
                     </td>
                     <td className={cn(cellCls, 'text-muted-foreground font-mono')}>{p.owner_code || '–'}</td>
                     <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{format(new Date(p.created_at), 'dd.MM.yyyy')}</td>
+                    <td className={cellCls}><UrgencyPicker value={(p as any).urgency} table="projects" rowId={p.id} size="sm" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -330,15 +334,16 @@ export default function ProjectsList() {
                   <SortableHeader column="status" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</SortableHeader>
                   <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Sichtbarkeit</th>
                   <SortableHeader column="created_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Erstellt</SortableHeader>
+                  <SortableHeader column="urgency" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Dringlichkeit</SortableHeader>
                   <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loading ? (
-                  <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
+                  <tr><td colSpan={8} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden…</td></tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={cn(cellCls, 'py-12 text-center')}>
+                    <td colSpan={8} className={cn(cellCls, 'py-12 text-center')}>
                       <Folder className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
                       <p className="text-muted-foreground">Keine abteilungsübergreifenden Vorgänge gefunden</p>
                     </td>
@@ -364,6 +369,7 @@ export default function ProjectsList() {
                     <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>
                       {format(new Date(p.created_at), 'dd.MM.yyyy')}
                     </td>
+                    <td className={cellCls}><UrgencyPicker value={(p as any).urgency} table="projects" rowId={p.id} size="sm" /></td>
                     <td className={cellCls}>
                       <div className="flex items-center gap-3">
                         <Link
