@@ -780,7 +780,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                         }}
                       >
                         <div
-                          className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer"
+                          className="flex items-center gap-2 group py-2 px-3 hover:bg-muted/40 transition-colors cursor-pointer max-md:flex-wrap min-w-0"
                           onClick={() => setExpandedId(isExpanded ? null : task.id)}
                         >
                           {canEdit && !isSortActive && (
