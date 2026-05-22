@@ -155,13 +155,16 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
                 {isEditing ? (
                   <div className="space-y-2">
                     <Textarea value={editText} onChange={e => setEditText(e.target.value)} rows={2} className="text-xs font-mono" />
-                    <div className="flex justify-end gap-1">
-                      <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setEditingId(null); setEditText(''); }}>
-                        <X className="h-3 w-3 mr-1" />Abbrechen
-                      </Button>
-                      <Button size="sm" className="h-6 text-xs" onClick={() => saveEdit(n.id)} disabled={!editText.trim()}>
-                        <Check className="h-3 w-3 mr-1" />Speichern
-                      </Button>
+                    <div className="flex justify-between items-center gap-1">
+                      <MtiqButton text={editText} onResult={setEditText} />
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => { setEditingId(null); setEditText(''); }}>
+                          <X className="h-3 w-3 mr-1" />Abbrechen
+                        </Button>
+                        <Button size="sm" className="h-6 text-xs" onClick={() => saveEdit(n.id)} disabled={!editText.trim()}>
+                          <Check className="h-3 w-3 mr-1" />Speichern
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
