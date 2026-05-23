@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     // Load case context (respecting RLS via user client)
     const { data: caseRow } = await client
       .from("cases")
-      .select("case_no, project_name, client_name, status, note, due_at, estimated_hours, urgency, urgency_label, departments:department_id(name)")
+      .select("case_no, project_name, client_name, status, note, due_at, estimated_hours, urgency, departments:department_id(name)")
       .eq("id", vorgang_id)
       .maybeSingle();
 
