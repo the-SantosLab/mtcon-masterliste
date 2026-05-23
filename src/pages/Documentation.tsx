@@ -49,6 +49,22 @@ const SECTIONS: Section[] = [
   { id: 'api', label: 'API-Schnittstelle', icon: Plug },
   { id: 'rls', label: 'RLS-Logik & Policies', icon: Lock },
   { id: 'schema', label: 'Datenmodell', icon: GitBranch },
+  // ── Technische Themen ──
+  { id: 'tech-stack', label: 'Technologie-Stack', icon: Cpu },
+  { id: 'optimistic-locking', label: 'Optimistic Locking', icon: GitMerge },
+  { id: 'realtime', label: 'Realtime-Subscriptions', icon: Radio },
+  { id: 'edge-functions', label: 'Edge Functions', icon: Zap },
+  { id: 'cron-jobs', label: 'Geplante Aufgaben (pg_cron)', icon: Clock },
+  { id: 'backups', label: 'Backups & Restore', icon: HardDrive },
+  { id: 'email-service', label: 'E-Mail-Versand (Resend)', icon: Mail },
+  { id: 'email-ingestion', label: 'E-Mail-Ingestion', icon: Inbox },
+  { id: 'announcements', label: 'Mitteilungen / Broadcasts', icon: Megaphone },
+  { id: 'notes-boards', label: 'Notizen & Post-it-Boards', icon: StickyNote },
+  { id: 'case-chat', label: 'Vorgangs-Chat & Mentions', icon: MessageSquare },
+  { id: 'mtiq', label: 'MTIQ KI-Reformulierung', icon: Sparkles },
+  { id: 'soft-delete', label: 'Papierkorb & Wiederherstellung', icon: Trash2 },
+  { id: 'session-security', label: 'Session-Sicherheit', icon: Timer },
+  { id: 'design-tokens', label: 'Design-System & Tokens', icon: Palette },
   { id: 'shortcuts', label: 'Tastenkürzel', icon: Columns },
 ];
 
