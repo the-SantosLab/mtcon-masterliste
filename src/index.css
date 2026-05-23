@@ -487,3 +487,36 @@
   main .rounded-lg.border > table,
   main .border.bg-card > table { min-width: 0 !important; }
 }
+
+/* =========================================================
+   Zebra-Streifen für Listen und Tabellen (hell + dunkel)
+   Erste Zeile transparent, zweite leicht hinterlegt, usw.
+   ========================================================= */
+@layer components {
+  /* Tabellen (tbody) */
+  main table > tbody > tr:nth-child(even) > td {
+    background-color: hsl(var(--muted) / 0.45);
+  }
+  .dark main table > tbody > tr:nth-child(even) > td {
+    background-color: hsl(var(--muted) / 0.35);
+  }
+  /* Hover hat Vorrang */
+  main table > tbody > tr:hover > td {
+    background-color: hsl(var(--muted) / 0.8) !important;
+  }
+
+  /* Div-basierte Listen mit divide-y → typisches Zeilen-Layout */
+  main .divide-y > :nth-child(even) {
+    background-color: hsl(var(--muted) / 0.4);
+  }
+  .dark main .divide-y > :nth-child(even) {
+    background-color: hsl(var(--muted) / 0.28);
+  }
+
+  /* Opt-out für Container, in denen Zebra unerwünscht ist (Formulare etc.) */
+  main .no-zebra > :nth-child(even),
+  main .no-zebra table > tbody > tr:nth-child(even) > td {
+    background-color: transparent !important;
+  }
+}
+
