@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/UserAvatar';
+import { MasterControlPanel } from '@/components/MasterControlPanel';
 import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
