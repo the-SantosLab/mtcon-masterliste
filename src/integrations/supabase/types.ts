@@ -2850,6 +2850,30 @@ export type Database = {
           },
         ]
       }
+      user_presence: {
+        Row: {
+          current_path: string | null
+          last_active_at: string
+          last_seen_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_path?: string | null
+          last_active_at?: string
+          last_seen_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_path?: string | null
+          last_active_at?: string
+          last_seen_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
