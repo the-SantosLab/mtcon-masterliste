@@ -41,6 +41,7 @@ export function AnnouncementsWidget() {
   const [receipts, setReceipts] = useState<Record<string, Receipt>>({});
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archive, setArchive] = useState<Announcement[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const seenObserver = useRef<IntersectionObserver | null>(null);
 
   const upsertReceipt = async (announcement_id: string, patch: Partial<Receipt>) => {
