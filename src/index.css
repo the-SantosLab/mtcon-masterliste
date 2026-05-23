@@ -495,22 +495,22 @@
 @layer components {
   /* Tabellen (tbody) */
   main table > tbody > tr:nth-child(even) > td {
-    background-color: hsl(var(--muted) / 0.45);
+    background-color: hsl(var(--muted) / 0.65);
   }
   .dark main table > tbody > tr:nth-child(even) > td {
-    background-color: hsl(var(--muted) / 0.35);
+    background-color: hsl(var(--muted) / 0.55);
   }
   /* Hover hat Vorrang */
   main table > tbody > tr:hover > td {
-    background-color: hsl(var(--muted) / 0.8) !important;
+    background-color: hsl(var(--muted) / 0.85) !important;
   }
 
   /* Div-basierte Listen mit divide-y → typisches Zeilen-Layout */
   main .divide-y > :nth-child(even) {
-    background-color: hsl(var(--muted) / 0.4);
+    background-color: hsl(var(--muted) / 0.6);
   }
   .dark main .divide-y > :nth-child(even) {
-    background-color: hsl(var(--muted) / 0.28);
+    background-color: hsl(var(--muted) / 0.45);
   }
 
   /* Opt-out für Container, in denen Zebra unerwünscht ist (Formulare etc.) */
