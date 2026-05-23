@@ -13,6 +13,7 @@ import {
   ShieldCheck, Briefcase, Users2, RefreshCw,
   Cpu, GitMerge, Radio, Zap, Clock, HardDrive, Mail, Megaphone,
   StickyNote, MessageSquare, Inbox, Sparkles, Trash2, Palette, Timer,
+  Server, Timer,
 } from 'lucide-react';
 
 interface Section {
