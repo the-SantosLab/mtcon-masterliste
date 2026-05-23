@@ -58,11 +58,27 @@ export function MtiqActionsGrid({ vorgangId }: { vorgangId: string }) {
 
 function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorgangId: string; onBack: () => void }) {
   const { user } = useAuth();
-  const [input, setInput] = useState('');
+  const storageKey = `mtiq:action:${vorgangId}:${action.key}`;
+  const readSaved = () => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { return {}; }
+  };
+  const initial = readSaved();
+  const [input, setInput] = useState<string>(initial.input ?? '');
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(initial.result ?? null);
+  const [ranAt, setRanAt] = useState<string | null>(initial.ranAt ?? null);
   const [copied, setCopied] = useState(false);
   const [savedNote, setSavedNote] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify({ input, result, ranAt })); } catch {}
+  }, [storageKey, input, result, ranAt]);
+
+  const clearSaved = () => {
+    try { localStorage.removeItem(storageKey); } catch {}
+    setInput(''); setResult(null); setRanAt(null); setCopied(false); setSavedNote(false);
+  };
+
 
   const run = async () => {
     if (action.requiresInput && !input.trim()) {
