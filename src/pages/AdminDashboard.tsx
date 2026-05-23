@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/UserAvatar';
+import { MasterControlPanel } from '@/components/MasterControlPanel';
 import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
@@ -227,6 +228,9 @@ export default function AdminDashboard() {
             {' '}· erstellt in diesem Zeitraum
           </div>
         )}
+
+        {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer */}
+        <MasterControlPanel />
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

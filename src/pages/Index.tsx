@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
-import { MasterControlPanel } from '@/components/MasterControlPanel';
+
 import { UrgencyDot } from '@/components/UrgencyDot';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -476,8 +476,8 @@ export default function Dashboard() {
         {/* Mitteilungen vom Admin-Team */}
         <AnnouncementsWidget />
 
-        {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer (nur Admin) */}
-        {isAdmin && <MasterControlPanel />}
+
+
 
 
 
