@@ -476,6 +476,11 @@ export default function Dashboard() {
         {/* Mitteilungen vom Admin-Team */}
         <AnnouncementsWidget />
 
+        {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer (nur Admin) */}
+        {isAdmin && <MasterControlPanel />}
+
+
+
         {/* Meine Vorgänge — moved below the hero zone */}
         <div className="glass-card overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
