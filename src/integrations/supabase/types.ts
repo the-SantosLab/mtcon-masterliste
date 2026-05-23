@@ -825,6 +825,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
           urgency: number
+          version: number
           visibility: string
           watchers: string[]
         }
@@ -869,6 +870,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           urgency?: number
+          version?: number
           visibility?: string
           watchers?: string[]
         }
@@ -913,6 +915,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           urgency?: number
+          version?: number
           visibility?: string
           watchers?: string[]
         }
