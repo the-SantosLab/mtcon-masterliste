@@ -4,10 +4,10 @@ import { ChevronLeft, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMtiqUnread } from './useMtiqUnread';
-import { MtiqChat } from './MtiqChat';
-import { MtiqCaseChat } from './MtiqCaseChat';
-import { MtiqQuickActions } from './MtiqQuickActions';
-import { MtiqAction } from './MtiqActionsGrid';
+import { MtiqVorgang } from './MtiqVorgang';
+// legacy direct chat imports kept for potential future use
+// (drilldown now reuses MtiqVorgang to expose all tabs)
+
 
 interface CaseRow {
   id: string;
@@ -33,9 +33,6 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
   const [rows, setRows] = useState<CaseRow[]>([]);
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [seedPrompt, setSeedPrompt] = useState<string | undefined>();
-  type DrillMode = 'case' | 'ai';
-  const [drillMode, setDrillMode] = useState<DrillMode>('case');
 
   useEffect(() => {
     (async () => {
@@ -102,7 +99,7 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-3 py-2.5" style={{ borderBottom: '1px solid #222' }}>
-          <button onClick={() => { setActiveId(null); setDrillMode('case'); }} className="hover:opacity-70" style={{ color: '#e0e0e0' }}>
+          <button onClick={() => setActiveId(null)} className="hover:opacity-70" style={{ color: '#e0e0e0' }}>
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div
@@ -124,28 +121,10 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
             style={{ background: '#181818', border: '1px solid #222', color: '#e0e0e0' }}
           >Öffnen</button>
         </div>
-        <div className="px-3 pt-1.5 pb-1 flex gap-1" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          {([['case', 'Vorgang-Chat'], ['ai', 'KI-Chat']] as [DrillMode, string][]).map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => setDrillMode(k)}
-              className="px-2.5 py-1 text-[11px] rounded transition-colors"
-              style={{
-                color: drillMode === k ? '#e0e0e0' : '#666',
-                background: drillMode === k ? '#181818' : 'transparent',
-                fontWeight: drillMode === k ? 500 : 400,
-              }}
-            >{label}</button>
-          ))}
+        <div className="flex-1 min-h-0">
+          <MtiqVorgang vorgangId={activeId} onClose={onClose} />
         </div>
-        {drillMode === 'case' ? (
-          <MtiqCaseChat vorgangId={activeId} />
-        ) : (
-          <>
-            <MtiqChat vorgangId={activeId} seedPrompt={seedPrompt} onSeedConsumed={() => setSeedPrompt(undefined)} />
-            <MtiqQuickActions onPick={(a: MtiqAction) => setSeedPrompt(a.prompt)} />
-          </>
-        )}
+
       </div>
     );
   }
