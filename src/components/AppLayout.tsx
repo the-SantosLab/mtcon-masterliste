@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useCrmAccess } from '@/hooks/useCrmAccess';
+import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 
 function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => string; onClose: () => void }) {
   const { allowed } = useCrmAccess();
@@ -89,6 +90,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [newPwConfirm, setNewPwConfirm] = useState('');
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  usePresenceHeartbeat();
 
   const handleChangePassword = async () => {
     if (!newPw || newPw.length < 8) { toast.error('Neues Passwort muss mindestens 8 Zeichen lang sein'); return; }
