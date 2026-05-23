@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, Loader2 } from 'lucide-react';
+import { ArrowUp, Loader2, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMtiqMessages } from './useMtiqMessages';
+import { useMtiqMessages, confirmProposal } from './useMtiqMessages';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Props {
   vorgangId: string;
