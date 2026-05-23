@@ -34,6 +34,8 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [seedPrompt, setSeedPrompt] = useState<string | undefined>();
+  type DrillMode = 'case' | 'ai';
+  const [drillMode, setDrillMode] = useState<DrillMode>('case');
 
   useEffect(() => {
     (async () => {
