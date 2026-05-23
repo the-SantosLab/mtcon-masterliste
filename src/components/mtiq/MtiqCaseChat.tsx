@@ -3,6 +3,14 @@ import { Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface Attachment {
+  id: string;
+  message_id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string | null;
+}
+
 interface Msg {
   id: string;
   author_id: string;
@@ -11,7 +19,10 @@ interface Msg {
   system_kind: string | null;
   author_name?: string | null;
   author_short?: string | null;
+  attachments?: Attachment[];
 }
+
+const BUCKET = 'case-attachments';
 
 export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
   const { user } = useAuth();
