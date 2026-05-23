@@ -296,22 +296,19 @@ export default function CaseDetail() {
     if (newIso === c.due_at) { setDueOpen(false); return; }
     const oldVal = c.due_at;
     const nowIso = new Date().toISOString();
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       due_at: newIso,
       due_date_corrected_by: user.id,
       due_date_corrected_at: nowIso,
       last_changed_by: user.id,
       last_changed_at: nowIso,
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: 'DUE_DATE_CHANGE',
-      field: 'due_at',
-      old_value: oldVal,
-      new_value: newIso,
-      actor_id: user.id,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'DUE_DATE_CHANGE', field: 'due_at',
+        old_value: oldVal, new_value: newIso, actor_id: user.id,
+      });
     });
+    if (!ok) return;
     toast.success(newIso ? 'Endtermin gesetzt' : 'Endtermin entfernt');
 
     if (newIso && sendIcs) {
@@ -339,24 +336,20 @@ export default function CaseDetail() {
     const newDept = departments.find(d => d.id === resolvedId);
     const newDeptName = newDept?.name || 'Keine';
 
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       department_id: resolvedId,
       assignee_id: null,
       status: 'nicht_begonnen' as Enums<'case_status'>,
       started_at: null,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: 'DEPT_MOVE',
-      field: 'department_id',
-      old_value: oldDeptName,
-      new_value: newDeptName,
-      actor_id: user.id,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'DEPT_MOVE', field: 'department_id',
+        old_value: oldDeptName, new_value: newDeptName, actor_id: user.id,
+      });
     });
+    if (!ok) return;
 
     toast.success(`Abteilung geändert: ${newDeptName}`);
     refresh();
@@ -369,21 +362,17 @@ export default function CaseDetail() {
     const newProject = projectOptions.find(p => p.id === resolvedId);
     const newProjectName = newProject ? `${newProject.project_number || ''} ${newProject.name}`.trim() : 'Keines';
 
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       project_id: resolvedId,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: 'PROJECT_MOVE',
-      field: 'project_id',
-      old_value: oldProjectName,
-      new_value: newProjectName,
-      actor_id: user.id,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'PROJECT_MOVE', field: 'project_id',
+        old_value: oldProjectName, new_value: newProjectName, actor_id: user.id,
+      });
     });
+    if (!ok) return;
 
     toast.success(`Projekt geändert: ${newProjectName}`);
     refresh();
@@ -396,31 +385,26 @@ export default function CaseDetail() {
     const newAssignee = profiles.find(p => p.id === resolvedId);
     const newAssigneeName = newAssignee?.short_code || 'Niemand';
 
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       assignee_id: resolvedId,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: resolvedId ? 'ASSIGN' : 'UNASSIGN',
-      field: 'assignee_id',
-      old_value: oldAssignee,
-      new_value: newAssigneeName,
-      actor_id: user.id,
-    });
-
-    if (resolvedId && resolvedId !== user.id) {
-      await supabase.from('notifications').insert({
-        user_id: resolvedId,
-        type: 'assignment',
-        title: `Vorgang zugewiesen: ${c.case_no}`,
-        body: c.project_name,
-        href: `/cases/${c.id}`,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: resolvedId ? 'ASSIGN' : 'UNASSIGN', field: 'assignee_id',
+        old_value: oldAssignee, new_value: newAssigneeName, actor_id: user.id,
       });
-    }
+      if (resolvedId && resolvedId !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: resolvedId,
+          type: 'assignment',
+          title: `Vorgang zugewiesen: ${c.case_no}`,
+          body: c.project_name,
+          href: `/cases/${c.id}`,
+        });
+      }
+    });
+    if (!ok) return;
 
     toast.success(resolvedId ? `Zugewiesen an ${newAssigneeName}` : 'Zuweisung entfernt');
     refresh();
@@ -429,44 +413,41 @@ export default function CaseDetail() {
 
   const changeStatus = async (newStatus: string) => {
     if (!c || !user) return;
-    // Unify: closing always goes through CompleteCaseDialog (mandatory note + email + activity)
-    if (newStatus === 'abgeschlossen') {
-      setCompleteOpen(true);
-      return;
-    }
+    if (newStatus === 'abgeschlossen') { setCompleteOpen(true); return; }
     const old = c.status;
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       status: newStatus as Enums<'case_status'>,
-      last_changed_by: user.id, last_changed_at: new Date().toISOString(),
-      ...(newStatus === 'abgeschlossen' ? { completed_at: new Date().toISOString(), closed_by: user.id, closed_at: new Date().toISOString() } : {}),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler'); return; }
-    await supabase.from('case_activity').insert({ case_id: c.id, action: 'STATUS_CHANGE', field: 'status', old_value: old, new_value: newStatus, actor_id: user.id });
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }, async () => {
+      await supabase.from('case_activity').insert({ case_id: c.id, action: 'STATUS_CHANGE', field: 'status', old_value: old, new_value: newStatus, actor_id: user.id });
 
-    // Notify creator and assignee (if different from actor)
-    const notifyTargets = new Set<string>();
-    if (c.created_by && c.created_by !== user.id) notifyTargets.add(c.created_by);
-    if (c.assignee_id && c.assignee_id !== user.id) notifyTargets.add(c.assignee_id);
-    const statusLabel = STATUS_LABELS[newStatus as Enums<'case_status'>] ?? newStatus;
-    await Promise.all([...notifyTargets].map(uid =>
-      supabase.from('notifications').insert({
-        user_id: uid,
-        type: 'status_change',
-        title: `Status geändert: ${c.case_no}`,
-        body: `${c.project_name} → ${statusLabel}`,
-        href: `/cases/${c.id}`,
-      })
-    ));
+      const notifyTargets = new Set<string>();
+      if (c.created_by && c.created_by !== user.id) notifyTargets.add(c.created_by);
+      if (c.assignee_id && c.assignee_id !== user.id) notifyTargets.add(c.assignee_id);
+      const statusLabel = STATUS_LABELS[newStatus as Enums<'case_status'>] ?? newStatus;
+      await Promise.all([...notifyTargets].map(uid =>
+        supabase.from('notifications').insert({
+          user_id: uid,
+          type: 'status_change',
+          title: `Status geändert: ${c.case_no}`,
+          body: `${c.project_name} → ${statusLabel}`,
+          href: `/cases/${c.id}`,
+        })
+      ));
 
-    if (newStatus === 'in_arbeit' && old !== 'in_arbeit' && sendStatusEmail) {
-      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } })
-        .then(() => setTimeout(() => refreshLog(), 1500))
-        .catch(() => {});
-    }
+      if (newStatus === 'in_arbeit' && old !== 'in_arbeit' && sendStatusEmail) {
+        supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } })
+          .then(() => setTimeout(() => refreshLog(), 1500))
+          .catch(() => {});
+      }
+    });
+    if (!ok) return;
 
     toast.success('Status geändert');
     refresh();
   };
+
 
   if (loading) return <AppLayout><p className="text-xs text-muted-foreground">Laden</p></AppLayout>;
   if (!c) return <AppLayout><p className="text-xs text-destructive">Vorgang nicht gefunden</p></AppLayout>;
