@@ -122,3 +122,73 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
     </div>
   );
 }
+
+function describeAction(p: any): string {
+  const a = p.args ?? {};
+  switch (p.tool) {
+    case 'set_case_status': return `Status → ${a.status}`;
+    case 'set_case_urgency': return `Chilis → ${a.urgency}🌶`;
+    case 'create_subtask': return `Unteraufgabe anlegen: "${a.title}"${a.due_at ? ` (fällig ${a.due_at})` : ''}${a.urgency ? ` ${a.urgency}🌶` : ''}`;
+    case 'update_subtask': {
+      const parts: string[] = [];
+      if (a.status) parts.push(`Status ${a.status}`);
+      if (a.title) parts.push(`Titel "${a.title}"`);
+      if (a.urgency !== undefined) parts.push(`${a.urgency}🌶`);
+      return `Unteraufgabe ändern: ${parts.join(', ') || '—'}`;
+    }
+    case 'add_case_note': return `Notiz: "${String(a.body ?? '').slice(0, 80)}${(a.body ?? '').length > 80 ? '…' : ''}"`;
+    case 'post_case_chat': return `Vorgang-Chat: "${String(a.body ?? '').slice(0, 80)}${(a.body ?? '').length > 80 ? '…' : ''}"`;
+    default: return p.tool;
+  }
+}
+
+function ProposalCard({ messageId, proposals, hasPending }: { messageId: string; proposals: any[]; hasPending: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const handle = async (decision: 'confirm' | 'cancel') => {
+    setBusy(true);
+    try {
+      await confirmProposal(messageId, decision);
+      toast.success(decision === 'confirm' ? 'Aktion ausgeführt' : 'Vorschlag verworfen');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Fehler');
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="text-[12px] rounded-xl p-2.5 space-y-2" style={{ background: '#0f172a', border: '1px solid #1e293b', color: '#cbd5e1' }}>
+      <div className="text-[11px] uppercase tracking-wide" style={{ color: '#64748b' }}>Vorgeschlagene Aktionen</div>
+      <ul className="space-y-1">
+        {proposals.map((p, i) => {
+          const st = p.status ?? 'pending';
+          return (
+            <li key={p.id ?? i} className="flex items-start gap-2">
+              <span className="mt-0.5 text-[10px]" style={{ color: st === 'executed' ? '#22c55e' : st === 'failed' ? '#ef4444' : st === 'cancelled' ? '#64748b' : '#f59e0b' }}>
+                {st === 'executed' ? '✓' : st === 'failed' ? '✗' : st === 'cancelled' ? '–' : '●'}
+              </span>
+              <span className="flex-1">{describeAction(p)}{p.error ? ` — ${p.error}` : ''}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {hasPending && (
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={() => handle('confirm')}
+            disabled={busy}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded-md text-white text-[12px] disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+          >
+            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Bestätigen
+          </button>
+          <button
+            onClick={() => handle('cancel')}
+            disabled={busy}
+            className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-md text-[12px] disabled:opacity-50"
+            style={{ background: '#1e293b', color: '#cbd5e1' }}
+          >
+            <X className="h-3 w-3" /> Verwerfen
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
