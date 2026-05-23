@@ -143,7 +143,8 @@ export function AnnouncementsWidget() {
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50">
           <div className="flex items-center gap-2">
             <Megaphone className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-medium text-foreground">Mitteilungen</h2>
+            <h2 className="text-sm font-medium text-foreground">Mitteilungen vom MCS</h2>
+            <span className="text-[10px] text-muted-foreground">Mastercontrolsystem – zentrales Steuerungssystem</span>
             <span className="text-[11px] text-muted-foreground tabular-nums">{items.length}</span>
           </div>
           <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => { setArchiveOpen(true); fetchArchive(); }}>
