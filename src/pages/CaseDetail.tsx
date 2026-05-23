@@ -37,6 +37,7 @@ import { buildAllDayIcs, downloadIcs } from '@/lib/ics';
 import { NotificationCockpit } from '@/components/NotificationCockpit';
 import { NotifyToggle } from '@/components/NotifyToggle';
 import { useNotificationLog } from '@/hooks/useNotificationLog';
+import { CaseConflictDialog } from '@/components/CaseConflictDialog';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
