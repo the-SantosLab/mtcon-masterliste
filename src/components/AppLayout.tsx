@@ -66,6 +66,7 @@ const adminItems = [
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
   { href: '/admin/templates', label: 'Vorlagen', icon: FileText },
+  { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
