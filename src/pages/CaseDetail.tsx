@@ -37,6 +37,7 @@ import { buildAllDayIcs, downloadIcs } from '@/lib/ics';
 import { NotificationCockpit } from '@/components/NotificationCockpit';
 import { NotifyToggle } from '@/components/NotifyToggle';
 import { useNotificationLog } from '@/hooks/useNotificationLog';
+import { CaseConflictDialog } from '@/components/CaseConflictDialog';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
@@ -66,6 +67,75 @@ export default function CaseDetail() {
   const [sendStatusEmail, setSendStatusEmail] = useState(true);
   const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
   const navigate = useNavigate();
+
+  // Optimistic locking: track pending update so user can decide on conflict
+  const [conflict, setConflict] = useState<{ patch: Record<string, any>; afterSuccess?: () => Promise<void> | void } | null>(null);
+
+  /**
+   * Perform a version-checked update on `cases`. Returns true on success.
+   * If the version no longer matches (someone else saved first), opens the
+   * conflict dialog and returns false. On success, the local case state is
+   * updated with the fields returned from the database (including new version).
+   */
+  const updateCaseOptimistic = async (
+    patch: Record<string, any>,
+    afterSuccess?: () => Promise<void> | void,
+  ): Promise<boolean> => {
+    if (!c) return false;
+    const currentVersion = (c as any).version ?? 1;
+    const { data, error } = await supabase
+      .from('cases')
+      .update(patch as any)
+      .eq('id', c.id)
+      .eq('version', currentVersion)
+      .select('*')
+      .maybeSingle();
+    if (error) {
+      toast.error('Fehler: ' + error.message);
+      return false;
+    }
+    if (!data) {
+      // Version mismatch → conflict
+      setConflict({ patch, afterSuccess });
+      return false;
+    }
+    setCase(prev => prev ? ({ ...prev, ...(data as any) }) : prev);
+    if (afterSuccess) await afterSuccess();
+    return true;
+  };
+
+  const resolveConflictReload = async () => {
+    setConflict(null);
+    await fetchCase();
+    toast.info('Aktuelle Version geladen');
+  };
+
+  const resolveConflictForceSave = async () => {
+    if (!c || !conflict) return;
+    // Refetch latest version, then retry update without version filter mismatch
+    const { data: latest } = await supabase
+      .from('cases').select('version').eq('id', c.id).maybeSingle();
+    const latestVersion = (latest as any)?.version;
+    if (!latestVersion) { setConflict(null); return; }
+    const { data, error } = await supabase
+      .from('cases')
+      .update(conflict.patch as any)
+      .eq('id', c.id)
+      .eq('version', latestVersion)
+      .select('*')
+      .maybeSingle();
+    if (error || !data) {
+      toast.error('Erneuter Konflikt – bitte Seite neu laden');
+      setConflict(null);
+      await fetchCase();
+      return;
+    }
+    setCase(prev => prev ? ({ ...prev, ...(data as any) }) : prev);
+    const after = conflict.afterSuccess;
+    setConflict(null);
+    if (after) await after();
+    toast.success('Änderungen gespeichert (überschrieben)');
+  };
 
   const deleteCase = async () => {
     if (!c) return;
@@ -205,14 +275,13 @@ export default function CaseDetail() {
     if (!next) return;
     if (next === c.project_name) { setTitleEditing(false); return; }
     setTitleSaving(true);
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from('cases')
-      .update({ project_name: next, last_changed_by: user?.id, last_changed_at: now })
-      .eq('id', c.id);
+    const ok = await updateCaseOptimistic({
+      project_name: next,
+      last_changed_by: user?.id,
+      last_changed_at: new Date().toISOString(),
+    });
     setTitleSaving(false);
-    if (error) { toast.error('Titel konnte nicht gespeichert werden'); return; }
-    setCase({ ...c, project_name: next });
+    if (!ok) return;
     setTitleEditing(false);
     setRefreshKey(k => k + 1);
     toast.success('Titel aktualisiert');
@@ -227,22 +296,19 @@ export default function CaseDetail() {
     if (newIso === c.due_at) { setDueOpen(false); return; }
     const oldVal = c.due_at;
     const nowIso = new Date().toISOString();
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       due_at: newIso,
       due_date_corrected_by: user.id,
       due_date_corrected_at: nowIso,
       last_changed_by: user.id,
       last_changed_at: nowIso,
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: 'DUE_DATE_CHANGE',
-      field: 'due_at',
-      old_value: oldVal,
-      new_value: newIso,
-      actor_id: user.id,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'DUE_DATE_CHANGE', field: 'due_at',
+        old_value: oldVal, new_value: newIso, actor_id: user.id,
+      });
     });
+    if (!ok) return;
     toast.success(newIso ? 'Endtermin gesetzt' : 'Endtermin entfernt');
 
     if (newIso && sendIcs) {
@@ -270,24 +336,20 @@ export default function CaseDetail() {
     const newDept = departments.find(d => d.id === resolvedId);
     const newDeptName = newDept?.name || 'Keine';
 
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       department_id: resolvedId,
       assignee_id: null,
       status: 'nicht_begonnen' as Enums<'case_status'>,
       started_at: null,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: 'DEPT_MOVE',
-      field: 'department_id',
-      old_value: oldDeptName,
-      new_value: newDeptName,
-      actor_id: user.id,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'DEPT_MOVE', field: 'department_id',
+        old_value: oldDeptName, new_value: newDeptName, actor_id: user.id,
+      });
     });
+    if (!ok) return;
 
     toast.success(`Abteilung geändert: ${newDeptName}`);
     refresh();
@@ -300,21 +362,17 @@ export default function CaseDetail() {
     const newProject = projectOptions.find(p => p.id === resolvedId);
     const newProjectName = newProject ? `${newProject.project_number || ''} ${newProject.name}`.trim() : 'Keines';
 
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       project_id: resolvedId,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: 'PROJECT_MOVE',
-      field: 'project_id',
-      old_value: oldProjectName,
-      new_value: newProjectName,
-      actor_id: user.id,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'PROJECT_MOVE', field: 'project_id',
+        old_value: oldProjectName, new_value: newProjectName, actor_id: user.id,
+      });
     });
+    if (!ok) return;
 
     toast.success(`Projekt geändert: ${newProjectName}`);
     refresh();
@@ -327,31 +385,26 @@ export default function CaseDetail() {
     const newAssignee = profiles.find(p => p.id === resolvedId);
     const newAssigneeName = newAssignee?.short_code || 'Niemand';
 
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       assignee_id: resolvedId,
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
-
-    await supabase.from('case_activity').insert({
-      case_id: c.id,
-      action: resolvedId ? 'ASSIGN' : 'UNASSIGN',
-      field: 'assignee_id',
-      old_value: oldAssignee,
-      new_value: newAssigneeName,
-      actor_id: user.id,
-    });
-
-    if (resolvedId && resolvedId !== user.id) {
-      await supabase.from('notifications').insert({
-        user_id: resolvedId,
-        type: 'assignment',
-        title: `Vorgang zugewiesen: ${c.case_no}`,
-        body: c.project_name,
-        href: `/cases/${c.id}`,
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: resolvedId ? 'ASSIGN' : 'UNASSIGN', field: 'assignee_id',
+        old_value: oldAssignee, new_value: newAssigneeName, actor_id: user.id,
       });
-    }
+      if (resolvedId && resolvedId !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: resolvedId,
+          type: 'assignment',
+          title: `Vorgang zugewiesen: ${c.case_no}`,
+          body: c.project_name,
+          href: `/cases/${c.id}`,
+        });
+      }
+    });
+    if (!ok) return;
 
     toast.success(resolvedId ? `Zugewiesen an ${newAssigneeName}` : 'Zuweisung entfernt');
     refresh();
@@ -360,44 +413,41 @@ export default function CaseDetail() {
 
   const changeStatus = async (newStatus: string) => {
     if (!c || !user) return;
-    // Unify: closing always goes through CompleteCaseDialog (mandatory note + email + activity)
-    if (newStatus === 'abgeschlossen') {
-      setCompleteOpen(true);
-      return;
-    }
+    if (newStatus === 'abgeschlossen') { setCompleteOpen(true); return; }
     const old = c.status;
-    const { error } = await supabase.from('cases').update({
+    const ok = await updateCaseOptimistic({
       status: newStatus as Enums<'case_status'>,
-      last_changed_by: user.id, last_changed_at: new Date().toISOString(),
-      ...(newStatus === 'abgeschlossen' ? { completed_at: new Date().toISOString(), closed_by: user.id, closed_at: new Date().toISOString() } : {}),
-    }).eq('id', c.id);
-    if (error) { toast.error('Fehler'); return; }
-    await supabase.from('case_activity').insert({ case_id: c.id, action: 'STATUS_CHANGE', field: 'status', old_value: old, new_value: newStatus, actor_id: user.id });
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }, async () => {
+      await supabase.from('case_activity').insert({ case_id: c.id, action: 'STATUS_CHANGE', field: 'status', old_value: old, new_value: newStatus, actor_id: user.id });
 
-    // Notify creator and assignee (if different from actor)
-    const notifyTargets = new Set<string>();
-    if (c.created_by && c.created_by !== user.id) notifyTargets.add(c.created_by);
-    if (c.assignee_id && c.assignee_id !== user.id) notifyTargets.add(c.assignee_id);
-    const statusLabel = STATUS_LABELS[newStatus as Enums<'case_status'>] ?? newStatus;
-    await Promise.all([...notifyTargets].map(uid =>
-      supabase.from('notifications').insert({
-        user_id: uid,
-        type: 'status_change',
-        title: `Status geändert: ${c.case_no}`,
-        body: `${c.project_name} → ${statusLabel}`,
-        href: `/cases/${c.id}`,
-      })
-    ));
+      const notifyTargets = new Set<string>();
+      if (c.created_by && c.created_by !== user.id) notifyTargets.add(c.created_by);
+      if (c.assignee_id && c.assignee_id !== user.id) notifyTargets.add(c.assignee_id);
+      const statusLabel = STATUS_LABELS[newStatus as Enums<'case_status'>] ?? newStatus;
+      await Promise.all([...notifyTargets].map(uid =>
+        supabase.from('notifications').insert({
+          user_id: uid,
+          type: 'status_change',
+          title: `Status geändert: ${c.case_no}`,
+          body: `${c.project_name} → ${statusLabel}`,
+          href: `/cases/${c.id}`,
+        })
+      ));
 
-    if (newStatus === 'in_arbeit' && old !== 'in_arbeit' && sendStatusEmail) {
-      supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } })
-        .then(() => setTimeout(() => refreshLog(), 1500))
-        .catch(() => {});
-    }
+      if (newStatus === 'in_arbeit' && old !== 'in_arbeit' && sendStatusEmail) {
+        supabase.functions.invoke('notify-vorgang-abgeholt', { body: { caseId: c.id, actorId: user.id } })
+          .then(() => setTimeout(() => refreshLog(), 1500))
+          .catch(() => {});
+      }
+    });
+    if (!ok) return;
 
     toast.success('Status geändert');
     refresh();
   };
+
 
   if (loading) return <AppLayout><p className="text-xs text-muted-foreground">Laden</p></AppLayout>;
   if (!c) return <AppLayout><p className="text-xs text-destructive">Vorgang nicht gefunden</p></AppLayout>;
@@ -866,7 +916,30 @@ export default function CaseDetail() {
             </div>
           </div>
         </div>
+
+        {/* Version footer */}
+        <div className="pt-2 text-[11px] text-muted-foreground">
+          Version {(c as any).version ?? 1}
+          {c.last_changed_at && (
+            <>
+              {' · Zuletzt gespeichert '}
+              {formatDateTime(c.last_changed_at)}
+              {(() => {
+                const p = profiles.find(p => p.id === (c as any).last_changed_by);
+                return p?.short_code ? ` von ${p.short_code}` : '';
+              })()}
+            </>
+          )}
+        </div>
       </div>
+
+      <CaseConflictDialog
+        open={!!conflict}
+        onOpenChange={(o) => { if (!o) setConflict(null); }}
+        onForceSave={resolveConflictForceSave}
+        onReload={resolveConflictReload}
+      />
     </AppLayout>
+
   );
 }
