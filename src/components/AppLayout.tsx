@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useCrmAccess } from '@/hooks/useCrmAccess';
+import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 
 function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => string; onClose: () => void }) {
   const { allowed } = useCrmAccess();
