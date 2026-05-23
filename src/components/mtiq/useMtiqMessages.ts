@@ -61,6 +61,13 @@ export function useMtiqMessages(vorgangId: string | null) {
           if (m.user_id !== user.id) return;
           setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m]);
         })
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'ai_messages', filter: `vorgang_id=eq.${vorgangId}` },
+        (payload) => {
+          const m = payload.new as AiMessage;
+          if (m.user_id !== user.id) return;
+          setMessages(prev => prev.map(x => x.id === m.id ? m : x));
+        })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [vorgangId, user?.id]);
