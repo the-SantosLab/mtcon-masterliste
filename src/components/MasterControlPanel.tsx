@@ -79,11 +79,32 @@ function classify(presence: PresenceRow | undefined, now: number): { bucket: Buc
 }
 
 export function MasterControlPanel() {
+  const { user: currentUser } = useAuth();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [presence, setPresence] = useState<Record<string, PresenceRow>>({});
   const [now, setNow] = useState(Date.now());
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
+  const [logoutTarget, setLogoutTarget] = useState<Entry | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleForceLogout = async () => {
+    if (!logoutTarget) return;
+    setLoggingOut(true);
+    try {
+      const { error } = await supabase.functions.invoke('force-logout-user', {
+        body: { user_id: logoutTarget.profile.id },
+      });
+      if (error) throw error;
+      toast({ title: 'Nutzer ausgeloggt', description: `${logoutTarget.profile.display_name ?? logoutTarget.profile.short_code} wurde abgemeldet.` });
+      setPresence(prev => { const n = { ...prev }; delete n[logoutTarget.profile.id]; return n; });
+      setLogoutTarget(null);
+    } catch (e) {
+      toast({ title: 'Fehler', description: (e as Error).message ?? 'Logout fehlgeschlagen.', variant: 'destructive' });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
