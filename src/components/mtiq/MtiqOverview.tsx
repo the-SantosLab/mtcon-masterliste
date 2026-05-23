@@ -17,6 +17,7 @@ interface CaseRow {
   department_name?: string | null;
   last_message?: string | null;
   last_at?: string | null;
+  mine?: boolean;
 }
 
 const statusDot: Record<string, string> = {
