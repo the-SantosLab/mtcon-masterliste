@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Activity, Circle, MoonStar, PowerOff, Users } from 'lucide-react';
+import { Activity, Circle, MoonStar, PowerOff, Radio, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 // Schwellen
 const ACTIVE_MS = 2 * 60 * 1000;     // < 2 Min seit letzter Interaktion = aktiv
@@ -25,6 +26,7 @@ type ProfileRow = {
 };
 
 type Bucket = 'active' | 'online' | 'idle' | 'offline';
+type Filter = 'all' | Bucket;
 
 interface Entry {
   profile: ProfileRow;
@@ -33,14 +35,24 @@ interface Entry {
   ageMs: number;
 }
 
-const BUCKET_META: Record<Bucket, { label: string; icon: typeof Circle; dot: string; ring: string }> = {
-  active:  { label: 'Aktiv arbeitend',     icon: Activity,  dot: 'bg-emerald-500',  ring: 'ring-emerald-500/40' },
-  online:  { label: 'Eingeloggt',          icon: Circle,    dot: 'bg-sky-500',      ring: 'ring-sky-500/30' },
-  idle:    { label: 'Inaktiv (Sitzung aktiv)', icon: MoonStar, dot: 'bg-amber-500', ring: 'ring-amber-500/30' },
-  offline: { label: 'Ausgeloggt',          icon: PowerOff,  dot: 'bg-muted-foreground/50', ring: 'ring-border' },
+const BUCKET_META: Record<Bucket, {
+  label: string;
+  short: string;
+  icon: typeof Circle;
+  dot: string;
+  text: string;
+  ring: string;
+  bg: string;
+  bar: string;
+}> = {
+  active:  { label: 'Aktiv arbeitend',   short: 'Aktiv',   icon: Activity,  dot: 'bg-emerald-500',          text: 'text-emerald-500',         ring: 'ring-emerald-500/40',   bg: 'bg-emerald-500/10',          bar: 'bg-emerald-500' },
+  online:  { label: 'Eingeloggt',        short: 'Online',  icon: Circle,    dot: 'bg-sky-500',              text: 'text-sky-500',             ring: 'ring-sky-500/30',       bg: 'bg-sky-500/10',              bar: 'bg-sky-500' },
+  idle:    { label: 'Inaktiv',           short: 'Inaktiv', icon: MoonStar,  dot: 'bg-amber-500',            text: 'text-amber-500',           ring: 'ring-amber-500/30',     bg: 'bg-amber-500/10',            bar: 'bg-amber-500' },
+  offline: { label: 'Ausgeloggt',        short: 'Offline', icon: PowerOff,  dot: 'bg-muted-foreground/50',  text: 'text-muted-foreground',    ring: 'ring-border',           bg: 'bg-muted/40',                bar: 'bg-muted-foreground/40' },
 };
 
 function formatAge(ms: number): string {
+  if (!isFinite(ms)) return '—';
   if (ms < 60_000) return 'gerade eben';
   const m = Math.floor(ms / 60_000);
   if (m < 60) return `vor ${m} Min`;
@@ -64,6 +76,8 @@ export function MasterControlPanel() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [presence, setPresence] = useState<Record<string, PresenceRow>>({});
   const [now, setNow] = useState(Date.now());
+  const [filter, setFilter] = useState<Filter>('all');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -110,72 +124,188 @@ export function MasterControlPanel() {
     });
   }, [profiles, presence, now]);
 
-  const grouped = useMemo(() => {
-    const g: Record<Bucket, Entry[]> = { active: [], online: [], idle: [], offline: [] };
-    entries.forEach(e => g[e.bucket].push(e));
-    (Object.keys(g) as Bucket[]).forEach(k => g[k].sort((a, b) => a.ageMs - b.ageMs));
-    return g;
+  const counts = useMemo(() => {
+    const c = { active: 0, online: 0, idle: 0, offline: 0 } as Record<Bucket, number>;
+    entries.forEach(e => { c[e.bucket]++; });
+    return c;
   }, [entries]);
 
-  const counts = { active: grouped.active.length, online: grouped.online.length, idle: grouped.idle.length, offline: grouped.offline.length };
+  const total = profiles.length || 1;
+  const reachable = counts.active + counts.online + counts.idle;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const order: Record<Bucket, number> = { active: 0, online: 1, idle: 2, offline: 3 };
+    return entries
+      .filter(e => filter === 'all' || e.bucket === filter)
+      .filter(e => {
+        if (!q) return true;
+        return (e.profile.display_name ?? '').toLowerCase().includes(q)
+          || (e.profile.short_code ?? '').toLowerCase().includes(q);
+      })
+      .sort((a, b) => {
+        if (order[a.bucket] !== order[b.bucket]) return order[a.bucket] - order[b.bucket];
+        return a.ageMs - b.ageMs;
+      });
+  }, [entries, filter, query]);
+
+  const TABS: { key: Filter; label: string; count: number; dot?: string }[] = [
+    { key: 'all',     label: 'Alle',     count: profiles.length },
+    { key: 'active',  label: 'Aktiv',    count: counts.active,  dot: BUCKET_META.active.bar },
+    { key: 'online',  label: 'Online',   count: counts.online,  dot: BUCKET_META.online.bar },
+    { key: 'idle',    label: 'Inaktiv',  count: counts.idle,    dot: BUCKET_META.idle.bar },
+    { key: 'offline', label: 'Offline',  count: counts.offline, dot: BUCKET_META.offline.bar },
+  ];
 
   return (
     <section className="glass-card overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          </span>
           <h2 className="text-sm font-medium text-foreground">Master-Control-Panel</h2>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 ml-1">Echtzeit-Status aller Nutzer</span>
+          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
+            <Radio className="h-3 w-3" /> Live
+          </span>
         </div>
-        <div className="flex items-center gap-3 text-[11px] tabular-nums">
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{counts.active} aktiv</span>
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-sky-500" />{counts.online} online</span>
-          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />{counts.idle} inaktiv</span>
-          <span className="flex items-center gap-1.5 text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />{counts.offline} offline</span>
+        <div className="text-[11px] text-muted-foreground tabular-nums">
+          <span className="text-foreground font-medium">{reachable}</span> von {profiles.length} erreichbar
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-px bg-border/40">
-        {(['active', 'online', 'idle', 'offline'] as Bucket[]).map(bucket => {
-          const meta = BUCKET_META[bucket];
+      {/* KPI Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border/40">
+        {(['active', 'online', 'idle', 'offline'] as Bucket[]).map(b => {
+          const meta = BUCKET_META[b];
           const Icon = meta.icon;
-          const list = grouped[bucket];
+          const pct = Math.round((counts[b] / total) * 100);
           return (
-            <div key={bucket} className="bg-card p-3 min-h-[160px]">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <Icon className={cn('h-3.5 w-3.5', bucket === 'active' && 'text-emerald-500', bucket === 'online' && 'text-sky-500', bucket === 'idle' && 'text-amber-500', bucket === 'offline' && 'text-muted-foreground')} />
-                  <span className="text-xs font-medium text-foreground">{meta.label}</span>
-                </div>
-                <span className="text-[11px] text-muted-foreground tabular-nums">{list.length}</span>
-              </div>
-              {list.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground/60 italic">Niemand</p>
-              ) : (
-                <ul className="space-y-1.5">
-                  {list.map(e => (
-                    <li key={e.profile.id} className="flex items-center gap-2 group">
-                      <div className={cn('relative rounded-full ring-2', meta.ring)}>
-                        <UserAvatar user={{ display_name: e.profile.display_name ?? '', short_code: e.profile.short_code ?? '', avatar_url: e.profile.avatar_url ?? null }} size="sm" />
-                        <span className={cn('absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-card', meta.dot)} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-foreground truncate">{e.profile.display_name || e.profile.short_code}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">
-                          {bucket === 'offline'
-                            ? (e.presence ? `zuletzt ${formatAge(e.ageMs)}` : 'noch nie eingeloggt')
-                            : bucket === 'active' && e.presence?.current_path
-                              ? e.presence.current_path
-                              : formatAge(e.ageMs)}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+            <button
+              key={b}
+              type="button"
+              onClick={() => setFilter(filter === b ? 'all' : b)}
+              className={cn(
+                'group bg-card p-3 text-left transition-colors',
+                'hover:bg-muted/30 focus:outline-none focus:bg-muted/30',
+                filter === b && 'bg-muted/40',
               )}
-            </div>
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <div className={cn('flex items-center gap-1.5 px-1.5 py-0.5 rounded-md', meta.bg)}>
+                  <Icon className={cn('h-3 w-3', meta.text)} />
+                  <span className={cn('text-[10px] uppercase tracking-wider font-medium', meta.text)}>{meta.short}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground tabular-nums">{pct}%</span>
+              </div>
+              <div className="flex items-baseline gap-1.5 mb-2">
+                <span className="text-2xl font-semibold text-foreground tabular-nums leading-none">{counts[b]}</span>
+                <span className="text-[10px] text-muted-foreground">/ {profiles.length}</span>
+              </div>
+              <div className="h-1 rounded-full bg-muted/40 overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full transition-all duration-500', meta.bar)}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </button>
           );
         })}
+      </div>
+
+      {/* Toolbar: Filter Tabs + Search */}
+      <div className="px-3 py-2.5 border-y border-border/50 flex items-center gap-2 flex-wrap bg-card/60">
+        <div className="flex items-center gap-1 flex-wrap">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setFilter(t.key)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2 py-1 text-[11px] rounded-md border transition-colors tabular-nums',
+                filter === t.key
+                  ? 'bg-foreground/5 border-border text-foreground'
+                  : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30',
+              )}
+            >
+              {t.dot && <span className={cn('h-1.5 w-1.5 rounded-full', t.dot)} />}
+              <span>{t.label}</span>
+              <span className="text-muted-foreground/70">{t.count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="relative ml-auto w-full sm:w-56">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Nutzer suchen…"
+            className="h-7 pl-7 text-[11px] bg-background/40"
+          />
+        </div>
+      </div>
+
+      {/* Grid of users */}
+      <div className="p-3">
+        {filtered.length === 0 ? (
+          <div className="text-center py-8 text-[11px] text-muted-foreground">
+            Keine Nutzer in dieser Auswahl.
+          </div>
+        ) : (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1.5">
+            {filtered.map(e => {
+              const meta = BUCKET_META[e.bucket];
+              const sub = e.bucket === 'offline'
+                ? (e.presence ? `zuletzt ${formatAge(e.ageMs)}` : 'noch nie eingeloggt')
+                : e.bucket === 'active' && e.presence?.current_path
+                  ? e.presence.current_path
+                  : formatAge(e.ageMs);
+              return (
+                <li
+                  key={e.profile.id}
+                  className={cn(
+                    'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/50 bg-card/60',
+                    'hover:bg-muted/30 hover:border-border transition-colors',
+                  )}
+                  title={e.presence?.current_path ? `Aktuell: ${e.presence.current_path}` : undefined}
+                >
+                  <div className={cn('relative rounded-full ring-2 shrink-0', meta.ring)}>
+                    <UserAvatar
+                      user={{
+                        display_name: e.profile.display_name ?? '',
+                        short_code: e.profile.short_code ?? '',
+                        avatar_url: e.profile.avatar_url ?? null,
+                      }}
+                      size="sm"
+                    />
+                    <span className={cn('absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-card', meta.dot)}>
+                      {e.bucket === 'active' && (
+                        <span className="absolute inset-0 rounded-full bg-emerald-500 opacity-60 animate-ping" />
+                      )}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-medium text-foreground truncate">
+                        {e.profile.display_name || e.profile.short_code}
+                      </p>
+                      {e.profile.short_code && e.profile.display_name && (
+                        <span className="text-[9px] text-muted-foreground/70 tabular-nums shrink-0">
+                          {e.profile.short_code}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">{sub}</p>
+                  </div>
+                  <span className={cn('text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded shrink-0', meta.bg, meta.text)}>
+                    {meta.short}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </section>
   );
