@@ -56,7 +56,7 @@ const matchesFilter = (c: CaseRow, k: FilterKey, today: string, weekEnd: string)
 };
 
 export default function Dashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [myTasks, setMyTasks] = useState<Array<{ id: string; title: string; due_at: string | null; status: string; case_id: string; case: { id: string; case_no: string; project_name: string } | null }>>([]);
   const [loading, setLoading] = useState(true);
