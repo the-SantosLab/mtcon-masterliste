@@ -4,10 +4,10 @@ import { ChevronLeft, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMtiqUnread } from './useMtiqUnread';
-import { MtiqChat } from './MtiqChat';
-import { MtiqCaseChat } from './MtiqCaseChat';
-import { MtiqQuickActions } from './MtiqQuickActions';
-import { MtiqAction } from './MtiqActionsGrid';
+import { MtiqVorgang } from './MtiqVorgang';
+// legacy direct chat imports kept for potential future use
+// (drilldown now reuses MtiqVorgang to expose all tabs)
+
 
 interface CaseRow {
   id: string;
