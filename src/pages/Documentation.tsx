@@ -1406,7 +1406,505 @@ USING (
             />
           </Card>
 
-          {/* ─── TASTENKÜRZEL ─── */}
+          {/* ═══════════════════════════════════════════════════
+              TECHNISCHE THEMEN
+              ═══════════════════════════════════════════════════ */}
+
+          {/* ─── TECHNOLOGIE-STACK ─── */}
+          <Card title="Technologie-Stack" id="tech-stack">
+            <p>
+              Die Plattform basiert auf einer modernen, vollständig verwalteten Cloud-Architektur. Frontend und Backend
+              laufen unabhängig und kommunizieren ausschließlich über typsichere Clients und HTTPS.
+            </p>
+
+            <SubHeading>Frontend</SubHeading>
+            <Table
+              headers={['Schicht', 'Technologie', 'Zweck']}
+              rows={[
+                ['Framework', 'React 18 + Vite 5', 'SPA mit Hot-Reload und schnellem Build'],
+                ['Sprache', 'TypeScript 5 (strict)', 'Vollständige Typsicherheit inkl. generierter DB-Typen'],
+                ['Styling', 'Tailwind CSS v3 + CSS Variablen', 'Semantische Design-Tokens (HSL) statt Hardcoded-Farben'],
+                ['UI-Bibliothek', 'shadcn/ui + Radix UI', 'Accessible Headless-Components mit eigenen Varianten'],
+                ['Routing', 'React Router 6', 'Client-seitiges Routing'],
+                ['State', 'React Hooks + Context', 'Auth, Preferences, Portal-Auth jeweils als Context'],
+                ['Forms', 'React Hook Form + Zod', 'Validierung mit TypeScript-Schemas'],
+                ['Charts', 'Recharts', 'KPI-Dashboards (Donut, Bar)'],
+              ]}
+            />
+
+            <SubHeading>Backend (Lovable Cloud)</SubHeading>
+            <Table
+              headers={['Schicht', 'Technologie', 'Zweck']}
+              rows={[
+                ['Datenbank', 'PostgreSQL 15', 'Relationale Speicherung mit RLS, Triggern, Funktionen'],
+                ['API', 'Auto-REST + Realtime', 'Direkter Zugriff via @supabase/supabase-js Client'],
+                ['Auth', 'Auth-Service mit AAL2/MFA', 'E-Mail/Passwort, TOTP, Session-Management'],
+                ['Edge Functions', 'Deno + TypeScript', 'Server-seitige Logik, Drittsystem-Anbindung, geplante Tasks'],
+                ['Storage', 'S3-kompatibel', 'Private Buckets mit signierten URLs (5 Min. Gültigkeit)'],
+                ['Realtime', 'WebSocket-Channels', 'postgres_changes-Subscriptions auf konfigurierten Tabellen'],
+                ['Cron', 'pg_cron', 'Geplante DB-Funktionen (Reminder, Archivierung, Cleanup)'],
+              ]}
+            />
+
+            <SubHeading>Integrationen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Resend" value="Transaktionaler E-Mail-Versand (noreply@kscommand.com)" color="success" />
+              <Rule label="Postmark Inbound" value="E-Mail-Ingestion über vorgang+VOR-…@inbox.kscommand.com" color="success" />
+              <Rule label="Personio" value="Mitarbeiter-Sync via API" color="success" />
+              <Rule label="Lovable AI Gateway" value="Zugriff auf Gemini/GPT-Modelle ohne separaten API-Key (MTIQ, Ticket-Analyse)" color="success" />
+            </div>
+          </Card>
+
+          {/* ─── OPTIMISTIC LOCKING ─── */}
+          <Card title="Optimistic Locking (Konfliktschutz)" id="optimistic-locking">
+            <p>
+              Damit zwei Mitarbeiter, die denselben Vorgang gleichzeitig bearbeiten, sich nicht gegenseitig
+              überschreiben, verwendet die Vorgangstabelle <strong className="text-foreground">Optimistic Locking</strong>
+              über eine Versionsnummer.
+            </p>
+
+            <SubHeading>Funktionsweise</SubHeading>
+            <Table
+              headers={['Schritt', 'Aktion']}
+              rows={[
+                ['1. Lesen', 'Beim Öffnen eines Vorgangs wird das Feld version mitgeladen (Start: 1)'],
+                ['2. Schreiben', 'Update enthält .eq("id", id).eq("version", currentVersion)'],
+                ['3. Trigger', 'BEFORE UPDATE-Trigger bump_case_version erhöht NEW.version := OLD.version + 1'],
+                ['4. Prüfen', 'Wenn keine Zeile betroffen ist → ein anderer Nutzer hat zwischenzeitlich gespeichert'],
+                ['5. Konflikt', 'Modal "Konflikt erkannt" mit drei Optionen (siehe unten)'],
+              ]}
+            />
+
+            <SubHeading>Konfliktauflösung</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Meine Änderungen speichern" value="Aktuelle Version aus DB lesen → Update mit neuer Version erzwingen (Force-Save)" color="warn" />
+              <Rule label="Aktuelle Version laden" value="Lokale Änderungen verwerfen → Vorgang neu aus DB laden" color="success" />
+              <Rule label="Abbrechen" value="Dialog schließen — lokaler unspeichert-Zustand bleibt erhalten" color="success" />
+            </div>
+
+            <SubHeading>Abgedeckte Felder</SubHeading>
+            <p>
+              Versionsgeprüft sind alle direkten Edits in der Vorgangs-Detailansicht: Titel,
+              Status, Endtermin, Bearbeiter, Abteilung und Projekt. Im Footer wird die aktuelle
+              Version angezeigt: <Badge>Version 4 · Zuletzt gespeichert 13:42 von MT</Badge>.
+            </p>
+
+            <Code>{`-- DB-Migration
+ALTER TABLE public.cases ADD COLUMN version INT NOT NULL DEFAULT 1;
+
+CREATE TRIGGER trg_bump_case_version
+BEFORE UPDATE ON public.cases
+FOR EACH ROW EXECUTE FUNCTION public.bump_case_version();
+
+-- Client (TypeScript)
+await supabase.from('cases')
+  .update(patch)
+  .eq('id', caseId)
+  .eq('version', currentVersion)
+  .select('*').maybeSingle();
+// data === null  →  Konflikt`}</Code>
+
+            <Tip>
+              Der Trigger inkrementiert die Version bei <em>jedem</em> Update — auch bei System-Triggern
+              (Kanban-Sortierung, Subtask-Auto-Forward). Die UI lädt nach erfolgreichem Save den
+              neuen Versionswert automatisch nach.
+            </Tip>
+          </Card>
+
+          {/* ─── REALTIME ─── */}
+          <Card title="Realtime-Subscriptions" id="realtime">
+            <p>
+              Die Anwendung nutzt PostgreSQL-Logical-Replication über WebSocket-Channels, um UI-Daten
+              live ohne Polling zu aktualisieren. Aktiviert wird Realtime pro Tabelle über
+              <Badge>ALTER PUBLICATION supabase_realtime ADD TABLE …</Badge>.
+            </p>
+
+            <SubHeading>Wo wird Realtime eingesetzt?</SubHeading>
+            <Table
+              headers={['Bereich', 'Tabelle(n)', 'Verhalten']}
+              rows={[
+                ['Dashboard', 'cases', 'KPIs und Listen aktualisieren sich bei jeder Änderung'],
+                ['Vorgangs-Detail', 'cases, case_chat_messages', 'Status, Bearbeiter, Chat live'],
+                ['Kanban-Board', 'cases', 'Karten verschieben sich live bei anderen Nutzern'],
+                ['Support-Tickets', 'support_tickets, ticket_messages', 'Neue Kunden-Nachricht sofort sichtbar'],
+                ['Portal', 'support_tickets, ticket_messages', 'Antworten vom Support live beim Kunden'],
+                ['Mitteilungen', 'announcements', 'Neue Broadcasts erscheinen ohne Reload'],
+                ['Urgency-Picker', 'cases / projects / case_tasks', 'Chili-Wert wird live synchronisiert'],
+                ['Notiz-Boards', 'notes, note_boards', 'Post-its bewegen sich kollaborativ'],
+              ]}
+            />
+
+            <Code>{`const channel = supabase
+  .channel('cases')
+  .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'cases' },
+      (payload) => { /* refresh state */ })
+  .subscribe();
+return () => { supabase.removeChannel(channel); };`}</Code>
+          </Card>
+
+          {/* ─── EDGE FUNCTIONS ─── */}
+          <Card title="Edge Functions" id="edge-functions">
+            <p>
+              Edge Functions sind serverseitige TypeScript-Funktionen (Deno-Runtime), die Aufgaben
+              übernehmen, die nicht im Browser laufen können oder dürfen — Drittsystem-Aufrufe,
+              Service-Role-Zugriffe, geplante Tasks und E-Mail-Versand.
+            </p>
+
+            <SubHeading>Benachrichtigungen & E-Mail</SubHeading>
+            <Table
+              headers={['Function', 'Auslöser', 'Zweck']}
+              rows={[
+                ['notify-vorgang-created', 'Beim Anlegen eines Vorgangs', 'Mail an Bearbeiter/Watcher'],
+                ['notify-vorgang-abgeholt', 'Status → In Arbeit', 'Info-Mail an Ersteller'],
+                ['notify-vorgang-abgeschlossen', 'Beim Abschließen', 'Abschluss-Mail mit Notiz'],
+                ['notify-task-created', 'Neue Unteraufgabe', 'Mail an zugewiesenen Mitarbeiter'],
+                ['notify-task-assigned', 'Re-Assign einer Unteraufgabe', 'Benachrichtigung an neuen Bearbeiter'],
+                ['notify-task-abgeschlossen', 'Subtask erledigt', 'Info an Vorgangs-Owner'],
+                ['notify-deadline-reminder', 'pg_cron 07:00', 'Erinnerung am Vortag der Fälligkeit'],
+                ['send-due-notifications', 'Manuell / Cron', 'Sammel-E-Mail aller offenen Termine'],
+                ['send-password-reset', 'Login-Seite "Passwort vergessen"', 'Reset-Link an Custom-Domain'],
+                ['send-welcome-credentials', 'Admin-Useranlage', 'Begrüßungsmail mit Initial-Passwort'],
+                ['receive-email', 'Postmark-Webhook', 'Eingehende Mail → Vorgang/Ticket'],
+                ['crm-send-email', 'CRM Outbound-Sequenz', 'Versand über Resend mit Variablen-Substitution'],
+                ['notify-test', '—', 'Diagnose: Test-Mail-Versand'],
+              ]}
+            />
+
+            <SubHeading>Benutzer- & Admin-Verwaltung</SubHeading>
+            <Table
+              headers={['Function', 'Zweck']}
+              rows={[
+                ['create-user', 'Neuen Auth-User + Profil + Rolle anlegen (Service-Role)'],
+                ['delete-user', 'Auth-User und alle Daten kaskadiert entfernen'],
+                ['update-user-email', 'E-Mail-Adresse eines Users ändern'],
+                ['reset-user-password', 'Admin-getriebener Passwort-Reset'],
+                ['list-user-emails', 'Auth-E-Mails für Admin-Tabelle nachladen'],
+                ['bulk-import-users', 'CSV-Bulk-Anlage von Mitarbeitern'],
+                ['sync-personio-employees', 'Mitarbeiterabgleich gegen Personio-API'],
+                ['invite-portal-customer', 'Portal-Account inkl. Invitation-Mail erzeugen'],
+              ]}
+            />
+
+            <SubHeading>Backups, API & Sonstiges</SubHeading>
+            <Table
+              headers={['Function', 'Zweck']}
+              rows={[
+                ['create-backup', 'pg_dump aller relevanten Tabellen → Storage-Bucket "backups"'],
+                ['restore-backup', 'Wiederherstellung aus Backup (Admin, Bestätigungs-Token)'],
+                ['download-backup', 'Signierte URL zum Download eines Backups'],
+                ['api-dashboard', 'Externe REST-API (Bearer-Token, siehe API-Schnittstelle)'],
+                ['get-dashboard-api-key', 'Aktuellen DASHBOARD_API_KEY für Admin-UI anzeigen'],
+                ['create-project-folders', 'Erstellt Default-Ordnerstruktur + Storage-Pfade'],
+                ['integration-settings', 'CRUD auf verschlüsselten Integration-Secrets (Admin)'],
+                ['analyze-ticket', 'KI-Klassifizierung von Support-Tickets'],
+                ['mtiq-reformulate', 'KI-Umformulierung von Texten (siehe MTIQ-Sektion)'],
+              ]}
+            />
+
+            <Tip>
+              Edge Functions werden bei jedem Code-Push automatisch deployed. Secrets (z.&nbsp;B.
+              <Badge>RESEND_API_KEY</Badge>, <Badge>DASHBOARD_API_KEY</Badge>) werden zentral
+              in den Cloud-Einstellungen gepflegt und sind nie im Frontend sichtbar.
+            </Tip>
+          </Card>
+
+          {/* ─── CRON JOBS ─── */}
+          <Card title="Geplante Aufgaben (pg_cron)" id="cron-jobs">
+            <p>
+              Wiederkehrende Aufgaben werden über die PostgreSQL-Extension <Badge>pg_cron</Badge> direkt
+              in der Datenbank geplant. Die Jobs rufen entweder eine DB-Funktion oder eine Edge Function auf.
+            </p>
+
+            <Table
+              headers={['Job', 'Zeitplan', 'Aktion']}
+              rows={[
+                ['Fälligkeits-Reminder', 'Täglich 07:00', 'notify-deadline-reminder — Mail an Bearbeiter mit Vortags-Fälligkeiten'],
+                ['Mitteilungen archivieren', 'Täglich 03:00', 'archive_old_announcements() — verschiebt abgelaufene/30-Tage-alte ins Archiv'],
+                ['Papierkorb leeren', 'Täglich (konfigurierbar)', 'purge_trashed_cases() — endgültige Löschung nach 90 Tagen im Papierkorb'],
+              ]}
+            />
+
+            <Warning>
+              Cron-Jobs laufen unabhängig vom Browser. Fehler werden in den Edge-Function-Logs sichtbar.
+              Für die Erstausführung wird empfohlen, den Job manuell zu triggern, um die Konfiguration zu validieren.
+            </Warning>
+          </Card>
+
+          {/* ─── BACKUPS ─── */}
+          <Card title="Backups & Wiederherstellung" id="backups">
+            <p>
+              Unter <Badge color="primary">/admin/backups</Badge> können Administratoren manuelle Sicherungen
+              aller produktiven Tabellen erzeugen, herunterladen und wiederherstellen.
+            </p>
+
+            <SubHeading>Funktionsweise</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Erstellung" value="create-backup Edge Function exportiert alle Tabellen als JSON-Snapshot in Bucket 'backups'" color="success" />
+              <Rule label="Geschützt" value="Aufruf erfordert Admin-Rolle + BACKUP_CRON_SECRET (für automatische Calls)" color="success" />
+              <Rule label="Download" value="download-backup liefert eine signierte URL (5 Min gültig)" color="success" />
+              <Rule label="Restore" value="restore-backup spielt einen Snapshot zurück — Admin-Bestätigung erforderlich" color="warn" />
+              <Rule label="Aufbewahrung" value="Backups bleiben dauerhaft im Storage — manuelle Bereinigung über Admin-UI" color="success" />
+            </div>
+
+            <Warning>
+              Ein Restore überschreibt bestehende Daten. Vor der Wiederherstellung wird automatisch
+              ein Sicherheits-Backup des aktuellen Zustands erstellt.
+            </Warning>
+          </Card>
+
+          {/* ─── E-MAIL-VERSAND ─── */}
+          <Card title="E-Mail-Versand (Resend)" id="email-service">
+            <p>
+              Sämtliche transaktionalen E-Mails (Benachrichtigungen, Passwort-Reset, Begrüßung,
+              CRM-Sequenzen) werden über <strong className="text-foreground">Resend</strong> versendet.
+            </p>
+
+            <SubHeading>Konfiguration</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Absender" value="noreply@kscommand.com (Custom Domain, SPF/DKIM verifiziert)" color="success" />
+              <Rule label="API-Key" value="RESEND_API_KEY als Edge-Function-Secret" color="success" />
+              <Rule label="Helper" value="supabase/functions/_shared/email-helpers.ts kapselt Templates und Versand-Logik" color="success" />
+              <Rule label="Logging" value="Jede gesendete Mail wird im notification_log mit Zeitstempel und Empfänger erfasst" color="success" />
+              <Rule label="Notify-Toggle" value="Pro Vorgang können Mitarbeiter aktivieren/deaktivieren, ob bei Status-Wechsel eine E-Mail rausgeht" color="success" />
+            </div>
+
+            <SubHeading>Template-Stil</SubHeading>
+            <p>
+              Alle E-Mails verwenden ein einheitliches HTML-Template mit MTCON-Branding, Dark/Light-tauglichen
+              Farben und einem direkten Call-to-Action-Button zum jeweiligen Vorgang/Ticket.
+            </p>
+          </Card>
+
+          {/* ─── E-MAIL-INGESTION ─── */}
+          <Card title="E-Mail-Ingestion pro Vorgang" id="email-ingestion">
+            <p>
+              Jeder Vorgang hat eine eigene <strong className="text-foreground">eindeutige E-Mail-Adresse</strong>.
+              E-Mails an diese Adresse — inklusive Anhängen — landen automatisch als Eintrag am Vorgang.
+            </p>
+
+            <Code>{`vorgang+VOR-2026-0042@inbox.kscommand.com`}</Code>
+
+            <SubHeading>Ablauf</SubHeading>
+            <Table
+              headers={['Schritt', 'Akteur', 'Aktion']}
+              rows={[
+                ['1. Versand', 'Externer Absender', 'E-Mail an vorgang+VOR-XXXX@inbox.kscommand.com'],
+                ['2. Webhook', 'Postmark Inbound', 'POST an receive-email Edge Function (signiert via POSTMARK_WEBHOOK_SECRET)'],
+                ['3. Parsing', 'receive-email', 'Extrahiert VOR-Nummer aus dem Plus-Tag, lädt zugehörigen Vorgang'],
+                ['4. Speichern', 'DB', 'Eintrag in case_emails, Anhänge in case-attachments-Bucket'],
+                ['5. Anzeige', 'CaseEmails-Komponente', 'Sichtbar im Vorgangs-Detail unter "E-Mails"'],
+                ['6. Notify', 'Optional', 'Watcher/Bearbeiter werden benachrichtigt'],
+              ]}
+            />
+
+            <Tip>
+              Die Adresse kann direkt im Vorgangs-Detail kopiert werden ("Email an diesen Vorgang"-Block).
+              Antworten auf System-Mails landen automatisch wieder am richtigen Vorgang.
+            </Tip>
+          </Card>
+
+          {/* ─── MITTEILUNGEN ─── */}
+          <Card title="Mitteilungen / Broadcasts" id="announcements">
+            <p>
+              Über <Badge color="primary">/admin/announcements</Badge> können Administratoren systemweite
+              Mitteilungen erstellen, die allen Mitarbeitern im Dashboard angezeigt werden — mit
+              Empfangs-, Sicht- und Lese-Bestätigung.
+            </p>
+
+            <SubHeading>Felder einer Mitteilung</SubHeading>
+            <Table
+              headers={['Feld', 'Beschreibung']}
+              rows={[
+                ['Titel', 'Kurzer Betreff'],
+                ['Body', 'Vollständiger Text (mehrzeilig)'],
+                ['Schweregrad', 'info · wichtig · kritisch (farbcodiert)'],
+                ['Pinned', 'Fixiert die Mitteilung dauerhaft — keine Auto-Archivierung'],
+                ['Geplant ab', 'published_at — Mitteilung wird erst ab diesem Zeitpunkt sichtbar'],
+                ['Läuft ab', 'expires_at — automatische Archivierung bei Überschreitung'],
+              ]}
+            />
+
+            <SubHeading>Tracking via announcement_receipts</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="delivered_at" value="Beim ersten Laden der Mitteilung im Browser" color="success" />
+              <Rule label="seen_at" value="Wenn die Mitteilung via IntersectionObserver im Viewport sichtbar wird" color="success" />
+              <Rule label="read_at" value="Erst nach explizitem Klick auf 'Gelesen'" color="success" />
+            </div>
+
+            <SubHeading>Archivierung</SubHeading>
+            <p>
+              Ein Cron-Job (täglich 03:00) verschiebt abgelaufene oder &gt; 30 Tage alte unpinned
+              Mitteilungen ins Archiv. Mitarbeiter können das Archiv jederzeit über das Dashboard öffnen.
+            </p>
+          </Card>
+
+          {/* ─── NOTIZEN & BOARDS ─── */}
+          <Card title="Notizen & Post-it-Boards" id="notes-boards">
+            <p>
+              Persönliche und gemeinsame Notiz-Boards mit frei platzierbaren Post-its — ähnlich einer
+              digitalen Pinnwand. Erreichbar über das schwebende Notiz-FAB-Icon.
+            </p>
+
+            <SubHeading>Tabellen</SubHeading>
+            <Table
+              headers={['Tabelle', 'Zweck']}
+              rows={[
+                ['note_boards', 'Boards mit owner_id, scope (private/shared), Farbschema'],
+                ['note_board_members', 'Geteilte Boards: user_id + role (view/edit)'],
+                ['notes', 'Einzelne Post-its mit body, color, position (x,y), z_index'],
+              ]}
+            />
+
+            <SubHeading>Funktionen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Drag & Drop" value="Post-its können frei verschoben werden — Position wird live in DB persistiert" color="success" />
+              <Rule label="Beschriftung" value="Doppelklick auf ein Post-it öffnet den Inline-Editor mit Auto-Save" color="success" />
+              <Rule label="Realtime-Kollaboration" value="Geteilte Boards aktualisieren sich live bei allen Mitgliedern" color="success" />
+              <Rule label="Sichtbarkeit" value="Privat (nur Ersteller) oder geteilt (Mitglieder-Liste über BoardMembersDialog)" color="success" />
+              <Rule label="Berechtigung" value="RLS-Funktionen can_read_board und can_write_board prüfen Owner + Mitgliedschaft" color="success" />
+            </div>
+          </Card>
+
+          {/* ─── CASE-CHAT ─── */}
+          <Card title="Vorgangs-Chat & @-Erwähnungen" id="case-chat">
+            <p>
+              Jeder Vorgang hat einen integrierten Echtzeit-Chat in der rechten Spalte des Detail-Layouts.
+              Nachrichten sind nach Berechtigung (RLS auf Abteilungs-Ebene) sichtbar.
+            </p>
+
+            <SubHeading>Funktionen</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Realtime" value="Subscriptions auf case_chat_messages — neue Nachrichten erscheinen sofort" color="success" />
+              <Rule label="System-Events" value="Status- und Abteilungs-Wechsel werden automatisch als system_kind-Nachrichten eingefügt" color="success" />
+              <Rule label="Erwähnungen" value="@Kürzel → MentionPopover zeigt passende Mitarbeiter — bei Auswahl wird die Person benachrichtigt" color="success" />
+              <Rule label="Vorgangs-Refs" value="VOR-Nummer im Text wird automatisch zum klickbaren Link aufgelöst" color="success" />
+              <Rule label="Ungelesen-Zähler" value="useChatUnread + get_case_chat_unread() liefern pro Vorgang die ungelesenen Nachrichten" color="success" />
+              <Rule label="Stummschalten" value="case_chat_mutes — User kann Chat eines Vorgangs ausblenden" color="success" />
+              <Rule label="Lese-Marker" value="case_chat_reads.last_read_at wird beim Öffnen aktualisiert" color="success" />
+            </div>
+          </Card>
+
+          {/* ─── MTIQ ─── */}
+          <Card title="MTIQ — KI-Reformulierung" id="mtiq">
+            <p>
+              <strong className="text-foreground">MTIQ</strong> ist ein KI-Helfer, der Notizen, Nachrichten
+              oder Beschreibungen sprachlich glättet — neutral, banking-konform und ohne Marketing-Tonalität.
+              Erreichbar über das MTIQ-Button-Icon neben Textfeldern.
+            </p>
+
+            <SubHeading>Funktionsweise</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Edge Function" value="mtiq-reformulate ruft das Lovable AI Gateway auf (Gemini / GPT)" color="success" />
+              <Rule label="Kein API-Key nötig" value="Lovable Cloud stellt den Zugang über LOVABLE_API_KEY bereit" color="success" />
+              <Rule label="Tonalität" value="Prompt erzwingt sachlich-neutralen Stil ohne Emojis" color="success" />
+              <Rule label="Modell-Wahl" value="Standard: google/gemini-2.5-flash (schnell, günstig). Bei längeren Texten: gemini-2.5-pro" color="success" />
+            </div>
+
+            <Tip>
+              Auch die <Badge>analyze-ticket</Badge> Edge Function nutzt denselben AI-Gateway, um eingehende
+              Support-Tickets zu kategorisieren und Priorisierungs-Vorschläge zu liefern.
+            </Tip>
+          </Card>
+
+          {/* ─── PAPIERKORB ─── */}
+          <Card title="Papierkorb & Wiederherstellung" id="soft-delete">
+            <p>
+              Gelöschte Vorgänge werden nicht sofort entfernt, sondern für 90 Tage in einem
+              <strong className="text-foreground"> Soft-Delete-Zustand</strong> (deleted = true) gehalten.
+              Admins können sie aus dem Papierkorb vollständig wiederherstellen.
+            </p>
+
+            <SubHeading>Architektur</SubHeading>
+            <Table
+              headers={['Komponente', 'Zweck']}
+              rows={[
+                ['cases.deleted / deleted_at / deleted_by', 'Soft-Delete-Marker auf der Hauptzeile'],
+                ['deleted_cases', 'Schattentabelle mit vollständigem JSONB-Snapshot (inkl. Tasks, Notizen, Activity, E-Mails)'],
+                ['log_case_deletion()', 'Trigger BEFORE DELETE: schreibt Snapshot in deleted_cases'],
+                ['restore_deleted_case(id)', 'SECURITY DEFINER Function: stellt Vorgang inkl. aller Children wieder her'],
+                ['purge_trashed_cases()', 'Cron: entfernt cases mit deleted_at < now() - 90 days endgültig'],
+              ]}
+            />
+
+            <SubHeading>Admin-UIs</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="/admin/trash" value="Aktiver Papierkorb — Wiederherstellen oder hart löschen" color="success" />
+              <Rule label="/admin/deleted-cases" value="Audit-Übersicht aller jemals gelöschten Vorgänge mit Akteur und Zeitpunkt" color="success" />
+            </div>
+
+            <Warning>
+              Hartes Löschen aus dem Papierkorb ist endgültig. Anhänge im Storage werden NICHT
+              automatisch entfernt — diese müssen separat über die Storage-Verwaltung bereinigt werden.
+            </Warning>
+          </Card>
+
+          {/* ─── SESSION-SICHERHEIT ─── */}
+          <Card title="Session-Sicherheit & Timeout" id="session-security">
+            <p>
+              Die Anwendung erzwingt mehrere Sicherheitsschichten auf Session-Ebene, um unbefugten
+              Zugriff bei verlassenem Arbeitsplatz oder gestohlenen Tokens zu verhindern.
+            </p>
+
+            <SubHeading>Mechanismen</SubHeading>
+            <Table
+              headers={['Mechanismus', 'Hook / Komponente', 'Verhalten']}
+              rows={[
+                ['Inaktivitäts-Timeout', 'useSessionTimeout', 'Automatischer Logout nach konfigurierbarer Idle-Zeit'],
+                ['Multi-Tab-Sync', 'SessionTimeoutGuard', 'Aktivität in einem Tab verlängert alle Tabs'],
+                ['MFA-Enforcement', 'useSessionEnforcement', 'Erzwingt AAL2 für sensible Bereiche (Admin)'],
+                ['Auto-Refresh', 'Supabase-Client', 'Token wird vor Ablauf transparent erneuert'],
+                ['MFA-Reminder', 'MfaReminderBanner', 'Banner für User ohne aktiviertes 2FA'],
+              ]}
+            />
+
+            <SubHeading>Best Practices</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="2FA verpflichtend" value="Admins sollten 2FA aktivieren — Reminder-Banner erscheint solange nicht aktiv" color="warn" />
+              <Rule label="Recovery" value="Bei Verlust des 2FA-Geräts ausschließlich Admin-Reset (kein E-Mail-Self-Service)" color="warn" />
+              <Rule label="Passwort-Stärke" value="Mindestens 8 Zeichen — Reset-Links sind 24h gültig" color="success" />
+            </div>
+          </Card>
+
+          {/* ─── DESIGN-TOKENS ─── */}
+          <Card title="Design-System & Tokens" id="design-tokens">
+            <p>
+              Das visuelle System folgt einem Premium-Dark-Mode mit Glassmorphism im Banking-Standard.
+              Alle Farben sind als <strong className="text-foreground">semantische HSL-Tokens</strong> in
+              <Badge>src/index.css</Badge> definiert — niemals hardcoded in Komponenten.
+            </p>
+
+            <SubHeading>Token-Kategorien</SubHeading>
+            <Table
+              headers={['Token', 'Verwendung']}
+              rows={[
+                ['--background / --foreground', 'Haupt-Hintergrund und Textfarbe'],
+                ['--primary / --primary-foreground', 'Markenfarbe für Aktionen und Akzente'],
+                ['--secondary / --muted / --accent', 'Sekundäre Flächen, gedämpfte Texte, Highlights'],
+                ['--card / --popover / --border', 'Container-Flächen und Trennlinien'],
+                ['--destructive', 'Fehler-, Lösch- und Warn-Aktionen'],
+                ['--ring', 'Focus-Outline für Keyboard-Navigation'],
+              ]}
+            />
+
+            <SubHeading>Globale UI-Regeln</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Glassmorphism" value="24px backdrop-blur auf Cards und Sidebar" color="success" />
+              <Rule label="Zebra-Stripes" value="Globale CSS-Regel: tbody tr:nth-child(even) und divide-y :nth-child(even) → leichte muted-Hinterlegung. Opt-out mit Klasse .no-zebra" color="success" />
+              <Rule label="Compact Mode" value="user_preferences.compact_tables → 20–30% dichtere Tabellen. Klasse lov-compact-region greift via CSS-Cascade" color="success" />
+              <Rule label="Typografie" value="Inter / SF Pro. Headers neutral klein (text-[11px] uppercase), Zahlen prominent" color="success" />
+              <Rule label="Dark Mode default" value="Standard ist Dark. Toggle pro User in den Profil-Einstellungen, Persistenz via user_preferences" color="success" />
+              <Rule label="Branding" value="MTCON-Logo in Sidebar, Titel text-[10px], Version text-[8px]" color="success" />
+            </div>
+
+            <Warning>
+              Niemals direkte Tailwind-Farbklassen wie <Badge>bg-white</Badge> oder <Badge>text-black</Badge>
+              verwenden — immer semantische Tokens (<Badge>bg-background</Badge>, <Badge>text-foreground</Badge>),
+              damit Dark/Light konsistent bleiben.
+            </Warning>
+          </Card>
+
+
           <Card title="Tastenkürzel" id="shortcuts">
             <Table
               headers={['Kürzel', 'Aktion']}
