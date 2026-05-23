@@ -124,28 +124,10 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
             style={{ background: '#181818', border: '1px solid #222', color: '#e0e0e0' }}
           >Öffnen</button>
         </div>
-        <div className="px-3 pt-1.5 pb-1 flex gap-1" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          {([['case', 'Vorgang-Chat'], ['ai', 'KI-Chat']] as [DrillMode, string][]).map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => setDrillMode(k)}
-              className="px-2.5 py-1 text-[11px] rounded transition-colors"
-              style={{
-                color: drillMode === k ? '#e0e0e0' : '#666',
-                background: drillMode === k ? '#181818' : 'transparent',
-                fontWeight: drillMode === k ? 500 : 400,
-              }}
-            >{label}</button>
-          ))}
+        <div className="flex-1 min-h-0">
+          <MtiqVorgang vorgangId={activeId} onClose={onClose} />
         </div>
-        {drillMode === 'case' ? (
-          <MtiqCaseChat vorgangId={activeId} />
-        ) : (
-          <>
-            <MtiqChat vorgangId={activeId} seedPrompt={seedPrompt} onSeedConsumed={() => setSeedPrompt(undefined)} />
-            <MtiqQuickActions onPick={(a: MtiqAction) => setSeedPrompt(a.prompt)} />
-          </>
-        )}
+
       </div>
     );
   }
