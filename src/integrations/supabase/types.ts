@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read_at: string | null
+          role: string
+          user_id: string
+          vorgang_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          role: string
+          user_id: string
+          vorgang_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          role?: string
+          user_id?: string
+          vorgang_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_vorgang_id_fkey"
+            columns: ["vorgang_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcement_receipts: {
         Row: {
           announcement_id: string
@@ -3168,6 +3206,7 @@ export type Database = {
         Args: { p_project_id: string; uid?: string }
         Returns: boolean
       }
+      mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       next_counter: { Args: { p_key: string }; Returns: number }
       purge_trashed_cases: { Args: never; Returns: number }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
