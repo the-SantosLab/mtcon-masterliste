@@ -154,18 +154,46 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
                   {m.author_name || m.author_short || '—'}
                 </div>
               )}
-              <div
-                className="max-w-[80%] px-2.5 py-1.5 text-[12px] whitespace-pre-wrap break-words"
-                style={{
-                  background: mine ? 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' : '#1a1a1a',
-                  color: mine ? '#fff' : '#e0e0e0',
-                  borderRadius: 12,
-                  borderTopRightRadius: mine ? 4 : 12,
-                  borderTopLeftRadius: mine ? 12 : 4,
-                }}
-              >
-                {m.body}
-              </div>
+              {m.body && (
+                <div
+                  className="max-w-[80%] px-2.5 py-1.5 text-[12px] whitespace-pre-wrap break-words"
+                  style={{
+                    background: mine ? 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' : '#1a1a1a',
+                    color: mine ? '#fff' : '#e0e0e0',
+                    borderRadius: 12,
+                    borderTopRightRadius: mine ? 4 : 12,
+                    borderTopLeftRadius: mine ? 12 : 4,
+                  }}
+                >
+                  {m.body}
+                </div>
+              )}
+              {!!m.attachments?.length && (
+                <div className={`mt-1 flex flex-wrap gap-1.5 max-w-[80%] ${mine ? 'justify-end' : 'justify-start'}`}>
+                  {m.attachments.map(a => {
+                    const isImg = (a.mime_type || '').startsWith('image/');
+                    if (isImg && signed[a.id]) {
+                      return (
+                        <a key={a.id} href={signed[a.id]} target="_blank" rel="noreferrer">
+                          <img src={signed[a.id]} alt={a.file_name}
+                               className="max-h-32 max-w-[180px] object-contain"
+                               style={{ borderRadius: 8, border: '1px solid #222', background: '#0f0f0f' }} />
+                        </a>
+                      );
+                    }
+                    return (
+                      <a key={a.id} href="#" onClick={async (e) => {
+                        e.preventDefault();
+                        const { data } = await (supabase as any).storage.from(BUCKET).createSignedUrl(a.storage_path, 300);
+                        if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                      }} className="inline-flex items-center gap-1 px-2 py-1 text-[11px]"
+                         style={{ background: '#1a1a1a', border: '1px solid #222', borderRadius: 8, color: '#ccc' }}>
+                        📎 <span className="truncate max-w-[140px]">{a.file_name}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
               <div className="text-[9px] mt-0.5 px-1 font-mono" style={{ color: '#555' }}>{fmtTime(m.created_at)}</div>
             </div>
           );
