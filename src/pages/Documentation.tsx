@@ -11,6 +11,8 @@ import {
   KeyRound, Database, BarChart3, Columns, BookOpen, Printer, List,
   Headphones, Globe, Network, Workflow, Lightbulb, FolderPlus, Plug,
   ShieldCheck, Briefcase, Users2, RefreshCw,
+  Cpu, GitMerge, Radio, Zap, Clock, HardDrive, Mail, Megaphone,
+  StickyNote, MessageSquare, Inbox, Sparkles, Trash2, Palette, Timer,
 } from 'lucide-react';
 
 interface Section {
