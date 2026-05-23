@@ -13,6 +13,7 @@ import {
   ShieldCheck, Briefcase, Users2, RefreshCw,
   Cpu, GitMerge, Radio, Zap, Clock, HardDrive, Mail, Megaphone,
   StickyNote, MessageSquare, Inbox, Sparkles, Trash2, Palette, Timer,
+  Server,
 } from 'lucide-react';
 
 interface Section {
@@ -51,9 +52,12 @@ const SECTIONS: Section[] = [
   { id: 'schema', label: 'Datenmodell', icon: GitBranch },
   // ── Technische Themen ──
   { id: 'tech-stack', label: 'Technologie-Stack', icon: Cpu },
+  { id: 'backend-architecture', label: 'Backend-Architektur', icon: Server },
   { id: 'optimistic-locking', label: 'Optimistic Locking', icon: GitMerge },
   { id: 'realtime', label: 'Realtime-Subscriptions', icon: Radio },
   { id: 'edge-functions', label: 'Edge Functions', icon: Zap },
+  { id: 'async-queues', label: 'Async Queues', icon: Timer },
+  { id: 'caching', label: 'Caching-Strategie', icon: Database },
   { id: 'cron-jobs', label: 'Geplante Aufgaben (pg_cron)', icon: Clock },
   { id: 'backups', label: 'Backups & Restore', icon: HardDrive },
   { id: 'email-service', label: 'E-Mail-Versand (Resend)', icon: Mail },
@@ -1904,6 +1908,103 @@ return () => { supabase.removeChannel(channel); };`}</Code>
             </Warning>
           </Card>
 
+          {/* ─── BACKEND-ARCHITEKTUR ─── */}
+          <Card title="Backend-Architektur" id="backend-architecture">
+            <p>
+              Masterliste verwendet <strong className="text-foreground">keinen traditionellen Backend-Server</strong> im Sinne von .NET oder Node.js.
+              Stattdessen läuft die gesamte serverseitige Logik auf <strong className="text-foreground">Supabase Edge Functions</strong> (Deno-Runtime).
+            </p>
+
+            <SubHeading>Warum kein .NET / Node.js?</SubHeading>
+            <div className="space-y-1 mt-1">
+              <Rule label="Stack" value="Edge Functions auf Deno — technisch sehr ähnlich zu Node.js/TypeScript, aber serverless und nahe an der Datenbank" color="success" />
+              <Rule label="Deployment" value="Automatisch bei jedem Code-Push — kein separates Server-Management, kein Docker, kein IIS" color="success" />
+              <Rule label="Kosten" value="Nur bei Ausführung Kosten — kein dauerhaft laufender Server" color="success" />
+              <Rule label="Performance" value="< 50 ms Cold-Start, danach warm — für 20 Nutzer vollkommen ausreichend" color="success" />
+              <Rule label="Wechsel-Sinnhaftigkeit" value="Ein Wechsel zu .NET oder eigenem Node.js wäre ein kompletter Stack-Wechsel ohne Mehrwert" color="warn" />
+            </div>
+
+            <SubHeading>Was Edge Functions bei uns machen</SubHeading>
+            <Table
+              headers={['Aufgabe', 'Function-Beispiel']}
+              rows={[
+                ['Authentifizierung & Rollen', 'create-user, delete-user, reset-user-password'],
+                ['E-Mail-Versand', 'notify-*, send-password-reset, crm-send-email'],
+                ['Drittsystem-Anbindung', 'sync-personio-employees, receive-email (Postmark)'],
+                ['KI-Features', 'mtiq-reformulate, analyze-ticket'],
+                ['Backups & API', 'create-backup, api-dashboard'],
+                ['Kundenportal', 'invite-portal-customer'],
+              ]}
+            />
+
+            <Tip>
+              Deno ist für TypeScript-Entwickler nahezu identisch zu Node.js. Dieselbe Syntax, ähnliche APIs,
+              nur ohne node_modules — Dependencies werden via URL importiert.
+            </Tip>
+          </Card>
+
+          {/* ─── ASYNC QUEUES ─── */}
+          <Card title="Async Queues & Hintergrund-Jobs" id="async-queues">
+            <p>
+              Eine dedizierte <strong className="text-foreground">Redis Queue</strong> (z. B. Bull, Bee-Queue, Sidekiq) ist bei uns <strong className="text-foreground">nicht vorhanden und nicht nötig</strong>.
+              Die Aufgaben, die normalerweise eine Queue übernimmt, werden bereits durch andere Mechanismen abgedeckt.
+            </p>
+
+            <SubHeading>Was ersetzt bei uns eine Queue?</SubHeading>
+            <Table
+              headers={['Queue-Aufgabe', 'Unsere Lösung', 'Beispiel']}
+              rows={[
+                ['Geplanter Versand', 'pg_cron + Edge Function', 'Täglich 07:00: Fälligkeits-Erinnerungen'],
+                ['E-Mail im Hintergrund', 'Edge Function (synchron)', 'notify-vorgang-created wird sofort aufgerufen'],
+                ['Batch-Verarbeitung', 'Edge Function + DB-Trigger', 'Archivierung alter Mitteilungen'],
+                ['Wiederholte Versuche', 'Edge Function + Log-Tabelle', 'Fehlgeschlagene Mails werden im notification_log erfasst'],
+              ]}
+            />
+
+            <SubHeading>Wann würde eine Queue Sinn machen?</SubHeading>
+            <p>
+              Erst bei einem Volumen von <strong className="text-foreground">50–100x der aktuellen Last</strong>:
+              Hunderte gleichzeitige E-Mails pro Minute, massive Batch-Imports oder Tausende Cron-Jobs pro Stunde.
+              Bei 20 Nutzern und dem aktuellen Aufkommen ist eine Redis Queue Over-Engineering.
+            </p>
+
+            <Warning>
+              Edge Functions haben ein Timeout von 60–150 s. Alles, was länger braucht,
+              wird in kleinere Schritte aufgeteilt oder via DB-Trigger asynchron verarbeitet.
+            </Warning>
+          </Card>
+
+          {/* ─── CACHING ─── */}
+          <Card title="Caching-Strategie" id="caching">
+            <p>
+              Ein <strong className="text-foreground">Redis-Cache</strong> ist bei uns <strong className="text-foreground">nicht vorhanden und aktuell nicht nötig</strong>.
+              Supabase bietet eingebautes Connection Pooling, und die Anwendung nutzt gezielte Frontend-Caching-Strategien.
+            </p>
+
+            <SubHeading>Welche Caching-Ebenen gibt es?</SubHeading>
+            <Table
+              headers={['Ebene', 'Mechanismus', 'Wirkung']}
+              rows={[
+                ['Datenbank', 'Supabase Connection Pooling', 'Mehrere gleichzeitige Queries werden effizient gemanagt'],
+                ['Realtime-Subscription', 'PostgreSQL Logical Replication', 'Kein Polling nötig — Daten kommen push-basiert'],
+                ['Frontend', 'React Query / State', 'Lokaler State hält Daten während der Session vor'],
+                ['Edge Functions', 'Deno-Runtime intern', 'Warme Functions wiederverwenden Kontext'],
+              ]}
+            />
+
+            <SubHeading>Wann würde Redis-Cache Sinn machen?</SubHeading>
+            <p>
+              Erst wenn <strong className="text-foreground">dieselbe Abfrage hunderte Male pro Sekunde</strong> läuft
+              oder komplexe aggregierte Dashboard-Daten unter 10 ms liegen müssen.
+              Bei 20 gleichzeitigen Nutzern ist das kein Thema.
+            </p>
+
+            <Tip>
+              Die Realtime-Subscriptions eliminieren den Hauptgrund für Caching:
+              Statt wiederholt die gleichen Daten abzufragen, erhält jeder Client automatisch
+              nur die tatsächlichen Änderungen.
+            </Tip>
+          </Card>
 
           <Card title="Tastenkürzel" id="shortcuts">
             <Table
