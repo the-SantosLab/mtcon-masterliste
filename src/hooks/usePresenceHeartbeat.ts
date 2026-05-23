@@ -19,16 +19,14 @@ export function usePresenceHeartbeat() {
 
     const push = async (markActive: boolean) => {
       const now = new Date().toISOString();
-      const payload: Record<string, unknown> = {
+      const payload = {
         user_id: user.id,
         last_seen_at: now,
         current_path: location.pathname,
         updated_at: now,
+        ...(markActive ? { last_active_at: now } : {}),
       };
-      if (markActive) {
-        payload.last_active_at = now;
-        lastPushedActiveRef.current = Date.now();
-      }
+      if (markActive) lastPushedActiveRef.current = Date.now();
       await supabase.from('user_presence').upsert(payload, { onConflict: 'user_id' });
     };
 
