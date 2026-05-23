@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface AiMessage {
   id: string;
   vorgang_id: string;
+  user_id: string;
   role: 'user' | 'assistant';
   content: string;
   read_at: string | null;
