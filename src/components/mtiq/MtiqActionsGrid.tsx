@@ -87,6 +87,7 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
     }
     setBusy(true);
     setResult(null);
+    setRanAt(null);
     setCopied(false);
     setSavedNote(false);
     try {
@@ -96,6 +97,7 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data?.reply ?? '');
+      setRanAt(new Date().toISOString());
     } catch (e: any) {
       toast.error(e?.message ?? 'Fehler');
     } finally {
