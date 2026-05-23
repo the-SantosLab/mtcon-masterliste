@@ -17,6 +17,7 @@ interface CaseRow {
   department_name?: string | null;
   last_message?: string | null;
   last_at?: string | null;
+  mine?: boolean;
 }
 
 const statusDot: Record<string, string> = {
@@ -37,17 +38,19 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
     (async () => {
       if (!user?.id) return;
       // Load recent cases the user can see, plus last AI message per case
-      const { data: cases } = await supabase
+      const { data: cases, error } = await supabase
         .from('cases')
-        .select('id, case_no, project_name, status, department_id, departments:department_id(name)')
+        .select('id, case_no, project_name, status, department_id, assignee_id, created_by, created_at, departments:department_id(name)')
         .eq('deleted', false)
-        .order('updated_at', { ascending: false })
-        .limit(80);
+        .order('created_at', { ascending: false })
+        .limit(120);
+      if (error) console.error('[MTIQ] cases load failed', error);
 
       const list: CaseRow[] = (cases ?? []).map((c: any) => ({
         id: c.id, case_no: c.case_no, project_name: c.project_name,
         status: c.status, department_id: c.department_id,
         department_name: c.departments?.name ?? null,
+        mine: c.assignee_id === user.id || c.created_by === user.id,
       }));
 
       const ids = list.map(c => c.id);
@@ -65,10 +68,11 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
           if (m) { c.last_message = m.content; c.last_at = m.created_at; }
         });
       }
-      // Sort: unread first, then with messages by last_at, then rest by original order
+      // Sort: unread first, then own cases, then messages by recency
       list.sort((a, b) => {
         const ua = perCase[a.id] ?? 0, ub = perCase[b.id] ?? 0;
         if (ua !== ub) return ub - ua;
+        if (!!a.mine !== !!b.mine) return a.mine ? -1 : 1;
         if (a.last_at && b.last_at) return b.last_at.localeCompare(a.last_at);
         if (a.last_at) return -1;
         if (b.last_at) return 1;
