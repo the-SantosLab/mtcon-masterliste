@@ -10,6 +10,16 @@ export interface AiMessage {
   content: string;
   read_at: string | null;
   created_at: string;
+  metadata: any | null;
+}
+
+export async function confirmProposal(messageId: string, decision: 'confirm' | 'cancel') {
+  const { data, error } = await supabase.functions.invoke('mtiq-execute', {
+    body: { message_id: messageId, decision },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
 }
 
 export function useMtiqMessages(vorgangId: string | null) {
