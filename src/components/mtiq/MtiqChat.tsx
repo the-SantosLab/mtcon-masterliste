@@ -46,7 +46,10 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
             Frag MTIQ etwas zu diesem Vorgang.
           </div>
         )}
-        {messages.map(m => (
+        {messages.map(m => {
+          const proposals: any[] = m.metadata?.proposed_actions ?? [];
+          const hasPending = proposals.some(p => (p.status ?? 'pending') === 'pending');
+          return (
           <div key={m.id} className={cn('flex items-end gap-1.5', m.role === 'user' && 'flex-row-reverse')}>
             <div
               className="shrink-0 flex items-center justify-center text-[10px] font-medium text-white"
@@ -59,18 +62,23 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
             >
               {m.role === 'assistant' ? '✦' : initials}
             </div>
-            <div
-              className="max-w-[78%] px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
-              style={{
-                background: m.role === 'assistant' ? '#181818' : '#1e293b',
-                color: '#e0e0e0',
-                borderRadius: m.role === 'assistant' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
-              }}
-            >
-              {m.content}
+            <div className="max-w-[78%] flex flex-col gap-1.5">
+              <div
+                className="px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
+                style={{
+                  background: m.role === 'assistant' ? '#181818' : '#1e293b',
+                  color: '#e0e0e0',
+                  borderRadius: m.role === 'assistant' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
+                }}
+              >
+                {m.content}
+              </div>
+              {proposals.length > 0 && (
+                <ProposalCard messageId={m.id} proposals={proposals} hasPending={hasPending} />
+              )}
             </div>
           </div>
-        ))}
+        );})}
         {sending && (
           <div className="flex items-end gap-1.5">
             <div
