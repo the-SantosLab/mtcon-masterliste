@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { MtiqActionsGrid, MtiqAction } from './MtiqActionsGrid';
+import { MtiqActionsGrid } from './MtiqActionsGrid';
 import { MtiqChat } from './MtiqChat';
 import { MtiqCaseChat } from './MtiqCaseChat';
 import { MtiqHistory } from './MtiqHistory';
@@ -10,7 +10,6 @@ type Tab = 'case' | 'actions' | 'ai' | 'history';
 
 export function MtiqVorgang({ vorgangId, onClose }: { vorgangId: string; onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('case');
-  const [seedPrompt, setSeedPrompt] = useState<string | undefined>();
   const [caseNo, setCaseNo] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,10 +18,6 @@ export function MtiqVorgang({ vorgangId, onClose }: { vorgangId: string; onClose
     });
   }, [vorgangId]);
 
-  const pickAction = (a: MtiqAction) => {
-    setSeedPrompt(a.prompt);
-    setTab('ai');
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -49,8 +44,8 @@ export function MtiqVorgang({ vorgangId, onClose }: { vorgangId: string; onClose
       </div>
       <div className="flex-1 min-h-0 flex flex-col">
         {tab === 'case' && <MtiqCaseChat vorgangId={vorgangId} />}
-        {tab === 'actions' && <MtiqActionsGrid onPick={pickAction} />}
-        {tab === 'ai' && <MtiqChat vorgangId={vorgangId} seedPrompt={seedPrompt} onSeedConsumed={() => setSeedPrompt(undefined)} />}
+        {tab === 'actions' && <MtiqActionsGrid vorgangId={vorgangId} />}
+        {tab === 'ai' && <MtiqChat vorgangId={vorgangId} />}
         {tab === 'history' && <MtiqHistory onNavigate={onClose} />}
       </div>
     </div>
