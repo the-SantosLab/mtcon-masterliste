@@ -328,12 +328,52 @@ export function MasterControlPanel() {
                   <span className={cn('text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded shrink-0', meta.bg, meta.text)}>
                     {meta.short}
                   </span>
+                  {e.bucket !== 'offline' && e.profile.id !== currentUser?.id && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoutTarget(e)}
+                      title="Nutzer ausloggen"
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                    >
+                      <LogOut className="h-3 w-3" />
+                    </button>
+                  )}
                 </li>
               );
             })}
           </ul>
         )}
       </div>
+
+      <AlertDialog open={!!logoutTarget} onOpenChange={(o) => !o && setLogoutTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nutzer ausloggen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {logoutTarget && (
+                <>
+                  Alle aktiven Sitzungen von{' '}
+                  <span className="font-medium text-foreground">
+                    {logoutTarget.profile.display_name || logoutTarget.profile.short_code}
+                  </span>{' '}
+                  werden sofort beendet. Der Nutzer muss sich neu anmelden.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loggingOut}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(ev) => { ev.preventDefault(); void handleForceLogout(); }}
+              disabled={loggingOut}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {loggingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
+              Ausloggen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
