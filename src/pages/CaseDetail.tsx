@@ -916,7 +916,30 @@ export default function CaseDetail() {
             </div>
           </div>
         </div>
+
+        {/* Version footer */}
+        <div className="pt-2 text-[11px] text-muted-foreground">
+          Version {(c as any).version ?? 1}
+          {c.last_changed_at && (
+            <>
+              {' · Zuletzt gespeichert '}
+              {formatDateTime(c.last_changed_at)}
+              {(() => {
+                const p = profiles.find(p => p.id === (c as any).last_changed_by);
+                return p?.short_code ? ` von ${p.short_code}` : '';
+              })()}
+            </>
+          )}
+        </div>
       </div>
+
+      <CaseConflictDialog
+        open={!!conflict}
+        onOpenChange={(o) => { if (!o) setConflict(null); }}
+        onForceSave={resolveConflictForceSave}
+        onReload={resolveConflictReload}
+      />
     </AppLayout>
+
   );
 }
