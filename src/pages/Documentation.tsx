@@ -52,9 +52,12 @@ const SECTIONS: Section[] = [
   { id: 'schema', label: 'Datenmodell', icon: GitBranch },
   // ── Technische Themen ──
   { id: 'tech-stack', label: 'Technologie-Stack', icon: Cpu },
+  { id: 'backend-architecture', label: 'Backend-Architektur', icon: Server },
   { id: 'optimistic-locking', label: 'Optimistic Locking', icon: GitMerge },
   { id: 'realtime', label: 'Realtime-Subscriptions', icon: Radio },
   { id: 'edge-functions', label: 'Edge Functions', icon: Zap },
+  { id: 'async-queues', label: 'Async Queues', icon: Timer },
+  { id: 'caching', label: 'Caching-Strategie', icon: Database },
   { id: 'cron-jobs', label: 'Geplante Aufgaben (pg_cron)', icon: Clock },
   { id: 'backups', label: 'Backups & Restore', icon: HardDrive },
   { id: 'email-service', label: 'E-Mail-Versand (Resend)', icon: Mail },
