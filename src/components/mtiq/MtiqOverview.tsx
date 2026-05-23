@@ -99,7 +99,7 @@ export function MtiqOverview({ onClose }: { onClose: () => void }) {
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-3 py-2.5" style={{ borderBottom: '1px solid #222' }}>
-          <button onClick={() => { setActiveId(null); setDrillMode('case'); }} className="hover:opacity-70" style={{ color: '#e0e0e0' }}>
+          <button onClick={() => setActiveId(null)} className="hover:opacity-70" style={{ color: '#e0e0e0' }}>
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div
