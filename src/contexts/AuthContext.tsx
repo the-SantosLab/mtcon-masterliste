@@ -102,9 +102,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('pagehide', handlePageHide);
 
+    // Admin-initiierter Force-Logout: serverseitig wurden Sessions widerrufen,
+    // dieser Listener meldet die Nutzer-Tab sofort ab.
+    const forceCh = supabase
+      .channel('force-logout')
+      .on('broadcast', { event: 'logout' }, async (msg) => {
+        const targetId = (msg.payload as { user_id?: string } | undefined)?.user_id;
+        const { data } = await supabase.auth.getUser();
+        if (targetId && data.user?.id === targetId) {
+          clearSessionEnforcementState();
+          await supabase.auth.signOut();
+          setSession(null); setUser(null); setProfile(null); setRole(null);
+          window.location.replace('/auth?reason=force-logout');
+        }
+      })
+      .subscribe();
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('pagehide', handlePageHide);
+      supabase.removeChannel(forceCh);
     };
   }, []);
 
