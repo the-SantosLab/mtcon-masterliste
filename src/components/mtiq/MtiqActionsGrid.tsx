@@ -162,11 +162,18 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
         )}
 
         {result && (
-          <div
-            className="p-3 text-[12.5px] leading-relaxed whitespace-pre-wrap"
-            style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, color: '#e0e0e0' }}
-          >
-            {result}
+          <div>
+            {ranAt && (
+              <div className="text-[10px] mb-1" style={{ color: '#666' }}>
+                Ergebnis gespeichert · {new Date(ranAt).toLocaleString('de-DE')}
+              </div>
+            )}
+            <div
+              className="p-3 text-[12.5px] leading-relaxed whitespace-pre-wrap"
+              style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, color: '#e0e0e0' }}
+            >
+              {result}
+            </div>
           </div>
         )}
 
