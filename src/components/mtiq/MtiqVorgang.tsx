@@ -44,8 +44,8 @@ export function MtiqVorgang({ vorgangId, onClose }: { vorgangId: string; onClose
       </div>
       <div className="flex-1 min-h-0 flex flex-col">
         {tab === 'case' && <MtiqCaseChat vorgangId={vorgangId} />}
-        {tab === 'actions' && <MtiqActionsGrid onPick={pickAction} />}
-        {tab === 'ai' && <MtiqChat vorgangId={vorgangId} seedPrompt={seedPrompt} onSeedConsumed={() => setSeedPrompt(undefined)} />}
+        {tab === 'actions' && <MtiqActionsGrid vorgangId={vorgangId} />}
+        {tab === 'ai' && <MtiqChat vorgangId={vorgangId} />}
         {tab === 'history' && <MtiqHistory onNavigate={onClose} />}
       </div>
     </div>
