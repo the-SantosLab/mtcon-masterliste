@@ -275,14 +275,13 @@ export default function CaseDetail() {
     if (!next) return;
     if (next === c.project_name) { setTitleEditing(false); return; }
     setTitleSaving(true);
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from('cases')
-      .update({ project_name: next, last_changed_by: user?.id, last_changed_at: now })
-      .eq('id', c.id);
+    const ok = await updateCaseOptimistic({
+      project_name: next,
+      last_changed_by: user?.id,
+      last_changed_at: new Date().toISOString(),
+    });
     setTitleSaving(false);
-    if (error) { toast.error('Titel konnte nicht gespeichert werden'); return; }
-    setCase({ ...c, project_name: next });
+    if (!ok) return;
     setTitleEditing(false);
     setRefreshKey(k => k + 1);
     toast.success('Titel aktualisiert');
