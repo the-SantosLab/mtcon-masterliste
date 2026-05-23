@@ -32,6 +32,7 @@ import {
 import { UserAvatar } from '@/components/UserAvatar';
 import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
+import { MtiqWidget } from '@/components/mtiq/MtiqWidget';
 
 function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => string; onClose: () => void }) {
   const { allowed } = useCrmAccess();
