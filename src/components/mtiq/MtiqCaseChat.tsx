@@ -32,6 +32,8 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [signed, setSigned] = useState<Record<string, string>>({});
+
   const fetchMessages = useCallback(async () => {
     const { data: msgs, error } = await (supabase as any)
       .from('case_chat_messages')
@@ -41,7 +43,7 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
       .order('created_at', { ascending: true })
       .limit(200);
     if (error) { console.error('[MTIQ case chat]', error); setLoading(false); return; }
-    const rows: Msg[] = msgs || [];
+    const rows: Msg[] = (msgs || []).map((m: any) => ({ ...m, attachments: [] }));
     const ids = Array.from(new Set(rows.map(r => r.author_id).filter(Boolean)));
     if (ids.length) {
       const { data: profs } = await (supabase as any)
@@ -52,6 +54,25 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
         r.author_name = map[r.author_id]?.display_name || null;
         r.author_short = map[r.author_id]?.short_code || null;
       });
+    }
+    // attachments
+    const msgIds = rows.map(r => r.id);
+    if (msgIds.length) {
+      const { data: atts } = await (supabase as any)
+        .from('case_chat_attachments').select('*').in('message_id', msgIds);
+      const byMsg: Record<string, Attachment[]> = {};
+      (atts || []).forEach((a: Attachment) => {
+        (byMsg[a.message_id] = byMsg[a.message_id] || []).push(a);
+      });
+      rows.forEach(r => { r.attachments = byMsg[r.id] || []; });
+      const imgs = (atts || []).filter((a: Attachment) => (a.mime_type || '').startsWith('image/'));
+      if (imgs.length) {
+        const { data: sd } = await (supabase as any).storage.from(BUCKET)
+          .createSignedUrls(imgs.map((a: Attachment) => a.storage_path), 300);
+        const sm: Record<string, string> = {};
+        (sd || []).forEach((s: any, i: number) => { if (s.signedUrl) sm[imgs[i].id] = s.signedUrl; });
+        setSigned(prev => ({ ...prev, ...sm }));
+      }
     }
     setMessages(rows);
     setLoading(false);
@@ -64,6 +85,7 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
     const ch = supabase
       .channel(`mtiq-case-chat-${vorgangId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_messages', filter: `case_id=eq.${vorgangId}` }, () => fetchMessages())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_attachments', filter: `case_id=eq.${vorgangId}` }, () => fetchMessages())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [vorgangId, fetchMessages]);
