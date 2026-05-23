@@ -195,6 +195,13 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
               {savedNote ? <Check className="h-3 w-3" /> : <StickyNote className="h-3 w-3" />}
               {savedNote ? 'Gespeichert' : 'Als Notiz speichern'}
             </button>
+            <button
+              onClick={clearSaved}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-md ml-auto"
+              style={{ background: '#181818', border: '1px solid #222', color: '#cbd5e1' }}
+            >
+              Verwerfen
+            </button>
           </div>
         )}
       </div>
