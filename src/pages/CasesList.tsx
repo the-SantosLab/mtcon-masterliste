@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useCaseActions } from '@/hooks/useCaseActions';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, STATUS_DOT_COLORS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor } from '@/lib/case-utils';
+import { formatDate, canClaim, isTerminalStatus, STATUS_LABELS, STATUS_DOT_COLORS, resolveEffectiveDeptId, caseMatchesDept, getUrgencyDotColor, getUrgencyRowClass } from '@/lib/case-utils';
 import { UrgencyDot } from '@/components/UrgencyDot';
 import type { Tables } from '@/integrations/supabase/types';
 import { Constants } from '@/integrations/supabase/types';
@@ -369,7 +369,7 @@ export default function CasesList() {
               ) : sorted.length === 0 ? (
                 <tr><td colSpan={10} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : sorted.map(c => (
-                <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((c as any).urgency))}>
                   <td className={cellCls}>
                     <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
                       <UrgencyDot status={c.status} dueAt={c.due_at} />

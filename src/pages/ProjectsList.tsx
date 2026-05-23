@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
+import { getUrgencyRowClass } from '@/lib/case-utils';
 
 type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at' | 'urgency';
 
@@ -307,7 +308,7 @@ export default function ProjectsList() {
                     </td>
                   </tr>
                 ) : filtered.map(p => (
-                  <tr key={p.id} className="hover:bg-muted/40 transition-colors">
+                  <tr key={p.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((p as any).urgency))}>
                     <td className={cellCls}>
                       <span className={cn('inline-block h-1.5 w-1.5 rounded-full', STATUS_COLORS[p.status] ?? 'bg-muted-foreground')} />
                     </td>
@@ -349,7 +350,7 @@ export default function ProjectsList() {
                     </td>
                   </tr>
                 ) : filtered.map(p => (
-                  <tr key={p.id} className="hover:bg-muted/40 transition-colors">
+                  <tr key={p.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((p as any).urgency))}>
                     <td className={cn(cellCls, 'font-mono')}>
                       <Link to={`/projects/${p.id}`} className="text-primary hover:underline">{p.project_number}</Link>
                     </td>
