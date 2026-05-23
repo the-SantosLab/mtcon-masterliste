@@ -9,7 +9,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Bold, Italic, List, ListChecks, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type, Palette, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Custom mark attribute to set inline font-size on TextStyle
 const FontSize = Extension.create({
@@ -74,6 +74,7 @@ interface Props {
 }
 
 export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorReady }: Props) {
+  const lastEmittedRef = useRef<string>(content || '');
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: false }),
@@ -88,7 +89,11 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
     ],
     content: content || '',
     editable: !readOnly,
-    onUpdate: ({ editor }) => onUpdate(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      lastEmittedRef.current = html;
+      onUpdate(html);
+    },
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none text-foreground/90 [&_ul[data-type=taskList]]:list-none [&_ul[data-type=taskList]_li]:flex [&_ul[data-type=taskList]_li]:gap-2 [&_ul[data-type=taskList]_li_p]:m-0 min-h-[40px]',
@@ -97,9 +102,14 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content || '', { emitUpdate: false });
-    }
+    if (!editor) return;
+    const incoming = content || '';
+    // Ignore echoes of what the editor itself just emitted (otherwise every
+    // keystroke would trigger setContent, causing cursor jumps / dropped keys).
+    if (incoming === lastEmittedRef.current) return;
+    if (incoming === editor.getHTML()) return;
+    lastEmittedRef.current = incoming;
+    editor.commands.setContent(incoming, { emitUpdate: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content]);
 
