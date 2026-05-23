@@ -10,6 +10,16 @@ export interface AiMessage {
   content: string;
   read_at: string | null;
   created_at: string;
+  metadata: any | null;
+}
+
+export async function confirmProposal(messageId: string, decision: 'confirm' | 'cancel') {
+  const { data, error } = await supabase.functions.invoke('mtiq-execute', {
+    body: { message_id: messageId, decision },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
 }
 
 export function useMtiqMessages(vorgangId: string | null) {
@@ -50,6 +60,13 @@ export function useMtiqMessages(vorgangId: string | null) {
           const m = payload.new as AiMessage;
           if (m.user_id !== user.id) return;
           setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m]);
+        })
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'ai_messages', filter: `vorgang_id=eq.${vorgangId}` },
+        (payload) => {
+          const m = payload.new as AiMessage;
+          if (m.user_id !== user.id) return;
+          setMessages(prev => prev.map(x => x.id === m.id ? m : x));
         })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
