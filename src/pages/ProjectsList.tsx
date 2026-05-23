@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
+import { getUrgencyRowClass } from '@/lib/case-utils';
 
 type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at' | 'urgency';
 
