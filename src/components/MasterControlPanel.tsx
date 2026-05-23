@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Activity, Circle, MoonStar, PowerOff, Radio, Search } from 'lucide-react';
+import { Activity, Circle, LogOut, MoonStar, PowerOff, Radio, Search, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Schwellen
 const ACTIVE_MS = 2 * 60 * 1000;     // < 2 Min seit letzter Interaktion = aktiv
