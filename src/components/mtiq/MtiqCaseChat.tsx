@@ -3,6 +3,14 @@ import { Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface Attachment {
+  id: string;
+  message_id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string | null;
+}
+
 interface Msg {
   id: string;
   author_id: string;
@@ -11,7 +19,10 @@ interface Msg {
   system_kind: string | null;
   author_name?: string | null;
   author_short?: string | null;
+  attachments?: Attachment[];
 }
+
+const BUCKET = 'case-attachments';
 
 export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
   const { user } = useAuth();
@@ -20,6 +31,8 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [signed, setSigned] = useState<Record<string, string>>({});
 
   const fetchMessages = useCallback(async () => {
     const { data: msgs, error } = await (supabase as any)
@@ -30,7 +43,7 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
       .order('created_at', { ascending: true })
       .limit(200);
     if (error) { console.error('[MTIQ case chat]', error); setLoading(false); return; }
-    const rows: Msg[] = msgs || [];
+    const rows: Msg[] = (msgs || []).map((m: any) => ({ ...m, attachments: [] }));
     const ids = Array.from(new Set(rows.map(r => r.author_id).filter(Boolean)));
     if (ids.length) {
       const { data: profs } = await (supabase as any)
@@ -41,6 +54,25 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
         r.author_name = map[r.author_id]?.display_name || null;
         r.author_short = map[r.author_id]?.short_code || null;
       });
+    }
+    // attachments
+    const msgIds = rows.map(r => r.id);
+    if (msgIds.length) {
+      const { data: atts } = await (supabase as any)
+        .from('case_chat_attachments').select('*').in('message_id', msgIds);
+      const byMsg: Record<string, Attachment[]> = {};
+      (atts || []).forEach((a: Attachment) => {
+        (byMsg[a.message_id] = byMsg[a.message_id] || []).push(a);
+      });
+      rows.forEach(r => { r.attachments = byMsg[r.id] || []; });
+      const imgs = (atts || []).filter((a: Attachment) => (a.mime_type || '').startsWith('image/'));
+      if (imgs.length) {
+        const { data: sd } = await (supabase as any).storage.from(BUCKET)
+          .createSignedUrls(imgs.map((a: Attachment) => a.storage_path), 300);
+        const sm: Record<string, string> = {};
+        (sd || []).forEach((s: any, i: number) => { if (s.signedUrl) sm[imgs[i].id] = s.signedUrl; });
+        setSigned(prev => ({ ...prev, ...sm }));
+      }
     }
     setMessages(rows);
     setLoading(false);
@@ -53,6 +85,7 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
     const ch = supabase
       .channel(`mtiq-case-chat-${vorgangId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_messages', filter: `case_id=eq.${vorgangId}` }, () => fetchMessages())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_attachments', filter: `case_id=eq.${vorgangId}` }, () => fetchMessages())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [vorgangId, fetchMessages]);
@@ -121,18 +154,46 @@ export function MtiqCaseChat({ vorgangId }: { vorgangId: string }) {
                   {m.author_name || m.author_short || '—'}
                 </div>
               )}
-              <div
-                className="max-w-[80%] px-2.5 py-1.5 text-[12px] whitespace-pre-wrap break-words"
-                style={{
-                  background: mine ? 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' : '#1a1a1a',
-                  color: mine ? '#fff' : '#e0e0e0',
-                  borderRadius: 12,
-                  borderTopRightRadius: mine ? 4 : 12,
-                  borderTopLeftRadius: mine ? 12 : 4,
-                }}
-              >
-                {m.body}
-              </div>
+              {m.body && (
+                <div
+                  className="max-w-[80%] px-2.5 py-1.5 text-[12px] whitespace-pre-wrap break-words"
+                  style={{
+                    background: mine ? 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' : '#1a1a1a',
+                    color: mine ? '#fff' : '#e0e0e0',
+                    borderRadius: 12,
+                    borderTopRightRadius: mine ? 4 : 12,
+                    borderTopLeftRadius: mine ? 12 : 4,
+                  }}
+                >
+                  {m.body}
+                </div>
+              )}
+              {!!m.attachments?.length && (
+                <div className={`mt-1 flex flex-wrap gap-1.5 max-w-[80%] ${mine ? 'justify-end' : 'justify-start'}`}>
+                  {m.attachments.map(a => {
+                    const isImg = (a.mime_type || '').startsWith('image/');
+                    if (isImg && signed[a.id]) {
+                      return (
+                        <a key={a.id} href={signed[a.id]} target="_blank" rel="noreferrer">
+                          <img src={signed[a.id]} alt={a.file_name}
+                               className="max-h-32 max-w-[180px] object-contain"
+                               style={{ borderRadius: 8, border: '1px solid #222', background: '#0f0f0f' }} />
+                        </a>
+                      );
+                    }
+                    return (
+                      <a key={a.id} href="#" onClick={async (e) => {
+                        e.preventDefault();
+                        const { data } = await (supabase as any).storage.from(BUCKET).createSignedUrl(a.storage_path, 300);
+                        if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                      }} className="inline-flex items-center gap-1 px-2 py-1 text-[11px]"
+                         style={{ background: '#1a1a1a', border: '1px solid #222', borderRadius: 8, color: '#ccc' }}>
+                        📎 <span className="truncate max-w-[140px]">{a.file_name}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
               <div className="text-[9px] mt-0.5 px-1 font-mono" style={{ color: '#555' }}>{fmtTime(m.created_at)}</div>
             </div>
           );
