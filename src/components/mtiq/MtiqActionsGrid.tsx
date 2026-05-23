@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Zap, CheckCircle2, Edit3, BarChart3, Calendar, Mail, ArrowLeft, Loader2, Copy, StickyNote, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,11 +58,27 @@ export function MtiqActionsGrid({ vorgangId }: { vorgangId: string }) {
 
 function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorgangId: string; onBack: () => void }) {
   const { user } = useAuth();
-  const [input, setInput] = useState('');
+  const storageKey = `mtiq:action:${vorgangId}:${action.key}`;
+  const readSaved = () => {
+    try { return JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { return {}; }
+  };
+  const initial = readSaved();
+  const [input, setInput] = useState<string>(initial.input ?? '');
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(initial.result ?? null);
+  const [ranAt, setRanAt] = useState<string | null>(initial.ranAt ?? null);
   const [copied, setCopied] = useState(false);
   const [savedNote, setSavedNote] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify({ input, result, ranAt })); } catch {}
+  }, [storageKey, input, result, ranAt]);
+
+  const clearSaved = () => {
+    try { localStorage.removeItem(storageKey); } catch {}
+    setInput(''); setResult(null); setRanAt(null); setCopied(false); setSavedNote(false);
+  };
+
 
   const run = async () => {
     if (action.requiresInput && !input.trim()) {
@@ -71,6 +87,7 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
     }
     setBusy(true);
     setResult(null);
+    setRanAt(null);
     setCopied(false);
     setSavedNote(false);
     try {
@@ -80,6 +97,7 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data?.reply ?? '');
+      setRanAt(new Date().toISOString());
     } catch (e: any) {
       toast.error(e?.message ?? 'Fehler');
     } finally {
@@ -144,11 +162,18 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
         )}
 
         {result && (
-          <div
-            className="p-3 text-[12.5px] leading-relaxed whitespace-pre-wrap"
-            style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, color: '#e0e0e0' }}
-          >
-            {result}
+          <div>
+            {ranAt && (
+              <div className="text-[10px] mb-1" style={{ color: '#666' }}>
+                Ergebnis gespeichert · {new Date(ranAt).toLocaleString('de-DE')}
+              </div>
+            )}
+            <div
+              className="p-3 text-[12.5px] leading-relaxed whitespace-pre-wrap"
+              style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, color: '#e0e0e0' }}
+            >
+              {result}
+            </div>
           </div>
         )}
 
@@ -169,6 +194,13 @@ function ActionRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorga
             >
               {savedNote ? <Check className="h-3 w-3" /> : <StickyNote className="h-3 w-3" />}
               {savedNote ? 'Gespeichert' : 'Als Notiz speichern'}
+            </button>
+            <button
+              onClick={clearSaved}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-md ml-auto"
+              style={{ background: '#181818', border: '1px solid #222', color: '#cbd5e1' }}
+            >
+              Verwerfen
             </button>
           </div>
         )}
