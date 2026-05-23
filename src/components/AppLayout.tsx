@@ -352,6 +352,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </DialogContent>
       </Dialog>
+      <MtiqWidget />
     </div>
   );
 }
