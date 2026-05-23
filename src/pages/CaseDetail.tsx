@@ -68,6 +68,75 @@ export default function CaseDetail() {
   const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
   const navigate = useNavigate();
 
+  // Optimistic locking: track pending update so user can decide on conflict
+  const [conflict, setConflict] = useState<{ patch: Record<string, any>; afterSuccess?: () => Promise<void> | void } | null>(null);
+
+  /**
+   * Perform a version-checked update on `cases`. Returns true on success.
+   * If the version no longer matches (someone else saved first), opens the
+   * conflict dialog and returns false. On success, the local case state is
+   * updated with the fields returned from the database (including new version).
+   */
+  const updateCaseOptimistic = async (
+    patch: Record<string, any>,
+    afterSuccess?: () => Promise<void> | void,
+  ): Promise<boolean> => {
+    if (!c) return false;
+    const currentVersion = (c as any).version ?? 1;
+    const { data, error } = await supabase
+      .from('cases')
+      .update(patch as any)
+      .eq('id', c.id)
+      .eq('version', currentVersion)
+      .select('*')
+      .maybeSingle();
+    if (error) {
+      toast.error('Fehler: ' + error.message);
+      return false;
+    }
+    if (!data) {
+      // Version mismatch → conflict
+      setConflict({ patch, afterSuccess });
+      return false;
+    }
+    setCase(prev => prev ? ({ ...prev, ...(data as any) }) : prev);
+    if (afterSuccess) await afterSuccess();
+    return true;
+  };
+
+  const resolveConflictReload = async () => {
+    setConflict(null);
+    await fetchCase();
+    toast.info('Aktuelle Version geladen');
+  };
+
+  const resolveConflictForceSave = async () => {
+    if (!c || !conflict) return;
+    // Refetch latest version, then retry update without version filter mismatch
+    const { data: latest } = await supabase
+      .from('cases').select('version').eq('id', c.id).maybeSingle();
+    const latestVersion = (latest as any)?.version;
+    if (!latestVersion) { setConflict(null); return; }
+    const { data, error } = await supabase
+      .from('cases')
+      .update(conflict.patch as any)
+      .eq('id', c.id)
+      .eq('version', latestVersion)
+      .select('*')
+      .maybeSingle();
+    if (error || !data) {
+      toast.error('Erneuter Konflikt – bitte Seite neu laden');
+      setConflict(null);
+      await fetchCase();
+      return;
+    }
+    setCase(prev => prev ? ({ ...prev, ...(data as any) }) : prev);
+    const after = conflict.afterSuccess;
+    setConflict(null);
+    if (after) await after();
+    toast.success('Änderungen gespeichert (überschrieben)');
+  };
+
   const deleteCase = async () => {
     if (!c) return;
     try {
