@@ -369,7 +369,7 @@ export default function CasesList() {
               ) : sorted.length === 0 ? (
                 <tr><td colSpan={10} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
               ) : sorted.map(c => (
-                <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((c as any).urgency))}>
                   <td className={cellCls}>
                     <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
                       <UrgencyDot status={c.status} dueAt={c.due_at} />
