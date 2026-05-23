@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Megaphone, Pin, AlertTriangle, Info, Check, Archive, X } from 'lucide-react';
+import { Megaphone, Pin, AlertTriangle, Info, Check, Archive, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -41,6 +41,7 @@ export function AnnouncementsWidget() {
   const [receipts, setReceipts] = useState<Record<string, Receipt>>({});
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archive, setArchive] = useState<Announcement[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const seenObserver = useRef<IntersectionObserver | null>(null);
 
   const upsertReceipt = async (announcement_id: string, patch: Partial<Receipt>) => {
@@ -157,38 +158,76 @@ export function AnnouncementsWidget() {
             const Icon = s.icon;
             const r = receipts[a.id];
             const isRead = !!r?.read_at;
+            const isOpen = isRead ? !!expanded[a.id] : true;
             return (
               <div
                 key={a.id}
                 ref={setRef}
                 data-aid={a.id}
-                className={cn('px-4 py-3 border-l-2', s.cls, isRead && 'opacity-70')}
+                className={cn('border-l-2 transition-colors', s.cls, isRead && !isOpen && 'opacity-70')}
               >
-                <div className="flex items-start gap-3">
-                  <Icon className="h-4 w-4 mt-0.5 shrink-0 text-foreground/70" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {a.pinned && <Pin className="h-3 w-3 text-primary fill-primary/30" />}
-                      <span className="text-sm font-medium text-foreground">{a.title}</span>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
-                      <span className="text-[10px] text-muted-foreground tabular-nums ml-auto">{formatDateTime(a.published_at)}</span>
-                    </div>
-                    {a.body && (
-                      <p className="text-xs text-foreground/80 whitespace-pre-wrap mt-1 leading-relaxed">{a.body}</p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2">
-                      {isRead ? (
-                        <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
-                          <Check className="h-3 w-3" /> Gelesen {r?.read_at && `· ${formatDateTime(r.read_at)}`}
-                        </span>
-                      ) : (
-                        <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => upsertReceipt(a.id, { read_at: new Date().toISOString() })}>
-                          <Check className="h-3 w-3 mr-1" /> Gelesen
-                        </Button>
-                      )}
+                {isRead && !isOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(p => ({ ...p, [a.id]: true }))}
+                    className="w-full flex items-center gap-2 px-4 py-1.5 text-left hover:bg-foreground/[0.03] transition-colors"
+                  >
+                    <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-foreground/60" />
+                    {a.pinned && <Pin className="h-3 w-3 text-primary fill-primary/30 shrink-0" />}
+                    <span className="text-xs font-medium text-foreground/80 truncate">{a.title}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">{s.label}</span>
+                    <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1 ml-auto shrink-0">
+                      <Check className="h-3 w-3" /> Gelesen
+                    </span>
+                  </button>
+                ) : (
+                  <div className="px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <Icon className="h-4 w-4 mt-0.5 shrink-0 text-foreground/70" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {a.pinned && <Pin className="h-3 w-3 text-primary fill-primary/30" />}
+                          <span className="text-sm font-medium text-foreground">{a.title}</span>
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
+                          <span className="text-[10px] text-muted-foreground tabular-nums ml-auto">{formatDateTime(a.published_at)}</span>
+                        </div>
+                        {a.body && (
+                          <p className="text-xs text-foreground/80 whitespace-pre-wrap mt-1 leading-relaxed">{a.body}</p>
+                        )}
+                        <div className="mt-2 flex items-center gap-2">
+                          {isRead ? (
+                            <>
+                              <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                                <Check className="h-3 w-3" /> Gelesen {r?.read_at && `· ${formatDateTime(r.read_at)}`}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-[11px] ml-auto"
+                                onClick={() => setExpanded(p => ({ ...p, [a.id]: false }))}
+                              >
+                                <ChevronDown className="h-3 w-3 mr-1" /> Zuklappen
+                              </Button>
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-[11px]"
+                              onClick={async () => {
+                                await upsertReceipt(a.id, { read_at: new Date().toISOString() });
+                                setExpanded(p => ({ ...p, [a.id]: false }));
+                              }}
+                            >
+                              <Check className="h-3 w-3 mr-1" /> Gelesen
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
