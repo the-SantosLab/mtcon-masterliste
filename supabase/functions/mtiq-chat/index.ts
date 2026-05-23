@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
     ).join("\n") || "  keine";
 
     const chatLines = (chat ?? []).slice().reverse().map((c: any) =>
-      `  • ${c.created_at?.slice(0,16).replace("T"," ")}${c.system_kind ? ` [${c.system_kind}]` : ""}: ${String(c.body ?? "").slice(0,160).replace(/\n"," ")}`
+      `  • ${c.created_at?.slice(0,16).replace("T"," ")}${c.system_kind ? ` [${c.system_kind}]` : ""}: ${String(c.body ?? "").slice(0,160).replace(/\n/g," ")}`
     ).join("\n") || "  keine";
 
     const activityLines = (activity ?? []).slice().reverse().map((a: any) =>
