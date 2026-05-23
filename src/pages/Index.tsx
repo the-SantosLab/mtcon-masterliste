@@ -476,8 +476,8 @@ export default function Dashboard() {
         {/* Mitteilungen vom Admin-Team */}
         <AnnouncementsWidget />
 
-        {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer (nur Admin) */}
-        {isAdmin && <MasterControlPanel />}
+
+
 
 
 
