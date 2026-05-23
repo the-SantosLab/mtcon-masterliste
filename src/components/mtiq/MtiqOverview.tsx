@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, Search } from 'lucide-react';
+import { ChevronLeft, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMtiqUnread } from './useMtiqUnread';
 import { MtiqChat } from './MtiqChat';
+import { MtiqCaseChat } from './MtiqCaseChat';
 import { MtiqQuickActions } from './MtiqQuickActions';
 import { MtiqAction } from './MtiqActionsGrid';
 
