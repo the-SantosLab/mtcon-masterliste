@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
+import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
 import { UrgencyDot } from '@/components/UrgencyDot';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -470,6 +471,9 @@ export default function Dashboard() {
             <CaseList items={drilldownItems} empty={scope === 'mine' ? 'Keine Vorgänge in deiner Verantwortung' : 'Keine Vorgänge in dieser Kategorie'} />
           </div>
         )}
+
+        {/* Mitteilungen vom Admin-Team */}
+        <AnnouncementsWidget />
 
         {/* Meine Vorgänge — moved below the hero zone */}
         <div className="glass-card overflow-hidden">
