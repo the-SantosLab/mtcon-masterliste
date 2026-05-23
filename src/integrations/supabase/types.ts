@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcement_receipts: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          delivered_at: string | null
+          id: string
+          read_at: string | null
+          seen_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          read_at?: string | null
+          seen_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          read_at?: string | null
+          seen_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_receipts_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          archived_at: string | null
+          body: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          pinned: boolean
+          published_at: string
+          severity: Database["public"]["Enums"]["announcement_severity"]
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          body?: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          pinned?: boolean
+          published_at?: string
+          severity?: Database["public"]["Enums"]["announcement_severity"]
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          pinned?: boolean
+          published_at?: string
+          severity?: Database["public"]["Enums"]["announcement_severity"]
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       backups: {
         Row: {
           created_at: string
@@ -2987,6 +3073,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_old_announcements: { Args: never; Returns: number }
       can_read_board: {
         Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
@@ -3060,6 +3147,7 @@ export type Database = {
       user_department: { Args: { uid?: string }; Returns: string }
     }
     Enums: {
+      announcement_severity: "info" | "wichtig" | "kritisch"
       app_role: "admin" | "staff" | "viewer"
       case_status:
         | "nicht_begonnen"
@@ -3243,6 +3331,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      announcement_severity: ["info", "wichtig", "kritisch"],
       app_role: ["admin", "staff", "viewer"],
       case_status: [
         "nicht_begonnen",
