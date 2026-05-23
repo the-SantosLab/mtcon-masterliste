@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_messages ADD COLUMN IF NOT EXISTS metadata jsonb;

@@ -19,6 +19,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          metadata: Json | null
           read_at: string | null
           role: string
           user_id: string
@@ -28,6 +29,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          metadata?: Json | null
           read_at?: string | null
           role: string
           user_id: string
@@ -37,6 +39,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          metadata?: Json | null
           read_at?: string | null
           role?: string
           user_id?: string
