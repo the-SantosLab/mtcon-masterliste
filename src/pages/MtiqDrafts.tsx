@@ -233,6 +233,11 @@ export default function MtiqDrafts() {
   // persist on blur
   const persistAll = async () => {
     if (!edit) return;
+    const toNum = (v: any) => {
+      if (v === '' || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
     await saveEdits({
       draft_title: edit.draft_title,
       draft_description: edit.draft_description,
@@ -240,6 +245,21 @@ export default function MtiqDrafts() {
       draft_priority: edit.draft_priority,
       draft_due_date: edit.draft_due_date,
       draft_tasks: edit.draft_tasks as any,
+      draft_project_id: edit.draft_project_id || null,
+      draft_template_id: edit.draft_template_id || null,
+      draft_team_id: edit.draft_team_id || null,
+      draft_assignee_id: edit.draft_assignee_id || null,
+      draft_customer_no: edit.draft_customer_no || null,
+      draft_client_name: edit.draft_client_name || null,
+      draft_product_code: edit.draft_product_code || null,
+      draft_internal_area_code: edit.draft_internal_area_code || null,
+      draft_project_article_no: edit.draft_project_article_no || null,
+      draft_received_at: edit.draft_received_at || null,
+      draft_estimated_hours: toNum(edit.draft_estimated_hours) as any,
+      draft_sop: edit.draft_sop || null,
+      draft_quantity: toNum(edit.draft_quantity) as any,
+      draft_project_duration: edit.draft_project_duration || null,
+      draft_note: edit.draft_note || null,
     });
   };
 
