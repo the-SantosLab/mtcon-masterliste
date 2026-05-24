@@ -838,7 +838,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
       {showJump && (
         <button
           onClick={jumpToBottom}
-          className="absolute bottom-[110px] right-4 h-8 px-3 rounded-full bg-primary text-primary-foreground shadow-md text-xs inline-flex items-center gap-1.5 hover:bg-primary/90"
+          className="absolute bottom-[180px] right-4 h-8 px-3 rounded-full bg-primary text-primary-foreground shadow-md text-xs inline-flex items-center gap-1.5 hover:bg-primary/90 z-10"
         >
           <ArrowDown className="h-3 w-3" /> Neueste
         </button>
