@@ -430,13 +430,13 @@ export default function MtiqDrafts() {
                             </Button>
                           )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <Select
                             value={t.department ?? ''}
                             onValueChange={v => { updateTask(idx, { department: v }); setTimeout(persistAll, 50); }}
                             disabled={edit.status !== 'pending'}
                           >
-                            <SelectTrigger><SelectValue placeholder="Abteilung" /></SelectTrigger>
+                            <SelectTrigger className="w-full min-w-0"><SelectValue placeholder="Abteilung" /></SelectTrigger>
                             <SelectContent>
                               {departments.map(d => (
                                 <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
@@ -449,6 +449,7 @@ export default function MtiqDrafts() {
                             onBlur={persistAll}
                             placeholder="Zuständigkeit (Hinweis)"
                             disabled={edit.status !== 'pending'}
+                            className="w-full min-w-0"
                           />
                           <Input
                             type="date"
@@ -456,6 +457,7 @@ export default function MtiqDrafts() {
                             onChange={e => updateTask(idx, { due_date: e.target.value || null })}
                             onBlur={persistAll}
                             disabled={edit.status !== 'pending'}
+                            className="w-full min-w-0"
                           />
                         </div>
                       </div>
