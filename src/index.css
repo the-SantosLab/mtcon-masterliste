@@ -527,28 +527,36 @@
    Override für Zebra + Hover via höhere Spezifität + !important.
    ========================================================= */
 @layer components {
-  /* Light mode (Pastell) — schwarze Schrift für Lesbarkeit */
+  /* Light mode — satte Farben analog Dark Mode */
   main table > tbody > tr.urgency-row-1 > td,
-  main table > tbody > tr.urgency-row-1:nth-child(even) > td { background-color: #E8F5E9 !important; color: #0a0a0a !important; }
+  main table > tbody > tr.urgency-row-1:nth-child(even) > td { background-color: #22C55E !important; color: #ffffff !important; }
   main table > tbody > tr.urgency-row-2 > td,
-  main table > tbody > tr.urgency-row-2:nth-child(even) > td { background-color: #FFF9E6 !important; color: #0a0a0a !important; }
+  main table > tbody > tr.urgency-row-2:nth-child(even) > td { background-color: #EAB308 !important; color: #0a0a0a !important; }
   main table > tbody > tr.urgency-row-3 > td,
-  main table > tbody > tr.urgency-row-3:nth-child(even) > td { background-color: #FFF0E0 !important; color: #0a0a0a !important; }
+  main table > tbody > tr.urgency-row-3:nth-child(even) > td { background-color: #F97316 !important; color: #ffffff !important; }
   main table > tbody > tr.urgency-row-4 > td,
-  main table > tbody > tr.urgency-row-4:nth-child(even) > td { background-color: #FDEAEA !important; color: #0a0a0a !important; }
+  main table > tbody > tr.urgency-row-4:nth-child(even) > td { background-color: #EF4444 !important; color: #ffffff !important; }
   main table > tbody > tr.urgency-row-5 > td,
   main table > tbody > tr.urgency-row-5:nth-child(even) > td { color: #0a0a0a !important; animation: urgency-pulse-light 2s ease-in-out infinite; }
 
-  /* Hover bleibt erkennbar, aber dezent abgedunkelt */
-  main table > tbody > tr.urgency-row-1:hover > td { background-color: #d6ecd9 !important; }
-  main table > tbody > tr.urgency-row-2:hover > td { background-color: #fdf0c2 !important; }
-  main table > tbody > tr.urgency-row-3:hover > td { background-color: #ffe1c2 !important; }
-  main table > tbody > tr.urgency-row-4:hover > td { background-color: #facaca !important; }
+  /* Hover: leicht abgedunkelt */
+  main table > tbody > tr.urgency-row-1:hover > td { background-color: #16a34a !important; }
+  main table > tbody > tr.urgency-row-2:hover > td { background-color: #ca8a04 !important; }
+  main table > tbody > tr.urgency-row-3:hover > td { background-color: #ea580c !important; }
+  main table > tbody > tr.urgency-row-4:hover > td { background-color: #dc2626 !important; }
 
-  /* Sekundärtext + Muted-Foreground in highlighted rows lesbar machen */
-  main table > tbody > tr[class*="urgency-row-"] > td .text-muted-foreground,
-  main table > tbody > tr[class*="urgency-row-"] > td.text-muted-foreground { color: #3f3f46 !important; }
-  main table > tbody > tr[class*="urgency-row-"] > td .text-primary { color: #1d4ed8 !important; }
+  /* Sekundärtext in highlighted rows lesbar */
+  main table > tbody > tr.urgency-row-1 > td .text-muted-foreground,
+  main table > tbody > tr.urgency-row-3 > td .text-muted-foreground,
+  main table > tbody > tr.urgency-row-4 > td .text-muted-foreground,
+  main table > tbody > tr.urgency-row-1 > td.text-muted-foreground,
+  main table > tbody > tr.urgency-row-3 > td.text-muted-foreground,
+  main table > tbody > tr.urgency-row-4 > td.text-muted-foreground { color: rgba(255,255,255,0.9) !important; }
+  main table > tbody > tr.urgency-row-2 > td .text-muted-foreground,
+  main table > tbody > tr.urgency-row-5 > td .text-muted-foreground,
+  main table > tbody > tr.urgency-row-2 > td.text-muted-foreground,
+  main table > tbody > tr.urgency-row-5 > td.text-muted-foreground { color: rgba(0,0,0,0.8) !important; }
+  main table > tbody > tr[class*="urgency-row-"] > td .text-primary { color: inherit !important; text-decoration-color: currentColor; }
 
   /* Dark mode (sattere Farben gemäß Vorgabe) */
   .dark main table > tbody > tr.urgency-row-1 > td,
