@@ -392,7 +392,7 @@ export default function MtiqDrafts() {
             ) : (
               <div className="p-6 space-y-5 max-w-3xl">
                 {/* Source email (collapsible) */}
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
+                <div className="rounded-2xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
                   <button
                     onClick={() => setEmailOpen(o => !o)}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03] transition-colors rounded-2xl"
@@ -406,10 +406,10 @@ export default function MtiqDrafts() {
                     </span>
                   </button>
                   {emailOpen && (
-                    <div className="px-4 pb-4 pt-2 border-t border-white/5 space-y-2 text-sm">
+                    <div className="px-4 pb-4 pt-2 border-t border-border dark:border-white/5 space-y-2 text-sm">
                       <div><span className="text-muted-foreground">Von:</span> {edit.source_email_from || '—'}</div>
                       <div><span className="text-muted-foreground">Betreff:</span> {edit.source_email_subject || '—'}</div>
-                      <pre className="whitespace-pre-wrap text-xs bg-black/30 border border-white/5 rounded-xl p-3 max-h-72 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-xs bg-neutral-100 dark:bg-black/30 border border-border dark:border-white/5 rounded-xl p-3 max-h-72 overflow-y-auto">
                         {edit.source_email_body || '(leer)'}
                       </pre>
                     </div>
@@ -491,7 +491,7 @@ export default function MtiqDrafts() {
                   </h2>
                   <div className="space-y-2">
                     {edit.draft_tasks.map((t, idx) => (
-                      <div key={idx} className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 space-y-2 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.4)]">
+                      <div key={idx} className="rounded-xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl p-3 space-y-2 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.4)]">
                         <div className="flex items-start gap-2">
                           <Input
                             value={t.title}
@@ -559,7 +559,7 @@ export default function MtiqDrafts() {
 
                 {/* Actions */}
                 {edit.status === 'pending' ? (
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-background/70 backdrop-blur-2xl py-3 -mx-6 px-6 border-t border-white/10">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-background/70 backdrop-blur-2xl py-3 -mx-6 px-6 border-t border-border dark:border-white/10">
                     <Button
                       onClick={approve}
                       disabled={approving || rejecting}
@@ -572,13 +572,13 @@ export default function MtiqDrafts() {
                       variant="secondary"
                       onClick={() => setConfirmReject(true)}
                       disabled={approving || rejecting}
-                      className="h-12 sm:w-48 bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10"
+                      className="h-12 sm:w-48 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
                     >
                       Ablehnen
                     </Button>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
+                  <div className="rounded-2xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
                     Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
                     {edit.vorgang_id && (
                       <Button
