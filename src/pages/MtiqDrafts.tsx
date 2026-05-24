@@ -458,7 +458,7 @@ export default function MtiqDrafts() {
                             onChange={e => updateTask(idx, { due_date: e.target.value || null })}
                             onBlur={persistAll}
                             disabled={edit.status !== 'pending'}
-                            className="w-full min-w-0"
+                            className="h-10 w-full min-w-0 appearance-none"
                           />
                         </div>
                       </div>
