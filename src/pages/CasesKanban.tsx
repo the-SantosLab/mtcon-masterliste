@@ -61,6 +61,7 @@ interface CaseCard {
   subtasks_done: number;
   subtasks_total: number;
   priority_order: number;
+  urgency?: number | null;
 }
 
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
@@ -169,6 +170,16 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
           <span className="inline-flex items-center gap-0.5">
             <Calendar className="h-2.5 w-2.5" />
             {format(new Date(c.due_at), 'dd.MM.')}
+          </span>
+        )}
+        {!!c.urgency && c.urgency > 0 && (
+          <span
+            className="inline-flex items-center gap-0.5 grayscale opacity-70 tabular-nums"
+            title={`Dringlichkeit: ${c.urgency}/5`}
+            aria-label={`Dringlichkeit ${c.urgency} von 5`}
+          >
+            <span className="text-[9px] leading-none">🌶️</span>
+            <span>×{c.urgency}</span>
           </span>
         )}
         {c.assignee_short_code && (
@@ -389,7 +400,7 @@ export default function CasesKanban() {
   const fetchCases = useCallback(async () => {
     const { data } = await supabase
       .from('cases')
-      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at, priority_order')
+      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at, priority_order, urgency')
       .eq('deleted', false)
       .order('priority_order', { ascending: true })
       .order('created_at', { ascending: true });
@@ -443,6 +454,7 @@ export default function CasesKanban() {
         subtasks_done: subDone[c.id] || 0,
         subtasks_total: subTotal[c.id] || 0,
         priority_order: c.priority_order ?? 0,
+        urgency: c.urgency ?? 0,
       };
     }));
   }, []);
