@@ -47,20 +47,20 @@ const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
 
 function priorityClasses(p: string | null): string {
   switch (p) {
-    case 'Kritisch': return 'bg-red-500/10 text-red-300 border-red-500/30 backdrop-blur-md';
-    case 'Hoch': return 'bg-orange-500/10 text-orange-300 border-orange-500/30 backdrop-blur-md';
-    case 'Mittel': return 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30 backdrop-blur-md';
-    case 'Niedrig': return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
-    default: return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
+    case 'Kritisch': return 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border-red-200 dark:border-red-500/30 backdrop-blur-md';
+    case 'Hoch': return 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/30 backdrop-blur-md';
+    case 'Mittel': return 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-500/30 backdrop-blur-md';
+    case 'Niedrig': return 'bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 backdrop-blur-md';
+    default: return 'bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 backdrop-blur-md';
   }
 }
 
 function statusClasses(s: string): string {
   switch (s) {
     case 'pending': return 'bg-primary/10 text-primary border-primary/30 backdrop-blur-md';
-    case 'approved': return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 backdrop-blur-md';
-    case 'rejected': return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
-    default: return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
+    case 'approved': return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 backdrop-blur-md';
+    case 'rejected': return 'bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 backdrop-blur-md';
+    default: return 'bg-neutral-100 dark:bg-white/5 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/10 backdrop-blur-md';
   }
 }
 
