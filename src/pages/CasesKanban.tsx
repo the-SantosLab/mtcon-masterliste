@@ -126,8 +126,21 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
               className="mt-0.5 h-3.5 w-3.5"
             />
           )}
-          <div className="flex flex-col gap-1 min-w-0">
-            <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+          <div className="flex flex-col gap-1 min-w-1">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+              {!!c.urgency && c.urgency > 0 && (
+                <span
+                  className="inline-flex items-center gap-[1px] text-[9px] grayscale opacity-70"
+                  title={`Dringlichkeit: ${c.urgency}/5`}
+                  aria-label={`Dringlichkeit ${c.urgency} von 5`}
+                >
+                  {Array.from({ length: c.urgency }).map((_, i) => (
+                    <span key={i} className="leading-none">🌶️</span>
+                  ))}
+                </span>
+              )}
+            </div>
             {departmentName && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border truncate max-w-[140px] w-fit">
                 {departmentName}
