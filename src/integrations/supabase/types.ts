@@ -1741,11 +1741,26 @@ export type Database = {
           approved_by: string | null
           created_at: string
           created_by: string | null
+          draft_assignee_id: string | null
+          draft_client_name: string | null
+          draft_customer_no: string | null
           draft_department: string | null
           draft_description: string | null
           draft_due_date: string | null
+          draft_estimated_hours: number | null
+          draft_internal_area_code: string | null
+          draft_note: string | null
           draft_priority: string | null
+          draft_product_code: string | null
+          draft_project_article_no: string | null
+          draft_project_duration: string | null
+          draft_project_id: string | null
+          draft_quantity: number | null
+          draft_received_at: string | null
+          draft_sop: string | null
           draft_tasks: Json
+          draft_team_id: string | null
+          draft_template_id: string | null
           draft_title: string | null
           id: string
           mtiq_reasoning: string | null
@@ -1761,11 +1776,26 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           created_by?: string | null
+          draft_assignee_id?: string | null
+          draft_client_name?: string | null
+          draft_customer_no?: string | null
           draft_department?: string | null
           draft_description?: string | null
           draft_due_date?: string | null
+          draft_estimated_hours?: number | null
+          draft_internal_area_code?: string | null
+          draft_note?: string | null
           draft_priority?: string | null
+          draft_product_code?: string | null
+          draft_project_article_no?: string | null
+          draft_project_duration?: string | null
+          draft_project_id?: string | null
+          draft_quantity?: number | null
+          draft_received_at?: string | null
+          draft_sop?: string | null
           draft_tasks?: Json
+          draft_team_id?: string | null
+          draft_template_id?: string | null
           draft_title?: string | null
           id?: string
           mtiq_reasoning?: string | null
@@ -1781,11 +1811,26 @@ export type Database = {
           approved_by?: string | null
           created_at?: string
           created_by?: string | null
+          draft_assignee_id?: string | null
+          draft_client_name?: string | null
+          draft_customer_no?: string | null
           draft_department?: string | null
           draft_description?: string | null
           draft_due_date?: string | null
+          draft_estimated_hours?: number | null
+          draft_internal_area_code?: string | null
+          draft_note?: string | null
           draft_priority?: string | null
+          draft_product_code?: string | null
+          draft_project_article_no?: string | null
+          draft_project_duration?: string | null
+          draft_project_id?: string | null
+          draft_quantity?: number | null
+          draft_received_at?: string | null
+          draft_sop?: string | null
           draft_tasks?: Json
+          draft_team_id?: string | null
+          draft_template_id?: string | null
           draft_title?: string | null
           id?: string
           mtiq_reasoning?: string | null

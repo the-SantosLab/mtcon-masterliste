@@ -1,0 +1,16 @@
+ALTER TABLE public.mtiq_drafts
+  ADD COLUMN IF NOT EXISTS draft_project_id uuid,
+  ADD COLUMN IF NOT EXISTS draft_template_id uuid,
+  ADD COLUMN IF NOT EXISTS draft_team_id uuid,
+  ADD COLUMN IF NOT EXISTS draft_assignee_id uuid,
+  ADD COLUMN IF NOT EXISTS draft_customer_no text,
+  ADD COLUMN IF NOT EXISTS draft_client_name text,
+  ADD COLUMN IF NOT EXISTS draft_product_code text,
+  ADD COLUMN IF NOT EXISTS draft_internal_area_code text,
+  ADD COLUMN IF NOT EXISTS draft_project_article_no text,
+  ADD COLUMN IF NOT EXISTS draft_received_at date,
+  ADD COLUMN IF NOT EXISTS draft_estimated_hours numeric,
+  ADD COLUMN IF NOT EXISTS draft_sop text,
+  ADD COLUMN IF NOT EXISTS draft_quantity integer,
+  ADD COLUMN IF NOT EXISTS draft_project_duration text,
+  ADD COLUMN IF NOT EXISTS draft_note text;
