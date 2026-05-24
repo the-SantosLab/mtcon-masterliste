@@ -139,8 +139,27 @@ export default function MtiqDrafts() {
 
   useEffect(() => {
     load();
-    (supabase as any).from('departments').select('id, name').order('name').then(({ data }: any) => {
+    const sb: any = supabase;
+    sb.from('departments').select('id, name, parent_id').eq('is_active', true).order('name').then(({ data }: any) => {
       setDepartments(data || []);
+    });
+    sb.from('users_profile').select('id, display_name, short_code, department_id').order('display_name').then(({ data }: any) => {
+      setProfiles(data || []);
+    });
+    sb.from('projects').select('id, project_number, name').order('project_number', { ascending: false }).limit(500).then(({ data }: any) => {
+      setProjects(data || []);
+    });
+    sb.from('case_templates').select('id, title').order('title').then(({ data }: any) => {
+      setTemplates(data || []);
+    });
+    sb.from('customers').select('id, customer_no, name').order('name').then(({ data }: any) => {
+      setCustomers(data || []);
+    });
+    sb.from('products').select('id, code, name').order('name').then(({ data }: any) => {
+      setProducts(data || []);
+    });
+    sb.from('internal_areas').select('id, code, name').order('name').then(({ data }: any) => {
+      setAreas(data || []);
     });
     // realtime
     const ch = supabase
