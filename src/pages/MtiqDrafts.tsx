@@ -41,7 +41,31 @@ type Draft = {
   mtiq_reasoning: string | null;
   status: 'pending' | 'approved' | 'rejected';
   vorgang_id: string | null;
+  // Extended fields (match CreateCaseForm)
+  draft_project_id: string | null;
+  draft_template_id: string | null;
+  draft_team_id: string | null;
+  draft_assignee_id: string | null;
+  draft_customer_no: string | null;
+  draft_client_name: string | null;
+  draft_product_code: string | null;
+  draft_internal_area_code: string | null;
+  draft_project_article_no: string | null;
+  draft_received_at: string | null;
+  draft_estimated_hours: number | string | null;
+  draft_sop: string | null;
+  draft_quantity: number | string | null;
+  draft_project_duration: string | null;
+  draft_note: string | null;
 };
+
+type DeptOpt = { id: string; name: string; parent_id: string | null };
+type ProfileOpt = { id: string; display_name: string; short_code: string | null; department_id: string | null };
+type ProjectOpt = { id: string; project_number: string; name: string };
+type TemplateOpt = { id: string; title: string };
+type CustomerOpt = { id: string; customer_no: string; name: string };
+type ProductOpt = { id: string; code: string; name: string };
+type AreaOpt = { id: string; code: string; name: string };
 
 const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
 
