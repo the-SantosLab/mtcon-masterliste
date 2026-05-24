@@ -66,10 +66,14 @@ function statusClasses(s: string): string {
 
 export default function MtiqDrafts() {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
+  // 'all' | 'mine' | a specific user id
+  const [ownerFilter, setOwnerFilter] = useState<string>('mine');
 
   // editable copy of selected draft
   const [edit, setEdit] = useState<Draft | null>(null);
