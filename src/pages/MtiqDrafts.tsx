@@ -618,15 +618,19 @@ export default function MtiqDrafts() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ filtered = false }: { filtered?: boolean } = {}) {
   return (
     <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-center px-8 py-16">
       <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
         <Inbox className="h-8 w-8 text-primary" />
       </div>
-      <h2 className="text-base font-medium">Keine offenen Entwürfe</h2>
+      <h2 className="text-base font-medium">
+        {filtered ? 'Keine Entwürfe im aktuellen Filter' : 'Keine offenen Entwürfe'}
+      </h2>
       <p className="text-sm text-muted-foreground mt-1 max-w-md">
-        Sende eine E-Mail an <span className="font-mono">mtiq@inbox.kscommand.com</span> um einen Vorgang vorzubereiten.
+        {filtered
+          ? 'Wechsle oben zu „Alle", um Entwürfe anderer Nutzer einzusehen.'
+          : <>Sende eine E-Mail an <span className="font-mono">mtiq@inbox.kscommand.com</span> um einen Vorgang vorzubereiten.</>}
       </p>
     </div>
   );
