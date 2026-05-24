@@ -1735,6 +1735,74 @@ export type Database = {
         }
         Relationships: []
       }
+      mtiq_drafts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          draft_department: string | null
+          draft_description: string | null
+          draft_due_date: string | null
+          draft_priority: string | null
+          draft_tasks: Json
+          draft_title: string | null
+          id: string
+          mtiq_reasoning: string | null
+          source_email_body: string | null
+          source_email_from: string | null
+          source_email_subject: string | null
+          status: string
+          vorgang_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          draft_department?: string | null
+          draft_description?: string | null
+          draft_due_date?: string | null
+          draft_priority?: string | null
+          draft_tasks?: Json
+          draft_title?: string | null
+          id?: string
+          mtiq_reasoning?: string | null
+          source_email_body?: string | null
+          source_email_from?: string | null
+          source_email_subject?: string | null
+          status?: string
+          vorgang_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          draft_department?: string | null
+          draft_description?: string | null
+          draft_due_date?: string | null
+          draft_priority?: string | null
+          draft_tasks?: Json
+          draft_title?: string | null
+          id?: string
+          mtiq_reasoning?: string | null
+          source_email_body?: string | null
+          source_email_from?: string | null
+          source_email_subject?: string | null
+          status?: string
+          vorgang_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mtiq_drafts_vorgang_id_fkey"
+            columns: ["vorgang_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       note_board_members: {
         Row: {
           board_id: string
