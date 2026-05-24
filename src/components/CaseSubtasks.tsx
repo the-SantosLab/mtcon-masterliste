@@ -196,6 +196,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newDeptId, setNewDeptId] = useState('');
+  const [newAssignee, setNewAssignee] = useState('');
   const [newDueAt, setNewDueAt] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
