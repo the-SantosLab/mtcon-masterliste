@@ -40,6 +40,7 @@ import MfaGuide from "./pages/MfaGuide";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
 import Notes from "./pages/Notes";
+import MtiqDrafts from "./pages/MtiqDrafts";
 import PortalAuth from "./pages/portal/PortalAuth";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
