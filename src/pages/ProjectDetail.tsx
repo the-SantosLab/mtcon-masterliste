@@ -556,6 +556,7 @@ export default function ProjectDetail() {
                           case 'project_name': return c.project_name;
                           case 'assignee': return c.assignee?.short_code ?? null;
                           case 'due_at': return c.due_at ? new Date(c.due_at).getTime() : null;
+                          case 'urgency': return c.urgency ?? 0;
                           default: return null;
                         }
                       }, caseSort.direction)
