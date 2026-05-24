@@ -593,8 +593,8 @@
   50%      { filter: brightness(1.45); }
 }
 @keyframes urgency-blink-5 {
-  0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.6); }
+  0%, 100% { background-color: #DC2626 !important; color: #ffffff !important; }
+  50%      { background-color: #EAB308 !important; color: #0a0a0a !important; }
 }
 @keyframes urgency-pulse-light {
   0%, 100% { background-color: #F8D7DA; }
