@@ -127,7 +127,48 @@ export default function MtiqDrafts() {
     if (d) setEdit(JSON.parse(JSON.stringify(d)));
   }, [selectedId, drafts]);
 
-  const pendingCount = useMemo(() => drafts.filter(d => d.status === 'pending').length, [drafts]);
+  // Resolve display names for all draft owners (admins use this for the filter)
+  useEffect(() => {
+    const ids = Array.from(new Set(drafts.map(d => d.created_by).filter(Boolean))) as string[];
+    const missing = ids.filter(id => !(id in ownerProfiles));
+    if (missing.length === 0) return;
+    (supabase as any)
+      .from('users_profile')
+      .select('id, display_name, short_code')
+      .in('id', missing)
+      .then(({ data }: any) => {
+        if (!data) return;
+        setOwnerProfiles(prev => {
+          const next = { ...prev };
+          for (const p of data) next[p.id] = p.display_name || p.short_code || p.id;
+          return next;
+        });
+      });
+  }, [drafts, ownerProfiles]);
+
+  const visibleDrafts = useMemo(() => {
+    if (!isAdmin) return drafts;
+    if (ownerFilter === 'all') return drafts;
+    if (ownerFilter === 'mine') return drafts.filter(d => d.created_by === user?.id);
+    return drafts.filter(d => d.created_by === ownerFilter);
+  }, [drafts, isAdmin, ownerFilter, user?.id]);
+
+  // Keep selection valid when filter changes
+  useEffect(() => {
+    if (selectedId && !visibleDrafts.find(d => d.id === selectedId)) {
+      const firstPending = visibleDrafts.find(d => d.status === 'pending');
+      setSelectedId((firstPending ?? visibleDrafts[0])?.id ?? null);
+    }
+  }, [visibleDrafts, selectedId]);
+
+  const pendingCount = useMemo(() => visibleDrafts.filter(d => d.status === 'pending').length, [visibleDrafts]);
+
+  const ownerOptions = useMemo(() => {
+    const ids = Array.from(new Set(drafts.map(d => d.created_by).filter(Boolean))) as string[];
+    return ids
+      .map(id => ({ id, name: ownerProfiles[id] || id.slice(0, 8) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [drafts, ownerProfiles]);
 
   const saveEdits = async (patch: Partial<Draft>) => {
     if (!edit) return;
