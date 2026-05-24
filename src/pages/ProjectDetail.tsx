@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 
-type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at';
+type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at' | 'urgency';
 
 interface Project {
   id: string; project_number: string; project_code: string | null;
