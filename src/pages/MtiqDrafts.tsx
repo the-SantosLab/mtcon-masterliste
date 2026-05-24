@@ -391,7 +391,7 @@ export default function MtiqDrafts() {
                   </h2>
                   <div className="space-y-2">
                     {edit.draft_tasks.map((t, idx) => (
-                      <div key={idx} className="rounded-lg border border-border p-3 space-y-2">
+                      <div key={idx} className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 space-y-2 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.4)]">
                         <div className="flex items-start gap-2">
                           <Input
                             value={t.title}
