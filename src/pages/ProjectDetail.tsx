@@ -565,6 +565,7 @@ export default function ProjectDetail() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
+                          <SortableHeader column="urgency" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
                           <SortableHeader column="status" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</SortableHeader>
                           <SortableHeader column="case_no" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</SortableHeader>
                           <SortableHeader column="project_name" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</SortableHeader>
@@ -574,9 +575,12 @@ export default function ProjectDetail() {
                       </thead>
                       <tbody className="divide-y divide-border">
                         {sortedCases.length === 0 ? (
-                          <tr><td colSpan={5} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
+                          <tr><td colSpan={6} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
                         ) : sortedCases.map(c => (
-                          <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                          <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency))}>
+                            <td className={cellCls}>
+                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" />
+                            </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono')}>
                               <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
