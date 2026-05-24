@@ -106,7 +106,13 @@ export default function Notes() {
     loadNotes(activeBoardId);
     const channel = supabase
       .channel(`notes-${activeBoardId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `board_id=eq.${activeBoardId}` }, () => loadNotes(activeBoardId))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `board_id=eq.${activeBoardId}` }, () => {
+        // Skip reload while we have unsent local patches — the incoming echo
+        // would be stale and could overwrite in-progress typing. The pending
+        // debounce will flush and a later realtime tick will reconcile.
+        if (Object.keys(pendingRef.current).length > 0) return;
+        loadNotes(activeBoardId);
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [activeBoardId]);
