@@ -13,9 +13,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send } from 'lucide-react';
+import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { useAuth } from '@/contexts/AuthContext';
 
 type TaskItem = {
   title: string;
@@ -27,6 +28,7 @@ type TaskItem = {
 type Draft = {
   id: string;
   created_at: string;
+  created_by: string | null;
   source_email_from: string | null;
   source_email_subject: string | null;
   source_email_body: string | null;
@@ -64,10 +66,14 @@ function statusClasses(s: string): string {
 
 export default function MtiqDrafts() {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
+  // 'all' | 'mine' | a specific user id
+  const [ownerFilter, setOwnerFilter] = useState<string>('mine');
 
   // editable copy of selected draft
   const [edit, setEdit] = useState<Draft | null>(null);
@@ -121,7 +127,48 @@ export default function MtiqDrafts() {
     if (d) setEdit(JSON.parse(JSON.stringify(d)));
   }, [selectedId, drafts]);
 
-  const pendingCount = useMemo(() => drafts.filter(d => d.status === 'pending').length, [drafts]);
+  // Resolve display names for all draft owners (admins use this for the filter)
+  useEffect(() => {
+    const ids = Array.from(new Set(drafts.map(d => d.created_by).filter(Boolean))) as string[];
+    const missing = ids.filter(id => !(id in ownerProfiles));
+    if (missing.length === 0) return;
+    (supabase as any)
+      .from('users_profile')
+      .select('id, display_name, short_code')
+      .in('id', missing)
+      .then(({ data }: any) => {
+        if (!data) return;
+        setOwnerProfiles(prev => {
+          const next = { ...prev };
+          for (const p of data) next[p.id] = p.display_name || p.short_code || p.id;
+          return next;
+        });
+      });
+  }, [drafts, ownerProfiles]);
+
+  const visibleDrafts = useMemo(() => {
+    if (!isAdmin) return drafts;
+    if (ownerFilter === 'all') return drafts;
+    if (ownerFilter === 'mine') return drafts.filter(d => d.created_by === user?.id);
+    return drafts.filter(d => d.created_by === ownerFilter);
+  }, [drafts, isAdmin, ownerFilter, user?.id]);
+
+  // Keep selection valid when filter changes
+  useEffect(() => {
+    if (selectedId && !visibleDrafts.find(d => d.id === selectedId)) {
+      const firstPending = visibleDrafts.find(d => d.status === 'pending');
+      setSelectedId((firstPending ?? visibleDrafts[0])?.id ?? null);
+    }
+  }, [visibleDrafts, selectedId]);
+
+  const pendingCount = useMemo(() => visibleDrafts.filter(d => d.status === 'pending').length, [visibleDrafts]);
+
+  const ownerOptions = useMemo(() => {
+    const ids = Array.from(new Set(drafts.map(d => d.created_by).filter(Boolean))) as string[];
+    return ids
+      .map(id => ({ id, name: ownerProfiles[id] || id.slice(0, 8) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [drafts, ownerProfiles]);
 
   const saveEdits = async (patch: Partial<Draft>) => {
     if (!edit) return;
@@ -217,7 +264,7 @@ export default function MtiqDrafts() {
           <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl opacity-30" />
         </div>
 
-        <div className="px-6 py-5 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
@@ -230,6 +277,51 @@ export default function MtiqDrafts() {
               E-Mails die MTIQ analysiert hat und auf Freigabe warten
             </p>
           </div>
+
+          {isAdmin && (
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Segmented toggle: Meine / Alle */}
+              <div className="inline-flex rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-1">
+                <button
+                  onClick={() => setOwnerFilter('mine')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    ownerFilter === 'mine'
+                      ? 'bg-primary/20 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.3)]'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <UserIcon className="h-3.5 w-3.5" /> Nur meine
+                </button>
+                <button
+                  onClick={() => setOwnerFilter('all')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    ownerFilter === 'all'
+                      ? 'bg-primary/20 text-primary shadow-[0_0_0_1px_hsl(var(--primary)/0.3)]'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Users className="h-3.5 w-3.5" /> Alle
+                </button>
+              </div>
+
+              {/* Specific user picker */}
+              <Select
+                value={ownerFilter === 'all' || ownerFilter === 'mine' ? '' : ownerFilter}
+                onValueChange={(v) => setOwnerFilter(v)}
+              >
+                <SelectTrigger className="h-9 w-[180px] bg-white/[0.03] border-white/10 backdrop-blur-xl text-xs">
+                  <SelectValue placeholder="Bestimmter Nutzer…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ownerOptions.length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">Keine Nutzer</div>
+                  ) : ownerOptions.map(o => (
+                    <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0">
@@ -237,11 +329,11 @@ export default function MtiqDrafts() {
           <div className="border-r border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
             {loading ? (
               <div className="p-6 text-sm text-muted-foreground">Lädt…</div>
-            ) : drafts.length === 0 ? (
-              <EmptyState />
+            ) : visibleDrafts.length === 0 ? (
+              <EmptyState filtered={isAdmin && ownerFilter !== 'all' && drafts.length > 0} />
             ) : (
               <ul className="p-3 space-y-2">
-                {drafts.map(d => {
+                {visibleDrafts.map(d => {
                   const active = d.id === selectedId;
                   return (
                     <li key={d.id}>
@@ -269,11 +361,19 @@ export default function MtiqDrafts() {
                             {d.draft_priority ?? '—'}
                           </Badge>
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge variant="outline" className={statusClasses(d.status)}>
-                            {d.status === 'pending' ? 'Offen' : d.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground">
+                        <div className="flex items-center justify-between mt-2 gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Badge variant="outline" className={statusClasses(d.status)}>
+                              {d.status === 'pending' ? 'Offen' : d.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
+                            </Badge>
+                            {isAdmin && ownerFilter === 'all' && d.created_by && d.created_by !== user?.id && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-white/[0.04] border border-white/10 rounded-md px-1.5 py-0.5 truncate">
+                                <UserIcon className="h-2.5 w-2.5" />
+                                {ownerProfiles[d.created_by] || '…'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
                             {formatDistanceToNow(new Date(d.created_at), { addSuffix: true, locale: de })}
                           </span>
                         </div>
@@ -518,15 +618,19 @@ export default function MtiqDrafts() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ filtered = false }: { filtered?: boolean } = {}) {
   return (
     <div className="h-full min-h-[400px] flex flex-col items-center justify-center text-center px-8 py-16">
       <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
         <Inbox className="h-8 w-8 text-primary" />
       </div>
-      <h2 className="text-base font-medium">Keine offenen Entwürfe</h2>
+      <h2 className="text-base font-medium">
+        {filtered ? 'Keine Entwürfe im aktuellen Filter' : 'Keine offenen Entwürfe'}
+      </h2>
       <p className="text-sm text-muted-foreground mt-1 max-w-md">
-        Sende eine E-Mail an <span className="font-mono">mtiq@inbox.kscommand.com</span> um einen Vorgang vorzubereiten.
+        {filtered
+          ? 'Wechsle oben zu „Alle", um Entwürfe anderer Nutzer einzusehen.'
+          : <>Sende eine E-Mail an <span className="font-mono">mtiq@inbox.kscommand.com</span> um einen Vorgang vorzubereiten.</>}
       </p>
     </div>
   );
