@@ -128,6 +128,9 @@ function describeAction(p: any): string {
   switch (p.tool) {
     case 'set_case_status': return `Status → ${a.status}`;
     case 'set_case_urgency': return `Chilis → ${a.urgency}🌶`;
+    case 'set_case_assignee':
+      if (a.unassign) return `Zuweisung entfernen`;
+      return `Zuständig → ${a.name_or_code ?? a.user_id ?? '—'}`;
     case 'create_subtask': return `Unteraufgabe anlegen: "${a.title}"${a.due_at ? ` (fällig ${a.due_at})` : ''}${a.urgency ? ` ${a.urgency}🌶` : ''}`;
     case 'update_subtask': {
       const parts: string[] = [];
@@ -138,6 +141,8 @@ function describeAction(p: any): string {
     }
     case 'add_case_note': return `Notiz: "${String(a.body ?? '').slice(0, 80)}${(a.body ?? '').length > 80 ? '…' : ''}"`;
     case 'post_case_chat': return `Vorgang-Chat: "${String(a.body ?? '').slice(0, 80)}${(a.body ?? '').length > 80 ? '…' : ''}"`;
+    case 'send_email':
+      return `E-Mail an ${a.to ?? '—'} — "${String(a.subject ?? '').slice(0, 60)}"`;
     default: return p.tool;
   }
 }
