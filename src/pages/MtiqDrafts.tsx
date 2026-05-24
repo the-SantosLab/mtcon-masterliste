@@ -45,20 +45,20 @@ const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
 
 function priorityClasses(p: string | null): string {
   switch (p) {
-    case 'Kritisch': return 'bg-red-500/15 text-red-400 border-red-500/30';
-    case 'Hoch': return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
-    case 'Mittel': return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
-    case 'Niedrig': return 'bg-muted text-muted-foreground border-border';
-    default: return 'bg-muted text-muted-foreground border-border';
+    case 'Kritisch': return 'bg-red-500/10 text-red-300 border-red-500/30 backdrop-blur-md';
+    case 'Hoch': return 'bg-orange-500/10 text-orange-300 border-orange-500/30 backdrop-blur-md';
+    case 'Mittel': return 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30 backdrop-blur-md';
+    case 'Niedrig': return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
+    default: return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
   }
 }
 
 function statusClasses(s: string): string {
   switch (s) {
-    case 'pending': return 'bg-primary/15 text-primary border-primary/30';
-    case 'approved': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-    case 'rejected': return 'bg-muted text-muted-foreground border-border';
-    default: return 'bg-muted text-muted-foreground border-border';
+    case 'pending': return 'bg-primary/10 text-primary border-primary/30 backdrop-blur-md';
+    case 'approved': return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 backdrop-blur-md';
+    case 'rejected': return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
+    default: return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
   }
 }
 
@@ -209,14 +209,24 @@ export default function MtiqDrafts() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-full">
-        <div className="px-6 py-5 border-b border-border flex items-center justify-between">
+      <div className="relative flex flex-col h-full overflow-hidden">
+        {/* Ambient background mesh */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl opacity-40" />
+          <div className="absolute top-1/3 -right-32 h-[28rem] w-[28rem] rounded-full bg-emerald-500/10 blur-3xl opacity-30" />
+          <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl opacity-30" />
+        </div>
+
+        <div className="px-6 py-5 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
+                <Inbox className="h-4 w-4 text-primary" />
+              </div>
               <h1 className="text-xl font-semibold tracking-tight">MTIQ Posteingang</h1>
               <Badge className={statusClasses('pending')}>{pendingCount} offen</Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1 ml-12">
               E-Mails die MTIQ analysiert hat und auf Freigabe warten
             </p>
           </div>
@@ -224,23 +234,28 @@ export default function MtiqDrafts() {
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0">
           {/* LEFT — list */}
-          <div className="border-r border-border overflow-y-auto">
+          <div className="border-r border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
             {loading ? (
               <div className="p-6 text-sm text-muted-foreground">Lädt…</div>
             ) : drafts.length === 0 ? (
               <EmptyState />
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="p-3 space-y-2">
                 {drafts.map(d => {
                   const active = d.id === selectedId;
                   return (
                     <li key={d.id}>
                       <button
                         onClick={() => setSelectedId(d.id)}
-                        className={`w-full text-left px-4 py-3 transition-colors ${
-                          active ? 'bg-primary/10' : 'hover:bg-accent/40'
-                        } ${d.status === 'pending' ? 'border-l-2 border-l-primary' : 'border-l-2 border-l-transparent'}`}
+                        className={`group w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 ${
+                          active
+                            ? 'bg-primary/10 border-primary/30 shadow-[0_0_0_1px_hsl(var(--primary)/0.2),0_8px_24px_-8px_hsl(var(--primary)/0.3)]'
+                            : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10'
+                        } ${d.status === 'pending' ? 'relative' : ''}`}
                       >
+                        {d.status === 'pending' && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-[3px] rounded-r-full bg-gradient-to-b from-primary to-primary/40" />
+                        )}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium truncate">
@@ -271,16 +286,16 @@ export default function MtiqDrafts() {
           </div>
 
           {/* RIGHT — detail */}
-          <div className="overflow-y-auto">
+          <div className="overflow-y-auto bg-background/10 backdrop-blur-xl">
             {!edit ? (
               <EmptyState />
             ) : (
               <div className="p-6 space-y-5 max-w-3xl">
                 {/* Source email (collapsible) */}
-                <div className="rounded-lg border border-border">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
                   <button
                     onClick={() => setEmailOpen(o => !o)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-accent/40 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03] transition-colors rounded-2xl"
                   >
                     <span className="flex items-center gap-2">
                       {emailOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -291,10 +306,10 @@ export default function MtiqDrafts() {
                     </span>
                   </button>
                   {emailOpen && (
-                    <div className="px-4 pb-4 pt-2 border-t border-border space-y-2 text-sm">
+                    <div className="px-4 pb-4 pt-2 border-t border-white/5 space-y-2 text-sm">
                       <div><span className="text-muted-foreground">Von:</span> {edit.source_email_from || '—'}</div>
                       <div><span className="text-muted-foreground">Betreff:</span> {edit.source_email_subject || '—'}</div>
-                      <pre className="whitespace-pre-wrap text-xs bg-muted/50 rounded p-3 max-h-72 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-xs bg-black/30 border border-white/5 rounded-xl p-3 max-h-72 overflow-y-auto">
                         {edit.source_email_body || '(leer)'}
                       </pre>
                     </div>
@@ -376,7 +391,7 @@ export default function MtiqDrafts() {
                   </h2>
                   <div className="space-y-2">
                     {edit.draft_tasks.map((t, idx) => (
-                      <div key={idx} className="rounded-lg border border-border p-3 space-y-2">
+                      <div key={idx} className="rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 space-y-2 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.4)]">
                         <div className="flex items-start gap-2">
                           <Input
                             value={t.title}
@@ -434,8 +449,8 @@ export default function MtiqDrafts() {
 
                 {/* Reasoning */}
                 {edit.mtiq_reasoning && (
-                  <div className="rounded-lg bg-muted/40 border border-border p-4">
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 backdrop-blur-xl p-4 shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.3)]">
+                    <div className="text-xs uppercase tracking-wide text-primary/80 mb-1 font-medium">
                       Warum hat MTIQ das so strukturiert?
                     </div>
                     <p className="text-sm italic text-muted-foreground">{edit.mtiq_reasoning}</p>
@@ -444,11 +459,11 @@ export default function MtiqDrafts() {
 
                 {/* Actions */}
                 {edit.status === 'pending' ? (
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-background/95 backdrop-blur py-3 -mx-6 px-6 border-t border-border">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-background/70 backdrop-blur-2xl py-3 -mx-6 px-6 border-t border-white/10">
                     <Button
                       onClick={approve}
                       disabled={approving || rejecting}
-                      className="flex-1 h-12 text-base font-semibold bg-emerald-600 hover:bg-emerald-500 text-white"
+                      className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-[0_8px_24px_-8px_rgba(16,185,129,0.6)] border border-emerald-400/30"
                     >
                       {approving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Send className="h-5 w-5 mr-2" />}
                       Freigeben & Vorgang anlegen
@@ -457,13 +472,13 @@ export default function MtiqDrafts() {
                       variant="secondary"
                       onClick={() => setConfirmReject(true)}
                       disabled={approving || rejecting}
-                      className="h-12 sm:w-48"
+                      className="h-12 sm:w-48 bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10"
                     >
                       Ablehnen
                     </Button>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
                     Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
                     {edit.vorgang_id && (
                       <Button
