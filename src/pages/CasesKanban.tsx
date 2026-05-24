@@ -444,6 +444,7 @@ export default function CasesKanban() {
         subtasks_done: subDone[c.id] || 0,
         subtasks_total: subTotal[c.id] || 0,
         priority_order: c.priority_order ?? 0,
+        urgency: c.urgency ?? 0,
       };
     }));
   }, []);
