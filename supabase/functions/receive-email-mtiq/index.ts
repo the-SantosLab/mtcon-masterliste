@@ -192,8 +192,17 @@ ${emailBody || "(empty)"}`;
       })).filter((t: any) => t.title)
     : [];
 
+  // Resolve sender email → internal user id so RLS restricts the draft to its owner
+  let createdBy: string | null = null;
+  try {
+    const { data: uid } = await admin.rpc("user_id_by_email", { p_email: fromEmail });
+    if (typeof uid === "string") createdBy = uid;
+  } catch (e) {
+    console.error("user_id_by_email lookup failed", e);
+  }
+
   const { data: inserted, error } = await admin.from("mtiq_drafts").insert({
-    created_by: null,
+    created_by: createdBy,
     source_email_from: fromName ? `${fromName} <${fromEmail}>` : fromEmail,
     source_email_subject: subject,
     source_email_body: emailBody,

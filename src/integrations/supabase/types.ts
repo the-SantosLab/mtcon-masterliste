@@ -3293,6 +3293,7 @@ export type Database = {
       purge_trashed_cases: { Args: never; Returns: number }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
       user_department: { Args: { uid?: string }; Returns: string }
+      user_id_by_email: { Args: { p_email: string }; Returns: string }
     }
     Enums: {
       announcement_severity: "info" | "wichtig" | "kritisch"
