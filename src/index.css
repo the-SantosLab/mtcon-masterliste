@@ -584,6 +584,18 @@
   .dark main table > tbody > tr[class*="urgency-row-"] > td .text-primary { color: #ffffff !important; text-decoration-color: currentColor; }
 }
 
+@keyframes urgency-blink-3 {
+  0%, 100% { background-color: #F97316 !important; }
+  50%      { background-color: #FDBA74 !important; }
+}
+@keyframes urgency-blink-4 {
+  0%, 100% { background-color: #EF4444 !important; }
+  50%      { background-color: #FCA5A5 !important; }
+}
+@keyframes urgency-blink-5 {
+  0%, 100% { background-color: #DC2626 !important; }
+  50%      { background-color: #F97316 !important; }
+}
 @keyframes urgency-pulse-light {
   0%, 100% { background-color: #F8D7DA; }
   50%      { background-color: #FFF0E0; }
