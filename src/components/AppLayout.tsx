@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox,
 } from 'lucide-react';
 
 import mtconLogo from '@/assets/mtcon_logo.png';
@@ -47,6 +47,32 @@ function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => strin
   );
 }
 
+function MtiqPendingBadge() {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { count: c } = await (supabase as any)
+        .from('mtiq_drafts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      if (!cancelled) setCount(c ?? 0);
+    };
+    load();
+    const ch = supabase
+      .channel('mtiq-drafts-badge')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mtiq_drafts' }, load)
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, []);
+  if (count === 0) return null;
+  return (
+    <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
+      {count}
+    </span>
+  );
+}
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -58,6 +84,7 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
+  { href: '/mtiq/drafts', label: 'MTIQ Posteingang', icon: Inbox, mtiq: true },
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
@@ -176,7 +203,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="border-t border-sidebar-border my-1" />
           {navItems.map(item => (
             <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-              <item.icon className="h-4 w-4" />{item.label}
+              <item.icon className="h-4 w-4" />
+              <span className="flex-1">{item.label}</span>
+              {(item as any).mtiq && <MtiqPendingBadge />}
             </Link>
           ))}
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
