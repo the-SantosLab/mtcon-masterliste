@@ -579,7 +579,7 @@ function EmptyState() {
       </div>
       <h2 className="text-base font-medium">Keine offenen Entwürfe</h2>
       <p className="text-sm text-muted-foreground mt-1 max-w-md">
-        Sende eine E-Mail an <span className="font-mono">mtiq@mtcon.kscommand.com</span> um einen Vorgang vorzubereiten.
+        Sende eine E-Mail an <span className="font-mono">mtiq@inbox.kscommand.com</span> um einen Vorgang vorzubereiten.
       </p>
     </div>
   );
