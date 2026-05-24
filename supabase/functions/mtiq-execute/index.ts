@@ -106,6 +106,38 @@ Deno.serve(async (req) => {
           });
           if (error) throw error;
           results.push({ id: a.id, ok: true, summary: `Vorgang-Chat-Nachricht gepostet` });
+        } else if (a.tool === "set_case_assignee") {
+          let targetId: string | null = null;
+          if (args.unassign) {
+            targetId = null;
+          } else if (args.user_id) {
+            targetId = args.user_id;
+          } else if (args.name_or_code) {
+            const needle = String(args.name_or_code).trim();
+            const { data: matches } = await client
+              .from("users_profile")
+              .select("id, display_name, short_code")
+              .or(`display_name.ilike.%${needle}%,short_code.ilike.%${needle}%`)
+              .limit(2);
+            if (!matches || matches.length === 0) throw new Error(`Kein Nutzer für "${needle}" gefunden`);
+            if (matches.length > 1) throw new Error(`Mehrere Treffer für "${needle}" – bitte eindeutig angeben`);
+            targetId = (matches[0] as any).id;
+          } else {
+            throw new Error("user_id, name_or_code oder unassign erforderlich");
+          }
+          const { error } = await client.from("cases").update({
+            assignee_id: targetId, last_changed_by: user.id, last_changed_at: new Date().toISOString(),
+          }).eq("id", vorgang_id);
+          if (error) throw error;
+          results.push({ id: a.id, ok: true, summary: targetId ? `Zuständig → ${targetId}` : `Zuweisung entfernt` });
+        } else if (a.tool === "send_email") {
+          if (!args.to || !args.subject || !args.body) throw new Error("to, subject, body erforderlich");
+          const { data, error } = await client.functions.invoke("crm-send-email", {
+            body: { to: args.to, subject: args.subject, body: args.body },
+          });
+          if (error) throw error;
+          if ((data as any)?.success === false) throw new Error((data as any).error ?? "E-Mail-Versand fehlgeschlagen");
+          results.push({ id: a.id, ok: true, summary: `E-Mail an ${args.to} gesendet` });
         } else {
           throw new Error(`Unbekanntes Tool: ${a.tool}`);
         }
