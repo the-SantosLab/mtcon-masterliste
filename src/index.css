@@ -585,16 +585,16 @@
 }
 
 @keyframes urgency-blink-3 {
-  0%, 100% { background-color: #F97316 !important; }
-  50%      { background-color: #FDBA74 !important; }
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.35); }
 }
 @keyframes urgency-blink-4 {
-  0%, 100% { background-color: #EF4444 !important; }
-  50%      { background-color: #FCA5A5 !important; }
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.45); }
 }
 @keyframes urgency-blink-5 {
-  0%, 100% { background-color: #DC2626 !important; }
-  50%      { background-color: #F97316 !important; }
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.6); }
 }
 @keyframes urgency-pulse-light {
   0%, 100% { background-color: #F8D7DA; }
