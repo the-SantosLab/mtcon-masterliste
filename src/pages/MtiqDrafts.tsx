@@ -94,7 +94,13 @@ export default function MtiqDrafts() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<DeptOpt[]>([]);
+  const [profiles, setProfiles] = useState<ProfileOpt[]>([]);
+  const [projects, setProjects] = useState<ProjectOpt[]>([]);
+  const [templates, setTemplates] = useState<TemplateOpt[]>([]);
+  const [customers, setCustomers] = useState<CustomerOpt[]>([]);
+  const [products, setProducts] = useState<ProductOpt[]>([]);
+  const [areas, setAreas] = useState<AreaOpt[]>([]);
   const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
   // 'all' | 'mine' | a specific user id
   const [ownerFilter, setOwnerFilter] = useState<string>('mine');
