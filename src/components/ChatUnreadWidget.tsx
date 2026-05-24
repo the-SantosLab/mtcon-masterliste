@@ -98,7 +98,7 @@ export function ChatUnreadWidget({ caseIds }: Props) {
             return (
               <Link
                 key={r.case_id}
-                to={`/cases/${r.case_id}?tab=chat`}
+                to={`/cases/${r.case_id}`}
                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors"
               >
                 <span className="relative shrink-0 h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
