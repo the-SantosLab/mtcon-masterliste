@@ -196,6 +196,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newDeptId, setNewDeptId] = useState('');
+  const [newAssignee, setNewAssignee] = useState('');
   const [newDueAt, setNewDueAt] = useState('');
   const [adding, setAdding] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -301,6 +302,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       created_by: userId,
       sort_order: tasks.length,
       department_id: newDeptId || null,
+      assigned_to: newAssignee || null,
       due_at: newDueAt || null,
       status: 'open',
     } as any).select('id').single();
@@ -308,12 +310,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     else {
       setNewTitle('');
       setNewDeptId('');
+      setNewAssignee('');
       setNewDueAt('');
       await fetchTasks();
       if (ins?.id) {
         supabase.functions.invoke('notify-task-created', {
           body: { caseId, taskId: ins.id, actorId: userId },
         }).catch(() => {});
+        if (newAssignee) {
+          supabase.functions.invoke('notify-task-assigned', {
+            body: { caseId, taskId: ins.id, assigneeId: newAssignee, actorId: userId },
+          }).catch(() => {});
+        }
       }
     }
     setAdding(false);
@@ -1029,14 +1037,25 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             className="h-8 text-xs flex-1"
             onKeyDown={e => e.key === 'Enter' && addTask()}
           />
-          <Select value={newDeptId || '_none'} onValueChange={v => setNewDeptId(v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
+          <Select value={newDeptId || '_none'} onValueChange={v => { setNewDeptId(v === '_none' ? '' : v); setNewAssignee(''); }}>
+            <SelectTrigger className="h-8 text-xs w-[130px]">
               <SelectValue placeholder="Abt." />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" className="text-xs">Keine Abt.</SelectItem>
               {departments.map(d => (
                 <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={newAssignee || '_none'} onValueChange={v => setNewAssignee(v === '_none' ? '' : v)}>
+            <SelectTrigger className="h-8 text-xs w-[150px]">
+              <SelectValue placeholder="Zuständig" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
+              {(newDeptId ? profiles.filter(p => p.department_id === newDeptId) : profiles).map(p => (
+                <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
               ))}
             </SelectContent>
           </Select>
