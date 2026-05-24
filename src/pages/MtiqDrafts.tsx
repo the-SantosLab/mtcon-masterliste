@@ -449,8 +449,8 @@ export default function MtiqDrafts() {
 
                 {/* Reasoning */}
                 {edit.mtiq_reasoning && (
-                  <div className="rounded-lg bg-muted/40 border border-border p-4">
-                    <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 backdrop-blur-xl p-4 shadow-[0_8px_32px_-12px_hsl(var(--primary)/0.3)]">
+                    <div className="text-xs uppercase tracking-wide text-primary/80 mb-1 font-medium">
                       Warum hat MTIQ das so strukturiert?
                     </div>
                     <p className="text-sm italic text-muted-foreground">{edit.mtiq_reasoning}</p>
@@ -459,11 +459,11 @@ export default function MtiqDrafts() {
 
                 {/* Actions */}
                 {edit.status === 'pending' ? (
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-background/95 backdrop-blur py-3 -mx-6 px-6 border-t border-border">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2 sticky bottom-0 bg-background/70 backdrop-blur-2xl py-3 -mx-6 px-6 border-t border-white/10">
                     <Button
                       onClick={approve}
                       disabled={approving || rejecting}
-                      className="flex-1 h-12 text-base font-semibold bg-emerald-600 hover:bg-emerald-500 text-white"
+                      className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-[0_8px_24px_-8px_rgba(16,185,129,0.6)] border border-emerald-400/30"
                     >
                       {approving ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Send className="h-5 w-5 mr-2" />}
                       Freigeben & Vorgang anlegen
@@ -472,13 +472,13 @@ export default function MtiqDrafts() {
                       variant="secondary"
                       onClick={() => setConfirmReject(true)}
                       disabled={approving || rejecting}
-                      className="h-12 sm:w-48"
+                      className="h-12 sm:w-48 bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10"
                     >
                       Ablehnen
                     </Button>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
                     Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
                     {edit.vorgang_id && (
                       <Button
