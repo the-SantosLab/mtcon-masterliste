@@ -52,9 +52,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Resolve department
-    let department_id: string | null = null;
-    if (draft.draft_department) {
+    // Resolve department:
+    //  1) explicit team (sub-department) wins,
+    //  2) then explicit draft_department_id (if you ever pass one),
+    //  3) finally the legacy fuzzy name match.
+    let department_id: string | null = draft.draft_team_id ?? null;
+    if (!department_id && draft.draft_department) {
       const needle = String(draft.draft_department).trim();
       const { data: deptMatches } = await client
         .from("departments")
@@ -66,6 +69,30 @@ Deno.serve(async (req) => {
 
     const urgency = PRIORITY_TO_URGENCY[draft.draft_priority ?? "Mittel"] ?? 2;
 
+    // Load template (if any) to inherit workflow settings + tasks
+    let templateSettings: { sequential_mode: boolean; due_required: boolean; lock_mode: string } | null = null;
+    let templateTasks: any[] = [];
+    if (draft.draft_template_id) {
+      const { data: tpl } = await client
+        .from("case_templates")
+        .select("id, sequential_mode, due_required, lock_mode")
+        .eq("id", draft.draft_template_id)
+        .maybeSingle();
+      if (tpl) {
+        templateSettings = {
+          sequential_mode: tpl.sequential_mode,
+          due_required: tpl.due_required,
+          lock_mode: tpl.lock_mode,
+        };
+        const { data: tplTasks } = await client
+          .from("case_template_tasks")
+          .select("title, description, department_id, order_index")
+          .eq("template_id", tpl.id)
+          .order("order_index", { ascending: true });
+        templateTasks = tplTasks ?? [];
+      }
+    }
+
     // Create case
     const { data: newCase, error: cErr } = await client
       .from("cases")
@@ -73,20 +100,45 @@ Deno.serve(async (req) => {
         project_name: draft.draft_title ?? "(ohne Titel)",
         note: draft.draft_description ?? null,
         department_id,
+        assignee_id: draft.draft_assignee_id ?? null,
+        project_id: draft.draft_project_id ?? null,
         urgency,
         due_at: draft.draft_due_date,
+        received_at: draft.draft_received_at ?? new Date().toISOString().slice(0, 10),
         status: "nicht_begonnen",
         created_by: user.id,
-        received_at: new Date().toISOString().slice(0, 10),
+        customer_no: draft.draft_customer_no ?? null,
+        client_name: draft.draft_client_name ?? null,
+        product_code: draft.draft_product_code ?? null,
+        internal_area_code: draft.draft_internal_area_code ?? null,
+        project_article_no: draft.draft_project_article_no ?? null,
+        estimated_hours: draft.draft_estimated_hours ?? null,
+        sop: draft.draft_sop ?? null,
+        quantity: draft.draft_quantity ?? null,
+        project_duration: draft.draft_project_duration ?? null,
+        sequential_mode: templateSettings?.sequential_mode ?? false,
+        due_required: templateSettings?.due_required ?? false,
+        lock_mode: templateSettings?.lock_mode ?? "hard",
       })
       .select("id, case_no")
       .single();
     if (cErr) throw cErr;
 
-    // Create subtasks
-    const tasks: any[] = Array.isArray(draft.draft_tasks) ? draft.draft_tasks : [];
-    if (tasks.length) {
-      const rows = await Promise.all(tasks.map(async (t: any, idx: number) => {
+    // Subtasks: prefer template tasks if a template was chosen, else MTIQ-suggested tasks
+    let taskRows: any[] = [];
+    if (templateTasks.length) {
+      taskRows = templateTasks.map((t: any, idx: number) => ({
+        case_id: newCase.id,
+        title: String(t.title ?? "").slice(0, 500) || `Aufgabe ${idx + 1}`,
+        description: t.description ?? null,
+        department_id: t.department_id ?? department_id,
+        status: "open",
+        sort_order: idx,
+        created_by: user.id,
+      }));
+    } else {
+      const tasks: any[] = Array.isArray(draft.draft_tasks) ? draft.draft_tasks : [];
+      taskRows = await Promise.all(tasks.map(async (t: any, idx: number) => {
         let task_dept_id: string | null = department_id;
         if (t.department) {
           const { data: dm } = await client
@@ -104,8 +156,21 @@ Deno.serve(async (req) => {
           created_by: user.id,
         };
       }));
-      const { error: tErr } = await client.from("case_tasks").insert(rows);
+    }
+    if (taskRows.length) {
+      const { error: tErr } = await client.from("case_tasks").insert(taskRows);
       if (tErr) console.error("subtasks insert error", tErr);
+    }
+
+    // Optional pinned note from the draft
+    if (draft.draft_note && String(draft.draft_note).trim()) {
+      const { error: nErr } = await client.from("case_notes").insert({
+        case_id: newCase.id,
+        author_id: user.id,
+        body: String(draft.draft_note),
+        pinned: true,
+      });
+      if (nErr) console.error("note insert error", nErr);
     }
 
     // Mark draft approved

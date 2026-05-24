@@ -41,7 +41,31 @@ type Draft = {
   mtiq_reasoning: string | null;
   status: 'pending' | 'approved' | 'rejected';
   vorgang_id: string | null;
+  // Extended fields (match CreateCaseForm)
+  draft_project_id: string | null;
+  draft_template_id: string | null;
+  draft_team_id: string | null;
+  draft_assignee_id: string | null;
+  draft_customer_no: string | null;
+  draft_client_name: string | null;
+  draft_product_code: string | null;
+  draft_internal_area_code: string | null;
+  draft_project_article_no: string | null;
+  draft_received_at: string | null;
+  draft_estimated_hours: number | string | null;
+  draft_sop: string | null;
+  draft_quantity: number | string | null;
+  draft_project_duration: string | null;
+  draft_note: string | null;
 };
+
+type DeptOpt = { id: string; name: string; parent_id: string | null };
+type ProfileOpt = { id: string; display_name: string; short_code: string | null; department_id: string | null };
+type ProjectOpt = { id: string; project_number: string; name: string };
+type TemplateOpt = { id: string; title: string };
+type CustomerOpt = { id: string; customer_no: string; name: string };
+type ProductOpt = { id: string; code: string; name: string };
+type AreaOpt = { id: string; code: string; name: string };
 
 const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
 
@@ -70,7 +94,13 @@ export default function MtiqDrafts() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<DeptOpt[]>([]);
+  const [profiles, setProfiles] = useState<ProfileOpt[]>([]);
+  const [projects, setProjects] = useState<ProjectOpt[]>([]);
+  const [templates, setTemplates] = useState<TemplateOpt[]>([]);
+  const [customers, setCustomers] = useState<CustomerOpt[]>([]);
+  const [products, setProducts] = useState<ProductOpt[]>([]);
+  const [areas, setAreas] = useState<AreaOpt[]>([]);
   const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
   // 'all' | 'mine' | a specific user id
   const [ownerFilter, setOwnerFilter] = useState<string>('mine');
@@ -109,8 +139,27 @@ export default function MtiqDrafts() {
 
   useEffect(() => {
     load();
-    (supabase as any).from('departments').select('id, name').order('name').then(({ data }: any) => {
+    const sb: any = supabase;
+    sb.from('departments').select('id, name, parent_id').eq('is_active', true).order('name').then(({ data }: any) => {
       setDepartments(data || []);
+    });
+    sb.from('users_profile').select('id, display_name, short_code, department_id').order('display_name').then(({ data }: any) => {
+      setProfiles(data || []);
+    });
+    sb.from('projects').select('id, project_number, name').order('project_number', { ascending: false }).limit(500).then(({ data }: any) => {
+      setProjects(data || []);
+    });
+    sb.from('case_templates').select('id, title').order('title').then(({ data }: any) => {
+      setTemplates(data || []);
+    });
+    sb.from('customers').select('id, customer_no, name').order('name').then(({ data }: any) => {
+      setCustomers(data || []);
+    });
+    sb.from('products').select('id, code, name').order('name').then(({ data }: any) => {
+      setProducts(data || []);
+    });
+    sb.from('internal_areas').select('id, code, name').order('name').then(({ data }: any) => {
+      setAreas(data || []);
     });
     // realtime
     const ch = supabase
@@ -184,6 +233,11 @@ export default function MtiqDrafts() {
   // persist on blur
   const persistAll = async () => {
     if (!edit) return;
+    const toNum = (v: any) => {
+      if (v === '' || v === null || v === undefined) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
     await saveEdits({
       draft_title: edit.draft_title,
       draft_description: edit.draft_description,
@@ -191,6 +245,21 @@ export default function MtiqDrafts() {
       draft_priority: edit.draft_priority,
       draft_due_date: edit.draft_due_date,
       draft_tasks: edit.draft_tasks as any,
+      draft_project_id: edit.draft_project_id || null,
+      draft_template_id: edit.draft_template_id || null,
+      draft_team_id: edit.draft_team_id || null,
+      draft_assignee_id: edit.draft_assignee_id || null,
+      draft_customer_no: edit.draft_customer_no || null,
+      draft_client_name: edit.draft_client_name || null,
+      draft_product_code: edit.draft_product_code || null,
+      draft_internal_area_code: edit.draft_internal_area_code || null,
+      draft_project_article_no: edit.draft_project_article_no || null,
+      draft_received_at: edit.draft_received_at || null,
+      draft_estimated_hours: toNum(edit.draft_estimated_hours) as any,
+      draft_sop: edit.draft_sop || null,
+      draft_quantity: toNum(edit.draft_quantity) as any,
+      draft_project_duration: edit.draft_project_duration || null,
+      draft_note: edit.draft_note || null,
     });
   };
 
@@ -483,6 +552,263 @@ export default function MtiqDrafts() {
                     </div>
                   </div>
                 </div>
+
+                {/* Erweiterte Vorgangs-Felder (analog zum manuellen Anlegen) */}
+                {(() => {
+                  const disabled = edit.status !== 'pending';
+                  const topDepts = departments.filter(d => !d.parent_id);
+                  const selectedTopDept = topDepts.find(d => d.name === (edit.draft_department ?? ''));
+                  const teamOptions = departments.filter(d => selectedTopDept && d.parent_id === selectedTopDept.id);
+                  const teamForFilter = edit.draft_team_id
+                    ? departments.find(d => d.id === edit.draft_team_id)
+                    : selectedTopDept;
+                  const assigneeOptions = teamForFilter
+                    ? profiles.filter(p => p.department_id === teamForFilter.id || !p.department_id)
+                    : profiles;
+                  return (
+                    <div className="space-y-4">
+                      {/* Projekt & Vorlage */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Projekt & Vorlage</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label>Bestehendem Projekt zuordnen</Label>
+                            <Select
+                              value={edit.draft_project_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_project_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Kein Projekt —</SelectItem>
+                                {projects.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>{p.project_number} · {p.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Aus Vorlage erstellen</Label>
+                            <Select
+                              value={edit.draft_template_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_template_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Keine Vorlage" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Keine Vorlage —</SelectItem>
+                                {templates.map(t => (
+                                  <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {edit.draft_template_id && (
+                          <p className="text-[11px] text-muted-foreground -mt-1">
+                            Hinweis: Bei gewählter Vorlage werden deren Unteraufgaben & Workflow-Einstellungen übernommen — die MTIQ-Vorschläge unten werden dann ignoriert.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Zuständigkeit */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Zuständigkeit</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label>Team / Unterabteilung</Label>
+                            <Select
+                              value={edit.draft_team_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_team_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled || !selectedTopDept}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={selectedTopDept ? 'Optional…' : 'Erst Abteilung wählen'} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Keines —</SelectItem>
+                                {teamOptions.map(d => (
+                                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Mitarbeiter</Label>
+                            <Select
+                              value={edit.draft_assignee_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_assignee_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Abteilungspool" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Abteilungspool —</SelectItem>
+                                {assigneeOptions.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.display_name}{p.short_code ? ` (${p.short_code})` : ''}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Kunde & Produkt */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Kunde & Produkt</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label>Kunde (Stammdaten)</Label>
+                            <Select
+                              value={edit.draft_customer_no ?? '__none__'}
+                              onValueChange={v => {
+                                if (v === '__none__') handleField('draft_customer_no', null);
+                                else handleField('draft_customer_no', v);
+                                setTimeout(persistAll, 50);
+                              }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Kein Kunde —</SelectItem>
+                                {customers.map(c => (
+                                  <SelectItem key={c.id} value={c.customer_no}>{c.customer_no} · {c.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Auftraggeber (Freitext)</Label>
+                            <Input
+                              value={edit.draft_client_name ?? ''}
+                              onChange={e => handleField('draft_client_name', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <Label>Produkt</Label>
+                            <Select
+                              value={edit.draft_product_code ?? '__none__'}
+                              onValueChange={v => { handleField('draft_product_code', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Kein Produkt —</SelectItem>
+                                {products.map(p => (
+                                  <SelectItem key={p.id} value={p.code}>{p.code} · {p.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Interner Bereich</Label>
+                            <Select
+                              value={edit.draft_internal_area_code ?? '__none__'}
+                              onValueChange={v => { handleField('draft_internal_area_code', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Keiner —</SelectItem>
+                                {areas.map(a => (
+                                  <SelectItem key={a.id} value={a.code}>{a.code} · {a.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Projekt-/Artikelnummer</Label>
+                            <Input
+                              value={edit.draft_project_article_no ?? ''}
+                              onChange={e => handleField('draft_project_article_no', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Termine & Details */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Termine & Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <Label>Auftragseingang</Label>
+                            <Input
+                              type="date"
+                              value={edit.draft_received_at ?? ''}
+                              onChange={e => handleField('draft_received_at', e.target.value || null)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                              className="h-10 w-full appearance-none"
+                            />
+                          </div>
+                          <div>
+                            <Label>Geschätzte Stunden</Label>
+                            <Input
+                              type="number"
+                              step="0.25"
+                              min="0"
+                              value={edit.draft_estimated_hours ?? ''}
+                              onChange={e => handleField('draft_estimated_hours', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div>
+                            <Label>SOP</Label>
+                            <Input
+                              value={edit.draft_sop ?? ''}
+                              onChange={e => handleField('draft_sop', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div>
+                            <Label>Stückzahl</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={edit.draft_quantity ?? ''}
+                              onChange={e => handleField('draft_quantity', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label>Projektdauer</Label>
+                            <Input
+                              value={edit.draft_project_duration ?? ''}
+                              onChange={e => handleField('draft_project_duration', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                              placeholder="z. B. 6 Monate"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bemerkung */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Bemerkung</h2>
+                        <Textarea
+                          value={edit.draft_note ?? ''}
+                          onChange={e => handleField('draft_note', e.target.value)}
+                          onBlur={persistAll}
+                          rows={3}
+                          disabled={disabled}
+                          placeholder="Wird beim Anlegen als angepinnte Notiz gespeichert."
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
 
                 {/* Tasks */}
                 <div className="space-y-3">
