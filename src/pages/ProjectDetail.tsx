@@ -230,7 +230,7 @@ function EditableField({
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isViewer } = useAuth();
   const { preferences } = usePreferences();
   const compact = preferences.compactTables;
   const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
