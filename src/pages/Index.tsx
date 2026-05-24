@@ -477,6 +477,9 @@ export default function Dashboard() {
         {/* Mitteilungen vom Admin-Team */}
         <AnnouncementsWidget />
 
+        {/* Neue Chat-Nachrichten in relevanten Vorgängen */}
+        <ChatUnreadWidget caseIds={cases.map(c => c.id)} />
+
 
 
 
