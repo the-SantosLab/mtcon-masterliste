@@ -5,7 +5,8 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, formatRelativeTime, ACTION_LABELS } from '@/lib/case-utils';
+import { formatDate, formatRelativeTime, ACTION_LABELS, getUrgencyRowClass } from '@/lib/case-utils';
+import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 
-type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at';
+type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at' | 'urgency';
 
 interface Project {
   id: string; project_number: string; project_code: string | null;
@@ -33,7 +34,7 @@ interface Project {
 
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
-  assignee_id: string | null; due_at: string | null;
+  assignee_id: string | null; due_at: string | null; urgency: number | null;
   assignee: { display_name: string; short_code: string } | null;
 }
 
@@ -229,7 +230,7 @@ function EditableField({
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isViewer } = useAuth();
   const { preferences } = usePreferences();
   const compact = preferences.compactTables;
   const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
@@ -256,7 +257,7 @@ export default function ProjectDetail() {
   const reloadCases = async () => {
     if (!id) return;
     const { data } = await supabase.from('cases')
-      .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .select('id, case_no, project_name, status, assignee_id, due_at, urgency, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
       .eq('project_id', id)
       .eq('deleted', false)
       .order('created_at', { ascending: false });
@@ -268,7 +269,7 @@ export default function ProjectDetail() {
     Promise.all([
       supabase.from('projects').select('*').eq('id', id).single(),
       supabase.from('cases')
-        .select('id, case_no, project_name, status, assignee_id, due_at, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+        .select('id, case_no, project_name, status, assignee_id, due_at, urgency, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
         .eq('project_id', id)
         .eq('deleted', false)
         .order('created_at', { ascending: false }),
@@ -555,6 +556,7 @@ export default function ProjectDetail() {
                           case 'project_name': return c.project_name;
                           case 'assignee': return c.assignee?.short_code ?? null;
                           case 'due_at': return c.due_at ? new Date(c.due_at).getTime() : null;
+                          case 'urgency': return c.urgency ?? 0;
                           default: return null;
                         }
                       }, caseSort.direction)
@@ -563,6 +565,7 @@ export default function ProjectDetail() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
+                          <SortableHeader column="urgency" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
                           <SortableHeader column="status" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</SortableHeader>
                           <SortableHeader column="case_no" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</SortableHeader>
                           <SortableHeader column="project_name" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</SortableHeader>
@@ -572,9 +575,12 @@ export default function ProjectDetail() {
                       </thead>
                       <tbody className="divide-y divide-border">
                         {sortedCases.length === 0 ? (
-                          <tr><td colSpan={5} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
+                          <tr><td colSpan={6} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
                         ) : sortedCases.map(c => (
-                          <tr key={c.id} className="hover:bg-muted/40 transition-colors">
+                          <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency))}>
+                            <td className={cellCls}>
+                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" />
+                            </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono')}>
                               <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
