@@ -108,6 +108,10 @@ export function NoteEditor({ content, onUpdate, readOnly, hideToolbar, onEditorR
     // keystroke would trigger setContent, causing cursor jumps / dropped keys).
     if (incoming === lastEmittedRef.current) return;
     if (incoming === editor.getHTML()) return;
+    // While the user is actively typing in this editor, NEVER overwrite from
+    // an external prop change. Stale realtime echoes (debounced server round-
+    // trips) would otherwise reset the document mid-keystroke and drop input.
+    if (editor.isFocused) return;
     lastEmittedRef.current = incoming;
     editor.commands.setContent(incoming, { emitUpdate: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
