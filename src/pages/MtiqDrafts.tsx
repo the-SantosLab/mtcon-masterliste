@@ -286,16 +286,16 @@ export default function MtiqDrafts() {
           </div>
 
           {/* RIGHT — detail */}
-          <div className="overflow-y-auto">
+          <div className="overflow-y-auto bg-background/10 backdrop-blur-xl">
             {!edit ? (
               <EmptyState />
             ) : (
               <div className="p-6 space-y-5 max-w-3xl">
                 {/* Source email (collapsible) */}
-                <div className="rounded-lg border border-border">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
                   <button
                     onClick={() => setEmailOpen(o => !o)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-accent/40 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03] transition-colors rounded-2xl"
                   >
                     <span className="flex items-center gap-2">
                       {emailOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -306,10 +306,10 @@ export default function MtiqDrafts() {
                     </span>
                   </button>
                   {emailOpen && (
-                    <div className="px-4 pb-4 pt-2 border-t border-border space-y-2 text-sm">
+                    <div className="px-4 pb-4 pt-2 border-t border-white/5 space-y-2 text-sm">
                       <div><span className="text-muted-foreground">Von:</span> {edit.source_email_from || '—'}</div>
                       <div><span className="text-muted-foreground">Betreff:</span> {edit.source_email_subject || '—'}</div>
-                      <pre className="whitespace-pre-wrap text-xs bg-muted/50 rounded p-3 max-h-72 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-xs bg-black/30 border border-white/5 rounded-xl p-3 max-h-72 overflow-y-auto">
                         {edit.source_email_body || '(leer)'}
                       </pre>
                     </div>
