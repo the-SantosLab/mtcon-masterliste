@@ -177,7 +177,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="border-t border-sidebar-border my-1" />
           {navItems.map(item => (
             <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-              <item.icon className="h-4 w-4" />{item.label}
+              <item.icon className="h-4 w-4" />
+              <span className="flex-1">{item.label}</span>
+              {(item as any).mtiq && <MtiqPendingBadge />}
             </Link>
           ))}
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
