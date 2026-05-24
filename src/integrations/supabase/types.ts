@@ -1751,6 +1751,7 @@ export type Database = {
           mtiq_reasoning: string | null
           source_email_body: string | null
           source_email_from: string | null
+          source_email_message_id: string | null
           source_email_subject: string | null
           status: string
           vorgang_id: string | null
@@ -1770,6 +1771,7 @@ export type Database = {
           mtiq_reasoning?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
+          source_email_message_id?: string | null
           source_email_subject?: string | null
           status?: string
           vorgang_id?: string | null
@@ -1789,6 +1791,7 @@ export type Database = {
           mtiq_reasoning?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
+          source_email_message_id?: string | null
           source_email_subject?: string | null
           status?: string
           vorgang_id?: string | null

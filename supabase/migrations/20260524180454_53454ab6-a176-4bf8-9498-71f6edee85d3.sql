@@ -1,0 +1,2 @@
+ALTER TABLE public.mtiq_drafts ADD COLUMN IF NOT EXISTS source_email_message_id TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS mtiq_drafts_source_email_message_id_key ON public.mtiq_drafts (source_email_message_id) WHERE source_email_message_id IS NOT NULL;
