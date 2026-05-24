@@ -553,6 +553,263 @@ export default function MtiqDrafts() {
                   </div>
                 </div>
 
+                {/* Erweiterte Vorgangs-Felder (analog zum manuellen Anlegen) */}
+                {(() => {
+                  const disabled = edit.status !== 'pending';
+                  const topDepts = departments.filter(d => !d.parent_id);
+                  const selectedTopDept = topDepts.find(d => d.name === (edit.draft_department ?? ''));
+                  const teamOptions = departments.filter(d => selectedTopDept && d.parent_id === selectedTopDept.id);
+                  const teamForFilter = edit.draft_team_id
+                    ? departments.find(d => d.id === edit.draft_team_id)
+                    : selectedTopDept;
+                  const assigneeOptions = teamForFilter
+                    ? profiles.filter(p => p.department_id === teamForFilter.id || !p.department_id)
+                    : profiles;
+                  return (
+                    <div className="space-y-4">
+                      {/* Projekt & Vorlage */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Projekt & Vorlage</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label>Bestehendem Projekt zuordnen</Label>
+                            <Select
+                              value={edit.draft_project_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_project_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Kein Projekt" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Kein Projekt —</SelectItem>
+                                {projects.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>{p.project_number} · {p.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Aus Vorlage erstellen</Label>
+                            <Select
+                              value={edit.draft_template_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_template_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Keine Vorlage" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Keine Vorlage —</SelectItem>
+                                {templates.map(t => (
+                                  <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {edit.draft_template_id && (
+                          <p className="text-[11px] text-muted-foreground -mt-1">
+                            Hinweis: Bei gewählter Vorlage werden deren Unteraufgaben & Workflow-Einstellungen übernommen — die MTIQ-Vorschläge unten werden dann ignoriert.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Zuständigkeit */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Zuständigkeit</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label>Team / Unterabteilung</Label>
+                            <Select
+                              value={edit.draft_team_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_team_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled || !selectedTopDept}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={selectedTopDept ? 'Optional…' : 'Erst Abteilung wählen'} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Keines —</SelectItem>
+                                {teamOptions.map(d => (
+                                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Mitarbeiter</Label>
+                            <Select
+                              value={edit.draft_assignee_id ?? '__none__'}
+                              onValueChange={v => { handleField('draft_assignee_id', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Abteilungspool" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Abteilungspool —</SelectItem>
+                                {assigneeOptions.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.display_name}{p.short_code ? ` (${p.short_code})` : ''}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Kunde & Produkt */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Kunde & Produkt</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label>Kunde (Stammdaten)</Label>
+                            <Select
+                              value={edit.draft_customer_no ?? '__none__'}
+                              onValueChange={v => {
+                                if (v === '__none__') handleField('draft_customer_no', null);
+                                else handleField('draft_customer_no', v);
+                                setTimeout(persistAll, 50);
+                              }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Kein Kunde —</SelectItem>
+                                {customers.map(c => (
+                                  <SelectItem key={c.id} value={c.customer_no}>{c.customer_no} · {c.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Auftraggeber (Freitext)</Label>
+                            <Input
+                              value={edit.draft_client_name ?? ''}
+                              onChange={e => handleField('draft_client_name', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <Label>Produkt</Label>
+                            <Select
+                              value={edit.draft_product_code ?? '__none__'}
+                              onValueChange={v => { handleField('draft_product_code', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Kein Produkt —</SelectItem>
+                                {products.map(p => (
+                                  <SelectItem key={p.id} value={p.code}>{p.code} · {p.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Interner Bereich</Label>
+                            <Select
+                              value={edit.draft_internal_area_code ?? '__none__'}
+                              onValueChange={v => { handleField('draft_internal_area_code', v === '__none__' ? null : v); setTimeout(persistAll, 50); }}
+                              disabled={disabled}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">— Keiner —</SelectItem>
+                                {areas.map(a => (
+                                  <SelectItem key={a.id} value={a.code}>{a.code} · {a.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Projekt-/Artikelnummer</Label>
+                            <Input
+                              value={edit.draft_project_article_no ?? ''}
+                              onChange={e => handleField('draft_project_article_no', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Termine & Details */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Termine & Details</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <Label>Auftragseingang</Label>
+                            <Input
+                              type="date"
+                              value={edit.draft_received_at ?? ''}
+                              onChange={e => handleField('draft_received_at', e.target.value || null)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                              className="h-10 w-full appearance-none"
+                            />
+                          </div>
+                          <div>
+                            <Label>Geschätzte Stunden</Label>
+                            <Input
+                              type="number"
+                              step="0.25"
+                              min="0"
+                              value={edit.draft_estimated_hours ?? ''}
+                              onChange={e => handleField('draft_estimated_hours', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div>
+                            <Label>SOP</Label>
+                            <Input
+                              value={edit.draft_sop ?? ''}
+                              onChange={e => handleField('draft_sop', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div>
+                            <Label>Stückzahl</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={edit.draft_quantity ?? ''}
+                              onChange={e => handleField('draft_quantity', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label>Projektdauer</Label>
+                            <Input
+                              value={edit.draft_project_duration ?? ''}
+                              onChange={e => handleField('draft_project_duration', e.target.value)}
+                              onBlur={persistAll}
+                              disabled={disabled}
+                              placeholder="z. B. 6 Monate"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bemerkung */}
+                      <div className="space-y-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Bemerkung</h2>
+                        <Textarea
+                          value={edit.draft_note ?? ''}
+                          onChange={e => handleField('draft_note', e.target.value)}
+                          onBlur={persistAll}
+                          rows={3}
+                          disabled={disabled}
+                          placeholder="Wird beim Anlegen als angepinnte Notiz gespeichert."
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+
                 {/* Tasks */}
                 <div className="space-y-3">
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
