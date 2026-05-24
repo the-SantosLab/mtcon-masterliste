@@ -1037,14 +1037,25 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             className="h-8 text-xs flex-1"
             onKeyDown={e => e.key === 'Enter' && addTask()}
           />
-          <Select value={newDeptId || '_none'} onValueChange={v => setNewDeptId(v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-8 text-xs w-[140px]">
+          <Select value={newDeptId || '_none'} onValueChange={v => { setNewDeptId(v === '_none' ? '' : v); setNewAssignee(''); }}>
+            <SelectTrigger className="h-8 text-xs w-[130px]">
               <SelectValue placeholder="Abt." />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" className="text-xs">Keine Abt.</SelectItem>
               {departments.map(d => (
                 <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={newAssignee || '_none'} onValueChange={v => setNewAssignee(v === '_none' ? '' : v)}>
+            <SelectTrigger className="h-8 text-xs w-[150px]">
+              <SelectValue placeholder="Zuständig" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
+              {(newDeptId ? profiles.filter(p => p.department_id === newDeptId) : profiles).map(p => (
+                <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
               ))}
             </SelectContent>
           </Select>
