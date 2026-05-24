@@ -361,11 +361,19 @@ export default function MtiqDrafts() {
                             {d.draft_priority ?? '—'}
                           </Badge>
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge variant="outline" className={statusClasses(d.status)}>
-                            {d.status === 'pending' ? 'Offen' : d.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground">
+                        <div className="flex items-center justify-between mt-2 gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Badge variant="outline" className={statusClasses(d.status)}>
+                              {d.status === 'pending' ? 'Offen' : d.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
+                            </Badge>
+                            {isAdmin && ownerFilter === 'all' && d.created_by && d.created_by !== user?.id && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-white/[0.04] border border-white/10 rounded-md px-1.5 py-0.5 truncate">
+                                <UserIcon className="h-2.5 w-2.5" />
+                                {ownerProfiles[d.created_by] || '…'}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
                             {formatDistanceToNow(new Date(d.created_at), { addSuffix: true, locale: de })}
                           </span>
                         </div>
