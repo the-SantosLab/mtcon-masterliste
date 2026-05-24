@@ -264,7 +264,7 @@ export default function MtiqDrafts() {
           <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl opacity-30" />
         </div>
 
-        <div className="px-6 py-5 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-start justify-between gap-4 flex-wrap">
+        <div className="px-6 py-5 border-b border-border dark:border-white/5 bg-background/40 backdrop-blur-xl flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
@@ -326,7 +326,7 @@ export default function MtiqDrafts() {
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0">
           {/* LEFT — list */}
-          <div className="border-r border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
+          <div className="border-r border-border dark:border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
             {loading ? (
               <div className="p-6 text-sm text-muted-foreground">Lädt…</div>
             ) : visibleDrafts.length === 0 ? (
@@ -342,7 +342,7 @@ export default function MtiqDrafts() {
                         className={`group w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 ${
                           active
                             ? 'bg-primary/10 border-primary/30 shadow-[0_0_0_1px_hsl(var(--primary)/0.2),0_8px_24px_-8px_hsl(var(--primary)/0.3)]'
-                            : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10'
+                            : 'bg-neutral-50/80 dark:bg-white/[0.02] border-neutral-200/60 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-white/[0.04] hover:border-neutral-300 dark:hover:border-white/10'
                         } ${d.status === 'pending' ? 'relative' : ''}`}
                       >
                         {d.status === 'pending' && (
@@ -367,7 +367,7 @@ export default function MtiqDrafts() {
                               {d.status === 'pending' ? 'Offen' : d.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
                             </Badge>
                             {isAdmin && ownerFilter === 'all' && d.created_by && d.created_by !== user?.id && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-white/[0.04] border border-white/10 rounded-md px-1.5 py-0.5 truncate">
+                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-neutral-100 dark:bg-white/[0.04] border border-neutral-200 dark:border-white/10 rounded-md px-1.5 py-0.5 truncate">
                                 <UserIcon className="h-2.5 w-2.5" />
                                 {ownerProfiles[d.created_by] || '…'}
                               </span>
