@@ -174,12 +174,13 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
         )}
         {!!c.urgency && c.urgency > 0 && (
           <span
-            className="inline-flex items-center gap-0.5 grayscale opacity-70 tabular-nums"
+            className="inline-flex items-center gap-[1px] text-[9px] grayscale opacity-70"
             title={`Dringlichkeit: ${c.urgency}/5`}
             aria-label={`Dringlichkeit ${c.urgency} von 5`}
           >
-            <span className="text-[9px] leading-none">🌶️</span>
-            <span>×{c.urgency}</span>
+            {Array.from({ length: c.urgency }).map((_, i) => (
+              <span key={i} className="leading-none">🌶️</span>
+            ))}
           </span>
         )}
         {c.assignee_short_code && (
