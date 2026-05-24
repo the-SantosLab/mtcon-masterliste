@@ -280,7 +280,7 @@ export default function MtiqDrafts() {
 
   const addTask = async () => {
     if (!edit) return;
-    const next = [...edit.draft_tasks, { title: '', department: null, assignee_hint: null, due_date: null }];
+    const next = [...edit.draft_tasks, { title: '', department: null, assignee_hint: null, assignee_id: null, due_date: null }];
     setEdit({ ...edit, draft_tasks: next });
     await saveEdits({ draft_tasks: next as any });
   };
