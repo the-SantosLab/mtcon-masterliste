@@ -302,6 +302,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       created_by: userId,
       sort_order: tasks.length,
       department_id: newDeptId || null,
+      assigned_to: newAssignee || null,
       due_at: newDueAt || null,
       status: 'open',
     } as any).select('id').single();
@@ -309,12 +310,18 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     else {
       setNewTitle('');
       setNewDeptId('');
+      setNewAssignee('');
       setNewDueAt('');
       await fetchTasks();
       if (ins?.id) {
         supabase.functions.invoke('notify-task-created', {
           body: { caseId, taskId: ins.id, actorId: userId },
         }).catch(() => {});
+        if (newAssignee) {
+          supabase.functions.invoke('notify-task-assigned', {
+            body: { caseId, taskId: ins.id, assigneeId: newAssignee, actorId: userId },
+          }).catch(() => {});
+        }
       }
     }
     setAdding(false);
