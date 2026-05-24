@@ -58,6 +58,7 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
+  { href: '/mtiq/drafts', label: 'MTIQ Posteingang', icon: Inbox, mtiq: true },
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
