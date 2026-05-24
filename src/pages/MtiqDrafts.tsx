@@ -1,15 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -17,7 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send } from 'lucide-react';
+import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -67,7 +63,6 @@ function statusClasses(s: string): string {
 }
 
 export default function MtiqDrafts() {
-  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,12 +76,6 @@ export default function MtiqDrafts() {
   const [rejecting, setRejecting] = useState(false);
   const [confirmReject, setConfirmReject] = useState(false);
 
-  // simulate modal (admin only)
-  const [simOpen, setSimOpen] = useState(false);
-  const [simFrom, setSimFrom] = useState('');
-  const [simSubject, setSimSubject] = useState('');
-  const [simBody, setSimBody] = useState('');
-  const [simRunning, setSimRunning] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -217,29 +206,6 @@ export default function MtiqDrafts() {
     }
   };
 
-  const runSimulate = async () => {
-    if (!simSubject.trim() && !simBody.trim()) {
-      toast.error('Betreff oder Inhalt erforderlich');
-      return;
-    }
-    setSimRunning(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('mtiq-email-intake', {
-        body: { from: simFrom, subject: simSubject, body: simBody },
-      });
-      if (error) throw error;
-      const id = (data as any)?.draft?.id;
-      toast.success('MTIQ-Analyse abgeschlossen');
-      setSimOpen(false);
-      setSimFrom(''); setSimSubject(''); setSimBody('');
-      await load();
-      if (id) setSelectedId(id);
-    } catch (e: any) {
-      toast.error(e?.message ?? 'Analyse fehlgeschlagen');
-    } finally {
-      setSimRunning(false);
-    }
-  };
 
   return (
     <AppLayout>
@@ -254,11 +220,6 @@ export default function MtiqDrafts() {
               E-Mails die MTIQ analysiert hat und auf Freigabe warten
             </p>
           </div>
-          {isAdmin && (
-            <Button variant="outline" onClick={() => setSimOpen(true)}>
-              <Sparkles className="h-4 w-4 mr-2" /> Test-E-Mail simulieren
-            </Button>
-          )}
         </div>
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0">
@@ -519,38 +480,6 @@ export default function MtiqDrafts() {
           </div>
         </div>
 
-        {/* Simulate dialog */}
-        <Dialog open={simOpen} onOpenChange={setSimOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Test-E-Mail simulieren</DialogTitle>
-              <DialogDescription>
-                Sende eine fiktive E-Mail an MTIQ. Die Analyse erstellt einen neuen Entwurf.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Von</Label>
-                <Input value={simFrom} onChange={e => setSimFrom(e.target.value)} placeholder="kunde@beispiel.de" />
-              </div>
-              <div>
-                <Label>Betreff</Label>
-                <Input value={simSubject} onChange={e => setSimSubject(e.target.value)} placeholder="Anfrage: …" />
-              </div>
-              <div>
-                <Label>E-Mail Inhalt</Label>
-                <Textarea value={simBody} onChange={e => setSimBody(e.target.value)} rows={10} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSimOpen(false)} disabled={simRunning}>Abbrechen</Button>
-              <Button onClick={runSimulate} disabled={simRunning}>
-                {simRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                Analysieren
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Reject confirm */}
         <AlertDialog open={confirmReject} onOpenChange={setConfirmReject}>
