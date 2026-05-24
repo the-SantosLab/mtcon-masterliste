@@ -402,6 +402,7 @@ export default function MtiqDrafts() {
                         onChange={e => handleField('draft_due_date', e.target.value || null)}
                         onBlur={persistAll}
                         disabled={edit.status !== 'pending'}
+                        className="h-10 w-full appearance-none"
                       />
                     </div>
                   </div>
