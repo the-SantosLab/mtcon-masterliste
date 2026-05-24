@@ -22,6 +22,7 @@ type TaskItem = {
   title: string;
   department: string | null;
   assignee_hint: string | null;
+  assignee_id: string | null;
   due_date: string | null;
 };
 
@@ -279,7 +280,7 @@ export default function MtiqDrafts() {
 
   const addTask = async () => {
     if (!edit) return;
-    const next = [...edit.draft_tasks, { title: '', department: null, assignee_hint: null, due_date: null }];
+    const next = [...edit.draft_tasks, { title: '', department: null, assignee_hint: null, assignee_id: null, due_date: null }];
     setEdit({ ...edit, draft_tasks: next });
     await saveEdits({ draft_tasks: next as any });
   };
@@ -846,14 +847,23 @@ export default function MtiqDrafts() {
                               ))}
                             </SelectContent>
                           </Select>
-                          <Input
-                            value={t.assignee_hint ?? ''}
-                            onChange={e => updateTask(idx, { assignee_hint: e.target.value || null })}
-                            onBlur={persistAll}
-                            placeholder="Zuständigkeit (Hinweis)"
+                          <Select
+                            value={t.assignee_id ?? '_none'}
+                            onValueChange={v => { updateTask(idx, { assignee_id: v === '_none' ? null : v }); setTimeout(persistAll, 50); }}
                             disabled={edit.status !== 'pending'}
-                            className="w-full min-w-0"
-                          />
+                          >
+                            <SelectTrigger className="w-full min-w-0"><SelectValue placeholder="Zuständig" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="_none">Niemand</SelectItem>
+                              {(() => {
+                                const dept = t.department ? departments.find(d => d.name === t.department) : null;
+                                const list = dept ? profiles.filter(p => p.department_id === dept.id) : profiles;
+                                return list.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>{p.display_name} ({p.short_code})</SelectItem>
+                                ));
+                              })()}
+                            </SelectContent>
+                          </Select>
                           <Input
                             type="date"
                             value={t.due_date ?? ''}

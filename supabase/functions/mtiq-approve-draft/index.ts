@@ -150,6 +150,7 @@ Deno.serve(async (req) => {
           title: String(t.title ?? "").slice(0, 500) || `Aufgabe ${idx + 1}`,
           description: t.assignee_hint ? `Hinweis: ${t.assignee_hint}` : null,
           department_id: task_dept_id,
+          assigned_to: t.assignee_id ?? null,
           due_at: t.due_date && /^\d{4}-\d{2}-\d{2}$/.test(t.due_date) ? t.due_date : null,
           status: "open",
           sort_order: idx,
