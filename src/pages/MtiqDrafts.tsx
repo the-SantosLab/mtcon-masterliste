@@ -22,6 +22,7 @@ type TaskItem = {
   title: string;
   department: string | null;
   assignee_hint: string | null;
+  assignee_id: string | null;
   due_date: string | null;
 };
 
