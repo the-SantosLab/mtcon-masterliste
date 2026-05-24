@@ -3,5 +3,8 @@ project_id = "tfzwssplxetptxnhrxse"
 [functions.receive-email]
 verify_jwt = false
 
+[functions.receive-email-mtiq]
+verify_jwt = false
+
 [functions.send-welcome-credentials]
 verify_jwt = false
