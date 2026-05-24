@@ -45,20 +45,20 @@ const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
 
 function priorityClasses(p: string | null): string {
   switch (p) {
-    case 'Kritisch': return 'bg-red-500/15 text-red-400 border-red-500/30';
-    case 'Hoch': return 'bg-orange-500/15 text-orange-400 border-orange-500/30';
-    case 'Mittel': return 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
-    case 'Niedrig': return 'bg-muted text-muted-foreground border-border';
-    default: return 'bg-muted text-muted-foreground border-border';
+    case 'Kritisch': return 'bg-red-500/10 text-red-300 border-red-500/30 backdrop-blur-md';
+    case 'Hoch': return 'bg-orange-500/10 text-orange-300 border-orange-500/30 backdrop-blur-md';
+    case 'Mittel': return 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30 backdrop-blur-md';
+    case 'Niedrig': return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
+    default: return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
   }
 }
 
 function statusClasses(s: string): string {
   switch (s) {
-    case 'pending': return 'bg-primary/15 text-primary border-primary/30';
-    case 'approved': return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-    case 'rejected': return 'bg-muted text-muted-foreground border-border';
-    default: return 'bg-muted text-muted-foreground border-border';
+    case 'pending': return 'bg-primary/10 text-primary border-primary/30 backdrop-blur-md';
+    case 'approved': return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 backdrop-blur-md';
+    case 'rejected': return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
+    default: return 'bg-white/5 text-muted-foreground border-white/10 backdrop-blur-md';
   }
 }
 
