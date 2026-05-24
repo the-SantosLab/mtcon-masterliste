@@ -3142,6 +3142,10 @@ export type Database = {
     }
     Functions: {
       archive_old_announcements: { Args: never; Returns: number }
+      can_access_case_chat: {
+        Args: { p_case_id: string; p_uid?: string }
+        Returns: boolean
+      }
       can_read_board: {
         Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
@@ -3198,6 +3202,10 @@ export type Database = {
       }
       is_board_owner: {
         Args: { p_board_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      is_case_watcher: {
+        Args: { p_case_id: string; p_uid?: string }
         Returns: boolean
       }
       is_direct_report: {
