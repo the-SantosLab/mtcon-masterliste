@@ -329,11 +329,11 @@ export default function MtiqDrafts() {
           <div className="border-r border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
             {loading ? (
               <div className="p-6 text-sm text-muted-foreground">Lädt…</div>
-            ) : drafts.length === 0 ? (
-              <EmptyState />
+            ) : visibleDrafts.length === 0 ? (
+              <EmptyState filtered={isAdmin && ownerFilter !== 'all' && drafts.length > 0} />
             ) : (
               <ul className="p-3 space-y-2">
-                {drafts.map(d => {
+                {visibleDrafts.map(d => {
                   const active = d.id === selectedId;
                   return (
                     <li key={d.id}>
