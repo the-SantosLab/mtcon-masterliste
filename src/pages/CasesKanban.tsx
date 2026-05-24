@@ -61,6 +61,7 @@ interface CaseCard {
   subtasks_done: number;
   subtasks_total: number;
   priority_order: number;
+  urgency?: number | null;
 }
 
 const PROJECT_STATUSES: { id: string; label: string; color: string }[] = [
