@@ -634,7 +634,7 @@ html body main table tbody tr.urgency-row-1 > td { background-color: #22C55E !im
 html body main table tbody tr.urgency-row-2 > td { background-color: #EAB308 !important; color: #0a0a0a !important; }
 html body main table tbody tr.urgency-row-3 > td { background-color: #F97316 !important; color: #ffffff !important; animation: urgency-blink-3 2.4s ease-in-out infinite; }
 html body main table tbody tr.urgency-row-4 > td { background-color: #EF4444 !important; color: #ffffff !important; animation: urgency-blink-4 1.8s ease-in-out infinite; }
-html body main table tbody tr.urgency-row-5 > td { background-color: #DC2626 !important; color: #ffffff !important; animation: urgency-blink-5 1.2s ease-in-out infinite; }
+html body main table tbody tr.urgency-row-5 > td { background-color: #DC2626; color: #ffffff; animation: urgency-blink-5 1.2s ease-in-out infinite; }
 
 html body main table tbody tr.urgency-row-1:hover > td { background-color: #16a34a !important; }
 html body main table tbody tr.urgency-row-2:hover > td { background-color: #ca8a04 !important; }
