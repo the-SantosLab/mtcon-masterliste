@@ -47,6 +47,32 @@ function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => strin
   );
 }
 
+function MtiqPendingBadge() {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { count: c } = await (supabase as any)
+        .from('mtiq_drafts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      if (!cancelled) setCount(c ?? 0);
+    };
+    load();
+    const ch = supabase
+      .channel('mtiq-drafts-badge')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mtiq_drafts' }, load)
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, []);
+  if (count === 0) return null;
+  return (
+    <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
+      {count}
+    </span>
+  );
+}
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
