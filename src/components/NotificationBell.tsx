@@ -103,7 +103,13 @@ export function NotificationBell() {
   const TYPE_ICON_COLOR: Record<string, string> = {
     assignment: 'bg-primary/10 text-primary',
     status_change: 'bg-[hsl(var(--status-working))]/10 text-[hsl(var(--status-working))]',
+    task_status_change: 'bg-[hsl(var(--status-working))]/10 text-[hsl(var(--status-working))]',
+    project_status_change: 'bg-[hsl(var(--status-working))]/10 text-[hsl(var(--status-working))]',
     mention: 'bg-[hsl(var(--status-planning))]/10 text-[hsl(var(--status-planning))]',
+    chat_message: 'bg-primary/10 text-primary',
+    chat_reaction: 'bg-accent/30 text-accent-foreground',
+    task_created: 'bg-[hsl(var(--status-planning))]/10 text-[hsl(var(--status-planning))]',
+    note_created: 'bg-muted text-foreground',
     default: 'bg-muted text-muted-foreground',
   };
 
