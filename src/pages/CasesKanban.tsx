@@ -185,17 +185,6 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
             {format(new Date(c.due_at), 'dd.MM.')}
           </span>
         )}
-        {!!c.urgency && c.urgency > 0 && (
-          <span
-            className="inline-flex items-center gap-[1px] text-[9px] grayscale opacity-70"
-            title={`Dringlichkeit: ${c.urgency}/5`}
-            aria-label={`Dringlichkeit ${c.urgency} von 5`}
-          >
-            {Array.from({ length: c.urgency }).map((_, i) => (
-              <span key={i} className="leading-none">🌶️</span>
-            ))}
-          </span>
-        )}
         {c.assignee_short_code && (
           <span className="inline-flex items-center gap-0.5 ml-auto">
             <UserIcon className="h-2.5 w-2.5" />
