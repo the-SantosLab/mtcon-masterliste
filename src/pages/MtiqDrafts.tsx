@@ -209,14 +209,24 @@ export default function MtiqDrafts() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-full">
-        <div className="px-6 py-5 border-b border-border flex items-center justify-between">
+      <div className="relative flex flex-col h-full overflow-hidden">
+        {/* Ambient background mesh */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl opacity-40" />
+          <div className="absolute top-1/3 -right-32 h-[28rem] w-[28rem] rounded-full bg-emerald-500/10 blur-3xl opacity-30" />
+          <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl opacity-30" />
+        </div>
+
+        <div className="px-6 py-5 border-b border-white/5 bg-background/40 backdrop-blur-xl flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
+                <Inbox className="h-4 w-4 text-primary" />
+              </div>
               <h1 className="text-xl font-semibold tracking-tight">MTIQ Posteingang</h1>
               <Badge className={statusClasses('pending')}>{pendingCount} offen</Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1 ml-12">
               E-Mails die MTIQ analysiert hat und auf Freigabe warten
             </p>
           </div>
@@ -224,23 +234,28 @@ export default function MtiqDrafts() {
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0">
           {/* LEFT — list */}
-          <div className="border-r border-border overflow-y-auto">
+          <div className="border-r border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
             {loading ? (
               <div className="p-6 text-sm text-muted-foreground">Lädt…</div>
             ) : drafts.length === 0 ? (
               <EmptyState />
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="p-3 space-y-2">
                 {drafts.map(d => {
                   const active = d.id === selectedId;
                   return (
                     <li key={d.id}>
                       <button
                         onClick={() => setSelectedId(d.id)}
-                        className={`w-full text-left px-4 py-3 transition-colors ${
-                          active ? 'bg-primary/10' : 'hover:bg-accent/40'
-                        } ${d.status === 'pending' ? 'border-l-2 border-l-primary' : 'border-l-2 border-l-transparent'}`}
+                        className={`group w-full text-left px-4 py-3 rounded-xl border transition-all duration-200 ${
+                          active
+                            ? 'bg-primary/10 border-primary/30 shadow-[0_0_0_1px_hsl(var(--primary)/0.2),0_8px_24px_-8px_hsl(var(--primary)/0.3)]'
+                            : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/10'
+                        } ${d.status === 'pending' ? 'relative' : ''}`}
                       >
+                        {d.status === 'pending' && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-[3px] rounded-r-full bg-gradient-to-b from-primary to-primary/40" />
+                        )}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium truncate">
