@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
+import { ChatUnreadWidget } from '@/components/ChatUnreadWidget';
 
 import { UrgencyDot } from '@/components/UrgencyDot';
 import { useAuth } from '@/contexts/AuthContext';
@@ -475,6 +476,9 @@ export default function Dashboard() {
 
         {/* Mitteilungen vom Admin-Team */}
         <AnnouncementsWidget />
+
+        {/* Neue Chat-Nachrichten in relevanten Vorgängen */}
+        <ChatUnreadWidget caseIds={cases.map(c => c.id)} />
 
 
 
