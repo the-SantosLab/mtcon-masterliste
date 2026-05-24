@@ -28,6 +28,7 @@ type TaskItem = {
 type Draft = {
   id: string;
   created_at: string;
+  created_by: string | null;
   source_email_from: string | null;
   source_email_subject: string | null;
   source_email_body: string | null;
