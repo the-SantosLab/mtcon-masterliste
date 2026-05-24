@@ -34,7 +34,7 @@ interface Project {
 
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
-  assignee_id: string | null; due_at: string | null;
+  assignee_id: string | null; due_at: string | null; urgency: number | null;
   assignee: { display_name: string; short_code: string } | null;
 }
 
