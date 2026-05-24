@@ -612,3 +612,26 @@
 }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* =========================================================
+   Urgency Row Highlight — Final Override (außerhalb @layer)
+   Garantiert höchste Spezifität + post-Tailwind-Kaskade.
+   Gilt für Light + Dark Mode identisch (satte Farben).
+   ========================================================= */
+html body main table tbody tr.urgency-row-1 > td { background-color: #22C55E !important; color: #ffffff !important; }
+html body main table tbody tr.urgency-row-2 > td { background-color: #EAB308 !important; color: #0a0a0a !important; }
+html body main table tbody tr.urgency-row-3 > td { background-color: #F97316 !important; color: #ffffff !important; }
+html body main table tbody tr.urgency-row-4 > td { background-color: #EF4444 !important; color: #ffffff !important; }
+html body main table tbody tr.urgency-row-5 > td { background-color: #DC2626 !important; color: #ffffff !important; animation: urgency-pulse-dark 1.4s ease-in-out infinite; }
+
+html body main table tbody tr.urgency-row-1:hover > td { background-color: #16a34a !important; }
+html body main table tbody tr.urgency-row-2:hover > td { background-color: #ca8a04 !important; }
+html body main table tbody tr.urgency-row-3:hover > td { background-color: #ea580c !important; }
+html body main table tbody tr.urgency-row-4:hover > td { background-color: #dc2626 !important; }
+
+html body main table tbody tr.urgency-row-1 > td .text-muted-foreground,
+html body main table tbody tr.urgency-row-3 > td .text-muted-foreground,
+html body main table tbody tr.urgency-row-4 > td .text-muted-foreground,
+html body main table tbody tr.urgency-row-5 > td .text-muted-foreground { color: rgba(255,255,255,0.9) !important; }
+html body main table tbody tr.urgency-row-2 > td .text-muted-foreground { color: rgba(0,0,0,0.8) !important; }
+html body main table tbody tr[class*="urgency-row-"] > td .text-primary { color: inherit !important; text-decoration-color: currentColor; }
