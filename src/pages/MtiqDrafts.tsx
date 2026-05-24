@@ -402,6 +402,7 @@ export default function MtiqDrafts() {
                         onChange={e => handleField('draft_due_date', e.target.value || null)}
                         onBlur={persistAll}
                         disabled={edit.status !== 'pending'}
+                        className="h-10 w-full appearance-none"
                       />
                     </div>
                   </div>
@@ -457,7 +458,7 @@ export default function MtiqDrafts() {
                             onChange={e => updateTask(idx, { due_date: e.target.value || null })}
                             onBlur={persistAll}
                             disabled={edit.status !== 'pending'}
-                            className="w-full min-w-0"
+                            className="h-10 w-full min-w-0 appearance-none"
                           />
                         </div>
                       </div>
