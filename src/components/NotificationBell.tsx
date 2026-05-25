@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bell, Check, CheckCheck, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime } from '@/lib/case-utils';
 
@@ -95,6 +95,13 @@ export function NotificationBell() {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const clearAll = async () => {
+    if (!user) return;
+    if (!window.confirm('Alle Benachrichtigungen löschen?')) return;
+    await supabase.from('notifications').delete().eq('user_id', user.id);
+    setNotifications([]);
+  };
+
   const handleClick = async (n: Notification) => {
     if (!n.read) await markAsRead(n.id);
     if (n.href) { navigate(n.href); setOpen(false); }
@@ -147,14 +154,24 @@ export function NotificationBell() {
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <CheckCheck className="h-3 w-3" />Alle gelesen
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <CheckCheck className="h-3 w-3" />Alle gelesen
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="flex items-center gap-1 text-[11px] text-destructive/80 hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="h-3 w-3" />Alle löschen
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List */}
