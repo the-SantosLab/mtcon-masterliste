@@ -1738,6 +1738,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mtiq_draft_corrections: {
+        Row: {
+          corrected_fields: Json
+          created_at: string
+          created_by: string | null
+          draft_id: string | null
+          id: string
+          original_fields: Json
+        }
+        Insert: {
+          corrected_fields?: Json
+          created_at?: string
+          created_by?: string | null
+          draft_id?: string | null
+          id?: string
+          original_fields?: Json
+        }
+        Update: {
+          corrected_fields?: Json
+          created_at?: string
+          created_by?: string | null
+          draft_id?: string | null
+          id?: string
+          original_fields?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mtiq_draft_corrections_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mtiq_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mtiq_drafts: {
         Row: {
           approved_at: string | null
@@ -1767,6 +1802,8 @@ export type Database = {
           draft_title: string | null
           id: string
           mtiq_reasoning: string | null
+          original_snapshot: Json | null
+          possible_duplicate_of: string | null
           source_email_body: string | null
           source_email_from: string | null
           source_email_message_id: string | null
@@ -1802,6 +1839,8 @@ export type Database = {
           draft_title?: string | null
           id?: string
           mtiq_reasoning?: string | null
+          original_snapshot?: Json | null
+          possible_duplicate_of?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
           source_email_message_id?: string | null
@@ -1837,6 +1876,8 @@ export type Database = {
           draft_title?: string | null
           id?: string
           mtiq_reasoning?: string | null
+          original_snapshot?: Json | null
+          possible_duplicate_of?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
           source_email_message_id?: string | null
@@ -1845,6 +1886,13 @@ export type Database = {
           vorgang_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "mtiq_drafts_possible_duplicate_of_fkey"
+            columns: ["possible_duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mtiq_drafts_vorgang_id_fkey"
             columns: ["vorgang_id"]
