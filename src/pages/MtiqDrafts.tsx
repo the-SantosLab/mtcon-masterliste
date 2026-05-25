@@ -929,20 +929,45 @@ export default function MtiqDrafts() {
                       disabled={approving || rejecting}
                       className="h-12 sm:w-48 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
                     >
+                    <Button
+                      variant="secondary"
+                      onClick={() => setConfirmReject(true)}
+                      disabled={approving || rejecting || deleting}
+                      className="h-12 sm:w-40 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
+                    >
                       Ablehnen
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmDelete(true)}
+                      disabled={approving || rejecting || deleting}
+                      className="h-12 sm:w-32 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1.5" /> Löschen
                     </Button>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
-                    Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
-                    {edit.vorgang_id && (
-                      <Button
-                        variant="link" className="ml-2 p-0 h-auto"
-                        onClick={() => navigate(`/cases/${edit.vorgang_id}`)}
-                      >
-                        Zum Vorgang
-                      </Button>
-                    )}
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
+                    <div>
+                      Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
+                      {edit.vorgang_id && (
+                        <Button
+                          variant="link" className="ml-2 p-0 h-auto"
+                          onClick={() => navigate(`/cases/${edit.vorgang_id}`)}
+                        >
+                          Zum Vorgang
+                        </Button>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDelete(true)}
+                      disabled={deleting}
+                      className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Löschen
+                    </Button>
                   </div>
                 )}
               </div>
