@@ -506,6 +506,13 @@ export default function MtiqDrafts() {
                   )}
                 </div>
 
+                {edit.possible_duplicate_of && edit.status === 'pending' && (
+                  <DuplicateBanner caseId={edit.possible_duplicate_of} onDismiss={async () => {
+                    await (supabase as any).from('mtiq_drafts').update({ possible_duplicate_of: null }).eq('id', edit.id);
+                    setEdit({ ...edit, possible_duplicate_of: null });
+                  }} />
+                )}
+
                 {/* MTIQ Vorschlag */}
                 <div className="space-y-3">
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">MTIQ Vorschlag</h2>
