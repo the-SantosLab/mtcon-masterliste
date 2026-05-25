@@ -46,7 +46,7 @@ const STATUS_LABEL: Record<string, string> = {
   blocked: 'Blockiert', waiting: 'Wartet', done: 'Erledigt', completed: 'Abgeschlossen', closed: 'Geschlossen',
 };
 
-interface CaseMeta { case_no: string | null; status: string | null; project_name: string | null; department_name: string | null }
+interface CaseMeta { case_no: string | null; status: string | null; project_name: string | null; department_name: string | null; watchers: string[] }
 
 interface ChatAttachment {
   id: string; message_id: string; case_id: string; storage_path: string;
