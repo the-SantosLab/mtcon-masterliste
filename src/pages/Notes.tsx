@@ -502,6 +502,16 @@ export default function Notes() {
                   <UserCog className="h-3 w-3" /> Mitglieder
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { setTrashOpen(true); loadTrash(); }}
+                disabled={!activeBoard}
+                className="h-7 text-xs gap-1.5"
+                title="Papierkorb"
+              >
+                <Trash2 className="h-3 w-3" /> Papierkorb
+              </Button>
               <div className="flex items-center gap-0.5 rounded border border-border bg-card/60 p-0.5">
                 {([
                   { k: 'postit' as ItemKind, icon: Sticker, title: 'Post-it' },
