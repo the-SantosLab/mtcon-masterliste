@@ -325,6 +325,23 @@ export default function MtiqDrafts() {
     }
   };
 
+  const removeDraft = async () => {
+    if (!edit) return;
+    setDeleting(true);
+    try {
+      const { error } = await (supabase as any).from('mtiq_drafts').delete().eq('id', edit.id);
+      if (error) throw error;
+      toast.success('Eintrag gelöscht');
+      setConfirmDelete(false);
+      setDrafts(prev => prev.filter(d => d.id !== edit.id));
+      setSelectedId(null);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Löschen fehlgeschlagen');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   return (
     <AppLayout>
