@@ -112,6 +112,8 @@ export default function MtiqDrafts() {
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [confirmReject, setConfirmReject] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
 
   const load = async () => {
