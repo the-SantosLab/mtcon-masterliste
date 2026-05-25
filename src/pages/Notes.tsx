@@ -12,7 +12,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, StickyNote, Trash2, Users, Lock, UserCog, Search, Filter, Pin, X, Type, Square, Circle, Triangle, ArrowRight, Table as TableIcon, Sticker } from 'lucide-react';
+import { Plus, StickyNote, Trash2, Users, Lock, UserCog, Search, Filter, Pin, X, Type, Square, Circle, Triangle, ArrowRight, Table as TableIcon, Sticker, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { NOTE_COLORS, type NoteColor, type NoteData } from '@/components/notes/PostIt';
