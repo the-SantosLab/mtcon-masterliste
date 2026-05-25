@@ -366,6 +366,9 @@ export default function MtiqDrafts() {
             <p className="text-sm text-muted-foreground mt-1 ml-12">
               E-Mails die MTIQ analysiert hat und auf Freigabe warten
             </p>
+            <p className="text-xs text-muted-foreground/70 mt-1 ml-12">
+              Sende deine E-Mails an: mtiq@inbox.kscommand.com
+            </p>
           </div>
 
           {isAdmin && (
