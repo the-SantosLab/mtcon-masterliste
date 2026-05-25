@@ -1039,3 +1039,35 @@ function EmptyState({ filtered = false }: { filtered?: boolean } = {}) {
     </div>
   );
 }
+
+function DuplicateBanner({ caseId, onDismiss }: { caseId: string; onDismiss: () => void }) {
+  const [info, setInfo] = useState<{ case_no: string | null; project_name: string | null; client_name: string | null; status: string | null } | null>(null);
+  useEffect(() => {
+    (supabase as any).from('cases')
+      .select('case_no, project_name, client_name, status')
+      .eq('id', caseId).maybeSingle()
+      .then(({ data }: any) => setInfo(data ?? null));
+  }, [caseId]);
+  if (!info) return null;
+  return (
+    <div className="rounded-2xl border border-amber-300/40 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 backdrop-blur-xl p-4 flex items-start gap-3">
+      <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+      <div className="flex-1 min-w-0 text-sm">
+        <div className="font-medium text-amber-900 dark:text-amber-200">Möglicher Duplikat-Vorgang</div>
+        <div className="text-xs text-amber-800/80 dark:text-amber-200/70 mt-0.5">
+          MTIQ hat einen ähnlichen bestehenden Vorgang gefunden:
+        </div>
+        <Link to={`/cases/${caseId}`} className="inline-flex items-center gap-1.5 mt-2 text-sm font-mono text-amber-900 dark:text-amber-200 hover:underline">
+          <ExternalLink className="h-3 w-3" />
+          {info.case_no ?? caseId.slice(0,8)} · {info.project_name ?? '(ohne Titel)'}{info.client_name ? ` — ${info.client_name}` : ''}
+        </Link>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="text-xs px-2 py-1 rounded-md text-amber-900/80 dark:text-amber-200/80 hover:bg-amber-500/10"
+      >
+        Kein Duplikat
+      </button>
+    </div>
+  );
+}
