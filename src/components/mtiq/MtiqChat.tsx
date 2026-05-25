@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, Loader2, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMtiqMessages, confirmProposal } from './useMtiqMessages';
+import { useTypewriterSession } from './useTypewriter';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
