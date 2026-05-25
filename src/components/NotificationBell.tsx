@@ -154,14 +154,24 @@ export function NotificationBell() {
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <CheckCheck className="h-3 w-3" />Alle gelesen
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <CheckCheck className="h-3 w-3" />Alle gelesen
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="flex items-center gap-1 text-[11px] text-destructive/80 hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="h-3 w-3" />Alle löschen
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List */}
