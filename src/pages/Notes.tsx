@@ -149,9 +149,55 @@ export default function Notes() {
       .select('*')
       .eq('board_id', boardId)
       .is('archived_at', null)
+      .is('deleted_at' as any, null)
       .order('z_index', { ascending: true });
     if (error) { toast.error(error.message); return; }
     setNotes((data || []) as any);
+  }
+
+  // Trash state
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [trashedNotes, setTrashedNotes] = useState<any[]>([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+
+  async function loadTrash() {
+    if (!activeBoardId) return;
+    setTrashLoading(true);
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('board_id', activeBoardId)
+      .not('deleted_at' as any, 'is', null)
+      .order('deleted_at' as any, { ascending: false });
+    setTrashLoading(false);
+    if (error) { toast.error(error.message); return; }
+    setTrashedNotes(data || []);
+  }
+
+  async function restoreNote(id: string) {
+    const { error } = await supabase.from('notes').update({ deleted_at: null, deleted_by: null } as any).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTrashedNotes(arr => arr.filter(n => n.id !== id));
+    if (activeBoardId) loadNotes(activeBoardId);
+    toast.success('Notiz wiederhergestellt');
+  }
+
+  async function purgeNote(id: string) {
+    const { error } = await supabase.from('notes').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTrashedNotes(arr => arr.filter(n => n.id !== id));
+    toast.success('Endgültig gelöscht');
+  }
+
+  async function emptyTrash() {
+    if (!activeBoardId) return;
+    if (!confirm('Wirklich alle Notizen im Papierkorb endgültig löschen?')) return;
+    const ids = trashedNotes.map(n => n.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('notes').delete().in('id', ids);
+    if (error) { toast.error(error.message); return; }
+    setTrashedNotes([]);
+    toast.success('Papierkorb geleert');
   }
 
   async function createBoard() {
