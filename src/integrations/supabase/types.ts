@@ -1984,6 +1984,8 @@ export type Database = {
           color: string
           content: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           extra: Json
           fill_color: string | null
           height: number
@@ -2006,6 +2008,8 @@ export type Database = {
           color?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           extra?: Json
           fill_color?: string | null
           height?: number
@@ -2028,6 +2032,8 @@ export type Database = {
           color?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           extra?: Json
           fill_color?: string | null
           height?: number
@@ -3386,6 +3392,7 @@ export type Database = {
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       next_counter: { Args: { p_key: string }; Returns: number }
+      purge_old_trashed_notes: { Args: never; Returns: undefined }
       purge_trashed_cases: { Args: never; Returns: number }
       recalc_case_effective_urgency: {
         Args: { _case_id: string }
