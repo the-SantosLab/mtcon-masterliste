@@ -368,8 +368,11 @@ export function CaseChat({ caseId, canWrite }: Props) {
       }
       pending.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
       setPending([]); setText(''); setReplyTo(null);
+      // Guarantee own message appears even if realtime echo is missed
+      await fetchMessages();
       // ensure scroll to bottom
       requestAnimationFrame(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; });
+
     } catch (e: any) {
       toast.error(e.message || 'Senden fehlgeschlagen');
     } finally { setSending(false); }
