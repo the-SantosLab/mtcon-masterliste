@@ -46,7 +46,7 @@ const STATUS_LABEL: Record<string, string> = {
   blocked: 'Blockiert', waiting: 'Wartet', done: 'Erledigt', completed: 'Abgeschlossen', closed: 'Geschlossen',
 };
 
-interface CaseMeta { case_no: string | null; status: string | null; project_name: string | null; department_name: string | null }
+interface CaseMeta { case_no: string | null; status: string | null; project_name: string | null; department_name: string | null; watchers: string[] }
 
 interface ChatAttachment {
   id: string; message_id: string; case_id: string; storage_path: string;
@@ -94,7 +94,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
   const [presentUsers, setPresentUsers] = useState<Record<string, { display_name: string; typing: boolean }>>({});
   const [showJump, setShowJump] = useState(false);
   const [caseNumberMap, setCaseNumberMap] = useState<Record<string, string>>({});
-  const [caseMeta, setCaseMeta] = useState<CaseMeta>({ case_no: null, status: null, project_name: null, department_name: null });
+  const [caseMeta, setCaseMeta] = useState<CaseMeta>({ case_no: null, status: null, project_name: null, department_name: null, watchers: [] });
   const [userDepts, setUserDepts] = useState<Record<string, string>>({});
 
   // mention state
@@ -129,17 +129,21 @@ export function CaseChat({ caseId, canWrite }: Props) {
   useEffect(() => {
     (async () => {
       const { data: cs } = await (supabase as any).from('cases')
-        .select('case_no, status, project_name, department_id, departments:department_id(name)').eq('id', caseId).maybeSingle();
+        .select('case_no, status, project_name, department_id, watchers, departments:department_id(name)').eq('id', caseId).maybeSingle();
       setCaseMeta({
         case_no: cs?.case_no || null,
         status: cs?.status || null,
         project_name: cs?.project_name || null,
         department_name: (cs as any)?.departments?.name || null,
+        watchers: Array.isArray(cs?.watchers) ? cs.watchers : [],
       });
       let userIds: string[] | null = null;
       if (cs?.department_id) {
         const { data: dm } = await (supabase as any).from('department_members').select('user_id').eq('department_id', cs.department_id);
         userIds = (dm || []).map((x: any) => x.user_id);
+        // include watchers (may live outside the department)
+        const w: string[] = Array.isArray(cs?.watchers) ? cs.watchers : [];
+        for (const wid of w) if (wid && !userIds.includes(wid)) userIds.push(wid);
       }
       let q = (supabase as any).from('users_profile').select('id, display_name, short_code, avatar_url').order('display_name');
       if (userIds && userIds.length) q = q.in('id', userIds);
@@ -563,20 +567,22 @@ export function CaseChat({ caseId, canWrite }: Props) {
   const participantStack = useMemo(() => {
     const seen = new Set<string>();
     const list: MentionUser[] = [];
-    // First: recent message authors (others before self)
+    // 1) Authors who have actually written (others first, newest first)
     for (let i = messages.length - 1; i >= 0; i--) {
       const a = messages[i].author;
       if (a && !seen.has(a.id) && a.id !== user?.id) { seen.add(a.id); list.push(a); }
     }
-    // Then: all other members with chat access
-    for (const m of members) {
-      if (!seen.has(m.id) && m.id !== user?.id) { seen.add(m.id); list.push(m); }
+    // 2) Explicit watchers ("Weitere Personen informieren")
+    for (const wid of caseMeta.watchers || []) {
+      if (seen.has(wid) || wid === user?.id) continue;
+      const m = members.find(x => x.id === wid);
+      if (m) { seen.add(m.id); list.push(m); }
     }
-    // Finally: self at the end
+    // 3) Self at the end
     const self = members.find(m => m.id === user?.id);
     if (self && !seen.has(self.id)) list.push(self);
     return list;
-  }, [messages, members, user?.id]);
+  }, [messages, members, caseMeta.watchers, user?.id]);
 
   const onlineCount = Object.keys(presentUsers).length + 1;
   const statusLabel = caseMeta.status ? (STATUS_LABEL[caseMeta.status] || caseMeta.status) : null;
