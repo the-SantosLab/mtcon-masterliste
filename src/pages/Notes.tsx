@@ -658,6 +658,68 @@ export default function Notes() {
           onOpenChange={(v) => { if (!v) setMembersBoard(null); }}
         />
       )}
+
+      <Dialog open={trashOpen} onOpenChange={setTrashOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <Trash2 className="h-4 w-4" />
+              Papierkorb {activeBoard ? `– ${activeBoard.name}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-[11px] text-muted-foreground -mt-2">
+            Gelöschte Notizen werden 30 Tage aufbewahrt und danach automatisch endgültig entfernt.
+          </p>
+          <div className="max-h-[60vh] overflow-y-auto -mx-2 px-2">
+            {trashLoading ? (
+              <p className="text-xs text-muted-foreground py-6 text-center">Laden…</p>
+            ) : trashedNotes.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-8 text-center">Papierkorb ist leer.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {trashedNotes.map(n => {
+                  const stripped = (n.content || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+                  const preview = stripped || `(${n.kind || 'Element'} ohne Text)`;
+                  const deletedDate = n.deleted_at ? new Date(n.deleted_at) : null;
+                  const daysLeft = deletedDate ? Math.max(0, 30 - Math.floor((Date.now() - deletedDate.getTime()) / 86_400_000)) : null;
+                  return (
+                    <li key={n.id} className="py-2.5 flex items-start gap-3">
+                      <div
+                        className="h-6 w-6 rounded-sm shrink-0 mt-0.5 border border-border"
+                        style={{ background: NOTE_COLORS[n.color as NoteColor] || 'hsl(var(--muted))' }}
+                        title={n.kind}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-foreground truncate">{preview}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          {deletedDate ? `Gelöscht am ${deletedDate.toLocaleString('de-DE')}` : '–'}
+                          {daysLeft !== null && ` · noch ${daysLeft} Tage`}
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => restoreNote(n.id)}>
+                          <RotateCcw className="h-3 w-3" /> Wiederherstellen
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => purgeNote(n.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          <DialogFooter>
+            {trashedNotes.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={emptyTrash} className="h-8 text-xs text-destructive hover:text-destructive mr-auto">
+                Papierkorb leeren
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setTrashOpen(false)} className="h-8 text-xs">Schließen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
