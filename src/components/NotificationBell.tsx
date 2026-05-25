@@ -95,6 +95,13 @@ export function NotificationBell() {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const clearAll = async () => {
+    if (!user) return;
+    if (!window.confirm('Alle Benachrichtigungen löschen?')) return;
+    await supabase.from('notifications').delete().eq('user_id', user.id);
+    setNotifications([]);
+  };
+
   const handleClick = async (n: Notification) => {
     if (!n.read) await markAsRead(n.id);
     if (n.href) { navigate(n.href); setOpen(false); }
