@@ -1,6 +1,12 @@
 // MTIQ Email-to-Vorgang intake: takes a forwarded email (from/subject/body),
-// asks Lovable AI for a structured draft, and stores it in mtiq_drafts (status=pending).
+// asks Lovable AI for a structured draft (with similar-case context + correction
+// few-shots), runs duplicate detection, and stores everything in mtiq_drafts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  getSimilarCases, similarCasesPromptBlock,
+  getRecentCorrections, correctionsPromptBlock,
+  findDuplicate,
+} from "../_shared/mtiq-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,7 +62,6 @@ Deno.serve(async (req) => {
     if (webhookSecret && webhookSecretHeader && webhookSecretHeader === webhookSecret) {
       // accepted as webhook
     } else {
-      // require auth user
       const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
       const { data: userRes } = await userClient.auth.getUser();
       if (!userRes?.user) {
@@ -78,6 +83,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Context retrieval (parallel)
+    const searchBlob = `${subject} ${emailBody}`;
+    const [similar, corrections] = await Promise.all([
+      getSimilarCases(supabaseUrl, serviceKey, searchBlob, 20),
+      getRecentCorrections(supabaseUrl, serviceKey, 5),
+    ]);
+
+    const augmentedSystem =
+      SYSTEM_PROMPT +
+      similarCasesPromptBlock(similar) +
+      correctionsPromptBlock(corrections);
+
     const userPrompt = `Forwarded email to analyze:
 
 From: ${from || "(unknown)"}
@@ -91,7 +108,7 @@ ${emailBody || "(empty)"}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: augmentedSystem },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
@@ -118,7 +135,6 @@ ${emailBody || "(empty)"}`;
       parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     } catch (e) {
       console.error("Parse error", e, raw);
-      // try to salvage
       const match = String(raw).match(/\{[\s\S]*\}/);
       if (match) {
         try { parsed = JSON.parse(match[0]); } catch { parsed = {}; }
@@ -138,13 +154,25 @@ ${emailBody || "(empty)"}`;
         })).filter((t: any) => t.title)
       : [];
 
+    const draftTitle = String(parsed?.title ?? "").slice(0, 500) || subject || "(ohne Titel)";
+    const duplicate = findDuplicate(similar, { title: draftTitle });
+
+    const originalSnapshot = {
+      title: draftTitle,
+      description: String(parsed?.description ?? "") || emailBody,
+      department: parsed?.department ?? null,
+      priority,
+      due_date: dueDate,
+      tasks,
+    };
+
     const admin = createClient(supabaseUrl, serviceKey);
     const { data: inserted, error } = await admin.from("mtiq_drafts").insert({
       created_by: creatorId,
       source_email_from: from || null,
       source_email_subject: subject || null,
       source_email_body: emailBody || null,
-      draft_title: String(parsed?.title ?? "").slice(0, 500) || subject || "(ohne Titel)",
+      draft_title: draftTitle,
       draft_description: String(parsed?.description ?? "") || emailBody || "",
       draft_department: parsed?.department ? String(parsed.department).slice(0, 120) : null,
       draft_priority: priority,
@@ -152,11 +180,13 @@ ${emailBody || "(empty)"}`;
       draft_tasks: tasks,
       mtiq_reasoning: String(parsed?.reasoning ?? "") || null,
       status: "pending",
+      possible_duplicate_of: duplicate?.id ?? null,
+      original_snapshot: originalSnapshot,
     }).select().single();
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ draft: inserted }), {
+    return new Response(JSON.stringify({ draft: inserted, duplicate }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

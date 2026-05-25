@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon } from 'lucide-react';
+import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,6 +58,7 @@ type Draft = {
   draft_quantity: number | string | null;
   draft_project_duration: string | null;
   draft_note: string | null;
+  possible_duplicate_of: string | null;
 };
 
 type DeptOpt = { id: string; name: string; parent_id: string | null };
@@ -504,6 +505,13 @@ export default function MtiqDrafts() {
                     </div>
                   )}
                 </div>
+
+                {edit.possible_duplicate_of && edit.status === 'pending' && (
+                  <DuplicateBanner caseId={edit.possible_duplicate_of} onDismiss={async () => {
+                    await (supabase as any).from('mtiq_drafts').update({ possible_duplicate_of: null }).eq('id', edit.id);
+                    setEdit({ ...edit, possible_duplicate_of: null });
+                  }} />
+                )}
 
                 {/* MTIQ Vorschlag */}
                 <div className="space-y-3">
@@ -1028,6 +1036,38 @@ function EmptyState({ filtered = false }: { filtered?: boolean } = {}) {
           ? 'Wechsle oben zu „Alle", um Entwürfe anderer Nutzer einzusehen.'
           : <>Sende eine E-Mail an <span className="font-mono">mtiq@inbox.kscommand.com</span> um einen Vorgang vorzubereiten.</>}
       </p>
+    </div>
+  );
+}
+
+function DuplicateBanner({ caseId, onDismiss }: { caseId: string; onDismiss: () => void }) {
+  const [info, setInfo] = useState<{ case_no: string | null; project_name: string | null; client_name: string | null; status: string | null } | null>(null);
+  useEffect(() => {
+    (supabase as any).from('cases')
+      .select('case_no, project_name, client_name, status')
+      .eq('id', caseId).maybeSingle()
+      .then(({ data }: any) => setInfo(data ?? null));
+  }, [caseId]);
+  if (!info) return null;
+  return (
+    <div className="rounded-2xl border border-amber-300/40 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 backdrop-blur-xl p-4 flex items-start gap-3">
+      <AlertTriangle className="h-4 w-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+      <div className="flex-1 min-w-0 text-sm">
+        <div className="font-medium text-amber-900 dark:text-amber-200">Möglicher Duplikat-Vorgang</div>
+        <div className="text-xs text-amber-800/80 dark:text-amber-200/70 mt-0.5">
+          MTIQ hat einen ähnlichen bestehenden Vorgang gefunden:
+        </div>
+        <Link to={`/cases/${caseId}`} className="inline-flex items-center gap-1.5 mt-2 text-sm font-mono text-amber-900 dark:text-amber-200 hover:underline">
+          <ExternalLink className="h-3 w-3" />
+          {info.case_no ?? caseId.slice(0,8)} · {info.project_name ?? '(ohne Titel)'}{info.client_name ? ` — ${info.client_name}` : ''}
+        </Link>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="text-xs px-2 py-1 rounded-md text-amber-900/80 dark:text-amber-200/80 hover:bg-amber-500/10"
+      >
+        Kein Duplikat
+      </button>
     </div>
   );
 }
