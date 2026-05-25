@@ -94,7 +94,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
   const [presentUsers, setPresentUsers] = useState<Record<string, { display_name: string; typing: boolean }>>({});
   const [showJump, setShowJump] = useState(false);
   const [caseNumberMap, setCaseNumberMap] = useState<Record<string, string>>({});
-  const [caseMeta, setCaseMeta] = useState<CaseMeta>({ case_no: null, status: null, project_name: null, department_name: null });
+  const [caseMeta, setCaseMeta] = useState<CaseMeta>({ case_no: null, status: null, project_name: null, department_name: null, watchers: [] });
   const [userDepts, setUserDepts] = useState<Record<string, string>>({});
 
   // mention state
