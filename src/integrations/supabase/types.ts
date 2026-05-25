@@ -844,6 +844,7 @@ export type Database = {
           due_date_corrected_at: string | null
           due_date_corrected_by: string | null
           due_required: boolean
+          effective_urgency: number
           estimated_hours: number | null
           id: string
           internal_area_code: string | null
@@ -889,6 +890,7 @@ export type Database = {
           due_date_corrected_at?: string | null
           due_date_corrected_by?: string | null
           due_required?: boolean
+          effective_urgency?: number
           estimated_hours?: number | null
           id?: string
           internal_area_code?: string | null
@@ -934,6 +936,7 @@ export type Database = {
           due_date_corrected_at?: string | null
           due_date_corrected_by?: string | null
           due_required?: boolean
+          effective_urgency?: number
           estimated_hours?: number | null
           id?: string
           internal_area_code?: string | null
@@ -3336,6 +3339,10 @@ export type Database = {
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       next_counter: { Args: { p_key: string }; Returns: number }
       purge_trashed_cases: { Args: never; Returns: number }
+      recalc_case_effective_urgency: {
+        Args: { _case_id: string }
+        Returns: undefined
+      }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
       user_department: { Args: { uid?: string }; Returns: string }
       user_id_by_email: { Args: { p_email: string }; Returns: string }

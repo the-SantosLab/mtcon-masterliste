@@ -403,7 +403,7 @@ export default function CasesKanban() {
   const fetchCases = useCallback(async () => {
     const { data } = await supabase
       .from('cases')
-      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at, priority_order, urgency')
+      .select('id, case_no, project_name, status, department_id, due_at, assignee_id, created_by, created_at, priority_order, urgency, effective_urgency')
       .eq('deleted', false)
       .order('priority_order', { ascending: true })
       .order('created_at', { ascending: true });
@@ -457,7 +457,7 @@ export default function CasesKanban() {
         subtasks_done: subDone[c.id] || 0,
         subtasks_total: subTotal[c.id] || 0,
         priority_order: c.priority_order ?? 0,
-        urgency: c.urgency ?? 0,
+        urgency: Math.max(c.urgency ?? 0, c.effective_urgency ?? 0),
       };
     }));
   }, []);
