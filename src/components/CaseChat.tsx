@@ -141,6 +141,9 @@ export function CaseChat({ caseId, canWrite }: Props) {
       if (cs?.department_id) {
         const { data: dm } = await (supabase as any).from('department_members').select('user_id').eq('department_id', cs.department_id);
         userIds = (dm || []).map((x: any) => x.user_id);
+        // include watchers (may live outside the department)
+        const w: string[] = Array.isArray(cs?.watchers) ? cs.watchers : [];
+        for (const wid of w) if (wid && !userIds.includes(wid)) userIds.push(wid);
       }
       let q = (supabase as any).from('users_profile').select('id, display_name, short_code, avatar_url').order('display_name');
       if (userIds && userIds.length) q = q.in('id', userIds);
