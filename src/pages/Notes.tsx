@@ -282,8 +282,17 @@ export default function Notes() {
 
   async function deleteNote(id: string) {
     setNotes(arr => arr.filter(n => n.id !== id));
-    const { error } = await supabase.from('notes').delete().eq('id', id);
+    const { error } = await supabase
+      .from('notes')
+      .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null } as any)
+      .eq('id', id);
     if (error) toast.error(error.message);
+    else toast.success('In den Papierkorb verschoben', {
+      action: {
+        label: 'Rückgängig',
+        onClick: () => restoreNote(id),
+      },
+    });
   }
 
   async function duplicateNote(n: NoteData & any) {
