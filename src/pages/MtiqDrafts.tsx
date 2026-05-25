@@ -926,12 +926,6 @@ export default function MtiqDrafts() {
                     <Button
                       variant="secondary"
                       onClick={() => setConfirmReject(true)}
-                      disabled={approving || rejecting}
-                      className="h-12 sm:w-48 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
-                    >
-                    <Button
-                      variant="secondary"
-                      onClick={() => setConfirmReject(true)}
                       disabled={approving || rejecting || deleting}
                       className="h-12 sm:w-40 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
                     >
