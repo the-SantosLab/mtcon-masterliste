@@ -182,6 +182,42 @@ Deno.serve(async (req) => {
       vorgang_id: newCase.id,
     }).eq("id", draft_id);
 
+    // Log corrections (diff between original AI snapshot and final draft state).
+    // Enables few-shot "learning from corrections" in future intakes.
+    try {
+      const orig = (draft as any).original_snapshot;
+      if (orig && typeof orig === "object") {
+        const finalState = {
+          title: draft.draft_title,
+          description: draft.draft_description,
+          department: draft.draft_department,
+          priority: draft.draft_priority,
+          due_date: draft.draft_due_date,
+          tasks: draft.draft_tasks,
+        };
+        const origFields: Record<string, unknown> = {};
+        const corrFields: Record<string, unknown> = {};
+        for (const k of Object.keys(finalState)) {
+          const a = JSON.stringify((orig as any)[k] ?? null);
+          const b = JSON.stringify((finalState as any)[k] ?? null);
+          if (a !== b) {
+            origFields[k] = (orig as any)[k] ?? null;
+            corrFields[k] = (finalState as any)[k] ?? null;
+          }
+        }
+        if (Object.keys(origFields).length > 0) {
+          await client.from("mtiq_draft_corrections").insert({
+            draft_id,
+            original_fields: origFields,
+            corrected_fields: corrFields,
+            created_by: user.id,
+          });
+        }
+      }
+    } catch (logErr) {
+      console.error("correction log failed (non-fatal)", logErr);
+    }
+
     return new Response(JSON.stringify({ vorgang_id: newCase.id, case_no: newCase.case_no }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
