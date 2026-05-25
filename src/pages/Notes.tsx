@@ -122,6 +122,7 @@ export default function Notes() {
     const { data, error } = await supabase
       .from('note_boards')
       .select('*')
+      .is('deleted_at' as any, null)
       .order('created_at', { ascending: true });
     if (error) { toast.error(error.message); setLoading(false); return; }
     const list = (data || []) as Board[];
@@ -141,6 +142,49 @@ export default function Notes() {
       if (!activeBoardId) setActiveBoardId(list[0]?.id || null);
     }
     setLoading(false);
+  }
+
+  // Board trash state
+  const [boardTrashOpen, setBoardTrashOpen] = useState(false);
+  const [trashedBoards, setTrashedBoards] = useState<any[]>([]);
+  const [boardTrashLoading, setBoardTrashLoading] = useState(false);
+
+  async function loadBoardTrash() {
+    setBoardTrashLoading(true);
+    const { data, error } = await supabase
+      .from('note_boards')
+      .select('*')
+      .not('deleted_at' as any, 'is', null)
+      .order('deleted_at' as any, { ascending: false });
+    setBoardTrashLoading(false);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards(data || []);
+  }
+
+  async function restoreBoard(id: string) {
+    const { error } = await supabase.from('note_boards').update({ deleted_at: null, deleted_by: null } as any).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards(arr => arr.filter(b => b.id !== id));
+    loadBoards();
+    toast.success('Board wiederhergestellt');
+  }
+
+  async function purgeBoard(id: string) {
+    if (!confirm('Board endgültig löschen? Alle Notizen darauf gehen verloren.')) return;
+    const { error } = await supabase.from('note_boards').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards(arr => arr.filter(b => b.id !== id));
+    toast.success('Endgültig gelöscht');
+  }
+
+  async function emptyBoardTrash() {
+    if (!confirm('Wirklich alle Boards im Papierkorb endgültig löschen?')) return;
+    const ids = trashedBoards.map(b => b.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('note_boards').delete().in('id', ids);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards([]);
+    toast.success('Board-Papierkorb geleert');
   }
 
   async function loadNotes(boardId: string) {
