@@ -112,6 +112,8 @@ export default function MtiqDrafts() {
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [confirmReject, setConfirmReject] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
 
   const load = async () => {
@@ -320,6 +322,23 @@ export default function MtiqDrafts() {
       toast.error(e?.message ?? 'Ablehnen fehlgeschlagen');
     } finally {
       setRejecting(false);
+    }
+  };
+
+  const removeDraft = async () => {
+    if (!edit) return;
+    setDeleting(true);
+    try {
+      const { error } = await (supabase as any).from('mtiq_drafts').delete().eq('id', edit.id);
+      if (error) throw error;
+      toast.success('Eintrag gelöscht');
+      setConfirmDelete(false);
+      setDrafts(prev => prev.filter(d => d.id !== edit.id));
+      setSelectedId(null);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Löschen fehlgeschlagen');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -907,23 +926,42 @@ export default function MtiqDrafts() {
                     <Button
                       variant="secondary"
                       onClick={() => setConfirmReject(true)}
-                      disabled={approving || rejecting}
-                      className="h-12 sm:w-48 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
+                      disabled={approving || rejecting || deleting}
+                      className="h-12 sm:w-40 bg-neutral-100 dark:bg-white/5 border border-border dark:border-white/10 backdrop-blur-xl hover:bg-neutral-200 dark:hover:bg-white/10"
                     >
                       Ablehnen
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmDelete(true)}
+                      disabled={approving || rejecting || deleting}
+                      className="h-12 sm:w-32 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1.5" /> Löschen
+                    </Button>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
-                    Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
-                    {edit.vorgang_id && (
-                      <Button
-                        variant="link" className="ml-2 p-0 h-auto"
-                        onClick={() => navigate(`/cases/${edit.vorgang_id}`)}
-                      >
-                        Zum Vorgang
-                      </Button>
-                    )}
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-border dark:border-white/10 bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-xl p-4 text-sm text-muted-foreground">
+                    <div>
+                      Status: {edit.status === 'approved' ? 'Freigegeben' : 'Abgelehnt'}
+                      {edit.vorgang_id && (
+                        <Button
+                          variant="link" className="ml-2 p-0 h-auto"
+                          onClick={() => navigate(`/cases/${edit.vorgang_id}`)}
+                        >
+                          Zum Vorgang
+                        </Button>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDelete(true)}
+                      disabled={deleting}
+                      className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Löschen
+                    </Button>
                   </div>
                 )}
               </div>
@@ -945,6 +983,28 @@ export default function MtiqDrafts() {
               <AlertDialogCancel disabled={rejecting}>Abbrechen</AlertDialogCancel>
               <AlertDialogAction onClick={reject} disabled={rejecting}>
                 {rejecting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Ablehnen
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete confirm */}
+        <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eintrag endgültig löschen?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Der Posteingang-Eintrag inkl. Quell-E-Mail und MTIQ-Vorschlag wird unwiderruflich entfernt. Bereits angelegte Vorgänge bleiben bestehen.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={removeDraft}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Löschen
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
