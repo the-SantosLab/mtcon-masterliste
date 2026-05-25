@@ -129,12 +129,13 @@ export function CaseChat({ caseId, canWrite }: Props) {
   useEffect(() => {
     (async () => {
       const { data: cs } = await (supabase as any).from('cases')
-        .select('case_no, status, project_name, department_id, departments:department_id(name)').eq('id', caseId).maybeSingle();
+        .select('case_no, status, project_name, department_id, watchers, departments:department_id(name)').eq('id', caseId).maybeSingle();
       setCaseMeta({
         case_no: cs?.case_no || null,
         status: cs?.status || null,
         project_name: cs?.project_name || null,
         department_name: (cs as any)?.departments?.name || null,
+        watchers: Array.isArray(cs?.watchers) ? cs.watchers : [],
       });
       let userIds: string[] | null = null;
       if (cs?.department_id) {
