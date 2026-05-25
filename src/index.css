@@ -633,6 +633,7 @@
 }
 @keyframes mtiq-caret-blink {
   to { visibility: hidden; }
+}
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
