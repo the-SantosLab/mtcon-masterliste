@@ -563,12 +563,21 @@ export function CaseChat({ caseId, canWrite }: Props) {
   const participantStack = useMemo(() => {
     const seen = new Set<string>();
     const list: MentionUser[] = [];
-    for (let i = messages.length - 1; i >= 0 && list.length < 5; i--) {
+    // First: recent message authors (others before self)
+    for (let i = messages.length - 1; i >= 0; i--) {
       const a = messages[i].author;
-      if (a && !seen.has(a.id)) { seen.add(a.id); list.push(a); }
+      if (a && !seen.has(a.id) && a.id !== user?.id) { seen.add(a.id); list.push(a); }
     }
+    // Then: all other members with chat access
+    for (const m of members) {
+      if (!seen.has(m.id) && m.id !== user?.id) { seen.add(m.id); list.push(m); }
+    }
+    // Finally: self at the end
+    const self = members.find(m => m.id === user?.id);
+    if (self && !seen.has(self.id)) list.push(self);
     return list;
-  }, [messages]);
+  }, [messages, members, user?.id]);
+
   const onlineCount = Object.keys(presentUsers).length + 1;
   const statusLabel = caseMeta.status ? (STATUS_LABEL[caseMeta.status] || caseMeta.status) : null;
 
