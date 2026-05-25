@@ -378,11 +378,19 @@ export default function Notes() {
   }
 
   async function deleteBoard(b: Board) {
-    if (!confirm(`Board "${b.name}" wirklich löschen? Alle Notizen darauf gehen verloren.`)) return;
-    const { error } = await supabase.from('note_boards').delete().eq('id', b.id);
+    if (!confirm(`Board "${b.name}" in den Papierkorb verschieben?`)) return;
+    const { data, error } = await supabase
+      .from('note_boards')
+      .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null } as any)
+      .eq('id', b.id)
+      .select('id');
     if (error) { toast.error(error.message); return; }
+    if (!data || data.length === 0) { toast.error('Löschen verweigert'); return; }
     setBoards(arr => arr.filter(x => x.id !== b.id));
     if (activeBoardId === b.id) setActiveBoardId(boards.find(x => x.id !== b.id)?.id || null);
+    toast.success('Board in den Papierkorb verschoben', {
+      action: { label: 'Rückgängig', onClick: () => restoreBoard(b.id) },
+    });
   }
 
   return (
