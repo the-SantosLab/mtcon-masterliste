@@ -408,6 +408,15 @@ export default function Notes() {
             <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 text-xs gap-1.5">
               <Plus className="h-3.5 w-3.5" /> Neues Board
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setBoardTrashOpen(true); loadBoardTrash(); }}
+              className="h-7 text-[11px] gap-1.5"
+              title="Gelöschte Boards"
+            >
+              <Trash2 className="h-3 w-3" /> Board-Papierkorb
+            </Button>
             <div className="flex-1 overflow-y-auto space-y-1 rounded border border-border bg-card/40 p-1">
               {loading && <div className="text-xs text-muted-foreground p-2">Laden…</div>}
               {!loading && boards.length === 0 && (
