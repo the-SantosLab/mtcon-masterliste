@@ -1937,6 +1937,8 @@ export type Database = {
       note_boards: {
         Row: {
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           department_id: string | null
           description: string | null
           id: string
@@ -1947,6 +1949,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           department_id?: string | null
           description?: string | null
           id?: string
@@ -1957,6 +1961,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           department_id?: string | null
           description?: string | null
           id?: string
@@ -3392,6 +3398,7 @@ export type Database = {
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       next_counter: { Args: { p_key: string }; Returns: number }
+      purge_old_trashed_boards: { Args: never; Returns: undefined }
       purge_old_trashed_notes: { Args: never; Returns: undefined }
       purge_trashed_cases: { Args: never; Returns: number }
       recalc_case_effective_urgency: {

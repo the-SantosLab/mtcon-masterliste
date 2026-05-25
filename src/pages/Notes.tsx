@@ -122,6 +122,7 @@ export default function Notes() {
     const { data, error } = await supabase
       .from('note_boards')
       .select('*')
+      .is('deleted_at' as any, null)
       .order('created_at', { ascending: true });
     if (error) { toast.error(error.message); setLoading(false); return; }
     const list = (data || []) as Board[];
@@ -141,6 +142,49 @@ export default function Notes() {
       if (!activeBoardId) setActiveBoardId(list[0]?.id || null);
     }
     setLoading(false);
+  }
+
+  // Board trash state
+  const [boardTrashOpen, setBoardTrashOpen] = useState(false);
+  const [trashedBoards, setTrashedBoards] = useState<any[]>([]);
+  const [boardTrashLoading, setBoardTrashLoading] = useState(false);
+
+  async function loadBoardTrash() {
+    setBoardTrashLoading(true);
+    const { data, error } = await supabase
+      .from('note_boards')
+      .select('*')
+      .not('deleted_at' as any, 'is', null)
+      .order('deleted_at' as any, { ascending: false });
+    setBoardTrashLoading(false);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards(data || []);
+  }
+
+  async function restoreBoard(id: string) {
+    const { error } = await supabase.from('note_boards').update({ deleted_at: null, deleted_by: null } as any).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards(arr => arr.filter(b => b.id !== id));
+    loadBoards();
+    toast.success('Board wiederhergestellt');
+  }
+
+  async function purgeBoard(id: string) {
+    if (!confirm('Board endgültig löschen? Alle Notizen darauf gehen verloren.')) return;
+    const { error } = await supabase.from('note_boards').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards(arr => arr.filter(b => b.id !== id));
+    toast.success('Endgültig gelöscht');
+  }
+
+  async function emptyBoardTrash() {
+    if (!confirm('Wirklich alle Boards im Papierkorb endgültig löschen?')) return;
+    const ids = trashedBoards.map(b => b.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('note_boards').delete().in('id', ids);
+    if (error) { toast.error(error.message); return; }
+    setTrashedBoards([]);
+    toast.success('Board-Papierkorb geleert');
   }
 
   async function loadNotes(boardId: string) {
@@ -334,11 +378,19 @@ export default function Notes() {
   }
 
   async function deleteBoard(b: Board) {
-    if (!confirm(`Board "${b.name}" wirklich löschen? Alle Notizen darauf gehen verloren.`)) return;
-    const { error } = await supabase.from('note_boards').delete().eq('id', b.id);
+    if (!confirm(`Board "${b.name}" in den Papierkorb verschieben?`)) return;
+    const { data, error } = await supabase
+      .from('note_boards')
+      .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null } as any)
+      .eq('id', b.id)
+      .select('id');
     if (error) { toast.error(error.message); return; }
+    if (!data || data.length === 0) { toast.error('Löschen verweigert'); return; }
     setBoards(arr => arr.filter(x => x.id !== b.id));
     if (activeBoardId === b.id) setActiveBoardId(boards.find(x => x.id !== b.id)?.id || null);
+    toast.success('Board in den Papierkorb verschoben', {
+      action: { label: 'Rückgängig', onClick: () => restoreBoard(b.id) },
+    });
   }
 
   return (
@@ -355,6 +407,15 @@ export default function Notes() {
           <aside className="w-56 shrink-0 flex flex-col gap-2">
             <Button size="sm" onClick={() => setCreateOpen(true)} className="h-8 text-xs gap-1.5">
               <Plus className="h-3.5 w-3.5" /> Neues Board
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setBoardTrashOpen(true); loadBoardTrash(); }}
+              className="h-7 text-[11px] gap-1.5"
+              title="Gelöschte Boards"
+            >
+              <Trash2 className="h-3 w-3" /> Board-Papierkorb
             </Button>
             <div className="flex-1 overflow-y-auto space-y-1 rounded border border-border bg-card/40 p-1">
               {loading && <div className="text-xs text-muted-foreground p-2">Laden…</div>}
@@ -722,6 +783,66 @@ export default function Notes() {
               </Button>
             )}
             <Button size="sm" onClick={() => setTrashOpen(false)} className="h-8 text-xs">Schließen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={boardTrashOpen} onOpenChange={setBoardTrashOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <Trash2 className="h-4 w-4" />
+              Board-Papierkorb
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-[11px] text-muted-foreground -mt-2">
+            Gelöschte Boards werden 30 Tage aufbewahrt und danach automatisch endgültig entfernt. Inklusive aller darauf befindlichen Notizen.
+          </p>
+          <div className="max-h-[60vh] overflow-y-auto -mx-2 px-2">
+            {boardTrashLoading ? (
+              <p className="text-xs text-muted-foreground py-6 text-center">Laden…</p>
+            ) : trashedBoards.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-8 text-center">Keine gelöschten Boards.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {trashedBoards.map(b => {
+                  const deletedDate = b.deleted_at ? new Date(b.deleted_at) : null;
+                  const daysLeft = deletedDate ? Math.max(0, 30 - Math.floor((Date.now() - deletedDate.getTime()) / 86_400_000)) : null;
+                  return (
+                    <li key={b.id} className="py-2.5 flex items-start gap-3">
+                      {b.scope === 'shared'
+                        ? <Users className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        : <Lock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-foreground truncate">{b.name}</div>
+                        {b.description && (
+                          <div className="text-[10px] text-muted-foreground truncate">{b.description}</div>
+                        )}
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          {deletedDate ? `Gelöscht am ${deletedDate.toLocaleString('de-DE')}` : '–'}
+                          {daysLeft !== null && ` · noch ${daysLeft} Tage`}
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => restoreBoard(b.id)}>
+                          <RotateCcw className="h-3 w-3" /> Wiederherstellen
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs gap-1 text-destructive hover:text-destructive" onClick={() => purgeBoard(b.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          <DialogFooter>
+            {trashedBoards.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={emptyBoardTrash} className="h-8 text-xs text-destructive hover:text-destructive mr-auto">
+                Papierkorb leeren
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setBoardTrashOpen(false)} className="h-8 text-xs">Schließen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
