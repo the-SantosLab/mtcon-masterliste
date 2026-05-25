@@ -236,12 +236,27 @@ export function CaseChat({ caseId, canWrite }: Props) {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          // Re-fetch on (re)subscribe to catch events missed during reconnect
+          fetchMessages();
           await ch.track({ display_name: user.email?.split('@')[0] || 'User', typing: false, at: Date.now() });
         }
       });
     channelRef.current = ch;
-    return () => { channelRef.current = null; supabase.removeChannel(ch); };
+
+    // Re-fetch when tab becomes visible again or window regains focus
+    const onVis = () => { if (document.visibilityState === 'visible') fetchMessages(); };
+    const onFocus = () => fetchMessages();
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      channelRef.current = null;
+      supabase.removeChannel(ch);
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [caseId, user?.id, user?.email, fetchMessages]);
+
 
   // ---------- mark read ----------
   const markRead = useCallback(async () => {
@@ -353,8 +368,11 @@ export function CaseChat({ caseId, canWrite }: Props) {
       }
       pending.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
       setPending([]); setText(''); setReplyTo(null);
+      // Guarantee own message appears even if realtime echo is missed
+      await fetchMessages();
       // ensure scroll to bottom
       requestAnimationFrame(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; });
+
     } catch (e: any) {
       toast.error(e.message || 'Senden fehlgeschlagen');
     } finally { setSending(false); }
