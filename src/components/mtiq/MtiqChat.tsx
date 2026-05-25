@@ -64,16 +64,7 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
               {m.role === 'assistant' ? '✦' : initials}
             </div>
             <div className="max-w-[78%] flex flex-col gap-1.5">
-              <div
-                className="px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
-                style={{
-                  background: m.role === 'assistant' ? '#181818' : '#1e293b',
-                  color: '#e0e0e0',
-                  borderRadius: m.role === 'assistant' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
-                }}
-              >
-                {m.content}
-              </div>
+              <MessageBubble role={m.role} id={m.id} content={m.content} />
               {proposals.length > 0 && (
                 <ProposalCard messageId={m.id} proposals={proposals} hasPending={hasPending} />
               )}
