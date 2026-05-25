@@ -1,6 +1,12 @@
 // MTIQ Text-to-Vorgang intake: takes free text / bullet points from the in-app widget,
-// asks Lovable AI for a structured draft, and stores it in mtiq_drafts (status=pending).
+// asks Lovable AI for a structured draft (with similar-case context + correction
+// few-shots), runs duplicate detection, and stores everything in mtiq_drafts.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  getSimilarCases, similarCasesPromptBlock,
+  getRecentCorrections, correctionsPromptBlock,
+  findDuplicate,
+} from "../_shared/mtiq-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,6 +85,18 @@ Deno.serve(async (req) => {
       if (prof) creatorName = prof.display_name || prof.short_code || creatorName;
     } catch (_) { /* ignore */ }
 
+    // Phase 1: context retrieval (parallel)
+    const searchBlob = `${titleHint} ${text}`;
+    const [similar, corrections] = await Promise.all([
+      getSimilarCases(supabaseUrl, serviceKey, searchBlob, 20),
+      getRecentCorrections(supabaseUrl, serviceKey, 5),
+    ]);
+
+    const augmentedSystem =
+      SYSTEM_PROMPT +
+      similarCasesPromptBlock(similar) +
+      correctionsPromptBlock(corrections);
+
     const userPrompt = `Free-text input from internal user "${creatorName}":
 
 ${titleHint ? `Hint/Title: ${titleHint}\n\n` : ""}${text}`;
@@ -89,7 +107,7 @@ ${titleHint ? `Hint/Title: ${titleHint}\n\n` : ""}${text}`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: augmentedSystem },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
@@ -135,13 +153,27 @@ ${titleHint ? `Hint/Title: ${titleHint}\n\n` : ""}${text}`;
         })).filter((t: any) => t.title)
       : [];
 
+    // Duplicate detection
+    const draftTitle = String(parsed?.title ?? "").slice(0, 500) || titleHint || "(ohne Titel)";
+    const duplicate = findDuplicate(similar, { title: draftTitle });
+
+    // Snapshot the AI's original suggestion for later diff
+    const originalSnapshot = {
+      title: draftTitle,
+      description: String(parsed?.description ?? "") || text,
+      department: parsed?.department ?? null,
+      priority,
+      due_date: dueDate,
+      tasks,
+    };
+
     const admin = createClient(supabaseUrl, serviceKey);
     const { data: inserted, error } = await admin.from("mtiq_drafts").insert({
       created_by: creatorId,
       source_email_from: `Schnell-Erfassung · ${creatorName}`,
       source_email_subject: titleHint || (parsed?.title ? String(parsed.title).slice(0, 200) : "Schnell-Erfassung"),
       source_email_body: text,
-      draft_title: String(parsed?.title ?? "").slice(0, 500) || titleHint || "(ohne Titel)",
+      draft_title: draftTitle,
       draft_description: String(parsed?.description ?? "") || text,
       draft_department: parsed?.department ? String(parsed.department).slice(0, 120) : null,
       draft_priority: priority,
@@ -149,11 +181,13 @@ ${titleHint ? `Hint/Title: ${titleHint}\n\n` : ""}${text}`;
       draft_tasks: tasks,
       mtiq_reasoning: String(parsed?.reasoning ?? "") || null,
       status: "pending",
+      possible_duplicate_of: duplicate?.id ?? null,
+      original_snapshot: originalSnapshot,
     }).select().single();
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ draft: inserted }), {
+    return new Response(JSON.stringify({ draft: inserted, duplicate }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
