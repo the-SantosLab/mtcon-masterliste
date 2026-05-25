@@ -4,35 +4,57 @@ import { useLocation } from 'react-router-dom';
 import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
 import { MtiqNewDraft } from './MtiqNewDraft';
+import { MtiqDraftsTab } from './MtiqDraftsTab';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'new';
+type Mode = 'current' | 'list' | 'drafts' | 'new';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     setMode(vorgangId ? 'current' : 'list');
   }, [vorgangId]);
 
+  useEffect(() => {
+    if (!open) return;
+    const load = async () => {
+      const { count } = await supabase
+        .from('mtiq_drafts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      setPendingCount(count ?? 0);
+    };
+    load();
+    const ch = supabase.channel('mtiq-panel-drafts-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mtiq_drafts' }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [open]);
+
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Aktueller Vorgang'], ['list', 'Alle Vorgänge'], ['new', 'Neu']]
-    : [['list', 'Alle Vorgänge'], ['new', 'Neu']];
+    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu']]
+    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
     : mode === 'new'
       ? '· neuer Entwurf'
-      : '· alle Vorgänge';
+      : mode === 'drafts'
+        ? '· offene Entwürfe'
+        : '· alle Vorgänge';
+
 
   return (
     <div
