@@ -115,6 +115,27 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
   );
 }
 
+function MessageBubble({ role, id, content }: { role: 'user' | 'assistant'; id: string; content: string }) {
+  // Only animate assistant messages — user messages render instantly.
+  const text = role === 'assistant' ? useTypewriterSession(id, content) : content;
+  const isStreaming = role === 'assistant' && text.length < content.length;
+  return (
+    <div
+      className="px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
+      style={{
+        background: role === 'assistant' ? '#181818' : '#1e293b',
+        color: '#e0e0e0',
+        borderRadius: role === 'assistant' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
+      }}
+    >
+      {text}
+      {isStreaming && <span className="mtiq-caret" />}
+    </div>
+  );
+}
+
+
+
 function describeAction(p: any): string {
   const a = p.args ?? {};
   switch (p.tool) {
