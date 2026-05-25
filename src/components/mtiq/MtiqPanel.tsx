@@ -4,35 +4,57 @@ import { useLocation } from 'react-router-dom';
 import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
 import { MtiqNewDraft } from './MtiqNewDraft';
+import { MtiqDraftsTab } from './MtiqDraftsTab';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'new';
+type Mode = 'current' | 'list' | 'drafts' | 'new';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     setMode(vorgangId ? 'current' : 'list');
   }, [vorgangId]);
 
+  useEffect(() => {
+    if (!open) return;
+    const load = async () => {
+      const { count } = await supabase
+        .from('mtiq_drafts')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      setPendingCount(count ?? 0);
+    };
+    load();
+    const ch = supabase.channel('mtiq-panel-drafts-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mtiq_drafts' }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [open]);
+
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Aktueller Vorgang'], ['list', 'Alle Vorgänge'], ['new', 'Neu']]
-    : [['list', 'Alle Vorgänge'], ['new', 'Neu']];
+    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu']]
+    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
     : mode === 'new'
       ? '· neuer Entwurf'
-      : '· alle Vorgänge';
+      : mode === 'drafts'
+        ? '· offene Entwürfe'
+        : '· alle Vorgänge';
+
 
   return (
     <div
@@ -75,23 +97,33 @@ export function MtiqPanel({ open, onClose }: Props) {
           <button
             key={k}
             onClick={() => setMode(k)}
-            className="px-2.5 py-1 text-[11px] rounded transition-colors"
+            className="px-2.5 py-1 text-[11px] rounded transition-colors flex items-center gap-1"
             style={{
               color: mode === k ? '#e0e0e0' : '#666',
               background: mode === k ? '#181818' : 'transparent',
               fontWeight: mode === k ? 500 : 400,
             }}
-          >{label}</button>
+          >
+            {label}
+            {k === 'drafts' && pendingCount > 0 && (
+              <span
+                className="text-white text-[9px] font-mono font-semibold flex items-center justify-center"
+                style={{ minWidth: 15, height: 15, padding: '0 4px', borderRadius: 8, background: '#0ea5e9' }}
+              >
+                {pendingCount}
+              </span>
+            )}
+          </button>
         ))}
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col">
-        {mode === 'new'
-          ? <MtiqNewDraft onClose={onClose} />
-          : vorgangId && mode === 'current'
-            ? <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />
-            : <MtiqOverview onClose={onClose} />}
+        {mode === 'new' && <MtiqNewDraft onClose={onClose} />}
+        {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
+        {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
+        {mode === 'list' && <MtiqOverview onClose={onClose} />}
       </div>
+
 
       <div className="px-3 py-1.5 flex items-center justify-between text-[10px]" style={{ borderTop: '1px solid #222', color: '#444' }}>
         <span>powered by MTIQ v1</span>

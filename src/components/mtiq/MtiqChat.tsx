@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp, Loader2, Check, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMtiqMessages, confirmProposal } from './useMtiqMessages';
+import { useTypewriterSession } from './useTypewriter';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -63,16 +64,7 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
               {m.role === 'assistant' ? '✦' : initials}
             </div>
             <div className="max-w-[78%] flex flex-col gap-1.5">
-              <div
-                className="px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
-                style={{
-                  background: m.role === 'assistant' ? '#181818' : '#1e293b',
-                  color: '#e0e0e0',
-                  borderRadius: m.role === 'assistant' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
-                }}
-              >
-                {m.content}
-              </div>
+              <MessageBubble role={m.role} id={m.id} content={m.content} />
               {proposals.length > 0 && (
                 <ProposalCard messageId={m.id} proposals={proposals} hasPending={hasPending} />
               )}
@@ -122,6 +114,27 @@ export function MtiqChat({ vorgangId, seedPrompt, onSeedConsumed }: Props) {
     </div>
   );
 }
+
+function MessageBubble({ role, id, content }: { role: 'user' | 'assistant'; id: string; content: string }) {
+  // Only animate assistant messages — user messages render instantly.
+  const text = role === 'assistant' ? useTypewriterSession(id, content) : content;
+  const isStreaming = role === 'assistant' && text.length < content.length;
+  return (
+    <div
+      className="px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
+      style={{
+        background: role === 'assistant' ? '#181818' : '#1e293b',
+        color: '#e0e0e0',
+        borderRadius: role === 'assistant' ? '4px 14px 14px 14px' : '14px 4px 14px 14px',
+      }}
+    >
+      {text}
+      {isStreaming && <span className="mtiq-caret" />}
+    </div>
+  );
+}
+
+
 
 function describeAction(p: any): string {
   const a = p.args ?? {};
