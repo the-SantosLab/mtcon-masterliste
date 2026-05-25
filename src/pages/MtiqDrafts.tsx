@@ -987,6 +987,28 @@ export default function MtiqDrafts() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Delete confirm */}
+        <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eintrag endgültig löschen?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Der Posteingang-Eintrag inkl. Quell-E-Mail und MTIQ-Vorschlag wird unwiderruflich entfernt. Bereits angelegte Vorgänge bleiben bestehen.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={removeDraft}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Löschen
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
