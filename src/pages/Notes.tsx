@@ -281,17 +281,22 @@ export default function Notes() {
   }
 
   async function deleteNote(id: string) {
+    console.log('[notes] deleteNote called', id);
     setNotes(arr => arr.filter(n => n.id !== id));
-    const { error } = await supabase
+    const payload = { deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null };
+    const { data, error } = await supabase
       .from('notes')
-      .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null } as any)
-      .eq('id', id);
-    if (error) toast.error(error.message);
-    else toast.success('In den Papierkorb verschoben', {
-      action: {
-        label: 'Rückgängig',
-        onClick: () => restoreNote(id),
-      },
+      .update(payload as any)
+      .eq('id', id)
+      .select('id, deleted_at');
+    console.log('[notes] deleteNote result', { data, error });
+    if (error) { toast.error('Löschen fehlgeschlagen: ' + error.message); return; }
+    if (!data || data.length === 0) {
+      toast.error('Löschen verweigert (RLS) – keine Zeile aktualisiert');
+      return;
+    }
+    toast.success('In den Papierkorb verschoben', {
+      action: { label: 'Rückgängig', onClick: () => restoreNote(id) },
     });
   }
 
