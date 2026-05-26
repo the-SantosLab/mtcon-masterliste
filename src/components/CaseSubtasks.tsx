@@ -244,7 +244,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
-  const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+  const sortedTasks = [...activeTasks].sort((a, b) => a.sort_order - b.sort_order);
   const firstOpenIdx = sortedTasks.findIndex(t => t.status !== 'done');
   const isLocked = (taskId: string): boolean => {
     if (!sequentialMode || lockMode === 'soft') return false;
