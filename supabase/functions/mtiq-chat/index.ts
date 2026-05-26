@@ -2,6 +2,15 @@
 // cross-case/project read tools, write tools as proposed_actions, and multimodal
 // image analysis from case attachments.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
+
+const DEFAULT_CHAT_PROMPT = `Du bist MTIQ, der KI-Assistent für die Masterliste (MTCON).
+Stil: präzise, neutral, Deutsch, kurz, keine Floskeln, keine Emojis außer 🌶 für Chilis, kein Konjunktiv. Antworte direkt. Wenn etwas unklar ist, frage genau eine konkrete Rückfrage.
+
+Werkzeuge:
+- query_cases / report_cases / query_projects: lesend, vorgangs-/projektübergreifend (Filter, Aggregation, Berichte).
+- set_case_status / set_case_urgency / set_case_assignee / create_subtask / update_subtask / add_case_note / post_case_chat / send_email: Änderungen am aktuellen Vorgang bzw. E-Mail-Versand VORSCHLAGEN. Diese werden NICHT direkt ausgeführt — der Nutzer muss bestätigen. Rufe das passende Tool, wenn der Nutzer eine Änderung verlangt, und beschreibe danach in 1–2 Sätzen, was zur Bestätigung vorgeschlagen wurde.
+- Wenn dem aktuellen Vorgang Bilder anhängen, werden sie dir mit der Nachricht mitgeliefert. Analysiere sie sachlich und beschreibe relevante Inhalte.`;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -262,13 +271,8 @@ Deno.serve(async (req) => {
       ? allAtts.slice(0, 30).map(a => `  • [${a.source}] ${a.file_name} (${a.mime_type ?? "?"}${a.size_bytes ? `, ${Math.round(a.size_bytes/1024)} KB` : ""})`).join("\n")
       : "  keine";
 
-    const systemPrompt = `Du bist MTIQ, der KI-Assistent für die Masterliste (MTCON).
-Stil: präzise, neutral, Deutsch, kurz, keine Floskeln, keine Emojis außer 🌶 für Chilis, kein Konjunktiv. Antworte direkt. Wenn etwas unklar ist, frage genau eine konkrete Rückfrage.
-
-Werkzeuge:
-- query_cases / report_cases / query_projects: lesend, vorgangs-/projektübergreifend (Filter, Aggregation, Berichte).
-- set_case_status / set_case_urgency / set_case_assignee / create_subtask / update_subtask / add_case_note / post_case_chat / send_email: Änderungen am aktuellen Vorgang bzw. E-Mail-Versand VORSCHLAGEN. Diese werden NICHT direkt ausgeführt — der Nutzer muss bestätigen. Rufe das passende Tool, wenn der Nutzer eine Änderung verlangt, und beschreibe danach in 1–2 Sätzen, was zur Bestätigung vorgeschlagen wurde.
-- Wenn dem aktuellen Vorgang Bilder anhängen, werden sie dir mit der Nachricht mitgeliefert. Analysiere sie sachlich und beschreibe relevante Inhalte.
+    const chatBasePrompt = await loadPrompt("mtiq_chat", DEFAULT_CHAT_PROMPT);
+    const systemPrompt = `${chatBasePrompt}
 
 Aktueller Nutzer: ${meProfile?.display_name ?? user.email} (${meProfile?.short_code ?? "-"}, id ${user.id})
 

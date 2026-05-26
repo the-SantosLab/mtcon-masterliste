@@ -7,13 +7,14 @@ import {
   getRecentCorrections, correctionsPromptBlock,
   findDuplicate,
 } from "../_shared/mtiq-context.ts";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-mtiq-webhook-secret",
 };
 
-const SYSTEM_PROMPT = `You are MTIQ, the internal AI assistant for MtCon, a PCB connector distributor.
+const DEFAULT_EMAIL_INTAKE_PROMPT = `You are MTIQ, the internal AI assistant for MtCon, a PCB connector distributor.
 You receive forwarded emails and must extract a structured Vorgang (case/project) from them.
 
 MtCon departments: Vertrieb, Einkauf, Lager, Technik, Konstruktion, Verwaltung, Geschäftsführung
@@ -90,8 +91,9 @@ Deno.serve(async (req) => {
       getRecentCorrections(supabaseUrl, serviceKey, 5),
     ]);
 
+    const basePrompt = await loadPrompt("mtiq_email_intake", DEFAULT_EMAIL_INTAKE_PROMPT);
     const augmentedSystem =
-      SYSTEM_PROMPT +
+      basePrompt +
       similarCasesPromptBlock(similar) +
       correctionsPromptBlock(corrections);
 
