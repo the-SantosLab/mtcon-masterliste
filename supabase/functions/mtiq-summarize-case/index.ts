@@ -63,9 +63,8 @@ Deno.serve(async (req) => {
       `  • ${a.created_at?.slice(0,10)} ${a.action}${a.field ? ` ${a.field}` : ""}: ${a.message ?? `${a.old_value ?? ""} → ${a.new_value ?? ""}`}`
     ).join("\n") || "  keine";
 
-    const systemPrompt = `Du bist MTIQ. Erstelle eine kompakte Zusammenfassung in 3–5 Sätzen auf Deutsch.
-Stil: neutral, präzise, keine Floskeln, keine Aufzählungen, kein Markdown.
-Decke ab: aktueller Stand, wichtigste offene Punkte, nächste sinnvolle Schritte, Dringlichkeit/Fälligkeit falls relevant.
+    const basePrompt = await loadPrompt("mtiq_summarize_case", DEFAULT_SUMMARIZE_PROMPT);
+    const systemPrompt = `${basePrompt}
 
 Vorgang:
 - Nr: ${c.case_no} · Titel: ${c.project_name} · Kunde: ${c.client_name ?? "-"} · Abt: ${dept}
