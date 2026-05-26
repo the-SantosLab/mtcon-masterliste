@@ -1,0 +1,1 @@
+ALTER TABLE public.mtiq_drafts ADD COLUMN IF NOT EXISTS mtiq_generated_note text;
