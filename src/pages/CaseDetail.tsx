@@ -218,6 +218,24 @@ export default function CaseDetail() {
 
   useEffect(() => { fetchCase(); }, [id]);
 
+  // Track whether any subtask carries a chili — drives "abgeleitet" UI for case urgency
+  useEffect(() => {
+    if (!id) return;
+    const loadFlag = async () => {
+      const { count } = await (supabase as any)
+        .from('case_tasks')
+        .select('id', { count: 'exact', head: true })
+        .eq('case_id', id)
+        .gt('urgency', 0);
+      setHasUrgentSubtasks((count ?? 0) > 0);
+    };
+    void loadFlag();
+    const ch = supabase.channel(`case-urg-flag-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks', filter: `case_id=eq.${id}` }, () => { void loadFlag(); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [id, refreshKey]);
+
   useEffect(() => {
     supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
       .then(r => setDepartments((r.data || []) as DeptOption[]));
