@@ -116,6 +116,28 @@ export default function MtiqDrafts() {
   const [confirmReject, setConfirmReject] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [generatingNote, setGeneratingNote] = useState(false);
+
+  const generateMtiqNote = async () => {
+    if (!edit) return;
+    setGeneratingNote(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('mtiq-merge-note', {
+        body: { description: edit.draft_description ?? '', reasoning: edit.mtiq_reasoning ?? '' },
+      });
+      if (error) throw error;
+      const note = (data as any)?.note as string | undefined;
+      if (!note) throw new Error('Keine Notiz erhalten');
+      const next = { ...edit, mtiq_generated_note: note };
+      setEdit(next);
+      await saveEdits({ mtiq_generated_note: note } as any);
+      toast.success('Notiz generiert');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Generierung fehlgeschlagen');
+    } finally {
+      setGeneratingNote(false);
+    }
+  };
 
 
   const load = async () => {
