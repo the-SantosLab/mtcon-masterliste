@@ -1065,6 +1065,60 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
         )}
       </div>
 
+      {/* Archive section */}
+      {archivedTasks.length > 0 && (
+        <div className="mt-4 border-t border-border/40 pt-3">
+          <button
+            type="button"
+            onClick={() => setShowArchive(v => !v)}
+            className="w-full flex items-center justify-between text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Archive className="h-3 w-3" />
+              Archiv ({archivedTasks.length}) – zählt nicht in Dringlichkeit
+            </span>
+            <ChevronDown className={cn('h-3 w-3 transition-transform', showArchive && 'rotate-180')} />
+          </button>
+          {showArchive && (
+            <div className="mt-2 space-y-1">
+              {archivedTasks.map(task => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-2 py-1.5 px-3 rounded-md border border-border/30 bg-muted/20 opacity-80"
+                >
+                  <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-done))] shrink-0" />
+                  <span className="flex-1 text-xs text-muted-foreground line-through truncate" title={task.title}>
+                    {task.title}
+                  </span>
+                  {getDeptName(task.department_id) && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+                      <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
+                    </Badge>
+                  )}
+                  {task.archived_at && (
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {new Date(task.archived_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                    </span>
+                  )}
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => unarchiveTask(task.id)}
+                      title="Aus Archiv zurückholen"
+                      className="shrink-0 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      <ArchiveRestore className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+
+
       {/* Add new subtask */}
       {canEdit && (
         <div className="flex gap-2 mt-3">
