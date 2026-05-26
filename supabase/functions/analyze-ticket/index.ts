@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
+
+const DEFAULT_ANALYZE_TICKET_PROMPT = "Du bist ein Support-Analyse-Assistent. Analysiere Support-Tickets und gib strukturierte Ergebnisse zurück. Antworte immer auf Deutsch.";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
