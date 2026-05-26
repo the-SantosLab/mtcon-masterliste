@@ -860,6 +860,33 @@ export default function MtiqDrafts() {
                           placeholder="Wird beim Anlegen als angepinnte Notiz gespeichert."
                         />
                       </div>
+
+                      {/* MTIQ-generierte Notiz für den Vorgang */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                            Notiz im Vorgang
+                          </h2>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={generateMtiqNote}
+                            disabled={disabled || generatingNote || (!edit.draft_description && !edit.mtiq_reasoning)}
+                          >
+                            {generatingNote ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : null}
+                            Mit MTIQ generieren
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={edit.mtiq_generated_note ?? ''}
+                          onChange={e => handleField('mtiq_generated_note', e.target.value)}
+                          onBlur={persistAll}
+                          rows={5}
+                          disabled={disabled}
+                          placeholder="KI-Mischung aus Beschreibung und Strukturierungs-Begründung. Wird beim Anlegen als angepinnte Notiz am Vorgang gespeichert."
+                        />
+                      </div>
                     </div>
                   );
                 })()}
