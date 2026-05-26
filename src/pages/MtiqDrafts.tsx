@@ -265,7 +265,8 @@ export default function MtiqDrafts() {
       draft_quantity: toNum(edit.draft_quantity) as any,
       draft_project_duration: edit.draft_project_duration || null,
       draft_note: edit.draft_note || null,
-    });
+      mtiq_generated_note: edit.mtiq_generated_note || null,
+    } as any);
   };
 
   const updateTask = (idx: number, patch: Partial<TaskItem>) => {
