@@ -98,6 +98,7 @@ const adminItems = [
   { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
+  { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles },
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
