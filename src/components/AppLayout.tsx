@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles,
 } from 'lucide-react';
 
 import mtconLogo from '@/assets/mtcon_logo.png';
@@ -98,6 +98,7 @@ const adminItems = [
   { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
+  { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles },
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },

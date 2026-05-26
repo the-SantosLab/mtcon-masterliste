@@ -30,6 +30,7 @@ import AdminTrash from "./pages/AdminTrash";
 import AdminTemplates from "./pages/AdminTemplates";
 import AdminSecurity from "./pages/AdminSecurity";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
+import AdminAiPrompts from "./pages/AdminAiPrompts";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
@@ -151,6 +152,7 @@ function AuthenticatedApp() {
         <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
         <Route path="/admin/security" element={<ProtectedRoute><AdminSecurity /></ProtectedRoute>} />
         <Route path="/admin/announcements" element={<ProtectedRoute><AdminAnnouncements /></ProtectedRoute>} />
+        <Route path="/admin/ai-prompts" element={<ProtectedRoute><AdminAiPrompts /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/2fa-anleitung" element={<ProtectedRoute enforceMfa={false}><MfaGuide /></ProtectedRoute>} />
         <Route path="/modules" element={<ProtectedRoute><ModuleSelect /></ProtectedRoute>} />
