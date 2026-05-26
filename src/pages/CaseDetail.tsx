@@ -448,6 +448,28 @@ export default function CaseDetail() {
     refresh();
   };
 
+  const reopenCase = async () => {
+    if (!c || !user || !isAdmin) return;
+    const old = c.status;
+    const ok = await updateCaseOptimistic({
+      status: 'in_arbeit' as Enums<'case_status'>,
+      completed_at: null,
+      closed_at: null,
+      closed_by: null,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'REOPEN', field: 'status',
+        old_value: old, new_value: 'in_arbeit', actor_id: user.id,
+        message: 'Vorgang durch Admin wieder geöffnet',
+      });
+    });
+    if (!ok) return;
+    toast.success('Vorgang wieder geöffnet');
+    refresh();
+  };
+
 
   if (loading) return <AppLayout><p className="text-xs text-muted-foreground">Laden</p></AppLayout>;
   if (!c) return <AppLayout><p className="text-xs text-destructive">Vorgang nicht gefunden</p></AppLayout>;
