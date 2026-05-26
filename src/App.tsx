@@ -30,6 +30,7 @@ import AdminTrash from "./pages/AdminTrash";
 import AdminTemplates from "./pages/AdminTemplates";
 import AdminSecurity from "./pages/AdminSecurity";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
+import AdminAiPrompts from "./pages/AdminAiPrompts";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
