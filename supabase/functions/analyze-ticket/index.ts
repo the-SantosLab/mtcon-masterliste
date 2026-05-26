@@ -69,10 +69,7 @@ ${conversationText || 'Kein Verlauf vorhanden.'}`;
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          {
-            role: "system",
-            content: "Du bist ein Support-Analyse-Assistent. Analysiere Support-Tickets und gib strukturierte Ergebnisse zurück. Antworte immer auf Deutsch."
-          },
+          { role: "system", content: await loadPrompt("analyze_ticket", DEFAULT_ANALYZE_TICKET_PROMPT) },
           { role: "user", content: prompt }
         ],
         tools: [{
