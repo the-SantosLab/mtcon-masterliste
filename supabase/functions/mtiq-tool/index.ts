@@ -1,6 +1,9 @@
 // MTIQ AI – one-shot tool runner. Loads case context, runs a single prompt,
 // returns plain text. Does NOT persist into ai_messages (so tools don't pollute the chat).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
+
+const DEFAULT_TOOL_PROMPT = `Du bist MTIQ, Tool-Modus "{{tool}}". Stil: neutral, präzise, Deutsch, kurz, keine Floskeln. Liefere direkt das Ergebnis ohne Vorwort.`;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
