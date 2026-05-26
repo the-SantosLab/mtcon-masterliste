@@ -17,10 +17,18 @@ interface ProjectOption { id: string; project_number: string; name: string; }
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface Profile { id: string; display_name: string; short_code: string; department_id: string | null; }
 
+export type CreateCaseFormPrefill = Partial<{
+  project_name: string; project_id: string; department_id: string; team_id: string; assignee_id: string;
+  customer_no: string; client_name: string; internal_area_code: string; product_code: string;
+  project_article_no: string; received_at: string; due_at: string; note: string; estimated_hours: string;
+  sop: string; quantity: string; project_duration: string; description: string;
+}>;
+
 interface CreateCaseFormProps {
   userId: string;
   onCreated: () => void;
   defaultProjectId?: string;
+  prefill?: CreateCaseFormPrefill;
 }
 
 const STEPS = [
@@ -31,14 +39,16 @@ const STEPS = [
   { id: 5, title: 'Bemerkung & Abschluss' },
 ];
 
-export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCaseFormProps) {
+export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }: CreateCaseFormProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
     sop: '', quantity: '', project_duration: '', description: '',
+    ...(prefill || {}),
   });
+  const [prefillDeptMapped, setPrefillDeptMapped] = useState(false);
 
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
   const [products, setProducts] = useState<Tables<'products'>[]>([]);
@@ -171,6 +181,17 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId }: CreateCa
       return { ...f, department_id: own.id };
     });
   }, [userDeptId, departments]);
+
+  // One-shot: if prefill.department_id is a sub-dept, map to parent + team.
+  useEffect(() => {
+    if (prefillDeptMapped || !prefill?.department_id || departments.length === 0) return;
+    const own = departments.find(d => d.id === prefill.department_id);
+    if (!own) { setPrefillDeptMapped(true); return; }
+    if (own.parent_id) {
+      setForm(f => ({ ...f, department_id: own.parent_id!, team_id: own.id }));
+    }
+    setPrefillDeptMapped(true);
+  }, [prefill, departments, prefillDeptMapped]);
 
   // Default-collapse Produkt / Projektinfos for HR / Marketing departments.
   useEffect(() => {
