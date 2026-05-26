@@ -410,7 +410,16 @@ export default function CasesList() {
                   <td className={cn(cellCls, 'text-muted-foreground')}>{c.customer_no || '–'}</td>
                   <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
                   <td className={cellCls}>
-                    <UrgencyPicker value={(c as any).urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" />
+                    <UrgencyPicker
+                      value={(c as any).urgency}
+                      table="cases"
+                      rowId={c.id}
+                      readOnly={isViewer}
+                      size="sm"
+                      derived
+                      overridden={!!(c as any).urgency_override}
+                      canOverride={isAdmin}
+                    />
                   </td>
                   <td className={cellCls}>
                     <div className="flex gap-1">
