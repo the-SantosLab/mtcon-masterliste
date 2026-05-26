@@ -58,14 +58,8 @@ Deno.serve(async (req) => {
       `  • ${String(n.body ?? "").slice(0,250).replace(/\n/g," ")}`
     ).join("\n") || "  keine";
 
-    const systemPrompt = `Du bist MTIQ. Schlage 3–6 sinnvolle, konkrete Unteraufgaben für den Vorgang vor.
-Regeln:
-- KEINE Doppelungen zu vorhandenen Unteraufgaben (siehe Liste).
-- Jede Aufgabe ist ein klarer, kurzer Imperativ-Satz auf Deutsch (max 80 Zeichen).
-- Vergib eine Dringlichkeit von 0–3 (0=normal, 3=dringend).
-- Antworte AUSSCHLIESSLICH als JSON-Objekt im Format:
-  {"tasks":[{"title":"...","urgency":0}, ...]}
-- Kein Fließtext, kein Markdown, keine Erklärung.
+    const basePrompt = await loadPrompt("mtiq_suggest_subtasks", DEFAULT_SUGGEST_SUBTASKS_PROMPT);
+    const systemPrompt = `${basePrompt}
 
 Vorgang:
 - Nr: ${c.case_no} · Titel: ${c.project_name} · Kunde: ${c.client_name ?? "-"} · Abt: ${dept}
