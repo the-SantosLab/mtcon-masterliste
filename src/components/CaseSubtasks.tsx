@@ -1081,37 +1081,71 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </button>
           {showArchive && (
             <div className="mt-2 space-y-1">
-              {archivedTasks.map(task => (
-                <div
-                  key={task.id}
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-md border border-border/30 bg-muted/20 opacity-80"
-                >
-                  <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-done))] shrink-0" />
-                  <span className="flex-1 text-xs text-muted-foreground line-through truncate" title={task.title}>
-                    {task.title}
-                  </span>
-                  {getDeptName(task.department_id) && (
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
-                      <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
-                    </Badge>
-                  )}
-                  {task.archived_at && (
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {new Date(task.archived_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                    </span>
-                  )}
-                  {canEdit && (
-                    <button
-                      type="button"
-                      onClick={() => unarchiveTask(task.id)}
-                      title="Aus Archiv zurückholen"
-                      className="shrink-0 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    >
-                      <ArchiveRestore className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              ))}
+              {archivedTasks.map(task => {
+                const st = STATUS_MAP[task.status] || STATUS_MAP.open;
+                const note = completionNotes[task.id];
+                const hasNote = task.status === 'done' && !!note;
+                return (
+                  <div
+                    key={task.id}
+                    className="rounded-md border border-border/50 overflow-hidden bg-card opacity-75"
+                  >
+                    <div className="flex items-center gap-2 group py-2 px-3 max-md:flex-wrap min-w-0">
+                      <div className={cn('h-2 w-2 rounded-full shrink-0', st.color)} />
+                      {hasNote ? (
+                        <TooltipProvider delayDuration={300}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={cn('flex-1 text-sm transition-colors break-words cursor-help', 'line-through text-muted-foreground')}>
+                                {task.title}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              className="max-w-[300px] whitespace-pre-wrap break-words bg-[hsl(0_0%_12%/0.95)] text-white border-0 shadow-lg px-3 py-2"
+                              style={{ fontSize: '13px', borderRadius: '6px' }}
+                            >
+                              {note}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span className="flex-1 text-sm line-through text-muted-foreground break-words">
+                          {task.title}
+                        </span>
+                      )}
+                      {getDeptName(task.department_id) && (
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+                          <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
+                        </Badge>
+                      )}
+                      {getProfileName(task.assigned_to) && (
+                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 gap-1">
+                          <User className="h-2.5 w-2.5" />{getProfileName(task.assigned_to)}
+                        </Badge>
+                      )}
+                      {task.due_at && (
+                        <span className="text-[10px] px-1 py-0 text-muted-foreground">
+                          Fällig: {new Date(task.due_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
+                        </span>
+                      )}
+                      <span className="ml-auto">
+                        <UrgencyPicker value={(task as any).urgency} table="case_tasks" rowId={task.id} readOnly={true} size="xs" />
+                      </span>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => unarchiveTask(task.id)}
+                          title="Aus Archiv zurückholen"
+                          className="shrink-0 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        >
+                          <ArchiveRestore className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
