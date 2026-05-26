@@ -174,15 +174,17 @@ Deno.serve(async (req) => {
       if (nErr) console.error("note insert error", nErr);
     }
 
-    // AI-merged pinned note: combine MTIQ description + reasoning into one note.
+    // Pinned note from the editable MTIQ-merged note field (preferred), with AI-merge fallback.
     try {
       const desc = String(draft.draft_description ?? "").trim();
       const reason = String((draft as any).mtiq_reasoning ?? "").trim();
-      if (desc || reason) {
+      const userNote = String((draft as any).mtiq_generated_note ?? "").trim();
+      let mergedBody = userNote;
+
+      if (!mergedBody && (desc || reason)) {
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        let mergedBody = "";
         if (LOVABLE_API_KEY && desc && reason) {
-          const sys = "Du bist ein neutraler Assistent für interne Vorgangsnotizen. Verbinde die Beschreibung und die Strukturierungs-Begründung von MTIQ zu EINER kompakten, sachlichen Notiz auf Deutsch (max. 6 Sätze). Keine Floskeln, keine Emojis, keine Marketingsprache. Gib NUR den Notiztext zurück.";
+          const sys = "Du bist ein neutraler Assistent für interne Vorgangsnotizen. Verbinde die Beschreibung und die Strukturierungs-Begründung von MTIQ zu EINER kompakten, sachlichen Notiz auf Deutsch (max. 6 Sätze). Keine Floskeln, keine Emojis, keine Marketingsprache, keine Überschriften. Gib NUR den Notiztext zurück.";
           const usr = `BESCHREIBUNG:\n${desc}\n\nWARUM SO STRUKTURIERT:\n${reason}`;
           const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -202,15 +204,16 @@ Deno.serve(async (req) => {
         if (!mergedBody) {
           mergedBody = [desc, reason && `**Warum so strukturiert:** ${reason}`].filter(Boolean).join("\n\n");
         }
-        if (mergedBody) {
-          const { error: mErr } = await client.from("case_notes").insert({
-            case_id: newCase.id,
-            author_id: user.id,
-            body: `**MTIQ Zusammenfassung**\n\n${mergedBody}`,
-            pinned: true,
-          });
-          if (mErr) console.error("merged note insert error", mErr);
-        }
+      }
+
+      if (mergedBody) {
+        const { error: mErr } = await client.from("case_notes").insert({
+          case_id: newCase.id,
+          author_id: user.id,
+          body: mergedBody,
+          pinned: true,
+        });
+        if (mErr) console.error("merged note insert error", mErr);
       }
     } catch (mergeErr) {
       console.error("merged note generation failed (non-fatal)", mergeErr);

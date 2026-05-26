@@ -1834,6 +1834,7 @@ export type Database = {
           draft_template_id: string | null
           draft_title: string | null
           id: string
+          mtiq_generated_note: string | null
           mtiq_reasoning: string | null
           original_snapshot: Json | null
           possible_duplicate_of: string | null
@@ -1871,6 +1872,7 @@ export type Database = {
           draft_template_id?: string | null
           draft_title?: string | null
           id?: string
+          mtiq_generated_note?: string | null
           mtiq_reasoning?: string | null
           original_snapshot?: Json | null
           possible_duplicate_of?: string | null
@@ -1908,6 +1910,7 @@ export type Database = {
           draft_template_id?: string | null
           draft_title?: string | null
           id?: string
+          mtiq_generated_note?: string | null
           mtiq_reasoning?: string | null
           original_snapshot?: Json | null
           possible_duplicate_of?: string | null

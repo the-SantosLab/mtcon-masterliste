@@ -58,6 +58,7 @@ type Draft = {
   draft_quantity: number | string | null;
   draft_project_duration: string | null;
   draft_note: string | null;
+  mtiq_generated_note: string | null;
   possible_duplicate_of: string | null;
 };
 
@@ -115,6 +116,28 @@ export default function MtiqDrafts() {
   const [confirmReject, setConfirmReject] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [generatingNote, setGeneratingNote] = useState(false);
+
+  const generateMtiqNote = async () => {
+    if (!edit) return;
+    setGeneratingNote(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('mtiq-merge-note', {
+        body: { description: edit.draft_description ?? '', reasoning: edit.mtiq_reasoning ?? '' },
+      });
+      if (error) throw error;
+      const note = (data as any)?.note as string | undefined;
+      if (!note) throw new Error('Keine Notiz erhalten');
+      const next = { ...edit, mtiq_generated_note: note };
+      setEdit(next);
+      await saveEdits({ mtiq_generated_note: note } as any);
+      toast.success('Notiz generiert');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Generierung fehlgeschlagen');
+    } finally {
+      setGeneratingNote(false);
+    }
+  };
 
 
   const load = async () => {
@@ -264,7 +287,8 @@ export default function MtiqDrafts() {
       draft_quantity: toNum(edit.draft_quantity) as any,
       draft_project_duration: edit.draft_project_duration || null,
       draft_note: edit.draft_note || null,
-    });
+      mtiq_generated_note: edit.mtiq_generated_note || null,
+    } as any);
   };
 
   const updateTask = (idx: number, patch: Partial<TaskItem>) => {
@@ -834,6 +858,33 @@ export default function MtiqDrafts() {
                           rows={3}
                           disabled={disabled}
                           placeholder="Wird beim Anlegen als angepinnte Notiz gespeichert."
+                        />
+                      </div>
+
+                      {/* MTIQ-generierte Notiz für den Vorgang */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                            Notiz im Vorgang
+                          </h2>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={generateMtiqNote}
+                            disabled={disabled || generatingNote || (!edit.draft_description && !edit.mtiq_reasoning)}
+                          >
+                            {generatingNote ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : null}
+                            Mit MTIQ generieren
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={edit.mtiq_generated_note ?? ''}
+                          onChange={e => handleField('mtiq_generated_note', e.target.value)}
+                          onBlur={persistAll}
+                          rows={5}
+                          disabled={disabled}
+                          placeholder="KI-Mischung aus Beschreibung und Strukturierungs-Begründung. Wird beim Anlegen als angepinnte Notiz am Vorgang gespeichert."
                         />
                       </div>
                     </div>
