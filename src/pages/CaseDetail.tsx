@@ -524,6 +524,37 @@ export default function CaseDetail() {
                 <Copy className="h-3.5 w-3.5" />Duplizieren
               </Button>
             )}
+            <Dialog open={duplicateOpen} onOpenChange={setDuplicateOpen}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-sm font-semibold">Vorgang duplizieren</DialogTitle>
+                </DialogHeader>
+                <CreateCaseForm
+                  userId={user?.id || ''}
+                  prefill={{
+                    project_name: `Kopie – ${c.project_name}`,
+                    project_id: c.project_id || '',
+                    department_id: c.department_id || '',
+                    customer_no: c.customer_no || '',
+                    client_name: c.client_name || '',
+                    internal_area_code: c.internal_area_code || '',
+                    product_code: c.product_code || '',
+                    project_article_no: c.project_article_no || '',
+                    sop: c.sop || '',
+                    quantity: c.quantity != null ? String(c.quantity) : '',
+                    project_duration: c.project_duration || '',
+                    estimated_hours: c.estimated_hours != null ? String(c.estimated_hours) : '',
+                    note: c.note || '',
+                    received_at: new Date().toISOString().slice(0, 10),
+                  }}
+                  onCreated={() => {
+                    setDuplicateOpen(false);
+                    toast.success('Vorgang wurde dupliziert');
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+
             {isAdmin && (
               <SaveAsTemplateDialog
                 caseId={c.id}
