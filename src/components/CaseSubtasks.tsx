@@ -938,6 +938,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           <span onClick={(e) => e.stopPropagation()} className="ml-auto">
                             <UrgencyPicker value={(task as any).urgency} table="case_tasks" rowId={task.id} readOnly={!canEditTask} size="xs" />
                           </span>
+                          {canEdit && task.status === 'done' && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); archiveTask(task.id); }}
+                              title="In Archiv verschieben (zählt nicht mehr in Dringlichkeit)"
+                              className="shrink-0 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              <Archive className="h-3 w-3" />
+                            </button>
+                          )}
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
