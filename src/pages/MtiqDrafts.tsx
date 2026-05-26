@@ -58,6 +58,7 @@ type Draft = {
   draft_quantity: number | string | null;
   draft_project_duration: string | null;
   draft_note: string | null;
+  mtiq_generated_note: string | null;
   possible_duplicate_of: string | null;
 };
 
