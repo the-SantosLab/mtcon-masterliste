@@ -900,6 +900,9 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["case_status"]
           urgency: number
+          urgency_override: boolean
+          urgency_override_at: string | null
+          urgency_override_by: string | null
           version: number
           visibility: string
           watchers: string[]
@@ -946,6 +949,9 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           urgency?: number
+          urgency_override?: boolean
+          urgency_override_at?: string | null
+          urgency_override_by?: string | null
           version?: number
           visibility?: string
           watchers?: string[]
@@ -992,6 +998,9 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["case_status"]
           urgency?: number
+          urgency_override?: boolean
+          urgency_override_at?: string | null
+          urgency_override_by?: string | null
           version?: number
           visibility?: string
           watchers?: string[]
@@ -2694,6 +2703,9 @@ export type Database = {
           status: string
           updated_at: string
           urgency: number
+          urgency_override: boolean
+          urgency_override_at: string | null
+          urgency_override_by: string | null
           visibility: string
         }
         Insert: {
@@ -2709,6 +2721,9 @@ export type Database = {
           status?: string
           updated_at?: string
           urgency?: number
+          urgency_override?: boolean
+          urgency_override_at?: string | null
+          urgency_override_by?: string | null
           visibility?: string
         }
         Update: {
@@ -2724,6 +2739,9 @@ export type Database = {
           status?: string
           updated_at?: string
           urgency?: number
+          urgency_override?: boolean
+          urgency_override_at?: string | null
+          urgency_override_by?: string | null
           visibility?: string
         }
         Relationships: [
@@ -3444,6 +3462,14 @@ export type Database = {
       purge_trashed_cases: { Args: never; Returns: number }
       recalc_case_effective_urgency: {
         Args: { _case_id: string }
+        Returns: undefined
+      }
+      recompute_case_urgency: {
+        Args: { p_case_id: string }
+        Returns: undefined
+      }
+      recompute_project_urgency: {
+        Args: { p_project_id: string }
         Returns: undefined
       }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
