@@ -27,6 +27,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { FileAttachments } from '@/components/FileAttachments';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { SaveAsTemplateDialog } from '@/components/SaveAsTemplateDialog';
 import { Button } from '@/components/ui/button';
