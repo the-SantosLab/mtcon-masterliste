@@ -588,8 +588,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const completedCount = tasks.filter(t => t.status === 'done').length;
-  const totalCount = tasks.length;
+  const completedCount = activeTasks.filter(t => t.status === 'done').length;
+  const totalCount = activeTasks.length;
 
   const getDeptName = (id: string | null) => {
     if (!id) return null;
