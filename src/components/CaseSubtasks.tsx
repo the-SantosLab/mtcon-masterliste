@@ -1085,6 +1085,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                 const st = STATUS_MAP[task.status] || STATUS_MAP.open;
                 const note = completionNotes[task.id];
                 const hasNote = task.status === 'done' && !!note;
+                const isNoteOpen = noteExpandedId === task.id;
                 return (
                   <div
                     key={task.id}
@@ -1113,6 +1114,17 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                         <span className="flex-1 text-sm line-through text-muted-foreground break-words">
                           {task.title}
                         </span>
+                      )}
+                      {hasNote && (
+                        <button
+                          type="button"
+                          onClick={() => setNoteExpandedId(isNoteOpen ? null : task.id)}
+                          title={isNoteOpen ? 'Abschlussnotiz ausblenden' : 'Abschlussnotiz anzeigen'}
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 hover:bg-muted transition-colors"
+                        >
+                          <FileText className="h-3 w-3" />
+                          <ChevronDown className={cn('h-3 w-3 transition-transform', isNoteOpen && 'rotate-180')} />
+                        </button>
                       )}
                       {getDeptName(task.department_id) && (
                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
@@ -1143,6 +1155,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                         </button>
                       )}
                     </div>
+                    {hasNote && isNoteOpen && (
+                      <div className="px-3 pb-3 pt-2 border-t border-border/50">
+                        <div
+                          className="ml-4 rounded-md bg-muted/40 border border-border/40 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
+                          style={{ fontSize: '13px', lineHeight: '1.5' }}
+                        >
+                          {note}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
