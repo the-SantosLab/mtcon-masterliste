@@ -55,6 +55,39 @@ export type Database = {
           },
         ]
       }
+      ai_prompts: {
+        Row: {
+          content: string
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          label: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          label: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       announcement_receipts: {
         Row: {
           announcement_id: string
