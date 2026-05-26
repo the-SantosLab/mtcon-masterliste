@@ -555,6 +555,25 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     fetchTasks();
   };
 
+  const archiveTask = async (taskId: string) => {
+    const { error } = await supabase.from('case_tasks').update({
+      archived_at: new Date().toISOString(),
+      archived_by: userId,
+    } as any).eq('id', taskId);
+    if (error) { toast.error('Archivieren fehlgeschlagen: ' + error.message); return; }
+    toast.success('Unteraufgabe archiviert');
+    fetchTasks();
+  };
+
+  const unarchiveTask = async (taskId: string) => {
+    const { error } = await supabase.from('case_tasks').update({
+      archived_at: null,
+      archived_by: null,
+    } as any).eq('id', taskId);
+    if (error) { toast.error('Wiederherstellen fehlgeschlagen: ' + error.message); return; }
+    toast.success('Unteraufgabe wiederhergestellt');
+    fetchTasks();
+
   const persistOrder = async (ordered: Subtask[]) => {
     const updates = ordered.map((t, idx) => ({ id: t.id, sort_order: idx }));
     // Optimistic update
