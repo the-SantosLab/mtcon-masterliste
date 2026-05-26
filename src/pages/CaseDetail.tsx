@@ -66,6 +66,7 @@ export default function CaseDetail() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [dueChange, setDueChange] = useState<{ at: string; by_name: string | null } | null>(null);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [sendStatusEmail, setSendStatusEmail] = useState(true);
   const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
   const navigate = useNavigate();
