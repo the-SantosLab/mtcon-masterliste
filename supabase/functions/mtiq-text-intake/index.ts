@@ -7,13 +7,14 @@ import {
   getRecentCorrections, correctionsPromptBlock,
   findDuplicate,
 } from "../_shared/mtiq-context.ts";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are MTIQ, the internal AI assistant for MtCon, a PCB connector distributor.
+const DEFAULT_TEXT_INTAKE_PROMPT = `You are MTIQ, the internal AI assistant for MtCon, a PCB connector distributor.
 You receive free text or bullet points entered directly by an internal user and must extract a structured Vorgang (case/project) from it.
 
 MtCon departments: Vertrieb, Einkauf, Lager, Technik, Konstruktion, Verwaltung, Geschäftsführung
