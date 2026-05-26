@@ -53,6 +53,8 @@ interface Subtask {
   status: string;
   due_at: string | null;
   urgency: number | null;
+  archived_at: string | null;
+  archived_by: string | null;
 }
 
 interface Dept { id: string; name: string; code: string | null; parent_id: string | null; }
