@@ -414,7 +414,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const forwardEnabled = ws['auto_forward_enabled'] !== false && ws['auto_forward_enabled'] !== 'false';
     const autoAssign = ws['auto_assign_on_forward'] === true || ws['auto_assign_on_forward'] === 'true';
 
-    const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+    const sortedTasks = [...activeTasks].sort((a, b) => a.sort_order - b.sort_order);
     const currentIdx = sortedTasks.findIndex(t => t.id === completedTask.id);
     const nextTask = sortedTasks.slice(currentIdx + 1).find(t => t.status !== 'done');
 
