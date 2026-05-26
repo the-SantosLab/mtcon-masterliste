@@ -91,8 +91,9 @@ Deno.serve(async (req) => {
       getRecentCorrections(supabaseUrl, serviceKey, 5),
     ]);
 
+    const basePrompt = await loadPrompt("mtiq_email_intake", DEFAULT_EMAIL_INTAKE_PROMPT);
     const augmentedSystem =
-      SYSTEM_PROMPT +
+      basePrompt +
       similarCasesPromptBlock(similar) +
       correctionsPromptBlock(corrections);
 
