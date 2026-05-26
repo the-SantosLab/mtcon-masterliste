@@ -258,7 +258,7 @@ export default function ProjectDetail() {
   const reloadCases = async () => {
     if (!id) return;
     const { data } = await supabase.from('cases')
-      .select('id, case_no, project_name, status, assignee_id, due_at, urgency, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .select('id, case_no, project_name, status, assignee_id, due_at, urgency, urgency_override, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
       .eq('project_id', id)
       .eq('deleted', false)
       .order('created_at', { ascending: false });
@@ -270,7 +270,7 @@ export default function ProjectDetail() {
     Promise.all([
       supabase.from('projects').select('*').eq('id', id).single(),
       supabase.from('cases')
-        .select('id, case_no, project_name, status, assignee_id, due_at, urgency, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+        .select('id, case_no, project_name, status, assignee_id, due_at, urgency, urgency_override, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
         .eq('project_id', id)
         .eq('deleted', false)
         .order('created_at', { ascending: false }),
