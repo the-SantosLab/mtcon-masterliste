@@ -320,7 +320,7 @@ export default function ProjectsList() {
                     </td>
                     <td className={cn(cellCls, 'text-muted-foreground font-mono')}>{p.owner_code || '–'}</td>
                     <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{format(new Date(p.created_at), 'dd.MM.yyyy')}</td>
-                    <td className={cellCls}><UrgencyPicker value={(p as any).urgency} table="projects" rowId={p.id} size="sm" /></td>
+                    <td className={cellCls}><UrgencyPicker value={(p as any).urgency} table="projects" rowId={p.id} size="sm" derived overridden={!!(p as any).urgency_override} canOverride={isAdmin} /></td>
                   </tr>
                 ))}
               </tbody>
