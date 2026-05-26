@@ -3420,6 +3420,7 @@ export type Database = {
         Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
       }
+      is_case_frozen: { Args: { p_case_id: string }; Returns: boolean }
       is_case_watcher: {
         Args: { p_case_id: string; p_uid?: string }
         Returns: boolean

@@ -448,6 +448,28 @@ export default function CaseDetail() {
     refresh();
   };
 
+  const reopenCase = async () => {
+    if (!c || !user || !isAdmin) return;
+    const old = c.status;
+    const ok = await updateCaseOptimistic({
+      status: 'in_arbeit' as Enums<'case_status'>,
+      completed_at: null,
+      closed_at: null,
+      closed_by: null,
+      last_changed_by: user.id,
+      last_changed_at: new Date().toISOString(),
+    }, async () => {
+      await supabase.from('case_activity').insert({
+        case_id: c.id, action: 'REOPEN', field: 'status',
+        old_value: old, new_value: 'in_arbeit', actor_id: user.id,
+        message: 'Vorgang durch Admin wieder geöffnet',
+      });
+    });
+    if (!ok) return;
+    toast.success('Vorgang wieder geöffnet');
+    refresh();
+  };
+
 
   if (loading) return <AppLayout><p className="text-xs text-muted-foreground">Laden</p></AppLayout>;
   if (!c) return <AppLayout><p className="text-xs text-destructive">Vorgang nicht gefunden</p></AppLayout>;
@@ -561,6 +583,44 @@ export default function CaseDetail() {
             )}
           </div>
         </div>
+
+        {isTerminalStatus(c.status) && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-4">
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium text-amber-200">
+                Vorgang eingefroren · {STATUS_LABELS[c.status]}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {isAdmin
+                  ? 'Du kannst diesen Vorgang als Admin wieder öffnen, um Änderungen zu erlauben.'
+                  : 'Keine Änderungen möglich. Nur Admins können den Vorgang wieder öffnen.'}
+              </p>
+            </div>
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="h-8 text-xs shrink-0">
+                    Wieder öffnen
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Vorgang wieder öffnen?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Vorgang {c.case_no} wird in den Status „In Arbeit" zurückgesetzt.
+                      Abschlussdaten (completed_at, closed_at, closed_by) werden entfernt.
+                      Die Aktion wird im Verlauf protokolliert.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                    <AlertDialogAction onClick={reopenCase}>Wieder öffnen</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        )}
 
         <NotificationCockpit caseId={c.id} refreshKey={refreshKey} />
 
