@@ -171,42 +171,12 @@ export default function CaseDetail() {
     }
   };
 
-  const duplicateCase = async () => {
+  const duplicateCase = () => {
     if (!c || !user) return;
-    const today = new Date().toISOString().slice(0, 10);
-    const payload: any = {
-      project_name: `Kopie – ${c.project_name}`,
-      client_name: c.client_name,
-      customer_no: c.customer_no,
-      project_article_no: c.project_article_no,
-      quantity: c.quantity,
-      sop: c.sop,
-      project_id: c.project_id,
-      department_id: c.department_id,
-      project_duration: c.project_duration,
-      estimated_hours: c.estimated_hours,
-      note: c.note,
-      internal_area_code: c.internal_area_code,
-      product_code: c.product_code,
-      visibility: c.visibility,
-      watchers: c.watchers ?? [],
-      status: 'nicht_begonnen',
-      assignee_id: null,
-      received_at: today,
-      started_at: null,
-      due_at: null,
-      completed_at: null,
-      closed_at: null,
-      closed_by: null,
-      created_by: user.id,
-      last_changed_by: user.id,
-      last_changed_at: new Date().toISOString(),
-    };
-    const { data, error } = await supabase.from('cases').insert(payload).select('id, case_no').single();
-    if (error) { toast.error('Fehler beim Duplizieren: ' + error.message); return; }
-    toast.success('Vorgang wurde dupliziert');
-    navigate(`/cases/${(data as any).id}`);
+    setDuplicateOpen(true);
   };
+
+
 
   const fetchCase = async () => {
     if (!id) return;
