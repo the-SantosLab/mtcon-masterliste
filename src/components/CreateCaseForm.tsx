@@ -182,6 +182,17 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
     });
   }, [userDeptId, departments]);
 
+  // One-shot: if prefill.department_id is a sub-dept, map to parent + team.
+  useEffect(() => {
+    if (prefillDeptMapped || !prefill?.department_id || departments.length === 0) return;
+    const own = departments.find(d => d.id === prefill.department_id);
+    if (!own) { setPrefillDeptMapped(true); return; }
+    if (own.parent_id) {
+      setForm(f => ({ ...f, department_id: own.parent_id!, team_id: own.id }));
+    }
+    setPrefillDeptMapped(true);
+  }, [prefill, departments, prefillDeptMapped]);
+
   // Default-collapse Produkt / Projektinfos for HR / Marketing departments.
   useEffect(() => {
     const dept = departments.find(d => d.id === (form.department_id || ''));
