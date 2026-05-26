@@ -93,8 +93,9 @@ Deno.serve(async (req) => {
       getRecentCorrections(supabaseUrl, serviceKey, 5),
     ]);
 
+    const basePrompt = await loadPrompt("mtiq_text_intake", DEFAULT_TEXT_INTAKE_PROMPT);
     const augmentedSystem =
-      SYSTEM_PROMPT +
+      basePrompt +
       similarCasesPromptBlock(similar) +
       correctionsPromptBlock(corrections);
 
