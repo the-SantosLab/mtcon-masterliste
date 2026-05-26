@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
+
+const DEFAULT_REFORMULATE_PROMPT = "Du bist MTIQ, ein Assistent für betriebliche Vorgangsbeschreibungen. Formuliere den eingegebenen Text klarer, verständlicher und strukturierter auf Deutsch. Verwende dabei durchgehend die 'Du'-Ansprache (z. B. 'kannst Du' statt 'können Sie'). Behalte alle inhaltlichen Informationen bei. Antworte ausschließlich mit der neuen Formulierung – ohne Einleitung, ohne Kommentare, ohne Markdown.";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
