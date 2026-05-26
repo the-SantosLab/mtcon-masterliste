@@ -649,6 +649,8 @@ export type Database = {
       }
       case_tasks: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           assigned_to: string | null
           case_id: string
           completed: boolean
@@ -666,6 +668,8 @@ export type Database = {
           urgency: number
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           assigned_to?: string | null
           case_id: string
           completed?: boolean
@@ -683,6 +687,8 @@ export type Database = {
           urgency?: number
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           assigned_to?: string | null
           case_id?: string
           completed?: boolean

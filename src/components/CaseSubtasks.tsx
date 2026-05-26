@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch, ArrowUpDown } from 'lucide-react';
+import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch, ArrowUpDown, Archive, ArchiveRestore } from 'lucide-react';
 import { nextSort, type SortState }    from '@/components/SortableHeader';
 import {
   DndContext,
@@ -53,6 +53,8 @@ interface Subtask {
   status: string;
   due_at: string | null;
   urgency: number | null;
+  archived_at: string | null;
+  archived_by: string | null;
 }
 
 interface Dept { id: string; name: string; code: string | null; parent_id: string | null; }
@@ -220,11 +222,15 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [sendCompleteEmail, setSendCompleteEmail] = useState(true);
   const [sendAssignEmail, setSendAssignEmail] = useState(true);
   const [subtaskSort, setSubtaskSort] = useState<SortState<'urgency'>>({ column: null, direction: null });
+  const [showArchive, setShowArchive] = useState(false);
   const isSortActive = !!subtaskSort.column;
 
+  const activeTasks = useMemo(() => tasks.filter(t => !t.archived_at), [tasks]);
+  const archivedTasks = useMemo(() => tasks.filter(t => !!t.archived_at), [tasks]);
+
   const displayTasks = useMemo(() => {
-    if (!subtaskSort.column || !subtaskSort.direction) return tasks;
-    const copy = [...tasks];
+    if (!subtaskSort.column || !subtaskSort.direction) return activeTasks;
+    const copy = [...activeTasks];
     copy.sort((a, b) => {
       const av = a.urgency ?? 0;
       const bv = b.urgency ?? 1;
@@ -234,11 +240,11 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       return subtaskSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
     });
     return copy;
-  }, [tasks, subtaskSort]);
+  }, [activeTasks, subtaskSort]);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
-  const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+  const sortedTasks = [...activeTasks].sort((a, b) => a.sort_order - b.sort_order);
   const firstOpenIdx = sortedTasks.findIndex(t => t.status !== 'done');
   const isLocked = (taskId: string): boolean => {
     if (!sequentialMode || lockMode === 'soft') return false;
@@ -408,7 +414,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const forwardEnabled = ws['auto_forward_enabled'] !== false && ws['auto_forward_enabled'] !== 'false';
     const autoAssign = ws['auto_assign_on_forward'] === true || ws['auto_assign_on_forward'] === 'true';
 
-    const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+    const sortedTasks = [...activeTasks].sort((a, b) => a.sort_order - b.sort_order);
     const currentIdx = sortedTasks.findIndex(t => t.id === completedTask.id);
     const nextTask = sortedTasks.slice(currentIdx + 1).find(t => t.status !== 'done');
 
@@ -549,6 +555,28 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     fetchTasks();
   };
 
+  const archiveTask = async (taskId: string) => {
+    const { error } = await supabase.from('case_tasks').update({
+      archived_at: new Date().toISOString(),
+      archived_by: userId,
+    } as any).eq('id', taskId);
+    if (error) { toast.error('Archivieren fehlgeschlagen: ' + error.message); return; }
+    toast.success('Unteraufgabe archiviert');
+    fetchTasks();
+  };
+
+  const unarchiveTask = async (taskId: string) => {
+    const { error } = await supabase.from('case_tasks').update({
+      archived_at: null,
+      archived_by: null,
+    } as any).eq('id', taskId);
+    if (error) { toast.error('Wiederherstellen fehlgeschlagen: ' + error.message); return; }
+    toast.success('Unteraufgabe wiederhergestellt');
+    fetchTasks();
+  };
+
+
+
   const persistOrder = async (ordered: Subtask[]) => {
     const updates = ordered.map((t, idx) => ({ id: t.id, sort_order: idx }));
     // Optimistic update
@@ -582,8 +610,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const completedCount = tasks.filter(t => t.status === 'done').length;
-  const totalCount = tasks.length;
+  const completedCount = activeTasks.filter(t => t.status === 'done').length;
+  const totalCount = activeTasks.length;
 
   const getDeptName = (id: string | null) => {
     if (!id) return null;
@@ -910,6 +938,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           <span onClick={(e) => e.stopPropagation()} className="ml-auto">
                             <UrgencyPicker value={(task as any).urgency} table="case_tasks" rowId={task.id} readOnly={!canEditTask} size="xs" />
                           </span>
+                          {canEdit && task.status === 'done' && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); archiveTask(task.id); }}
+                              title="In Archiv verschieben (zählt nicht mehr in Dringlichkeit)"
+                              className="shrink-0 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              <Archive className="h-3 w-3" />
+                            </button>
+                          )}
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
@@ -996,22 +1034,22 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </SortableContext>
           </DndContext>
         )}
-        {!loading && tasks.length > PAGE_SIZE && (
+        {!loading && activeTasks.length > PAGE_SIZE && (
           <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-border/40">
             <span className="text-[11px] text-muted-foreground tabular-nums">
-              {Math.min(visibleCount, tasks.length)} von {tasks.length}
+              {Math.min(visibleCount, activeTasks.length)} von {activeTasks.length}
             </span>
-            {visibleCount < tasks.length && (
+            {visibleCount < activeTasks.length && (
               <Button
                 size="sm"
                 variant="outline"
                 className="h-7 text-[11px]"
-                onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, tasks.length))}
+                onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, activeTasks.length))}
               >
-                Mehr laden ({Math.min(PAGE_SIZE, tasks.length - visibleCount)})
+                Mehr laden ({Math.min(PAGE_SIZE, activeTasks.length - visibleCount)})
               </Button>
             )}
-            {visibleCount > PAGE_SIZE && visibleCount >= tasks.length && (
+            {visibleCount > PAGE_SIZE && visibleCount >= activeTasks.length && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -1026,6 +1064,60 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
         </>
         )}
       </div>
+
+      {/* Archive section */}
+      {archivedTasks.length > 0 && (
+        <div className="mt-4 border-t border-border/40 pt-3">
+          <button
+            type="button"
+            onClick={() => setShowArchive(v => !v)}
+            className="w-full flex items-center justify-between text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Archive className="h-3 w-3" />
+              Archiv ({archivedTasks.length}) – zählt nicht in Dringlichkeit
+            </span>
+            <ChevronDown className={cn('h-3 w-3 transition-transform', showArchive && 'rotate-180')} />
+          </button>
+          {showArchive && (
+            <div className="mt-2 space-y-1">
+              {archivedTasks.map(task => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-2 py-1.5 px-3 rounded-md border border-border/30 bg-muted/20 opacity-80"
+                >
+                  <CheckCircle2 className="h-3 w-3 text-[hsl(var(--status-done))] shrink-0" />
+                  <span className="flex-1 text-xs text-muted-foreground line-through truncate" title={task.title}>
+                    {task.title}
+                  </span>
+                  {getDeptName(task.department_id) && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
+                      <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
+                    </Badge>
+                  )}
+                  {task.archived_at && (
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {new Date(task.archived_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                    </span>
+                  )}
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => unarchiveTask(task.id)}
+                      title="Aus Archiv zurückholen"
+                      className="shrink-0 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      <ArchiveRestore className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+
 
       {/* Add new subtask */}
       {canEdit && (

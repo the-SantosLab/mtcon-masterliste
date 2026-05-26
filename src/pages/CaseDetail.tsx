@@ -226,6 +226,7 @@ export default function CaseDetail() {
         .from('case_tasks')
         .select('id', { count: 'exact', head: true })
         .eq('case_id', id)
+        .is('archived_at', null)
         .gt('urgency', 0);
       setHasUrgentSubtasks((count ?? 0) > 0);
     };
