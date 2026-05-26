@@ -3362,6 +3362,10 @@ export type Database = {
         Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
       }
+      can_read_case: {
+        Args: { p_case_id: string; p_uid?: string }
+        Returns: boolean
+      }
       can_read_dept: {
         Args: { p_dept_id: string; p_uid?: string }
         Returns: boolean
