@@ -1034,22 +1034,22 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </SortableContext>
           </DndContext>
         )}
-        {!loading && tasks.length > PAGE_SIZE && (
+        {!loading && activeTasks.length > PAGE_SIZE && (
           <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-border/40">
             <span className="text-[11px] text-muted-foreground tabular-nums">
-              {Math.min(visibleCount, tasks.length)} von {tasks.length}
+              {Math.min(visibleCount, activeTasks.length)} von {activeTasks.length}
             </span>
-            {visibleCount < tasks.length && (
+            {visibleCount < activeTasks.length && (
               <Button
                 size="sm"
                 variant="outline"
                 className="h-7 text-[11px]"
-                onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, tasks.length))}
+                onClick={() => setVisibleCount(c => Math.min(c + PAGE_SIZE, activeTasks.length))}
               >
-                Mehr laden ({Math.min(PAGE_SIZE, tasks.length - visibleCount)})
+                Mehr laden ({Math.min(PAGE_SIZE, activeTasks.length - visibleCount)})
               </Button>
             )}
-            {visibleCount > PAGE_SIZE && visibleCount >= tasks.length && (
+            {visibleCount > PAGE_SIZE && visibleCount >= activeTasks.length && (
               <Button
                 size="sm"
                 variant="ghost"
