@@ -68,6 +68,7 @@ export default function CaseDetail() {
   const [completeOpen, setCompleteOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [sendStatusEmail, setSendStatusEmail] = useState(true);
+  const [hasUrgentSubtasks, setHasUrgentSubtasks] = useState(false);
   const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
   const navigate = useNavigate();
 
