@@ -222,11 +222,15 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [sendCompleteEmail, setSendCompleteEmail] = useState(true);
   const [sendAssignEmail, setSendAssignEmail] = useState(true);
   const [subtaskSort, setSubtaskSort] = useState<SortState<'urgency'>>({ column: null, direction: null });
+  const [showArchive, setShowArchive] = useState(false);
   const isSortActive = !!subtaskSort.column;
 
+  const activeTasks = useMemo(() => tasks.filter(t => !t.archived_at), [tasks]);
+  const archivedTasks = useMemo(() => tasks.filter(t => !!t.archived_at), [tasks]);
+
   const displayTasks = useMemo(() => {
-    if (!subtaskSort.column || !subtaskSort.direction) return tasks;
-    const copy = [...tasks];
+    if (!subtaskSort.column || !subtaskSort.direction) return activeTasks;
+    const copy = [...activeTasks];
     copy.sort((a, b) => {
       const av = a.urgency ?? 0;
       const bv = b.urgency ?? 1;
@@ -236,7 +240,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       return subtaskSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
     });
     return copy;
-  }, [tasks, subtaskSort]);
+  }, [activeTasks, subtaskSort]);
 
   // Locked-task indices in sequential mode: every task after the first non-done task is locked.
   // Im "soft"-Modus wird nicht hart gesperrt – die UI hebt nur die empfohlene Reihenfolge hervor.
