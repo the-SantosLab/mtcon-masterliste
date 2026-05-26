@@ -59,7 +59,8 @@ Deno.serve(async (req) => {
       `  • ${n.created_at?.slice(0,10)}${n.pinned ? " 📌" : ""} ${String(n.body ?? "").slice(0,300).replace(/\n/g," ")}`
     ).join("\n") || "  keine";
 
-    const systemPrompt = `Du bist MTIQ, Tool-Modus "${tool}". Stil: neutral, präzise, Deutsch, kurz, keine Floskeln. Liefere direkt das Ergebnis ohne Vorwort.
+    const basePrompt = await loadPrompt("mtiq_tool", DEFAULT_TOOL_PROMPT, { tool: String(tool ?? "") });
+    const systemPrompt = `${basePrompt}
 ${system_addon}
 
 Vorgang:
