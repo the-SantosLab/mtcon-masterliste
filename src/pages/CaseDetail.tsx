@@ -68,6 +68,7 @@ export default function CaseDetail() {
   const [completeOpen, setCompleteOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [sendStatusEmail, setSendStatusEmail] = useState(true);
+  const [hasUrgentSubtasks, setHasUrgentSubtasks] = useState(false);
   const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
   const navigate = useNavigate();
 
@@ -216,6 +217,24 @@ export default function CaseDetail() {
   };
 
   useEffect(() => { fetchCase(); }, [id]);
+
+  // Track whether any subtask carries a chili — drives "abgeleitet" UI for case urgency
+  useEffect(() => {
+    if (!id) return;
+    const loadFlag = async () => {
+      const { count } = await (supabase as any)
+        .from('case_tasks')
+        .select('id', { count: 'exact', head: true })
+        .eq('case_id', id)
+        .gt('urgency', 0);
+      setHasUrgentSubtasks((count ?? 0) > 0);
+    };
+    void loadFlag();
+    const ch = supabase.channel(`case-urg-flag-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks', filter: `case_id=eq.${id}` }, () => { void loadFlag(); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [id, refreshKey]);
 
   useEffect(() => {
     supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
@@ -496,7 +515,16 @@ export default function CaseDetail() {
             <div className="flex items-center gap-3 mt-0.5">
               <p className="text-xs text-muted-foreground font-mono">{c.case_no}</p>
               <span className="text-[10px] text-muted-foreground">Dringlichkeit:</span>
-              <UrgencyPicker value={(c as any).urgency} table="cases" rowId={c.id} readOnly={isViewer || isTerminalStatus(c.status)} size="sm" />
+              <UrgencyPicker
+                value={(c as any).urgency}
+                table="cases"
+                rowId={c.id}
+                readOnly={isViewer || isTerminalStatus(c.status)}
+                size="sm"
+                derived={hasUrgentSubtasks}
+                overridden={!!(c as any).urgency_override}
+                canOverride={isAdmin}
+              />
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">

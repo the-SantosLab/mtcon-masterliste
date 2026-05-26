@@ -35,6 +35,7 @@ interface Project {
 interface CaseRow {
   id: string; case_no: string; project_name: string; status: string;
   assignee_id: string | null; due_at: string | null; urgency: number | null;
+  urgency_override?: boolean | null;
   assignee: { display_name: string; short_code: string } | null;
 }
 
@@ -257,7 +258,7 @@ export default function ProjectDetail() {
   const reloadCases = async () => {
     if (!id) return;
     const { data } = await supabase.from('cases')
-      .select('id, case_no, project_name, status, assignee_id, due_at, urgency, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+      .select('id, case_no, project_name, status, assignee_id, due_at, urgency, urgency_override, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
       .eq('project_id', id)
       .eq('deleted', false)
       .order('created_at', { ascending: false });
@@ -269,7 +270,7 @@ export default function ProjectDetail() {
     Promise.all([
       supabase.from('projects').select('*').eq('id', id).single(),
       supabase.from('cases')
-        .select('id, case_no, project_name, status, assignee_id, due_at, urgency, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
+        .select('id, case_no, project_name, status, assignee_id, due_at, urgency, urgency_override, assignee:users_profile!cases_assignee_id_fkey(display_name, short_code)')
         .eq('project_id', id)
         .eq('deleted', false)
         .order('created_at', { ascending: false }),
@@ -579,7 +580,7 @@ export default function ProjectDetail() {
                         ) : sortedCases.map(c => (
                           <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency))}>
                             <td className={cellCls}>
-                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" />
+                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
                             </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono')}>
