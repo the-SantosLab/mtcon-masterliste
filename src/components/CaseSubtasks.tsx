@@ -573,6 +573,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     if (error) { toast.error('Wiederherstellen fehlgeschlagen: ' + error.message); return; }
     toast.success('Unteraufgabe wiederhergestellt');
     fetchTasks();
+  };
+
+
 
   const persistOrder = async (ordered: Subtask[]) => {
     const updates = ordered.map((t, idx) => ({ id: t.id, sort_order: idx }));
