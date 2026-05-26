@@ -580,7 +580,7 @@ export default function ProjectDetail() {
                         ) : sortedCases.map(c => (
                           <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency))}>
                             <td className={cellCls}>
-                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" />
+                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
                             </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono')}>
