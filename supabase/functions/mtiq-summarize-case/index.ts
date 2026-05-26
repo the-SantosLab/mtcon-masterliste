@@ -1,6 +1,11 @@
 // MTIQ – Vorgangs-Zusammenfassung: lädt Chat, Notizen, Aktivitäten, Subtasks
 // und erzeugt eine kompakte 3–5-Satz-Zusammenfassung.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { loadPrompt } from "../_shared/ai-prompt.ts";
+
+const DEFAULT_SUMMARIZE_PROMPT = `Du bist MTIQ. Erstelle eine kompakte Zusammenfassung in 3–5 Sätzen auf Deutsch.
+Stil: neutral, präzise, keine Floskeln, keine Aufzählungen, kein Markdown.
+Decke ab: aktueller Stand, wichtigste offene Punkte, nächste sinnvolle Schritte, Dringlichkeit/Fälligkeit falls relevant.`;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
