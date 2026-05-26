@@ -515,7 +515,16 @@ export default function CaseDetail() {
             <div className="flex items-center gap-3 mt-0.5">
               <p className="text-xs text-muted-foreground font-mono">{c.case_no}</p>
               <span className="text-[10px] text-muted-foreground">Dringlichkeit:</span>
-              <UrgencyPicker value={(c as any).urgency} table="cases" rowId={c.id} readOnly={isViewer || isTerminalStatus(c.status)} size="sm" />
+              <UrgencyPicker
+                value={(c as any).urgency}
+                table="cases"
+                rowId={c.id}
+                readOnly={isViewer || isTerminalStatus(c.status)}
+                size="sm"
+                derived={hasUrgentSubtasks}
+                overridden={!!(c as any).urgency_override}
+                canOverride={isAdmin}
+              />
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
