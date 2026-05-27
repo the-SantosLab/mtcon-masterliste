@@ -32,7 +32,7 @@ serve(async (req) => {
       });
     }
 
-    const { text } = await req.json();
+    const { text, mode } = await req.json();
     if (!text || typeof text !== "string" || !text.trim()) {
       return new Response(JSON.stringify({ error: "Kein Text angegeben" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -42,7 +42,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPromptText = await loadPrompt("mtiq_reformulate", DEFAULT_REFORMULATE_PROMPT);
+    const reformulationMode = mode === "light" ? "light" : "full";
+
+    const basePrompt = await loadPrompt("mtiq_reformulate", DEFAULT_REFORMULATE_PROMPT);
+    const systemPromptText = reformulationMode === "light"
+      ? `${basePrompt}\n\nWICHTIG (Modus: Kleine Umformulierung): Nimm nur minimale Korrekturen vor – Rechtschreibung, Grammatik, Zeichensetzung und kleine sprachliche Glättungen. Strukturiere den Text NICHT um, ergänze nichts, kürze nichts und ändere den Stil nur so wenig wie möglich. Behalte die ursprüngliche Satzreihenfolge und Wortwahl weitestgehend bei.`
+      : `${basePrompt}\n\nHinweis (Modus: Große Umformulierung): Du darfst den Text deutlich umstrukturieren, klarer gliedern und sprachlich vollständig überarbeiten, solange alle inhaltlichen Informationen erhalten bleiben.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
