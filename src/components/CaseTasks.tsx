@@ -67,13 +67,17 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
 
   const toggleTask = async (task: CaseTask) => {
     const completed = !task.completed;
-    const { error } = await supabase.from('case_tasks').update({
+    const { data, error } = await supabase.from('case_tasks').update({
       completed,
       completed_at: completed ? new Date().toISOString() : null,
       completed_by: completed ? userId : null,
-    }).eq('id', task.id);
-    if (error) toast.error('Fehler');
-    else fetchTasks();
+    }).eq('id', task.id).select('id');
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (!data || data.length === 0) {
+      toast.error('Du hast keine Berechtigung, diese Aufgabe zu ändern. Bitte wende dich an den Zuständigen oder einen Admin.');
+      return;
+    }
+    fetchTasks();
   };
 
   const deleteTask = async (taskId: string) => {
