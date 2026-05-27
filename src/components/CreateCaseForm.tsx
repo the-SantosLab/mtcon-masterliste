@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight, ChevronDown, Sparkles, Loader2, Feather, Wand2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
@@ -507,37 +508,88 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary"
-                    disabled={mtiqLoading || !form.description.trim()}
-                    onClick={async () => {
-                      if (!form.description.trim()) return;
-                      setMtiqLoading(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
-                          body: { text: form.description },
-                        });
-                        if (error) throw error;
-                        if (data?.error) throw new Error(data.error);
-                        if (data?.text) {
-                          set('description', data.text);
-                          setMtiqApplied(true);
-                          setMtiqHintDismissed(true);
-                          toast.success('Mit MTIQ formuliert');
-                        }
-                      } catch (e: any) {
-                        toast.error(e?.message || 'Fehler bei MTIQ');
-                      } finally {
-                        setMtiqLoading(false);
-                      }
-                    }}
-                  >
-                    {mtiqLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                    Mit MTIQ formulieren
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary"
+                        disabled={mtiqLoading || !form.description.trim()}
+                      >
+                        {mtiqLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                        Mit MTIQ formulieren
+                        <ChevronDown className="h-3 w-3 opacity-70" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64">
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          if (!form.description.trim()) return;
+                          setMtiqLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
+                              body: { text: form.description, mode: 'light' },
+                            });
+                            if (error) throw error;
+                            if (data?.error) throw new Error(data.error);
+                            if (data?.text) {
+                              set('description', data.text);
+                              setMtiqApplied(true);
+                              setMtiqHintDismissed(true);
+                              toast.success('Kleine Umformulierung übernommen');
+                            }
+                          } catch (e: any) {
+                            toast.error(e?.message || 'Fehler bei MTIQ');
+                          } finally {
+                            setMtiqLoading(false);
+                          }
+                        }}
+                        className="flex items-start gap-2 py-2"
+                      >
+                        <Feather className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium">Kleine Umformulierung</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">
+                            Nur Rechtschreibung, Grammatik und sprachliche Glättung
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          if (!form.description.trim()) return;
+                          setMtiqLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
+                              body: { text: form.description, mode: 'full' },
+                            });
+                            if (error) throw error;
+                            if (data?.error) throw new Error(data.error);
+                            if (data?.text) {
+                              set('description', data.text);
+                              setMtiqApplied(true);
+                              setMtiqHintDismissed(true);
+                              toast.success('Große Umformulierung übernommen');
+                            }
+                          } catch (e: any) {
+                            toast.error(e?.message || 'Fehler bei MTIQ');
+                          } finally {
+                            setMtiqLoading(false);
+                          }
+                        }}
+                        className="flex items-start gap-2 py-2"
+                      >
+                        <Wand2 className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium">Große Umformulierung</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">
+                            Vollständige sprachliche Überarbeitung und Strukturierung
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                 </div>
                 <Textarea
                   value={form.description}
