@@ -531,7 +531,8 @@ export default function ProjectDetail() {
                   </div>
                 );
               })()}
-              <div className="rounded-md border border-border bg-card overflow-hidden">
+              <div className="rounded-md border border-border bg-card overflow-x-auto">
+
                 {cases.length === 0 ? (
                   <div className="py-10 text-center">
                     <XCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
