@@ -584,7 +584,7 @@ export default function ProjectDetail() {
                               <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
                             </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
-                            <td className={cn(cellCls, 'font-mono')}>
+                            <td className={cn(cellCls, 'font-mono whitespace-nowrap')}>
                               <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-foreground')}>
