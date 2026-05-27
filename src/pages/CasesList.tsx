@@ -377,11 +377,17 @@ export default function CasesList() {
                     </span>
                   </td>
                   <td className={cn(cellCls, 'font-mono min-w-[120px] whitespace-nowrap')}>
-                    <Link to={`/cases/${c.id}`} className="text-primary hover:underline inline-flex items-center gap-1.5">
+                    <Link to={`/cases/${c.id}`} className="text-primary hover:underline inline-flex items-center gap-1.5 whitespace-nowrap">
                       {(unreadMap[c.id] ?? 0) > 0 && (
-                        <span title={`${unreadMap[c.id]} ungelesene Nachricht(en)`} className="inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold leading-none">{unreadMap[c.id] > 9 ? '9+' : unreadMap[c.id]}</span>
+                        <span
+                          title={`${unreadMap[c.id]} ungelesene Nachricht(en)`}
+                          className={cn(
+                            'inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold leading-none shrink-0',
+                            compact ? 'min-w-[12px] h-[12px] px-0.5 text-[8px]' : 'min-w-[16px] h-[16px] px-1 text-[9px]',
+                          )}
+                        >{unreadMap[c.id] > 9 ? '9+' : unreadMap[c.id]}</span>
                       )}
-                      {c.case_no}
+                      <span className="whitespace-nowrap">{c.case_no}</span>
                     </Link>
                   </td>
                   <td className={cn(cellCls, 'text-foreground')}>
