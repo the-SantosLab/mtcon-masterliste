@@ -564,7 +564,7 @@ export default function ProjectDetail() {
                       }, caseSort.direction)
                     : filteredCases;
                   return (
-                    <table className="w-full">
+                    <table className="w-full min-w-[760px]">
                       <thead>
                         <tr className="border-b border-border">
                           <SortableHeader column="urgency" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
