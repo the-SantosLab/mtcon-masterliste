@@ -119,10 +119,13 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
         ) : tasks.length === 0 && !canEdit ? (
           <p className="text-xs text-muted-foreground py-2">Keine Aufgaben</p>
         ) : (
-          tasks.map(task => (
+          tasks.map((task, index) => (
             <div
               key={task.id}
-              className="flex items-center gap-2 group py-1.5 px-1 rounded hover:bg-muted/40 transition-colors"
+              className={cn(
+                'flex items-center gap-2 group py-1.5 px-1 rounded hover:bg-muted/40 transition-colors',
+                index % 2 === 1 && 'bg-muted/20'
+              )}
             >
               <button
                 onClick={() => canEdit && toggleTask(task)}
