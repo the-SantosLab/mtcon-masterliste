@@ -87,10 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Öffnen muss sich der Nutzer neu anmelden.
     const handlePageHide = () => {
       try {
-        // Auto-Logout deaktiviert für js@santoslab.de (Dev-Account).
+        // Auto-Logout deaktiviert für Dev-/Ausnahme-Accounts.
         const currentEmail = session?.user?.email
           ?? (() => { try { return JSON.parse(localStorage.getItem('sb-tfzwssplxetptxnhrxse-auth-token') || 'null')?.user?.email ?? null; } catch { return null; } })();
-        if (currentEmail === 'js@santoslab.de') return;
+        if (currentEmail === 'js@santoslab.de' || currentEmail === 'nathalie.kress@mtcon.eu') return;
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
