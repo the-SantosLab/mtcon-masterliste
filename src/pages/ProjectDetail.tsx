@@ -531,7 +531,8 @@ export default function ProjectDetail() {
                   </div>
                 );
               })()}
-              <div className="rounded-md border border-border bg-card overflow-hidden">
+              <div className="rounded-md border border-border bg-card overflow-x-auto">
+
                 {cases.length === 0 ? (
                   <div className="py-10 text-center">
                     <XCircle className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
@@ -563,7 +564,7 @@ export default function ProjectDetail() {
                       }, caseSort.direction)
                     : filteredCases;
                   return (
-                    <table className="w-full">
+                    <table className="w-full min-w-[760px]">
                       <thead>
                         <tr className="border-b border-border">
                           <SortableHeader column="urgency" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
@@ -583,7 +584,7 @@ export default function ProjectDetail() {
                               <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
                             </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
-                            <td className={cn(cellCls, 'font-mono')}>
+                            <td className={cn(cellCls, 'font-mono whitespace-nowrap')}>
                               <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-foreground')}>
