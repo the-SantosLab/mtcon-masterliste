@@ -814,7 +814,12 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                   >
                     {({ dragHandleProps, isDragging }) => (
                       <div
-                        className={cn('rounded-md border border-border/50 overflow-hidden bg-card', isDragging && 'shadow-lg ring-1 ring-primary/40', taskLocked && 'opacity-50')}
+                        className={cn(
+                          'rounded-md border border-border/50 overflow-hidden',
+                          index % 2 === 1 ? 'bg-muted/20' : 'bg-card',
+                          isDragging && 'shadow-lg ring-1 ring-primary/40',
+                          taskLocked && 'opacity-50'
+                        )}
                         title={taskLocked ? `Bitte zuerst Schritt ${previousStepNumber(task.id)} abschließen` : undefined}
                         onClickCapture={(e) => {
                           if (taskLocked) {
