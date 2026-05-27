@@ -672,7 +672,7 @@ export default function CaseDetail() {
 
 
         <div className="grid lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4 min-w-0 [&>div:nth-of-type(even)]:!bg-muted/60">
+          <div className="lg:col-span-2 space-y-4 min-w-0 [&>div:nth-of-type(even)]:!bg-muted/80">
             <div className="rounded-md border border-border bg-card p-5">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Details</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">

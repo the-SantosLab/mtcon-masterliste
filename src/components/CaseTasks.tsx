@@ -123,8 +123,8 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
             <div
               key={task.id}
               className={cn(
-                'flex items-center gap-2 group py-1.5 px-1 rounded hover:bg-muted/60 transition-colors',
-                index % 2 === 1 && 'bg-muted/60'
+                'flex items-center gap-2 group py-1.5 px-1 rounded hover:bg-muted/80 transition-colors',
+                index % 2 === 1 && 'bg-muted/80'
               )}
             >
               <button
