@@ -816,7 +816,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                       <div
                         className={cn(
                           'rounded-md border border-border/50 overflow-hidden',
-                          index % 2 === 1 ? 'bg-muted/80' : 'bg-card',
+                          index % 2 === 1 ? 'bg-muted/100' : 'bg-card',
                           isDragging && 'shadow-lg ring-1 ring-primary/40',
                           taskLocked && 'opacity-50'
                         )}
