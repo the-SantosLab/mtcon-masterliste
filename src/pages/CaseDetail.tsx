@@ -8,6 +8,7 @@ import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseEmails } from '@/components/CaseEmails';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
+import { CaseBlockedBanner } from '@/components/CaseBlockedBanner';
 import { WatchersSection } from '@/components/WatchersSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
