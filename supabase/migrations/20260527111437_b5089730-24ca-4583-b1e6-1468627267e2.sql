@@ -1,0 +1,2 @@
+DELETE FROM auth.mfa_challenges WHERE factor_id IN (SELECT id FROM auth.mfa_factors WHERE user_id = '6f9b49f3-6abc-4240-a90d-aa2d9ca125e9');
+DELETE FROM auth.mfa_factors WHERE user_id = '6f9b49f3-6abc-4240-a90d-aa2d9ca125e9';
