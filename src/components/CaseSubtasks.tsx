@@ -343,13 +343,17 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       setCompletionNote('');
       return;
     }
-    const { error } = await supabase.from('case_tasks').update({
+    const { data, error } = await supabase.from('case_tasks').update({
       status: newStatus,
       completed: false,
       completed_at: null,
       completed_by: null,
-    } as any).eq('id', task.id);
-    if (error) { toast.error('Fehler'); return; }
+    } as any).eq('id', task.id).select('id');
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (!data || data.length === 0) {
+      toast.error('Du hast keine Berechtigung, diese Unteraufgabe zu ändern. Bitte wende dich an den Zuständigen oder einen Admin.');
+      return;
+    }
     fetchTasks();
   };
 
