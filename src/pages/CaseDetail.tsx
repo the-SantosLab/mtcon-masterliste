@@ -618,6 +618,15 @@ export default function CaseDetail() {
           </div>
         </div>
 
+        {c.status === 'blocked' && (
+          <CaseBlockedBanner
+            caseId={c.id}
+            userId={user?.id || ''}
+            canEdit={!isViewer}
+            onChanged={refresh}
+          />
+        )}
+
         {isTerminalStatus(c.status) && (
           <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-4">
             <div className="space-y-0.5">
