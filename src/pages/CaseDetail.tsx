@@ -409,8 +409,10 @@ export default function CaseDetail() {
     if (!c || !user) return;
     if (newStatus === 'abgeschlossen') { setCompleteOpen(true); return; }
     const old = c.status;
+    const wasCompleted = old === 'abgeschlossen';
     const ok = await updateCaseOptimistic({
       status: newStatus as Enums<'case_status'>,
+      ...(wasCompleted ? { completed_at: null, closed_at: null, closed_by: null } : {}),
       last_changed_by: user.id,
       last_changed_at: new Date().toISOString(),
     }, async () => {
