@@ -483,7 +483,30 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
             <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-xs text-muted-foreground">Beschreibung / fixierte Notiz</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-full h-5 w-5 bg-primary/10 text-primary hover:bg-primary/20 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        >
+                          <Sparkles className="h-3 w-3" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent side="top" align="start" sideOffset={8} className="w-64 space-y-2 text-xs p-3">
+                        <div className="flex items-start gap-2">
+                          <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          <div className="space-y-1.5">
+                            <p className="font-medium text-foreground">MTIQ Tipp</p>
+                            <p className="text-muted-foreground text-[11px] leading-relaxed">
+                              MTIQ kann deine Beschreibung klarer und verständlicher formulieren. Gib mindestens 20 Zeichen ein.
+                            </p>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -516,53 +539,6 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
                     Mit MTIQ formulieren
                   </Button>
                 </div>
-                {descBlurred && !mtiqHintDismissed && !mtiqApplied && !mtiqLoading && form.description.trim().length >= 20 && (
-                  <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-2 py-1.5 text-[11px] text-foreground/80 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Sparkles className="h-3 w-3 text-primary shrink-0" />
-                      <span className="truncate">Tipp: MTIQ kann den Text klarer und verständlicher formulieren.</span>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-[11px] text-primary hover:text-primary"
-                        onClick={async () => {
-                          setMtiqLoading(true);
-                          try {
-                            const { data, error } = await supabase.functions.invoke('mtiq-reformulate', {
-                              body: { text: form.description },
-                            });
-                            if (error) throw error;
-                            if (data?.error) throw new Error(data.error);
-                            if (data?.text) {
-                              set('description', data.text);
-                              setMtiqApplied(true);
-                              setMtiqHintDismissed(true);
-                              toast.success('Mit MTIQ formuliert');
-                            }
-                          } catch (e: any) {
-                            toast.error(e?.message || 'Fehler bei MTIQ');
-                          } finally {
-                            setMtiqLoading(false);
-                          }
-                        }}
-                      >
-                        Verbessern
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-[11px] text-muted-foreground"
-                        onClick={() => setMtiqHintDismissed(true)}
-                      >
-                        Schließen
-                      </Button>
-                    </div>
-                  </div>
-                )}
                 <Textarea
                   value={form.description}
                   onChange={e => { set('description', e.target.value); if (mtiqApplied) setMtiqApplied(false); }}
