@@ -800,6 +800,20 @@ export default function AdminInsurance() {
               </label>
             </div>
 
+            {pendingFile && !editingId && (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-[11px] text-foreground truncate">{pendingFile.name}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{fmtBytes(pendingFile.size)} · wird beim Speichern abgelegt</span>
+                </div>
+                <button type="button" onClick={() => setPendingFile(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Bezeichnung *" className="col-span-2">
                 <Input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Betriebshaftpflicht 2026" />
