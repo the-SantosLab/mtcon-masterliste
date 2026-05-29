@@ -53,6 +53,21 @@ function colorFor(seed: string) {
   return PALETTE[h % PALETTE.length];
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+
+function firstNameOf(u?: UserLike | null): string | null {
+  const name = u?.display_name?.trim();
+  if (!name) return null;
+  const first = name.split(/\s+/)[0];
+  return first || null;
+}
+
+function thumbUrlFor(u?: UserLike | null): string | null {
+  const first = firstNameOf(u);
+  if (!first || !SUPABASE_URL) return null;
+  return `${SUPABASE_URL}/storage/v1/object/public/thumbs/Thumb_${encodeURIComponent(first)}.jpg`;
+}
+
 export function UserAvatar({
   user, size = 'md', showName = false, className, ringColor, tooltip = true,
 }: Props) {
@@ -61,7 +76,13 @@ export function UserAvatar({
   const dim = SIZE_MAP[size];
   const initials = initialsOf(user);
   const palette = useMemo(() => colorFor(user?.id || user?.display_name || 'x'), [user?.id, user?.display_name]);
-  const hasImage = !!user?.avatar_url && !errored;
+
+  // xl (Hero) zeigt das Original aus `avatars`, alle kleineren Größen das Thumbnail aus `thumbs`.
+  const thumb = useMemo(() => thumbUrlFor(user), [user?.display_name]);
+  const imageSrc = size === 'xl'
+    ? (user?.avatar_url || thumb)
+    : (thumb || user?.avatar_url);
+  const hasImage = !!imageSrc && !errored;
 
   const ringStyle = size === 'xl' && ringColor
     ? { boxShadow: `0 0 0 3px hsl(var(--background)), 0 0 0 5px ${ringColor}, 0 0 24px ${ringColor}55` }
@@ -81,7 +102,7 @@ export function UserAvatar({
     >
       {hasImage ? (
         <img
-          src={user!.avatar_url!}
+          src={imageSrc!}
           alt={user?.display_name || 'Avatar'}
           width={dim.px}
           height={dim.px}
