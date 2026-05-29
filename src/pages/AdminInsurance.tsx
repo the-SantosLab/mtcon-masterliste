@@ -786,6 +786,17 @@ export default function AdminInsurance() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Category Manager */}
+      <CategoryManager
+        open={catManagerOpen}
+        onOpenChange={setCatManagerOpen}
+        categories={categories}
+        childrenByParent={childrenByParent}
+        rootCategories={rootCategories}
+        onChanged={load}
+        canWrite={canWrite}
+      />
     </AppLayout>
   );
 }
