@@ -748,6 +748,36 @@ export default function AdminInsurance() {
           </DialogHeader>
 
           <div className="space-y-4 mt-2">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-center justify-between gap-3">
+              <div className="flex items-start gap-2 min-w-0">
+                <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">Dokument analysieren (MTIQ)</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    PDF oder Bild hochladen – die Felder werden automatisch ausgefüllt.
+                  </p>
+                </div>
+              </div>
+              <label className={cn(
+                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-medium cursor-pointer transition-colors shrink-0',
+                analyzing ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-primary text-primary-foreground hover:bg-primary/90',
+              )}>
+                {analyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                {analyzing ? 'Analysiere…' : 'Datei wählen'}
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  disabled={analyzing}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleAnalyzeDocument(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Bezeichnung *" className="col-span-2">
                 <Input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Betriebshaftpflicht 2026" />
