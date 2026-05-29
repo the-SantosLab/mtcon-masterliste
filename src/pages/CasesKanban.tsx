@@ -27,6 +27,8 @@ import { format } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { useCaseActions } from '@/hooks/useCaseActions';
+import { useChatUnread } from '@/hooks/useChatUnread';
+import { UnreadBadge } from '@/components/UnreadBadge';
 
 type ViewMode = 'projects' | 'cases';
 
@@ -103,7 +105,7 @@ function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCa
   );
 }
 
-function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable, selected, onToggleSelect }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void }) {
+function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable, selected, onToggleSelect, unreadCount = 0 }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; unreadCount?: number }) {
   return (
     <div
       onClick={(e) => {
@@ -129,6 +131,7 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
           <div className="flex flex-col gap-1 min-w-1">
             <div className="flex items-center gap-1">
               <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+              <UnreadBadge count={unreadCount} size="xs" />
               {!!c.urgency && c.urgency > 0 && (
                 <span
                   className="inline-flex items-center gap-[1px] text-[9px] grayscale opacity-70"
@@ -205,7 +208,7 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[] }) {
+function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds, unreadCount }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[]; unreadCount?: number }) {
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: card.id,
     data: { card, kind: 'case', status: card.status, bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
@@ -226,7 +229,7 @@ function DraggableCase({ card, onOpen, departmentName, selectable, selected, onT
         <GripVertical className="h-3 w-3 text-muted-foreground" />
       </button>
       <div className={cn(isDragging && 'opacity-40')}>
-        <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
+        <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} unreadCount={unreadCount} />
       </div>
     </div>
   );
@@ -337,6 +340,7 @@ export default function CasesKanban() {
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingCloseIds, setPendingCloseIds] = useState<string[] | null>(null);
   const { completeCase } = useCaseActions(user?.id, () => fetchCases());
+  const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -758,6 +762,7 @@ export default function CasesKanban() {
                                 selected={selectedCaseIds.has(c.id)}
                                 onToggleSelect={() => toggleCaseSelected(c.id)}
                                 bulkIds={Array.from(selectedCaseIds)}
+                                unreadCount={unreadMap[c.id] ?? 0}
                               />
                             ))}
                           </SortableContext>
@@ -766,7 +771,7 @@ export default function CasesKanban() {
                 </div>
                 <DragOverlay>
                   {activeProject && <ProjectKanbanCard project={activeProject} isDragging />}
-                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging departmentName={!selectedDeptId ? departments.find(d => d.id === activeCase.department_id)?.name : undefined} />}
+                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging departmentName={!selectedDeptId ? departments.find(d => d.id === activeCase.department_id)?.name : undefined} unreadCount={unreadMap[activeCase.id] ?? 0} />}
                 </DragOverlay>
               </DndContext>
             )}

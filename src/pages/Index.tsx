@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
 import { ChatUnreadWidget } from '@/components/ChatUnreadWidget';
+import { UnreadBadge } from '@/components/UnreadBadge';
+import { useChatUnread } from '@/hooks/useChatUnread';
 
 import { UrgencyDot } from '@/components/UrgencyDot';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,6 +67,7 @@ export default function Dashboard() {
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
   const [now, setNow] = useState(new Date());
+  const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -256,7 +259,10 @@ export default function Dashboard() {
             <UrgencyDot status={c.status} dueAt={c.due_at} />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground truncate">{c.project_name}</p>
-              <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
+              <p className="text-[11px] text-muted-foreground font-mono inline-flex items-center gap-1.5">
+                <span>{c.case_no}</span>
+                <UnreadBadge count={unreadMap[c.id] ?? 0} size="xs" />
+              </p>
             </div>
             <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{formatDate(c.due_at)}</span>
           </Link>
@@ -557,7 +563,10 @@ export default function Dashboard() {
                   >
                     <UrgencyDot status={c.status} dueAt={c.due_at} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono inline-flex items-center gap-1.5">
+                        <span>{c.case_no}</span>
+                        <UnreadBadge count={unreadMap[c.id] ?? 0} size="xs" />
+                      </p>
                       <p className="text-sm text-foreground truncate">{c.project_name}</p>
                     </div>
                     {c.assignee?.short_code && (
