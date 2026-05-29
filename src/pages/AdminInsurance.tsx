@@ -157,6 +157,8 @@ export default function AdminInsurance() {
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
 
   const handleAnalyzeDocument = async (file: File) => {
     if (analyzing) return;
