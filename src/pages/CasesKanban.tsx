@@ -131,6 +131,7 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
           <div className="flex flex-col gap-1 min-w-1">
             <div className="flex items-center gap-1">
               <span className="text-[10px] font-mono text-muted-foreground">{c.case_no}</span>
+              <UnreadBadge count={unreadCount} size="xs" />
               {!!c.urgency && c.urgency > 0 && (
                 <span
                   className="inline-flex items-center gap-[1px] text-[9px] grayscale opacity-70"
