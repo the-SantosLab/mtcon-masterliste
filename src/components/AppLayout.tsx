@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -213,8 +213,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           ))}
           {(isAdmin || (profile as any)?.is_manager) && (
             <Link to="/insurance" onClick={() => setOpen(false)} className={linkClass('/insurance')}>
-              <ShieldCheck className="h-4 w-4" />
-              <span className="flex-1">Versicherungen</span>
+              <FolderArchive className="h-4 w-4" />
+              <span className="flex-1">Ablage</span>
             </Link>
           )}
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />

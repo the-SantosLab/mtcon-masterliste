@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  Shield, ShieldCheck, Lock, Building, Car, Users as UsersIcon, Folder,
+  Shield, ShieldCheck, Lock, Building, Car, Users as UsersIcon, Folder, FolderOpen, FolderArchive,
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
-  CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X,
+  CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X, ChevronRight, Settings2,
+  Briefcase, Wallet, Hammer, Truck, Gavel, FileSignature, Paperclip, Archive, Receipt,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ interface Category {
   color: string;
   icon: string;
   sort_order: number;
+  parent_id: string | null;
 }
 
 interface Policy {
@@ -72,7 +74,12 @@ interface PolicyDocument {
 const ICON_MAP: Record<string, any> = {
   'shield': Shield, 'shield-check': ShieldCheck, 'lock': Lock,
   'building': Building, 'car': Car, 'users': UsersIcon, 'folder': Folder,
+  'folder-open': FolderOpen, 'folder-archive': FolderArchive, 'archive': Archive,
+  'briefcase': Briefcase, 'wallet': Wallet, 'hammer': Hammer, 'truck': Truck,
+  'gavel': Gavel, 'file-signature': FileSignature, 'paperclip': Paperclip,
+  'receipt': Receipt, 'file-text': FileText,
 };
+const ICON_CHOICES = Object.keys(ICON_MAP);
 
 const COLOR_MAP: Record<string, { bg: string; ring: string; text: string; glow: string }> = {
   sky:     { bg: 'bg-sky-500/10',     ring: 'ring-sky-500/30',     text: 'text-sky-400',     glow: 'shadow-[0_0_30px_-12px_hsl(199_89%_48%/0.5)]' },
@@ -82,6 +89,7 @@ const COLOR_MAP: Record<string, { bg: string; ring: string; text: string; glow: 
   rose:    { bg: 'bg-rose-500/10',    ring: 'ring-rose-500/30',    text: 'text-rose-400',    glow: 'shadow-[0_0_30px_-12px_hsl(351_83%_60%/0.5)]' },
   slate:   { bg: 'bg-slate-500/10',   ring: 'ring-slate-500/30',   text: 'text-slate-300',   glow: 'shadow-[0_0_30px_-12px_hsl(215_16%_47%/0.5)]' },
 };
+const COLOR_CHOICES = Object.keys(COLOR_MAP);
 
 const EMPTY_FORM: Partial<Policy> = {
   name: '', provider: '', policy_number: '', category_id: null, description: '', insured_object: '',
@@ -153,6 +161,10 @@ export default function AdminInsurance() {
   const [docsLoading, setDocsLoading] = useState(false);
   const [showAllVersions, setShowAllVersions] = useState(false);
 
+  const [catManagerOpen, setCatManagerOpen] = useState(false);
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
+  const toggleExpand = (id: string) => setExpandedCats(s => ({ ...s, [id]: !s[id] }));
+
   useEffect(() => { setDetailId(routeId || null); }, [routeId]);
 
   const load = async () => {
@@ -178,12 +190,41 @@ export default function AdminInsurance() {
   };
   useEffect(() => { if (detailId) loadDocs(detailId); }, [detailId]);
 
+  const childrenByParent = useMemo(() => {
+    const m: Record<string, Category[]> = {};
+    for (const c of categories) {
+      const key = c.parent_id || '__root__';
+      (m[key] ||= []).push(c);
+    }
+    for (const k of Object.keys(m)) m[k].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
+    return m;
+  }, [categories]);
+  const rootCategories = childrenByParent['__root__'] || [];
+
+  const descendantIds = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    const walk = (id: string): string[] => {
+      if (map[id]) return map[id];
+      const kids = childrenByParent[id] || [];
+      const all = [id, ...kids.flatMap(k => walk(k.id))];
+      map[id] = all;
+      return all;
+    };
+    for (const c of categories) walk(c.id);
+    return map;
+  }, [categories, childrenByParent]);
+
   const counts = useMemo(() => {
     const map: Record<string, number> = { all: policies.length, uncategorized: 0 };
     for (const c of categories) map[c.id] = 0;
     for (const p of policies) {
-      if (!p.category_id) map.uncategorized++;
-      else map[p.category_id] = (map[p.category_id] || 0) + 1;
+      if (!p.category_id) { map.uncategorized++; continue; }
+      // count up the chain so parents include children
+      let cur: Category | undefined = categories.find(c => c.id === p.category_id);
+      while (cur) {
+        map[cur.id] = (map[cur.id] || 0) + 1;
+        cur = cur.parent_id ? categories.find(c => c.id === cur!.parent_id) : undefined;
+      }
     }
     return map;
   }, [policies, categories]);
@@ -195,9 +236,12 @@ export default function AdminInsurance() {
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
+    const selectedSet = selectedCat !== 'all' && selectedCat !== 'uncategorized'
+      ? new Set(descendantIds[selectedCat] || [selectedCat])
+      : null;
     return policies.filter(p => {
       if (selectedCat === 'uncategorized' && p.category_id) return false;
-      if (selectedCat !== 'all' && selectedCat !== 'uncategorized' && p.category_id !== selectedCat) return false;
+      if (selectedSet && (!p.category_id || !selectedSet.has(p.category_id))) return false;
       if (statusFilter !== 'all' && getEffectiveStatus(p) !== statusFilter) return false;
       if (s) {
         const hay = [p.name, p.provider, p.policy_number, p.insured_object, p.description, p.notes, (p.tags || []).join(' ')]
@@ -206,7 +250,7 @@ export default function AdminInsurance() {
       }
       return true;
     });
-  }, [policies, selectedCat, statusFilter, search]);
+  }, [policies, selectedCat, statusFilter, search, descendantIds]);
 
   const detailPolicy = policies.find(p => p.id === detailId) || null;
   const detailCategory = detailPolicy ? categories.find(c => c.id === detailPolicy.category_id) : null;
@@ -339,7 +383,7 @@ export default function AdminInsurance() {
       <AppLayout>
         <div className="max-w-2xl">
           <div className="rounded-md border border-border bg-card p-6">
-            <h1 className="text-base font-semibold text-foreground">Versicherungs-Tresor</h1>
+            <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
             <p className="text-xs text-muted-foreground mt-1">Diese Ablage ist nur für Admins und Manager sichtbar.</p>
           </div>
         </div>
@@ -361,15 +405,15 @@ export default function AdminInsurance() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-md bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <FolderArchive className="h-4 w-4 text-primary" />
                 </div>
-                <h1 className="text-base font-semibold text-foreground">Versicherungs-Tresor</h1>
+                <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
               </div>
-              <p className="text-xs text-muted-foreground">Strukturierte Ablage aller Policen mit Dokumenten-Versionierung und Ablauf-Erinnerung.</p>
+              <p className="text-xs text-muted-foreground">Zentrale Ablage für Verträge, Dokumente und Versicherungen – mit Versionierung, Volltextsuche und Ablauf-Erinnerung.</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Verträge</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Einträge</div>
                 <div className="text-xl font-semibold tabular-nums text-foreground">{policies.length}</div>
               </div>
               <div className={cn('text-right rounded-md px-3 py-1.5 ring-1', expiringCount > 0 ? 'bg-amber-500/10 ring-amber-500/30' : 'bg-muted/30 ring-border')}>
@@ -378,7 +422,7 @@ export default function AdminInsurance() {
               </div>
               {canWrite && (
                 <Button size="sm" onClick={openCreate} className="h-9 gap-1.5">
-                  <Plus className="h-4 w-4" /> Neue Police
+                  <Plus className="h-4 w-4" /> Neuer Eintrag
                 </Button>
               )}
             </div>
@@ -411,20 +455,34 @@ export default function AdminInsurance() {
             </Select>
 
             <div className="rounded-lg border border-border bg-card/60 backdrop-blur p-1.5 space-y-0.5">
+              <div className="flex items-center justify-between px-2.5 py-1.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Kategorien</span>
+                {canWrite && (
+                  <button
+                    onClick={() => setCatManagerOpen(true)}
+                    className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    title="Kategorien verwalten"
+                  >
+                    <Settings2 className="h-3 w-3" /> Verwalten
+                  </button>
+                )}
+              </div>
               <CategoryRow
                 active={selectedCat === 'all'}
                 onClick={() => setSelectedCat('all')}
                 icon={Folder} color="slate" label="Alle Kategorien" count={counts.all}
               />
-              {categories.map(c => (
-                <CategoryRow
+              {rootCategories.map(c => (
+                <CategoryTree
                   key={c.id}
-                  active={selectedCat === c.id}
-                  onClick={() => setSelectedCat(c.id)}
-                  icon={ICON_MAP[c.icon] || Shield}
-                  color={c.color}
-                  label={c.name}
-                  count={counts[c.id] || 0}
+                  cat={c}
+                  depth={0}
+                  selectedCat={selectedCat}
+                  setSelectedCat={setSelectedCat}
+                  expanded={expandedCats}
+                  toggleExpand={toggleExpand}
+                  childrenByParent={childrenByParent}
+                  counts={counts}
                 />
               ))}
               {counts.uncategorized > 0 && (
@@ -443,12 +501,12 @@ export default function AdminInsurance() {
               <div className="text-center text-xs text-muted-foreground py-16">Laden…</div>
             ) : filtered.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border bg-card/30 p-12 text-center">
-                <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-                <p className="text-sm text-foreground">Noch keine Policen in dieser Ansicht</p>
-                <p className="text-xs text-muted-foreground mt-1">Lege deine erste Versicherung an.</p>
+                <FolderOpen className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-foreground">Noch keine Einträge in dieser Ansicht</p>
+                <p className="text-xs text-muted-foreground mt-1">Lege deinen ersten Eintrag an oder wähle eine andere Kategorie.</p>
                 {canWrite && (
                   <Button size="sm" onClick={openCreate} className="mt-4 gap-1.5">
-                    <Plus className="h-4 w-4" /> Neue Police
+                    <Plus className="h-4 w-4" /> Neuer Eintrag
                   </Button>
                 )}
               </div>
@@ -728,6 +786,17 @@ export default function AdminInsurance() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Category Manager */}
+      <CategoryManager
+        open={catManagerOpen}
+        onOpenChange={setCatManagerOpen}
+        categories={categories}
+        childrenByParent={childrenByParent}
+        rootCategories={rootCategories}
+        onChanged={load}
+        canWrite={canWrite}
+      />
     </AppLayout>
   );
 }
@@ -858,5 +927,287 @@ function DocRow({ doc, canWrite, onDownload, onDelete, onReplace, archived }: {
         </button>
       )}
     </div>
+  );
+}
+
+// ---- Category tree (sidebar) ----
+function CategoryTree({
+  cat, depth, selectedCat, setSelectedCat, expanded, toggleExpand, childrenByParent, counts,
+}: {
+  cat: Category;
+  depth: number;
+  selectedCat: string;
+  setSelectedCat: (id: string) => void;
+  expanded: Record<string, boolean>;
+  toggleExpand: (id: string) => void;
+  childrenByParent: Record<string, Category[]>;
+  counts: Record<string, number>;
+}) {
+  const kids = childrenByParent[cat.id] || [];
+  const hasKids = kids.length > 0;
+  const isOpen = expanded[cat.id] ?? depth === 0;
+  const c = COLOR_MAP[cat.color] || COLOR_MAP.slate;
+  const Icon = ICON_MAP[cat.icon] || Folder;
+  const isActive = selectedCat === cat.id;
+  return (
+    <div>
+      <div
+        className={cn(
+          'w-full flex items-center gap-1 rounded-md pr-2 text-xs transition-all group',
+          isActive ? 'bg-muted/60 ring-1 ring-border' : 'hover:bg-muted/30',
+        )}
+        style={{ paddingLeft: `${depth * 12}px` }}
+      >
+        <button
+          onClick={() => hasKids ? toggleExpand(cat.id) : setSelectedCat(cat.id)}
+          className="p-1 text-muted-foreground hover:text-foreground"
+          aria-label={hasKids ? 'aufklappen' : ''}
+        >
+          {hasKids ? (
+            <ChevronRight className={cn('h-3 w-3 transition-transform', isOpen && 'rotate-90')} />
+          ) : (
+            <span className="inline-block h-3 w-3" />
+          )}
+        </button>
+        <button
+          onClick={() => setSelectedCat(cat.id)}
+          className="flex-1 flex items-center justify-between gap-2 min-w-0 py-1.5"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={cn('h-5 w-5 rounded ring-1 flex items-center justify-center shrink-0', c.bg, c.ring)}>
+              <Icon className={cn('h-3 w-3', c.text)} />
+            </div>
+            <span className={cn('truncate', isActive ? 'text-foreground font-medium' : 'text-muted-foreground group-hover:text-foreground')}>
+              {cat.name}
+            </span>
+          </div>
+          <span className="text-[10px] tabular-nums text-muted-foreground shrink-0">{counts[cat.id] || 0}</span>
+        </button>
+      </div>
+      {hasKids && isOpen && (
+        <div className="mt-0.5 space-y-0.5">
+          {kids.map(k => (
+            <CategoryTree
+              key={k.id}
+              cat={k}
+              depth={depth + 1}
+              selectedCat={selectedCat}
+              setSelectedCat={setSelectedCat}
+              expanded={expanded}
+              toggleExpand={toggleExpand}
+              childrenByParent={childrenByParent}
+              counts={counts}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Category manager dialog ----
+function CategoryManager({
+  open, onOpenChange, categories, childrenByParent, rootCategories, onChanged, canWrite,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  categories: Category[];
+  childrenByParent: Record<string, Category[]>;
+  rootCategories: Category[];
+  onChanged: () => Promise<void> | void;
+  canWrite: boolean;
+}) {
+  const [editing, setEditing] = useState<Partial<Category> & { id?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const startNew = (parent_id: string | null = null) => {
+    setEditing({ name: '', description: '', color: 'slate', icon: 'folder', sort_order: 100, parent_id });
+  };
+  const startEdit = (c: Category) => setEditing({ ...c });
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.name?.trim()) { toast.error('Name ist Pflicht'); return; }
+    setBusy(true);
+    const payload: any = {
+      name: editing.name.trim(),
+      description: editing.description || null,
+      color: editing.color || 'slate',
+      icon: editing.icon || 'folder',
+      sort_order: editing.sort_order ?? 100,
+      parent_id: editing.parent_id || null,
+    };
+    let error;
+    if (editing.id) {
+      ({ error } = await supabase.from('insurance_categories' as any).update(payload).eq('id', editing.id));
+    } else {
+      ({ error } = await supabase.from('insurance_categories' as any).insert(payload));
+    }
+    setBusy(false);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success(editing.id ? 'Kategorie aktualisiert' : 'Kategorie angelegt');
+    setEditing(null);
+    await onChanged();
+  };
+
+  const remove = async (c: Category) => {
+    const kids = childrenByParent[c.id] || [];
+    const msg = kids.length
+      ? `Kategorie "${c.name}" und ${kids.length} Unterkategorie(n) freisetzen? Einträge bleiben erhalten, werden aber ohne Kategorie geführt.`
+      : `Kategorie "${c.name}" löschen? Zugeordnete Einträge bleiben erhalten (ohne Kategorie).`;
+    if (!confirm(msg)) return;
+    const { error } = await supabase.from('insurance_categories' as any).delete().eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Kategorie gelöscht');
+    await onChanged();
+  };
+
+  const renderRow = (c: Category, depth: number) => {
+    const kids = childrenByParent[c.id] || [];
+    const Icon = ICON_MAP[c.icon] || Folder;
+    const cm = COLOR_MAP[c.color] || COLOR_MAP.slate;
+    return (
+      <div key={c.id}>
+        <div
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40 group"
+          style={{ paddingLeft: `${8 + depth * 16}px` }}
+        >
+          <div className={cn('h-6 w-6 rounded ring-1 flex items-center justify-center shrink-0', cm.bg, cm.ring)}>
+            <Icon className={cn('h-3 w-3', cm.text)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-foreground truncate">{c.name}</div>
+            {c.description && <div className="text-[10px] text-muted-foreground truncate">{c.description}</div>}
+          </div>
+          {canWrite && (
+            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => startNew(c.id)} title="Unterkategorie anlegen" className="p-1 text-muted-foreground hover:text-foreground">
+                <Plus className="h-3 w-3" />
+              </button>
+              <button onClick={() => startEdit(c)} title="Bearbeiten" className="p-1 text-muted-foreground hover:text-foreground">
+                <Pencil className="h-3 w-3" />
+              </button>
+              <button onClick={() => remove(c)} title="Löschen" className="p-1 text-muted-foreground hover:text-rose-400">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+        </div>
+        {kids.map(k => renderRow(k, depth + 1))}
+      </div>
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-sm">Kategorien verwalten</DialogTitle>
+        </DialogHeader>
+
+        {editing ? (
+          <div className="space-y-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {editing.id ? 'Kategorie bearbeiten' : 'Neue Kategorie'}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</Label>
+                <Input value={editing.name || ''} onChange={e => setEditing(s => ({ ...s!, name: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div className="col-span-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Beschreibung</Label>
+                <Input value={editing.description || ''} onChange={e => setEditing(s => ({ ...s!, description: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Oberkategorie</Label>
+                <Select
+                  value={editing.parent_id || '__none__'}
+                  onValueChange={v => setEditing(s => ({ ...s!, parent_id: v === '__none__' ? null : v }))}
+                >
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— Keine (Hauptkategorie) —</SelectItem>
+                    {categories
+                      .filter(c => c.id !== editing.id) // prevent self
+                      .map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Sortierung</Label>
+                <Input
+                  type="number"
+                  value={editing.sort_order ?? 100}
+                  onChange={e => setEditing(s => ({ ...s!, sort_order: Number(e.target.value) }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Farbe</Label>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {COLOR_CHOICES.map(col => {
+                    const cm = COLOR_MAP[col];
+                    return (
+                      <button
+                        key={col}
+                        onClick={() => setEditing(s => ({ ...s!, color: col }))}
+                        className={cn('h-6 w-6 rounded ring-1', cm.bg, cm.ring, editing.color === col && 'ring-2 ring-primary')}
+                        title={col}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Icon</Label>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {ICON_CHOICES.map(ic => {
+                    const I = ICON_MAP[ic];
+                    return (
+                      <button
+                        key={ic}
+                        onClick={() => setEditing(s => ({ ...s!, icon: ic }))}
+                        className={cn(
+                          'h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-muted/40',
+                          editing.icon === ic && 'ring-2 ring-primary',
+                        )}
+                        title={ic}
+                      >
+                        <I className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(null)} className="h-8 text-xs">Abbrechen</Button>
+              <Button size="sm" onClick={save} disabled={busy} className="h-8 text-xs">{busy ? 'Speichern…' : 'Speichern'}</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-muted-foreground">
+                Kategorien können beliebig verschachtelt, umbenannt und gelöscht werden. Einträge bleiben bei Löschung erhalten.
+              </p>
+              {canWrite && (
+                <Button size="sm" onClick={() => startNew(null)} className="h-8 text-xs gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Neue Hauptkategorie
+                </Button>
+              )}
+            </div>
+            <div className="rounded-md border border-border bg-card/40 max-h-[55vh] overflow-y-auto p-1">
+              {rootCategories.length === 0 ? (
+                <div className="text-center text-xs text-muted-foreground py-8">Noch keine Kategorien.</div>
+              ) : (
+                rootCategories.map(c => renderRow(c, 0))
+              )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
