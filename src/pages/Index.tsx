@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
 import { ChatUnreadWidget } from '@/components/ChatUnreadWidget';
+import { UnreadBadge } from '@/components/UnreadBadge';
+import { useChatUnread } from '@/hooks/useChatUnread';
 
 import { UrgencyDot } from '@/components/UrgencyDot';
 import { useAuth } from '@/contexts/AuthContext';
