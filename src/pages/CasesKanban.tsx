@@ -208,7 +208,7 @@ function DraggableProject({ card, onOpen }: { card: ProjectCard; onOpen: () => v
   );
 }
 
-function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[] }) {
+function DraggableCase({ card, onOpen, departmentName, selectable, selected, onToggleSelect, bulkIds, unreadCount }: { card: CaseCard; onOpen: () => void; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; bulkIds?: string[]; unreadCount?: number }) {
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: card.id,
     data: { card, kind: 'case', status: card.status, bulkIds: selected && bulkIds && bulkIds.length > 1 ? bulkIds : undefined },
@@ -229,7 +229,7 @@ function DraggableCase({ card, onOpen, departmentName, selectable, selected, onT
         <GripVertical className="h-3 w-3 text-muted-foreground" />
       </button>
       <div className={cn(isDragging && 'opacity-40')}>
-        <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} />
+        <CaseKanbanCardInner c={card} onOpen={onOpen} isDragging={isDragging} departmentName={departmentName} selectable={selectable} selected={selected} onToggleSelect={onToggleSelect} unreadCount={unreadCount} />
       </div>
     </div>
   );
