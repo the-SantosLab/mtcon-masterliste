@@ -113,6 +113,35 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
+  // Auto-save draft to localStorage on every change (skip when used in prefill/duplicate flow).
+  useEffect(() => {
+    if (prefill) return;
+    try {
+      const hasContent = Object.entries(form).some(([k, v]) => {
+        if (k === 'received_at' || k === 'project_id') return false;
+        return typeof v === 'string' && v.trim().length > 0;
+      });
+      if (hasContent) {
+        localStorage.setItem(draftKey, JSON.stringify({ form, step }));
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    } catch {}
+  }, [form, step, draftKey, prefill]);
+
+  const discardDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch {}
+    setForm({
+      project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
+      customer_no: '', client_name: '', internal_area_code: '', product_code: '',
+      project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
+      sop: '', quantity: '', project_duration: '', description: '',
+    });
+    setStep(1);
+    setDraftRestored(false);
+  };
+
+
   const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
 
   useEffect(() => {
