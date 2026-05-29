@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Megaphone, Plus, Pencil, Trash2, Archive, ArchiveRestore, Eye, Check, Users } from 'lucide-react';
+import { MtiqButton } from '@/components/MtiqButton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -298,7 +299,14 @@ export default function AdminAnnouncements() {
               <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-sm" />
             </div>
             <div>
-              <Label className="text-xs">Text</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-xs">Text</Label>
+                <MtiqButton
+                  text={form.body}
+                  onResult={(t) => setForm(f => ({ ...f, body: t }))}
+                  minChars={10}
+                />
+              </div>
               <Textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} rows={5} className="text-sm" />
             </div>
             <div className="grid grid-cols-2 gap-3">

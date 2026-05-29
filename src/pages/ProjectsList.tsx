@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { getUrgencyRowClass } from '@/lib/case-utils';
+import { MtiqButton } from '@/components/MtiqButton';
 
 type ProjectSortKey = 'project_number' | 'name' | 'status' | 'owner' | 'dept' | 'created_at' | 'urgency';
 
@@ -460,7 +461,14 @@ export default function ProjectsList() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                <MtiqButton
+                  text={form.description}
+                  onResult={(t) => setForm(f => ({ ...f, description: t }))}
+                  minChars={10}
+                />
+              </div>
               <Textarea
                 className="text-xs resize-none"
                 rows={2}
