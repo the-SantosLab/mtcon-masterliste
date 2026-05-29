@@ -501,12 +501,12 @@ export default function AdminInsurance() {
               <div className="text-center text-xs text-muted-foreground py-16">Laden…</div>
             ) : filtered.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border bg-card/30 p-12 text-center">
-                <Shield className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-                <p className="text-sm text-foreground">Noch keine Policen in dieser Ansicht</p>
-                <p className="text-xs text-muted-foreground mt-1">Lege deine erste Versicherung an.</p>
+                <FolderOpen className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-foreground">Noch keine Einträge in dieser Ansicht</p>
+                <p className="text-xs text-muted-foreground mt-1">Lege deinen ersten Eintrag an oder wähle eine andere Kategorie.</p>
                 {canWrite && (
                   <Button size="sm" onClick={openCreate} className="mt-4 gap-1.5">
-                    <Plus className="h-4 w-4" /> Neue Police
+                    <Plus className="h-4 w-4" /> Neuer Eintrag
                   </Button>
                 )}
               </div>
