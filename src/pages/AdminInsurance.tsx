@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
-  Shield, ShieldCheck, Lock, Building, Car, Users as UsersIcon, Folder,
+  Shield, ShieldCheck, Lock, Building, Car, Users as UsersIcon, Folder, FolderOpen, FolderArchive,
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
-  CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X,
+  CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X, ChevronRight, Settings2,
+  Briefcase, Wallet, Hammer, Truck, Gavel, FileSignature, Paperclip, Archive, Receipt,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ interface Category {
   color: string;
   icon: string;
   sort_order: number;
+  parent_id: string | null;
 }
 
 interface Policy {
