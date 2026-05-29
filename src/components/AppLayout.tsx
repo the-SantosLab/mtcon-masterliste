@@ -230,6 +230,17 @@ export function AppLayout({ children }: AppLayoutProps) {
               ))}
             </>
           )}
+          <div className="border-t border-sidebar-border my-1" />
+          <button
+            onClick={() => setBugDialogOpen(true)}
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+          >
+            <Bug className="h-4 w-4" />
+            <span className="flex-1 text-left">Bug / Feedback melden</span>
+          </button>
+          <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-9 text-[12px]')}>
+            <span>Meine Meldungen</span>
+          </Link>
         </nav>
 
         <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-between gap-2">
