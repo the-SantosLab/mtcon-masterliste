@@ -157,6 +157,8 @@ export default function AdminInsurance() {
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
 
   const handleAnalyzeDocument = async (file: File) => {
     if (analyzing) return;
@@ -217,13 +219,22 @@ export default function AdminInsurance() {
       });
 
       const filled = Object.values(fields).filter(v => v !== null && v !== undefined && !(typeof v === 'string' && v.trim() === '') && !(Array.isArray(v) && v.length === 0)).length;
-      toast.success(`Dokument analysiert · ${filled} Felder erkannt`);
+
+      // Keep the file to attach it after save (create) or upload immediately (edit)
+      if (editingId) {
+        await uploadDocument(file, undefined, editingId);
+        toast.success(`Dokument analysiert · ${filled} Felder erkannt · gespeichert`);
+      } else {
+        setPendingFile(file);
+        toast.success(`Dokument analysiert · ${filled} Felder erkannt · wird beim Speichern abgelegt`);
+      }
     } catch (e: any) {
       toast.error(e?.message || 'Analyse fehlgeschlagen');
     } finally {
       setAnalyzing(false);
     }
   };
+
 
   const [detailId, setDetailId] = useState<string | null>(routeId || null);
   const [documents, setDocuments] = useState<PolicyDocument[]>([]);
@@ -328,13 +339,16 @@ export default function AdminInsurance() {
   const openCreate = () => {
     setEditingId(null);
     setForm({ ...EMPTY_FORM, category_id: selectedCat !== 'all' && selectedCat !== 'uncategorized' ? selectedCat : null });
+    setPendingFile(null);
     setEditorOpen(true);
   };
   const openEdit = (p: Policy) => {
     setEditingId(p.id);
     setForm({ ...p });
+    setPendingFile(null);
     setEditorOpen(true);
   };
+
   const addTag = () => {
     const t = tagInput.trim();
     if (!t) return;
@@ -365,6 +379,7 @@ export default function AdminInsurance() {
       tags: form.tags || [],
       updated_by: user?.id || null,
     };
+    let newPolicyId: string | null = null;
     if (editingId) {
       const { error } = await supabase.from('insurance_policies' as any).update(payload).eq('id', editingId);
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
@@ -374,12 +389,17 @@ export default function AdminInsurance() {
       const { data, error } = await supabase.from('insurance_policies' as any).insert(payload).select('id').single();
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
       toast.success('Police angelegt');
-      if (data) setDetailId((data as any).id);
+      if (data) { newPolicyId = (data as any).id; setDetailId(newPolicyId); }
     }
+    if (pendingFile && newPolicyId) {
+      await uploadDocument(pendingFile, undefined, newPolicyId);
+    }
+    setPendingFile(null);
     setSaving(false);
     setEditorOpen(false);
     await load();
   };
+
 
   const deletePolicy = async (p: Policy) => {
     if (!confirm(`Police "${p.name}" inkl. aller Dokumente löschen?`)) return;
@@ -395,10 +415,11 @@ export default function AdminInsurance() {
   };
 
   // ---- documents ----
-  const uploadDocument = async (file: File, replacesId?: string) => {
-    if (!detailId) return;
+  const uploadDocument = async (file: File, replacesId?: string, policyIdOverride?: string) => {
+    const policyId = policyIdOverride || detailId;
+    if (!policyId) return;
     const ext = file.name.split('.').pop() || 'pdf';
-    const key = `${detailId}/${crypto.randomUUID()}.${ext}`;
+    const key = `${policyId}/${crypto.randomUUID()}.${ext}`;
     const up = await supabase.storage.from('insurance-documents').upload(key, file, {
       cacheControl: '3600', upsert: false, contentType: file.type,
     });
@@ -411,7 +432,7 @@ export default function AdminInsurance() {
     }
 
     const { data: inserted, error: insErr } = await supabase.from('insurance_documents' as any).insert({
-      policy_id: detailId,
+      policy_id: policyId,
       storage_path: key,
       file_name: file.name,
       file_size: file.size,
@@ -430,8 +451,9 @@ export default function AdminInsurance() {
       }).eq('id', replacesId);
     }
     toast.success('Dokument hochgeladen');
-    await loadDocs(detailId);
+    if (detailId === policyId) await loadDocs(policyId);
   };
+
 
   const downloadDoc = async (doc: PolicyDocument) => {
     const { data, error } = await supabase.storage.from('insurance-documents').createSignedUrl(doc.storage_path, 300);
@@ -777,6 +799,20 @@ export default function AdminInsurance() {
                 />
               </label>
             </div>
+
+            {pendingFile && !editingId && (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-[11px] text-foreground truncate">{pendingFile.name}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{fmtBytes(pendingFile.size)} · wird beim Speichern abgelegt</span>
+                </div>
+                <button type="button" onClick={() => setPendingFile(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Bezeichnung *" className="col-span-2">
