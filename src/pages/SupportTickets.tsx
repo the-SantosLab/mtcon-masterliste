@@ -64,9 +64,9 @@ export default function SupportTickets() {
   const fetchTickets = async () => {
     const { data } = await supabase
       .from('support_tickets')
-      .select('*, customer:portal_customers!support_tickets_customer_id_fkey(display_name, company_name), assignee:users_profile!support_tickets_assigned_to_fkey(display_name, short_code), reporter:users_profile!support_tickets_reporter_user_id_fkey(display_name, short_code)')
+      .select('*, customer:portal_customers!support_tickets_customer_id_fkey(display_name, company_name), assignee:users_profile!support_tickets_assigned_to_fkey(display_name, short_code)')
       .order('created_at', { ascending: false });
-    setTickets((data as TicketRow[]) || []);
+    setTickets(((data as any[]) || []) as TicketRow[]);
     setLoading(false);
   };
 
