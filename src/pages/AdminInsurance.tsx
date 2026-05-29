@@ -383,7 +383,7 @@ export default function AdminInsurance() {
       <AppLayout>
         <div className="max-w-2xl">
           <div className="rounded-md border border-border bg-card p-6">
-            <h1 className="text-base font-semibold text-foreground">Versicherungs-Tresor</h1>
+            <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
             <p className="text-xs text-muted-foreground mt-1">Diese Ablage ist nur für Admins und Manager sichtbar.</p>
           </div>
         </div>
