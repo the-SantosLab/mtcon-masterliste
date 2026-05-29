@@ -406,10 +406,11 @@ export default function AdminInsurance() {
   };
 
   // ---- documents ----
-  const uploadDocument = async (file: File, replacesId?: string) => {
-    if (!detailId) return;
+  const uploadDocument = async (file: File, replacesId?: string, policyIdOverride?: string) => {
+    const policyId = policyIdOverride || detailId;
+    if (!policyId) return;
     const ext = file.name.split('.').pop() || 'pdf';
-    const key = `${detailId}/${crypto.randomUUID()}.${ext}`;
+    const key = `${policyId}/${crypto.randomUUID()}.${ext}`;
     const up = await supabase.storage.from('insurance-documents').upload(key, file, {
       cacheControl: '3600', upsert: false, contentType: file.type,
     });
@@ -422,7 +423,7 @@ export default function AdminInsurance() {
     }
 
     const { data: inserted, error: insErr } = await supabase.from('insurance_documents' as any).insert({
-      policy_id: detailId,
+      policy_id: policyId,
       storage_path: key,
       file_name: file.name,
       file_size: file.size,
@@ -441,8 +442,9 @@ export default function AdminInsurance() {
       }).eq('id', replacesId);
     }
     toast.success('Dokument hochgeladen');
-    await loadDocs(detailId);
+    if (detailId === policyId) await loadDocs(policyId);
   };
+
 
   const downloadDoc = async (doc: PolicyDocument) => {
     const { data, error } = await supabase.storage.from('insurance-documents').createSignedUrl(doc.storage_path, 300);
