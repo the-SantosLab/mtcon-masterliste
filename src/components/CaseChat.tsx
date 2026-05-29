@@ -337,14 +337,55 @@ export function CaseChat({ caseId, canWrite }: Props) {
     const body = text.trim();
     if (!body && pending.length === 0) return;
     setSending(true);
+
+    // Optimistic: render the message immediately while the insert runs in the background
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const nowIso = new Date().toISOString();
+    const selfAuthor = (members.find(m => m.id === user.id) || null) as MentionUser | null;
+    const optimisticAttachments: ChatAttachment[] = pending.map(p => ({
+      id: `temp-att-${p.id}`,
+      message_id: tempId,
+      case_id: caseId,
+      storage_path: '',
+      file_name: p.file.name,
+      mime_type: p.file.type,
+      size_bytes: p.file.size,
+      uploaded_by: user.id,
+      created_at: nowIso,
+    }));
+    const optimisticMsg: ChatMessage = {
+      id: tempId,
+      case_id: caseId,
+      author_id: user.id,
+      body,
+      created_at: nowIso,
+      edited_at: null,
+      deleted_at: null,
+      reply_to_id: replyTo?.id || null,
+      pinned: false,
+      pinned_at: null,
+      pinned_by: null,
+      system_kind: null,
+      author: selfAuthor,
+      attachments: optimisticAttachments,
+      reactions: [],
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+
+    const sentText = text;
+    const sentPending = pending;
+    const sentReplyTo = replyTo;
+    setPending([]); setText(''); setReplyTo(null);
+    requestAnimationFrame(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; });
+
     try {
       const { data: ins, error } = await (supabase as any)
         .from('case_chat_messages')
-        .insert({ case_id: caseId, author_id: user.id, body, reply_to_id: replyTo?.id || null })
+        .insert({ case_id: caseId, author_id: user.id, body, reply_to_id: sentReplyTo?.id || null })
         .select('id').single();
       if (error) throw error;
       const msgId = ins.id;
-      for (const p of pending) {
+      for (const p of sentPending) {
         const path = `cases/${caseId}/chat/${msgId}/${Date.now()}_${sanitizeFileName(p.file.name)}`;
         const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, p.file, { contentType: p.file.type });
         if (upErr) { toast.error(`Upload ${p.file.name}: ${upErr.message}`); continue; }
@@ -370,14 +411,16 @@ export function CaseChat({ caseId, canWrite }: Props) {
           );
         }
       }
-      pending.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
-      setPending([]); setText(''); setReplyTo(null);
-      // Guarantee own message appears even if realtime echo is missed
+      sentPending.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
+      // Reconcile: fetchMessages replaces the temporary message with the real one
       await fetchMessages();
-      // ensure scroll to bottom
       requestAnimationFrame(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; });
-
     } catch (e: any) {
+      // Roll back optimistic insert and restore the input so the user can retry
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setText(sentText);
+      setPending(sentPending);
+      setReplyTo(sentReplyTo);
       toast.error(e.message || 'Senden fehlgeschlagen');
     } finally { setSending(false); }
   };

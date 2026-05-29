@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch, ArrowUpDown, Archive, ArchiveRestore } from 'lucide-react';
+import { CheckSquare, Square, Plus, Trash2, Loader2, Building2, User, ChevronDown, AlertTriangle, FileText, GripVertical, ArrowUp, ArrowDown, Lock, CheckCircle2, ListChecks, GitBranch, ArrowUpDown, Archive, ArchiveRestore, Pencil } from 'lucide-react';
 import { nextSort, type SortState }    from '@/components/SortableHeader';
 import {
   DndContext,
@@ -224,6 +224,89 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [subtaskSort, setSubtaskSort] = useState<SortState<'urgency'>>({ column: null, direction: null });
   const [showArchive, setShowArchive] = useState(false);
   const isSortActive = !!subtaskSort.column;
+
+  // ---------- Bulk edit dialog (Frage 61) ----------
+  interface EditForm {
+    title: string;
+    description: string;
+    department_id: string;
+    assigned_to: string;
+    due_at: string;
+  }
+  const [editTask, setEditTask] = useState<Subtask | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({ title: '', description: '', department_id: '', assigned_to: '', due_at: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (t: Subtask) => {
+    setEditTask(t);
+    setEditForm({
+      title: t.title || '',
+      description: t.description || '',
+      department_id: t.department_id || '',
+      assigned_to: t.assigned_to || '',
+      due_at: t.due_at || '',
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editTask) return;
+    if (!editForm.title.trim()) { toast.error('Titel ist erforderlich'); return; }
+    if (dueRequired && !editForm.due_at) { toast.error('„Fällig bis" ist verpflichtend'); return; }
+    setSavingEdit(true);
+    const orig = editTask;
+    const next = {
+      title: editForm.title.trim(),
+      description: editForm.description.trim() || null,
+      department_id: editForm.department_id || null,
+      assigned_to: editForm.assigned_to || null,
+      due_at: editForm.due_at || null,
+    };
+    const { data, error } = await supabase.from('case_tasks').update(next as any).eq('id', orig.id).select('id');
+    if (error) { toast.error('Fehler: ' + error.message); setSavingEdit(false); return; }
+    if (!data || data.length === 0) {
+      toast.error('Keine Berechtigung, diese Unteraufgabe zu bearbeiten.');
+      setSavingEdit(false);
+      return;
+    }
+
+    // Log changed fields once, batched
+    const changes: { field: string; old_value: string | null; new_value: string | null }[] = [];
+    if (orig.title !== next.title) changes.push({ field: 'title', old_value: orig.title, new_value: next.title });
+    if ((orig.description || '') !== (next.description || '')) changes.push({ field: 'description', old_value: orig.description, new_value: next.description });
+    if ((orig.department_id || '') !== (next.department_id || '')) changes.push({ field: 'department_id', old_value: orig.department_id, new_value: next.department_id });
+    if ((orig.assigned_to || '') !== (next.assigned_to || '')) changes.push({ field: 'assigned_to', old_value: orig.assigned_to, new_value: next.assigned_to });
+    if ((orig.due_at || '') !== (next.due_at || '')) changes.push({ field: 'due_at', old_value: orig.due_at, new_value: next.due_at });
+
+    if (changes.length) {
+      await supabase.from('case_activity').insert(
+        changes.map(c => ({
+          case_id: caseId,
+          task_id: orig.id,
+          action: 'task_updated',
+          actor_id: userId,
+          field: c.field,
+          old_value: c.old_value,
+          new_value: c.new_value,
+        })) as any
+      );
+    }
+
+    // Single, batched email notification:
+    //  - only if the assignee actually changed
+    //  - only if the user has the assign-email toggle enabled
+    const assigneeChanged = (orig.assigned_to || '') !== (next.assigned_to || '');
+    if (assigneeChanged && next.assigned_to && sendAssignEmail) {
+      supabase.functions.invoke('notify-task-assigned', {
+        body: { caseId, taskId: orig.id, assigneeId: next.assigned_to, actorId: userId },
+      }).catch(() => {});
+    }
+
+    toast.success(changes.length ? 'Änderungen gespeichert' : 'Keine Änderungen');
+    setEditTask(null);
+    setSavingEdit(false);
+    fetchTasks();
+  };
+
 
   const activeTasks = useMemo(() => tasks.filter(t => !t.archived_at), [tasks]);
   const archivedTasks = useMemo(() => tasks.filter(t => !!t.archived_at), [tasks]);
@@ -1035,9 +1118,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                   onBlur={e => { if ((e.target.value || null) !== task.due_at) updateDueAt(task.id, e.target.value || null); }}
                                 />
                               </div>
-                            <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => setConfirmDeleteId(task.id)}>
-                              <Trash2 className="h-3 w-3 mr-1" />Löschen
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button variant="outline" size="sm" className="h-6 text-[11px]" onClick={() => openEdit(task)}>
+                                <Pencil className="h-3 w-3 mr-1" />Bearbeiten
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-6 text-[11px] text-destructive hover:text-destructive" onClick={() => setConfirmDeleteId(task.id)}>
+                                <Trash2 className="h-3 w-3 mr-1" />Löschen
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1306,6 +1394,86 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!editTask} onOpenChange={(o) => { if (!o && !savingEdit) setEditTask(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Unteraufgabe bearbeiten</DialogTitle>
+          </DialogHeader>
+          {editTask && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Titel *</p>
+                <Input
+                  value={editForm.title}
+                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Beschreibung</p>
+                <Textarea
+                  value={editForm.description}
+                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  className="text-xs min-h-[80px]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground">Abteilung</p>
+                  <Select value={editForm.department_id || 'none'} onValueChange={v => setEditForm(f => ({ ...f, department_id: v === 'none' ? '' : v, assigned_to: '' }))}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" className="text-xs">— Keine —</SelectItem>
+                      {departments.map(d => (
+                        <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground">Bearbeiter</p>
+                  <Select value={editForm.assigned_to || 'none'} onValueChange={v => setEditForm(f => ({ ...f, assigned_to: v === 'none' ? '' : v }))}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" className="text-xs">— Nicht zugewiesen —</SelectItem>
+                      {profiles
+                        .filter(p => !editForm.department_id || p.department_id === editForm.department_id)
+                        .map(p => (
+                          <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Fällig bis{dueRequired ? ' *' : ''}</p>
+                <Input
+                  type="date"
+                  value={editForm.due_at}
+                  onChange={e => setEditForm(f => ({ ...f, due_at: e.target.value }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="rounded-md border border-border/60 bg-muted/30 px-2.5 py-2">
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  Alle Änderungen werden erst beim Klick auf <span className="font-medium text-foreground">Speichern</span> übernommen.
+                  E-Mail-Benachrichtigungen werden gesammelt: Es wird höchstens eine Zuweisungs-E-Mail versendet – und nur, wenn sich der Bearbeiter tatsächlich geändert hat und die Benachrichtigung aktiviert ist.
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditTask(null)} disabled={savingEdit}>
+              Abbrechen
+            </Button>
+            <Button size="sm" className="h-8 text-xs" onClick={saveEdit} disabled={savingEdit}>
+              {savingEdit ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+              Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

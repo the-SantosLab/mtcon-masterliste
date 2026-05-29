@@ -69,6 +69,7 @@ const SECTIONS: Section[] = [
   { id: 'soft-delete', label: 'Papierkorb & Wiederherstellung', icon: Trash2 },
   { id: 'session-security', label: 'Session-Sicherheit', icon: Timer },
   { id: 'design-tokens', label: 'Design-System & Tokens', icon: Palette },
+  { id: 'gobd', label: 'GoBD-Konformität', icon: ShieldCheck },
   { id: 'shortcuts', label: 'Tastenkürzel', icon: Columns },
 ];
 
@@ -2004,6 +2005,51 @@ return () => { supabase.removeChannel(channel); };`}</Code>
               Statt wiederholt die gleichen Daten abzufragen, erhält jeder Client automatisch
               nur die tatsächlichen Änderungen.
             </Tip>
+          </Card>
+
+          <Card title="GoBD-Konformität (Anforderungs-Check)" id="gobd">
+            <p className="text-xs text-muted-foreground mb-3">
+              Gegenüberstellung der zentralen GoBD-Grundsätze (Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern, Aufzeichnungen und Unterlagen in elektronischer Form) und der heute in der Masterliste vorhandenen Mechanismen. Status ist eine technische Selbsteinschätzung, keine juristische Bewertung.
+            </p>
+            <SubHeading>Erfüllt / weitgehend erfüllt</SubHeading>
+            <Table
+              headers={['GoBD-Anforderung', 'Umsetzung in der Software']}
+              rows={[
+                ['Nachvollziehbarkeit & Nachprüfbarkeit (§ 145 AO)', 'Lückenloses case_activity-Log für Status-, Abteilungs-, Zuweisungs- und Feldänderungen inkl. actor_id, old_value, new_value, Zeitstempel.'],
+                ['Unveränderbarkeit (§ 146 Abs. 4 AO)', 'Abgeschlossene Vorgänge (status in abgeschlossen/verworfen/archiv) sind über RLS-„freeze"-Policies für UPDATE/DELETE auf cases, case_tasks, case_notes, case_chat_messages und case_emails gesperrt; Aufhebung nur durch Admin.'],
+                ['Vollständigkeit', 'Pflichtfelder bei Vorgangsanlage, automatische VOR-YYYY-nnnn-Nummerierung, watcher- und Abteilungs-Zuordnung, CSV-Import mit Vorschau.'],
+                ['Ordnung', 'Projekt/Vorgangs/Untervorgangs-Hierarchie, Abteilungs- und Projektablagen in Storage, eindeutige Nummernkreise (VOR/TKT).'],
+                ['Zeitgerechte Erfassung', 'Realtime-Inserts; created_at/last_changed_at auf allen relevanten Tabellen, automatische Trigger-Setzung.'],
+                ['Datensicherheit & Zugriffsschutz', 'Row-Level-Security für alle public-Tabellen, Rollenmodell (Admin/Mitarbeiter/Viewer), separater Portal-Kontext, 2-Faktor-Authentifizierung, Session-Timeout.'],
+                ['Datensicherung', 'Tägliche Backups via create-backup Edge Function inkl. Storage-Path, restore-backup für Admin-gestützte Wiederherstellung.'],
+                ['Verfügbarkeit & Lesbarkeit', 'Webbasierter Zugriff, Druck-/PDF-Export der Dokumentation, Anhänge über signierte URLs (5 Min) abrufbar.'],
+                ['Löschkonzept', 'Soft-Delete (deleted=true, deleted_at, deleted_by), eigener Papierkorb (deleted_cases, AdminTrash), endgültige Löschung nur durch Admin.'],
+              ]}
+            />
+            <SubHeading>Teilweise / mit Einschränkungen</SubHeading>
+            <Table
+              headers={['Anforderung', 'Status & offene Punkte']}
+              rows={[
+                ['Maschinelle Auswertbarkeit / Datenexport (GoBD-Datenzugriff Z3)', 'REST-API (api-dashboard) liefert strukturierte Daten; ein vollständiger, GoBD-konformer Export (CSV/XML inkl. Beschreibungsstandard) ist noch nicht implementiert.'],
+                ['Verfahrensdokumentation', 'Diese Seite dient als technische Verfahrensdokumentation; eine formell freigegebene Version mit Versionsstand und Freigabeworkshop fehlt.'],
+                ['Aufbewahrungsfristen (6 / 10 Jahre)', 'Daten werden nicht automatisch nach Ablauf gelöscht und nicht automatisch in ein Langzeitarchiv überführt; aktuell unbegrenzte Aufbewahrung in der Live-DB.'],
+                ['Notiz- und Chat-Edits', 'Edits werden mit edited_at / edited_by markiert; eine vollständige Versionshistorie (alter Text) wird für Chat-Nachrichten nicht aufgehoben.'],
+              ]}
+            />
+            <SubHeading>Noch zu ergänzen</SubHeading>
+            <Table
+              headers={['Thema', 'Empfehlung']}
+              rows={[
+                ['Verfahrensdokumentation', 'Formelle Verfahrensdokumentation (Allgemeine Beschreibung, Anwender-, Technische und Betriebsdokumentation) erstellen, versionieren und ablegen.'],
+                ['Z1/Z2/Z3-Datenzugriff', 'Definierten Prüfer-Zugang (read-only) plus standardisierter Export (z. B. DSFinV-K-ähnlich) für Vorgänge, Aktivitäten und Anhänge bereitstellen.'],
+                ['Archivierung', 'Regelbasierte Langzeitarchivierung abgeschlossener Vorgänge nach X Jahren in ein separates, unveränderbares Archiv (S3-Object-Lock oder vergleichbar).'],
+                ['Internes Kontrollsystem (IKS)', 'Dokumentierte Berechtigungs-Reviews, Notfall-/Restore-Tests sowie Vier-Augen-Prinzip für Stammdatenänderungen.'],
+                ['Vollständige Edit-Historie', 'Optional: zusätzliche history-Tabelle für case_notes und case_chat_messages mit altem Body je Edit.'],
+              ]}
+            />
+            <Warning>
+              Diese Einschätzung ersetzt keine steuerrechtliche oder wirtschaftsprüferische Prüfung. Vor einer Außenprüfung sollte eine formelle Verfahrensdokumentation gemeinsam mit Steuerberatung / Wirtschaftsprüfung freigegeben werden.
+            </Warning>
           </Card>
 
           <Card title="Tastenkürzel" id="shortcuts">
