@@ -15,6 +15,7 @@ import {
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
   CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X, ChevronRight, Settings2,
   Briefcase, Wallet, Hammer, Truck, Gavel, FileSignature, Paperclip, Archive, Receipt,
+  Sparkles, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -155,6 +156,74 @@ export default function AdminInsurance() {
   const [form, setForm] = useState<Partial<Policy>>(EMPTY_FORM);
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const handleAnalyzeDocument = async (file: File) => {
+    if (analyzing) return;
+    const maxBytes = 15 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error('Datei zu groß (max. 15 MB)');
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      const buf = await file.arrayBuffer();
+      // chunked base64 to avoid stack overflow on large files
+      const bytes = new Uint8Array(buf);
+      let binary = '';
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunk)) as any);
+      }
+      const file_base64 = btoa(binary);
+      const { data, error } = await supabase.functions.invoke('analyze-policy-document', {
+        body: { file_base64, mime_type: file.type || 'application/pdf', file_name: file.name },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const fields = (data?.fields || {}) as Record<string, any>;
+
+      // Merge only non-null/non-empty fields; never overwrite Kategorie
+      setForm(prev => {
+        const next: any = { ...prev };
+        const assign = (key: string, value: any) => {
+          if (value === null || value === undefined) return;
+          if (typeof value === 'string' && value.trim() === '') return;
+          next[key] = value;
+        };
+        assign('name', fields.name);
+        assign('provider', fields.provider);
+        assign('policy_number', fields.policy_number);
+        assign('description', fields.description);
+        assign('insured_object', fields.insured_object);
+        assign('start_date', fields.start_date);
+        assign('end_date', fields.end_date);
+        assign('renewal_date', fields.renewal_date);
+        if (typeof fields.notice_period_days === 'number') next.notice_period_days = fields.notice_period_days;
+        if (typeof fields.premium_amount === 'number') next.premium_amount = fields.premium_amount;
+        assign('premium_currency', fields.premium_currency);
+        if (fields.premium_interval && ['monthly','quarterly','yearly','one_time'].includes(fields.premium_interval)) {
+          next.premium_interval = fields.premium_interval;
+        }
+        assign('contact_name', fields.contact_name);
+        assign('contact_email', fields.contact_email);
+        assign('contact_phone', fields.contact_phone);
+        assign('notes', fields.notes);
+        if (Array.isArray(fields.tags) && fields.tags.length) {
+          const merged = Array.from(new Set([...(prev.tags || []), ...fields.tags.filter((t: any) => typeof t === 'string')]));
+          next.tags = merged.slice(0, 10);
+        }
+        return next;
+      });
+
+      const filled = Object.values(fields).filter(v => v !== null && v !== undefined && !(typeof v === 'string' && v.trim() === '') && !(Array.isArray(v) && v.length === 0)).length;
+      toast.success(`Dokument analysiert · ${filled} Felder erkannt`);
+    } catch (e: any) {
+      toast.error(e?.message || 'Analyse fehlgeschlagen');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const [detailId, setDetailId] = useState<string | null>(routeId || null);
   const [documents, setDocuments] = useState<PolicyDocument[]>([]);
@@ -679,6 +748,36 @@ export default function AdminInsurance() {
           </DialogHeader>
 
           <div className="space-y-4 mt-2">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-center justify-between gap-3">
+              <div className="flex items-start gap-2 min-w-0">
+                <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">Dokument analysieren (MTIQ)</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    PDF oder Bild hochladen – die Felder werden automatisch ausgefüllt.
+                  </p>
+                </div>
+              </div>
+              <label className={cn(
+                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-medium cursor-pointer transition-colors shrink-0',
+                analyzing ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-primary text-primary-foreground hover:bg-primary/90',
+              )}>
+                {analyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                {analyzing ? 'Analysiere…' : 'Datei wählen'}
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  disabled={analyzing}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleAnalyzeDocument(f);
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Bezeichnung *" className="col-span-2">
                 <Input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Betriebshaftpflicht 2026" />
