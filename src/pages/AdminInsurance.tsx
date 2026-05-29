@@ -219,13 +219,22 @@ export default function AdminInsurance() {
       });
 
       const filled = Object.values(fields).filter(v => v !== null && v !== undefined && !(typeof v === 'string' && v.trim() === '') && !(Array.isArray(v) && v.length === 0)).length;
-      toast.success(`Dokument analysiert · ${filled} Felder erkannt`);
+
+      // Keep the file to attach it after save (create) or upload immediately (edit)
+      if (editingId) {
+        await uploadDocument(file, undefined, editingId);
+        toast.success(`Dokument analysiert · ${filled} Felder erkannt · gespeichert`);
+      } else {
+        setPendingFile(file);
+        toast.success(`Dokument analysiert · ${filled} Felder erkannt · wird beim Speichern abgelegt`);
+      }
     } catch (e: any) {
       toast.error(e?.message || 'Analyse fehlgeschlagen');
     } finally {
       setAnalyzing(false);
     }
   };
+
 
   const [detailId, setDetailId] = useState<string | null>(routeId || null);
   const [documents, setDocuments] = useState<PolicyDocument[]>([]);
