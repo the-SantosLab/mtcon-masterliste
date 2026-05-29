@@ -236,7 +236,11 @@ export default function CasesList() {
                   <Plus className="h-3.5 w-3.5 mr-1" />Neuer Vorgang
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent
+                className="max-w-2xl max-h-[90vh] overflow-y-auto"
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+              >
                 <DialogHeader><DialogTitle className="text-sm font-semibold">Neuen Vorgang anlegen</DialogTitle></DialogHeader>
                 <CreateCaseForm userId={user?.id || ''} onCreated={() => { setCreateOpen(false); fetchCases(); }} />
               </DialogContent>

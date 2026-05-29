@@ -41,15 +41,34 @@ const STEPS = [
   { id: 5, title: 'Bemerkung & Abschluss' },
 ];
 
+const DRAFT_KEY_PREFIX = 'createCaseDraft:v1:';
+const draftKeyFor = (projectId?: string) => `${DRAFT_KEY_PREFIX}${projectId || 'global'}`;
+
 export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }: CreateCaseFormProps) {
-  const [step, setStep] = useState(1);
+  // Only auto-restore drafts when there is no explicit prefill (e.g. duplicate flow).
+  const draftKey = draftKeyFor(defaultProjectId);
+  const initialDraft = (() => {
+    if (prefill) return null;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.form) return parsed as { form: Record<string, string>; step?: number };
+    } catch {}
+    return null;
+  })();
+
+  const [step, setStep] = useState<number>(initialDraft?.step ?? 1);
   const [form, setForm] = useState({
     project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
     sop: '', quantity: '', project_duration: '', description: '',
     ...(prefill || {}),
+    ...(initialDraft?.form || {}),
   });
+  const [draftRestored, setDraftRestored] = useState<boolean>(!!initialDraft);
+
   const [prefillDeptMapped, setPrefillDeptMapped] = useState(false);
 
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
@@ -93,6 +112,35 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   const [projectInfoOpen, setProjectInfoOpen] = useState(true);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  // Auto-save draft to localStorage on every change (skip when used in prefill/duplicate flow).
+  useEffect(() => {
+    if (prefill) return;
+    try {
+      const hasContent = Object.entries(form).some(([k, v]) => {
+        if (k === 'received_at' || k === 'project_id') return false;
+        return typeof v === 'string' && v.trim().length > 0;
+      });
+      if (hasContent) {
+        localStorage.setItem(draftKey, JSON.stringify({ form, step }));
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    } catch {}
+  }, [form, step, draftKey, prefill]);
+
+  const discardDraft = () => {
+    try { localStorage.removeItem(draftKey); } catch {}
+    setForm({
+      project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
+      customer_no: '', client_name: '', internal_area_code: '', product_code: '',
+      project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
+      sop: '', quantity: '', project_duration: '', description: '',
+    });
+    setStep(1);
+    setDraftRestored(false);
+  };
+
 
   const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
 
@@ -433,6 +481,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
       }
     }
     try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
+    try { localStorage.removeItem(draftKey); } catch {}
     toast.success('Vorgang erstellt');
     onCreated();
   };
@@ -458,6 +507,20 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   return (
     <>
       <div className="space-y-4">
+        {draftRestored && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+            <span className="text-foreground">
+              Entwurf wiederhergestellt – deine letzten Eingaben wurden geladen.
+            </span>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              Entwurf verwerfen
+            </button>
+          </div>
+        )}
         {/* Stepper */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
