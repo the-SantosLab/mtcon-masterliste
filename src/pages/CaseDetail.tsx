@@ -253,6 +253,7 @@ export default function CaseDetail() {
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
   const [titleEditing, setTitleEditing] = useState(false);
