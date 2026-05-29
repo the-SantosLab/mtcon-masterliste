@@ -225,6 +225,89 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [showArchive, setShowArchive] = useState(false);
   const isSortActive = !!subtaskSort.column;
 
+  // ---------- Bulk edit dialog (Frage 61) ----------
+  interface EditForm {
+    title: string;
+    description: string;
+    department_id: string;
+    assigned_to: string;
+    due_at: string;
+  }
+  const [editTask, setEditTask] = useState<Subtask | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({ title: '', description: '', department_id: '', assigned_to: '', due_at: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEdit = (t: Subtask) => {
+    setEditTask(t);
+    setEditForm({
+      title: t.title || '',
+      description: t.description || '',
+      department_id: t.department_id || '',
+      assigned_to: t.assigned_to || '',
+      due_at: t.due_at || '',
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editTask) return;
+    if (!editForm.title.trim()) { toast.error('Titel ist erforderlich'); return; }
+    if (dueRequired && !editForm.due_at) { toast.error('„Fällig bis" ist verpflichtend'); return; }
+    setSavingEdit(true);
+    const orig = editTask;
+    const next = {
+      title: editForm.title.trim(),
+      description: editForm.description.trim() || null,
+      department_id: editForm.department_id || null,
+      assigned_to: editForm.assigned_to || null,
+      due_at: editForm.due_at || null,
+    };
+    const { data, error } = await supabase.from('case_tasks').update(next as any).eq('id', orig.id).select('id');
+    if (error) { toast.error('Fehler: ' + error.message); setSavingEdit(false); return; }
+    if (!data || data.length === 0) {
+      toast.error('Keine Berechtigung, diese Unteraufgabe zu bearbeiten.');
+      setSavingEdit(false);
+      return;
+    }
+
+    // Log changed fields once, batched
+    const changes: { field: string; old_value: string | null; new_value: string | null }[] = [];
+    if (orig.title !== next.title) changes.push({ field: 'title', old_value: orig.title, new_value: next.title });
+    if ((orig.description || '') !== (next.description || '')) changes.push({ field: 'description', old_value: orig.description, new_value: next.description });
+    if ((orig.department_id || '') !== (next.department_id || '')) changes.push({ field: 'department_id', old_value: orig.department_id, new_value: next.department_id });
+    if ((orig.assigned_to || '') !== (next.assigned_to || '')) changes.push({ field: 'assigned_to', old_value: orig.assigned_to, new_value: next.assigned_to });
+    if ((orig.due_at || '') !== (next.due_at || '')) changes.push({ field: 'due_at', old_value: orig.due_at, new_value: next.due_at });
+
+    if (changes.length) {
+      await supabase.from('case_activity').insert(
+        changes.map(c => ({
+          case_id: caseId,
+          task_id: orig.id,
+          action: 'task_updated',
+          actor_id: userId,
+          field: c.field,
+          old_value: c.old_value,
+          new_value: c.new_value,
+        })) as any
+      );
+    }
+
+    // Single, batched email notification:
+    //  - only if the assignee actually changed
+    //  - only if the user has the assign-email toggle enabled
+    const assigneeChanged = (orig.assigned_to || '') !== (next.assigned_to || '');
+    if (assigneeChanged && next.assigned_to && sendAssignEmail) {
+      supabase.functions.invoke('notify-task-assigned', {
+        body: { caseId, taskId: orig.id, assigneeId: next.assigned_to, actorId: userId },
+      }).catch(() => {});
+    }
+
+    toast.success(changes.length ? 'Änderungen gespeichert' : 'Keine Änderungen');
+    setEditTask(null);
+    setSavingEdit(false);
+    fetchTasks();
+  };
+
+
   const activeTasks = useMemo(() => tasks.filter(t => !t.archived_at), [tasks]);
   const archivedTasks = useMemo(() => tasks.filter(t => !!t.archived_at), [tasks]);
 
