@@ -141,6 +141,7 @@ function AuthenticatedApp() {
         <Route path="/mtiq/drafts" element={<ProtectedRoute><MtiqDrafts /></ProtectedRoute>} />
         <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
         <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><MyFeedback /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
