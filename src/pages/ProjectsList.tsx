@@ -427,12 +427,28 @@ export default function ProjectsList() {
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={o => !o && setCreateOpen(false)}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className="max-w-md"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold">Neues Projekt anlegen</DialogTitle>
             <p className="text-[11px] text-muted-foreground">Die Projektnummer (PRJ-YYYY-xxxx) wird automatisch vergeben.</p>
           </DialogHeader>
           <div className="space-y-4">
+            {projectDraftRestored && (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+                <span className="text-foreground">Entwurf wiederhergestellt – deine letzten Eingaben wurden geladen.</span>
+                <button
+                  type="button"
+                  onClick={discardProjectDraft}
+                  className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Entwurf verwerfen
+                </button>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Projektname *</Label>
               <Input
