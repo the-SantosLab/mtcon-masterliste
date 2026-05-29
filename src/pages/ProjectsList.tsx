@@ -86,9 +86,34 @@ export default function ProjectsList() {
   });
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({
+  const PROJECT_DRAFT_KEY = 'createProjectDraft:v1';
+  const initialProjectDraft = (() => {
+    try {
+      const raw = localStorage.getItem(PROJECT_DRAFT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.name !== undefined) return parsed;
+    } catch {}
+    return null;
+  })();
+  const [form, setForm] = useState(initialProjectDraft || {
     name: '', description: '', department_id: '', visibility: 'project_members',
   });
+  const [projectDraftRestored, setProjectDraftRestored] = useState<boolean>(!!initialProjectDraft);
+
+  useEffect(() => {
+    try {
+      const hasContent = (form.name || form.description || form.department_id);
+      if (hasContent) localStorage.setItem(PROJECT_DRAFT_KEY, JSON.stringify(form));
+      else localStorage.removeItem(PROJECT_DRAFT_KEY);
+    } catch {}
+  }, [form]);
+
+  const discardProjectDraft = () => {
+    try { localStorage.removeItem(PROJECT_DRAFT_KEY); } catch {}
+    setForm({ name: '', description: '', department_id: '', visibility: 'project_members' });
+    setProjectDraftRestored(false);
+  };
 
   const fetchProjects = async () => {
     const { data } = await supabase
