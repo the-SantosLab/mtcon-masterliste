@@ -339,6 +339,7 @@ export default function CasesKanban() {
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingCloseIds, setPendingCloseIds] = useState<string[] | null>(null);
   const { completeCase } = useCaseActions(user?.id, () => fetchCases());
+  const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
