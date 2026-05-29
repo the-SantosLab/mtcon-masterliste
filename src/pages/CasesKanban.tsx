@@ -762,6 +762,7 @@ export default function CasesKanban() {
                                 selected={selectedCaseIds.has(c.id)}
                                 onToggleSelect={() => toggleCaseSelected(c.id)}
                                 bulkIds={Array.from(selectedCaseIds)}
+                                unreadCount={unreadMap[c.id] ?? 0}
                               />
                             ))}
                           </SortableContext>
@@ -770,7 +771,7 @@ export default function CasesKanban() {
                 </div>
                 <DragOverlay>
                   {activeProject && <ProjectKanbanCard project={activeProject} isDragging />}
-                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging departmentName={!selectedDeptId ? departments.find(d => d.id === activeCase.department_id)?.name : undefined} />}
+                  {activeCase && <CaseKanbanCardInner c={activeCase} isDragging departmentName={!selectedDeptId ? departments.find(d => d.id === activeCase.department_id)?.name : undefined} unreadCount={unreadMap[activeCase.id] ?? 0} />}
                 </DragOverlay>
               </DndContext>
             )}
