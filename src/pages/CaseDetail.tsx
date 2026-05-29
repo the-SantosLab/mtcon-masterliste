@@ -565,7 +565,11 @@ export default function CaseDetail() {
             </Button>
             <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} caseId={c.id} caseNo={c.case_no || c.case_number?.toString()} />
             <Dialog open={duplicateOpen} onOpenChange={setDuplicateOpen}>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent
+                className="max-w-2xl max-h-[90vh] overflow-y-auto"
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-sm font-semibold">Vorgang duplizieren</DialogTitle>
                 </DialogHeader>
