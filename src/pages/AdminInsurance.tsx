@@ -405,15 +405,15 @@ export default function AdminInsurance() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-md bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
+                  <FolderArchive className="h-4 w-4 text-primary" />
                 </div>
-                <h1 className="text-base font-semibold text-foreground">Versicherungs-Tresor</h1>
+                <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
               </div>
-              <p className="text-xs text-muted-foreground">Strukturierte Ablage aller Policen mit Dokumenten-Versionierung und Ablauf-Erinnerung.</p>
+              <p className="text-xs text-muted-foreground">Zentrale Ablage für Verträge, Dokumente und Versicherungen – mit Versionierung, Volltextsuche und Ablauf-Erinnerung.</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Verträge</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Einträge</div>
                 <div className="text-xl font-semibold tabular-nums text-foreground">{policies.length}</div>
               </div>
               <div className={cn('text-right rounded-md px-3 py-1.5 ring-1', expiringCount > 0 ? 'bg-amber-500/10 ring-amber-500/30' : 'bg-muted/30 ring-border')}>
@@ -422,7 +422,7 @@ export default function AdminInsurance() {
               </div>
               {canWrite && (
                 <Button size="sm" onClick={openCreate} className="h-9 gap-1.5">
-                  <Plus className="h-4 w-4" /> Neue Police
+                  <Plus className="h-4 w-4" /> Neuer Eintrag
                 </Button>
               )}
             </div>
