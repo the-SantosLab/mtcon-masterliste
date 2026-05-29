@@ -33,10 +33,17 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 type TicketRow = {
   id: string; ticket_number: string; title: string; description: string;
-  status: string; priority: string; customer_id: string; assigned_to: string | null;
+  status: string; priority: string; customer_id: string | null; assigned_to: string | null;
+  source: 'intern' | 'extern' | null; kind: string | null; reporter_user_id: string | null;
+  case_id: string | null; ai_triage: any;
   created_at: string; updated_at: string; resolved_at: string | null; closed_at: string | null;
   customer: { display_name: string; company_name: string | null } | null;
   assignee: { display_name: string; short_code: string } | null;
+  reporter: { display_name: string; short_code: string } | null;
+};
+
+const KIND_LABELS: Record<string, string> = {
+  bug: 'Bug', idee: 'Idee', frage: 'Frage', sonstige: 'Sonstiges',
 };
 
 export default function SupportTickets() {
@@ -51,6 +58,7 @@ export default function SupportTickets() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'intern' | 'extern'>('all');
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const fetchTickets = async () => {
@@ -58,7 +66,7 @@ export default function SupportTickets() {
       .from('support_tickets')
       .select('*, customer:portal_customers!support_tickets_customer_id_fkey(display_name, company_name), assignee:users_profile!support_tickets_assigned_to_fkey(display_name, short_code)')
       .order('created_at', { ascending: false });
-    setTickets((data as TicketRow[]) || []);
+    setTickets(((data as any[]) || []) as TicketRow[]);
     setLoading(false);
   };
 
@@ -80,17 +88,23 @@ export default function SupportTickets() {
     else { toast.success('Ticket zugewiesen'); fetchTickets(); }
   };
 
+  const reporterById = (id: string | null) => id ? profiles.find(p => p.id === id) : null;
+
   const filtered = tickets.filter(t => {
+    if (sourceFilter !== 'all' && (t.source ?? 'extern') !== sourceFilter) return false;
     if (statusFilter !== 'all' && t.status !== statusFilter) return false;
     if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
     if (assigneeFilter === 'unassigned' && t.assigned_to !== null) return false;
     if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && t.assigned_to !== assigneeFilter) return false;
     if (search) {
       const s = search.toLowerCase();
-      if (![t.ticket_number, t.title, t.customer?.display_name, t.customer?.company_name].some(v => v?.toLowerCase().includes(s))) return false;
+      const reporter = reporterById(t.reporter_user_id);
+      if (![t.ticket_number, t.title, t.customer?.display_name, t.customer?.company_name, reporter?.display_name, reporter?.short_code].some(v => v?.toLowerCase().includes(s))) return false;
     }
     return true;
   });
+
+  const internCount = tickets.filter(t => t.source === 'intern').length;
 
   const openCount = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
   const resolvedCount = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
@@ -101,7 +115,7 @@ export default function SupportTickets() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Support-Tickets</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Kundenanfragen verwalten und beantworten</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Kundenanfragen sowie interne Bug-/Feedback-Meldungen verwalten · {internCount} intern</p>
           </div>
           <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
             <DialogTrigger asChild>
@@ -150,6 +164,14 @@ export default function SupportTickets() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche" className="pl-9 h-8 text-xs" />
           </div>
+          <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
+            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Quelle" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Quellen</SelectItem>
+              <SelectItem value="extern">Extern (Kunde)</SelectItem>
+              <SelectItem value="intern">Intern (Bug/Idee)</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
@@ -181,7 +203,7 @@ export default function SupportTickets() {
               <tr className="border-b border-border">
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Betreff</th>
-                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde</th>
+                <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Kunde / Melder</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Priorität</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</th>
                 <th className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</th>
@@ -198,15 +220,35 @@ export default function SupportTickets() {
                   <td className={cn(cellCls, 'font-mono')}>
                     <Link to={`/support/${t.id}`} className="text-primary hover:underline">{t.ticket_number}</Link>
                   </td>
-                  <td className={cn(cellCls, 'text-foreground max-w-[250px] truncate')}>
-                    <Link to={`/support/${t.id}`} className="hover:text-primary">{t.title}</Link>
+                  <td className={cn(cellCls, 'text-foreground max-w-[260px]')}>
+                    <Link to={`/support/${t.id}`} className="hover:text-primary line-clamp-1">{t.title}</Link>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {t.source === 'intern' ? (
+                        <>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary/40 text-primary">Intern</Badge>
+                          {t.kind && <Badge variant="outline" className="text-[9px] px-1 py-0">{KIND_LABELS[t.kind] ?? t.kind}</Badge>}
+                          {t.ai_triage?.module && <span className="text-[9px] text-muted-foreground">· {t.ai_triage.module}</span>}
+                        </>
+                      ) : (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0">Extern</Badge>
+                      )}
+                    </div>
                   </td>
                   <td className={cn(cellCls, 'text-muted-foreground')}>
-                    <div>{t.customer?.display_name || '–'}</div>
-                    {t.customer?.company_name && <div className="text-[10px] text-muted-foreground/60">{t.customer.company_name}</div>}
+                    {t.source === 'intern' ? (
+                      <div className="text-[11px]">{reporterById(t.reporter_user_id)?.short_code ?? '—'}</div>
+                    ) : (
+                      <>
+                        <div>{t.customer?.display_name || '–'}</div>
+                        {t.customer?.company_name && <div className="text-[10px] text-muted-foreground/60">{t.customer.company_name}</div>}
+                      </>
+                    )}
                   </td>
                   <td className={cellCls}>
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">{PRIORITY_LABELS[t.priority]}</Badge>
+                    {t.source === 'intern' && t.ai_triage?.severity && t.ai_triage.severity !== t.priority && (
+                      <div className="text-[9px] text-muted-foreground mt-0.5">MTIQ: {PRIORITY_LABELS[t.ai_triage.severity] ?? t.ai_triage.severity}</div>
+                    )}
                   </td>
                   <td className={cellCls}>
                     <Badge className={`${STATUS_COLORS[t.status]} text-white text-[10px] px-1.5 py-0`}>{STATUS_LABELS[t.status]}</Badge>
