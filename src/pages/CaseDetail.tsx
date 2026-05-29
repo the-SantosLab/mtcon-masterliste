@@ -681,31 +681,52 @@ export default function CaseDetail() {
 
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4 min-w-0 [&>div:nth-of-type(even)]:!bg-foreground/[0.08]">
-            <div className="rounded-md border border-border bg-card p-5">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">Details</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
-                 <Field label="Bearbeiter" value={c.assignee?.short_code} />
-                 <Field label="Kunde" value={c.customer_no} />
-                 <Field label="Auftraggeber" value={c.client_name} />
-                 <Field label="Produkt" value={c.product_code} />
-                 <Field label="Bereich intern" value={c.internal_area_code} />
-                 <Field label="Projekt-/Artikelnr." value={c.project_article_no} />
-                 <Field label="Geschätzte Std." value={c.estimated_hours?.toString()} />
-                 <Field label="Erstellt von" value={c.creator?.short_code} />
-                 {c.project && (
-                   <div>
-                     <p className="text-[11px] text-muted-foreground mb-0.5">Verknüpftes Projekt</p>
-                     <Link
-                       to={`/projects/${c.project.id}/files`}
-                       className="text-sm text-primary hover:underline flex items-center gap-1"
-                     >
-                       <span className="font-mono text-[11px] text-muted-foreground">{c.project.project_number}</span>
-                       <span className="ml-1">{c.project.name}</span>
-                     </Link>
+            {(() => {
+              const detailFields = [
+                c.assignee?.short_code,
+                c.customer_no,
+                c.client_name,
+                c.product_code,
+                c.internal_area_code,
+                c.project_article_no,
+                c.estimated_hours?.toString(),
+                c.creator?.short_code,
+              ];
+              const filledCount = detailFields.filter(v => v !== null && v !== undefined && v !== '').length + (c.project ? 1 : 0);
+              const hasAny = filledCount > 0;
+              return (
+                <details className="rounded-md border border-border bg-card p-5 group" open={hasAny}>
+                  <summary className="flex items-center justify-between cursor-pointer list-none">
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Details {!hasAny && <span className="ml-1 normal-case text-[10px] text-muted-foreground/70">(keine Angaben)</span>}
+                    </h3>
+                    <span className="text-muted-foreground text-xs transition-transform group-open:rotate-180">▾</span>
+                  </summary>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 mt-4">
+                     <Field label="Bearbeiter" value={c.assignee?.short_code} />
+                     <Field label="Kunde" value={c.customer_no} />
+                     <Field label="Auftraggeber" value={c.client_name} />
+                     <Field label="Produkt" value={c.product_code} />
+                     <Field label="Bereich intern" value={c.internal_area_code} />
+                     <Field label="Projekt-/Artikelnr." value={c.project_article_no} />
+                     <Field label="Geschätzte Std." value={c.estimated_hours?.toString()} />
+                     <Field label="Erstellt von" value={c.creator?.short_code} />
+                     {c.project && (
+                       <div>
+                         <p className="text-[11px] text-muted-foreground mb-0.5">Verknüpftes Projekt</p>
+                         <Link
+                           to={`/projects/${c.project.id}/files`}
+                           className="text-sm text-primary hover:underline flex items-center gap-1"
+                         >
+                           <span className="font-mono text-[11px] text-muted-foreground">{c.project.project_number}</span>
+                           <span className="ml-1">{c.project.name}</span>
+                         </Link>
+                       </div>
+                     )}
                    </div>
-                 )}
-               </div>
-            </div>
+                </details>
+              );
+            })()}
 
             {/* Projektinformationen */}
             {((c as any).sop || (c as any).quantity || (c as any).project_duration) && (
