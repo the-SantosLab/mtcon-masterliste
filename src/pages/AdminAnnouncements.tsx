@@ -68,7 +68,24 @@ export default function AdminAnnouncements() {
   const [receipts, setReceipts] = useState<Record<string, ReceiptRow[]>>({});
   const [editorOpen, setEditorOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
+  const [announcementDraftRestored, setAnnouncementDraftRestored] = useState(false);
   const [statsOpen, setStatsOpen] = useState<Announcement | null>(null);
+
+  // Auto-save draft (only for new announcements, not edits)
+  useEffect(() => {
+    if (form.id) return;
+    try {
+      const hasContent = form.title.trim() || form.body.trim();
+      if (hasContent) localStorage.setItem(ANNOUNCEMENT_DRAFT_KEY, JSON.stringify(form));
+      else localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY);
+    } catch {}
+  }, [form]);
+
+  const discardAnnouncementDraft = () => {
+    try { localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY); } catch {}
+    setForm(emptyForm());
+    setAnnouncementDraftRestored(false);
+  };
 
   const totalUsers = profiles.length;
 
