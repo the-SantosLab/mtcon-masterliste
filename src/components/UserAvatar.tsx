@@ -62,7 +62,12 @@ function firstNameOf(u?: UserLike | null): string | null {
   return first || null;
 }
 
+// Nutzer, für die (noch) kein Thumb gezeigt werden soll – auch wenn ein Vorname-Match existiert.
+const THUMB_BLOCKLIST = new Set<string>(['anja magnussen']);
+
 function thumbUrlFor(u?: UserLike | null): string | null {
+  const full = u?.display_name?.trim().toLowerCase();
+  if (full && THUMB_BLOCKLIST.has(full)) return null;
   const first = firstNameOf(u);
   if (!first || !SUPABASE_URL) return null;
   return `${SUPABASE_URL}/storage/v1/object/public/thumbs/Thumb_${encodeURIComponent(first)}.jpg`;
