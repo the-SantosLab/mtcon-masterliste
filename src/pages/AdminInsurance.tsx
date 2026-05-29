@@ -455,20 +455,34 @@ export default function AdminInsurance() {
             </Select>
 
             <div className="rounded-lg border border-border bg-card/60 backdrop-blur p-1.5 space-y-0.5">
+              <div className="flex items-center justify-between px-2.5 py-1.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Kategorien</span>
+                {canWrite && (
+                  <button
+                    onClick={() => setCatManagerOpen(true)}
+                    className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    title="Kategorien verwalten"
+                  >
+                    <Settings2 className="h-3 w-3" /> Verwalten
+                  </button>
+                )}
+              </div>
               <CategoryRow
                 active={selectedCat === 'all'}
                 onClick={() => setSelectedCat('all')}
                 icon={Folder} color="slate" label="Alle Kategorien" count={counts.all}
               />
-              {categories.map(c => (
-                <CategoryRow
+              {rootCategories.map(c => (
+                <CategoryTree
                   key={c.id}
-                  active={selectedCat === c.id}
-                  onClick={() => setSelectedCat(c.id)}
-                  icon={ICON_MAP[c.icon] || Shield}
-                  color={c.color}
-                  label={c.name}
-                  count={counts[c.id] || 0}
+                  cat={c}
+                  depth={0}
+                  selectedCat={selectedCat}
+                  setSelectedCat={setSelectedCat}
+                  expanded={expandedCats}
+                  toggleExpand={toggleExpand}
+                  childrenByParent={childrenByParent}
+                  counts={counts}
                 />
               ))}
               {counts.uncategorized > 0 && (
