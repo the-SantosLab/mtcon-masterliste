@@ -704,7 +704,7 @@ export default function CaseDetail() {
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Details {!hasAny && <span className="ml-1 normal-case text-[10px] text-muted-foreground/70">(keine Angaben)</span>}
                     </h3>
-                    <span className="text-muted-foreground text-xs transition-transform group-open:rotate-180">▾</span>
+                    <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', 'group-open:rotate-180')} />
                   </summary>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 mt-4">
                      <Field label="Bearbeiter" value={c.assignee?.short_code} />
