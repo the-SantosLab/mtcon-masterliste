@@ -128,11 +128,20 @@
   z-index: 0;
 }
 
+.glass-sidebar {
+  background: hsl(228 20% 96% / 0.85);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border-right: 1px solid hsl(228 14% 85% / 0.8);
+  box-shadow: 1px 0 0 0 hsl(228 14% 90% / 0.5);
+}
+
 .dark .glass-sidebar {
   background: hsl(228 15% 7% / 0.7);
   backdrop-filter: blur(24px) saturate(1.2);
   -webkit-backdrop-filter: blur(24px) saturate(1.2);
   border-right: 1px solid hsl(228 14% 22% / 0.5);
+  box-shadow: none;
 }
 
 .dark .glass-card {
