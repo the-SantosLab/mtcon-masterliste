@@ -48,6 +48,18 @@ const emptyForm = () => ({
   expires_at: '' as string,
 });
 
+const ANNOUNCEMENT_DRAFT_KEY = 'createAnnouncementDraft:v1';
+
+const loadAnnouncementDraft = () => {
+  try {
+    const raw = localStorage.getItem(ANNOUNCEMENT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.title !== undefined) return parsed;
+  } catch {}
+  return null;
+};
+
 export default function AdminAnnouncements() {
   const { user, isAdmin } = useAuth();
   const [tab, setTab] = useState<'active' | 'archived'>('active');
