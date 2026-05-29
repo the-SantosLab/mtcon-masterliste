@@ -67,6 +67,7 @@ export default function Dashboard() {
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
   const [now, setNow] = useState(new Date());
+  const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
