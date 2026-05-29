@@ -213,8 +213,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           ))}
           {(isAdmin || (profile as any)?.is_manager) && (
             <Link to="/insurance" onClick={() => setOpen(false)} className={linkClass('/insurance')}>
-              <ShieldCheck className="h-4 w-4" />
-              <span className="flex-1">Versicherungen</span>
+              <FolderArchive className="h-4 w-4" />
+              <span className="flex-1">Ablage</span>
             </Link>
           )}
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
