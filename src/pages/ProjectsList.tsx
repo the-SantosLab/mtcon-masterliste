@@ -460,7 +460,14 @@ export default function ProjectsList() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Beschreibung</Label>
+                <MtiqButton
+                  text={form.description}
+                  onResult={(t) => setForm(f => ({ ...f, description: t }))}
+                  minChars={10}
+                />
+              </div>
               <Textarea
                 className="text-xs resize-none"
                 rows={2}
