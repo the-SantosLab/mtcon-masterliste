@@ -1666,6 +1666,194 @@ export type Database = {
           },
         ]
       }
+      insurance_categories: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      insurance_documents: {
+        Row: {
+          description: string | null
+          doc_kind: string
+          file_name: string
+          file_size: number | null
+          id: string
+          is_current: boolean
+          mime_type: string | null
+          policy_id: string
+          replaced_by: string | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          description?: string | null
+          doc_kind?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean
+          mime_type?: string | null
+          policy_id: string
+          replaced_by?: string | null
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          description?: string | null
+          doc_kind?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean
+          mime_type?: string | null
+          policy_id?: string
+          replaced_by?: string | null
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_documents_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_documents_replaced_by_fkey"
+            columns: ["replaced_by"]
+            isOneToOne: false
+            referencedRelation: "insurance_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insurance_policies: {
+        Row: {
+          category_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          insured_object: string | null
+          name: string
+          notes: string | null
+          notice_period_days: number | null
+          policy_number: string | null
+          premium_amount: number | null
+          premium_currency: string | null
+          premium_interval: string | null
+          provider: string | null
+          renewal_date: string | null
+          search_tsv: unknown
+          start_date: string | null
+          status: string
+          tags: string[] | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          insured_object?: string | null
+          name: string
+          notes?: string | null
+          notice_period_days?: number | null
+          policy_number?: string | null
+          premium_amount?: number | null
+          premium_currency?: string | null
+          premium_interval?: string | null
+          provider?: string | null
+          renewal_date?: string | null
+          search_tsv?: unknown
+          start_date?: string | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          insured_object?: string | null
+          name?: string
+          notes?: string | null
+          notice_period_days?: number | null
+          policy_number?: string | null
+          premium_amount?: number | null
+          premium_currency?: string | null
+          premium_interval?: string | null
+          provider?: string | null
+          renewal_date?: string | null
+          search_tsv?: unknown
+          start_date?: string | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_policies_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_settings: {
         Row: {
           config: Json
@@ -3442,6 +3630,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["dept_member_role"]
       }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      generate_insurance_reminders: { Args: never; Returns: number }
       get_case_chat_unread: {
         Args: { p_case_ids: string[] }
         Returns: {
@@ -3465,6 +3654,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      insurance_policy_effective_status: {
+        Args: { p: Database["public"]["Tables"]["insurance_policies"]["Row"] }
+        Returns: string
       }
       is_admin: { Args: never; Returns: boolean }
       is_board_member: {
