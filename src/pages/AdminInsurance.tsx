@@ -929,3 +929,285 @@ function DocRow({ doc, canWrite, onDownload, onDelete, onReplace, archived }: {
     </div>
   );
 }
+
+// ---- Category tree (sidebar) ----
+function CategoryTree({
+  cat, depth, selectedCat, setSelectedCat, expanded, toggleExpand, childrenByParent, counts,
+}: {
+  cat: Category;
+  depth: number;
+  selectedCat: string;
+  setSelectedCat: (id: string) => void;
+  expanded: Record<string, boolean>;
+  toggleExpand: (id: string) => void;
+  childrenByParent: Record<string, Category[]>;
+  counts: Record<string, number>;
+}) {
+  const kids = childrenByParent[cat.id] || [];
+  const hasKids = kids.length > 0;
+  const isOpen = expanded[cat.id] ?? depth === 0;
+  const c = COLOR_MAP[cat.color] || COLOR_MAP.slate;
+  const Icon = ICON_MAP[cat.icon] || Folder;
+  const isActive = selectedCat === cat.id;
+  return (
+    <div>
+      <div
+        className={cn(
+          'w-full flex items-center gap-1 rounded-md pr-2 text-xs transition-all group',
+          isActive ? 'bg-muted/60 ring-1 ring-border' : 'hover:bg-muted/30',
+        )}
+        style={{ paddingLeft: `${depth * 12}px` }}
+      >
+        <button
+          onClick={() => hasKids ? toggleExpand(cat.id) : setSelectedCat(cat.id)}
+          className="p-1 text-muted-foreground hover:text-foreground"
+          aria-label={hasKids ? 'aufklappen' : ''}
+        >
+          {hasKids ? (
+            <ChevronRight className={cn('h-3 w-3 transition-transform', isOpen && 'rotate-90')} />
+          ) : (
+            <span className="inline-block h-3 w-3" />
+          )}
+        </button>
+        <button
+          onClick={() => setSelectedCat(cat.id)}
+          className="flex-1 flex items-center justify-between gap-2 min-w-0 py-1.5"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={cn('h-5 w-5 rounded ring-1 flex items-center justify-center shrink-0', c.bg, c.ring)}>
+              <Icon className={cn('h-3 w-3', c.text)} />
+            </div>
+            <span className={cn('truncate', isActive ? 'text-foreground font-medium' : 'text-muted-foreground group-hover:text-foreground')}>
+              {cat.name}
+            </span>
+          </div>
+          <span className="text-[10px] tabular-nums text-muted-foreground shrink-0">{counts[cat.id] || 0}</span>
+        </button>
+      </div>
+      {hasKids && isOpen && (
+        <div className="mt-0.5 space-y-0.5">
+          {kids.map(k => (
+            <CategoryTree
+              key={k.id}
+              cat={k}
+              depth={depth + 1}
+              selectedCat={selectedCat}
+              setSelectedCat={setSelectedCat}
+              expanded={expanded}
+              toggleExpand={toggleExpand}
+              childrenByParent={childrenByParent}
+              counts={counts}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Category manager dialog ----
+function CategoryManager({
+  open, onOpenChange, categories, childrenByParent, rootCategories, onChanged, canWrite,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  categories: Category[];
+  childrenByParent: Record<string, Category[]>;
+  rootCategories: Category[];
+  onChanged: () => Promise<void> | void;
+  canWrite: boolean;
+}) {
+  const [editing, setEditing] = useState<Partial<Category> & { id?: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const startNew = (parent_id: string | null = null) => {
+    setEditing({ name: '', description: '', color: 'slate', icon: 'folder', sort_order: 100, parent_id });
+  };
+  const startEdit = (c: Category) => setEditing({ ...c });
+
+  const save = async () => {
+    if (!editing) return;
+    if (!editing.name?.trim()) { toast.error('Name ist Pflicht'); return; }
+    setBusy(true);
+    const payload: any = {
+      name: editing.name.trim(),
+      description: editing.description || null,
+      color: editing.color || 'slate',
+      icon: editing.icon || 'folder',
+      sort_order: editing.sort_order ?? 100,
+      parent_id: editing.parent_id || null,
+    };
+    let error;
+    if (editing.id) {
+      ({ error } = await supabase.from('insurance_categories' as any).update(payload).eq('id', editing.id));
+    } else {
+      ({ error } = await supabase.from('insurance_categories' as any).insert(payload));
+    }
+    setBusy(false);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success(editing.id ? 'Kategorie aktualisiert' : 'Kategorie angelegt');
+    setEditing(null);
+    await onChanged();
+  };
+
+  const remove = async (c: Category) => {
+    const kids = childrenByParent[c.id] || [];
+    const msg = kids.length
+      ? `Kategorie "${c.name}" und ${kids.length} Unterkategorie(n) freisetzen? Einträge bleiben erhalten, werden aber ohne Kategorie geführt.`
+      : `Kategorie "${c.name}" löschen? Zugeordnete Einträge bleiben erhalten (ohne Kategorie).`;
+    if (!confirm(msg)) return;
+    const { error } = await supabase.from('insurance_categories' as any).delete().eq('id', c.id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Kategorie gelöscht');
+    await onChanged();
+  };
+
+  const renderRow = (c: Category, depth: number) => {
+    const kids = childrenByParent[c.id] || [];
+    const Icon = ICON_MAP[c.icon] || Folder;
+    const cm = COLOR_MAP[c.color] || COLOR_MAP.slate;
+    return (
+      <div key={c.id}>
+        <div
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/40 group"
+          style={{ paddingLeft: `${8 + depth * 16}px` }}
+        >
+          <div className={cn('h-6 w-6 rounded ring-1 flex items-center justify-center shrink-0', cm.bg, cm.ring)}>
+            <Icon className={cn('h-3 w-3', cm.text)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-foreground truncate">{c.name}</div>
+            {c.description && <div className="text-[10px] text-muted-foreground truncate">{c.description}</div>}
+          </div>
+          {canWrite && (
+            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => startNew(c.id)} title="Unterkategorie anlegen" className="p-1 text-muted-foreground hover:text-foreground">
+                <Plus className="h-3 w-3" />
+              </button>
+              <button onClick={() => startEdit(c)} title="Bearbeiten" className="p-1 text-muted-foreground hover:text-foreground">
+                <Pencil className="h-3 w-3" />
+              </button>
+              <button onClick={() => remove(c)} title="Löschen" className="p-1 text-muted-foreground hover:text-rose-400">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+        </div>
+        {kids.map(k => renderRow(k, depth + 1))}
+      </div>
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-sm">Kategorien verwalten</DialogTitle>
+        </DialogHeader>
+
+        {editing ? (
+          <div className="space-y-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {editing.id ? 'Kategorie bearbeiten' : 'Neue Kategorie'}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</Label>
+                <Input value={editing.name || ''} onChange={e => setEditing(s => ({ ...s!, name: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div className="col-span-2">
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Beschreibung</Label>
+                <Input value={editing.description || ''} onChange={e => setEditing(s => ({ ...s!, description: e.target.value }))} className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Oberkategorie</Label>
+                <Select
+                  value={editing.parent_id || '__none__'}
+                  onValueChange={v => setEditing(s => ({ ...s!, parent_id: v === '__none__' ? null : v }))}
+                >
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— Keine (Hauptkategorie) —</SelectItem>
+                    {categories
+                      .filter(c => c.id !== editing.id) // prevent self
+                      .map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Sortierung</Label>
+                <Input
+                  type="number"
+                  value={editing.sort_order ?? 100}
+                  onChange={e => setEditing(s => ({ ...s!, sort_order: Number(e.target.value) }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Farbe</Label>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {COLOR_CHOICES.map(col => {
+                    const cm = COLOR_MAP[col];
+                    return (
+                      <button
+                        key={col}
+                        onClick={() => setEditing(s => ({ ...s!, color: col }))}
+                        className={cn('h-6 w-6 rounded ring-1', cm.bg, cm.ring, editing.color === col && 'ring-2 ring-primary')}
+                        title={col}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Icon</Label>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {ICON_CHOICES.map(ic => {
+                    const I = ICON_MAP[ic];
+                    return (
+                      <button
+                        key={ic}
+                        onClick={() => setEditing(s => ({ ...s!, icon: ic }))}
+                        className={cn(
+                          'h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-muted/40',
+                          editing.icon === ic && 'ring-2 ring-primary',
+                        )}
+                        title={ic}
+                      >
+                        <I className="h-3.5 w-3.5 text-muted-foreground" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(null)} className="h-8 text-xs">Abbrechen</Button>
+              <Button size="sm" onClick={save} disabled={busy} className="h-8 text-xs">{busy ? 'Speichern…' : 'Speichern'}</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-muted-foreground">
+                Kategorien können beliebig verschachtelt, umbenannt und gelöscht werden. Einträge bleiben bei Löschung erhalten.
+              </p>
+              {canWrite && (
+                <Button size="sm" onClick={() => startNew(null)} className="h-8 text-xs gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Neue Hauptkategorie
+                </Button>
+              )}
+            </div>
+            <div className="rounded-md border border-border bg-card/40 max-h-[55vh] overflow-y-auto p-1">
+              {rootCategories.length === 0 ? (
+                <div className="text-center text-xs text-muted-foreground py-8">Noch keine Kategorien.</div>
+              ) : (
+                rootCategories.map(c => renderRow(c, 0))
+              )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
