@@ -74,7 +74,12 @@ interface PolicyDocument {
 const ICON_MAP: Record<string, any> = {
   'shield': Shield, 'shield-check': ShieldCheck, 'lock': Lock,
   'building': Building, 'car': Car, 'users': UsersIcon, 'folder': Folder,
+  'folder-open': FolderOpen, 'folder-archive': FolderArchive, 'archive': Archive,
+  'briefcase': Briefcase, 'wallet': Wallet, 'hammer': Hammer, 'truck': Truck,
+  'gavel': Gavel, 'file-signature': FileSignature, 'paperclip': Paperclip,
+  'receipt': Receipt, 'file-text': FileText,
 };
+const ICON_CHOICES = Object.keys(ICON_MAP);
 
 const COLOR_MAP: Record<string, { bg: string; ring: string; text: string; glow: string }> = {
   sky:     { bg: 'bg-sky-500/10',     ring: 'ring-sky-500/30',     text: 'text-sky-400',     glow: 'shadow-[0_0_30px_-12px_hsl(199_89%_48%/0.5)]' },
@@ -84,6 +89,7 @@ const COLOR_MAP: Record<string, { bg: string; ring: string; text: string; glow: 
   rose:    { bg: 'bg-rose-500/10',    ring: 'ring-rose-500/30',    text: 'text-rose-400',    glow: 'shadow-[0_0_30px_-12px_hsl(351_83%_60%/0.5)]' },
   slate:   { bg: 'bg-slate-500/10',   ring: 'ring-slate-500/30',   text: 'text-slate-300',   glow: 'shadow-[0_0_30px_-12px_hsl(215_16%_47%/0.5)]' },
 };
+const COLOR_CHOICES = Object.keys(COLOR_MAP);
 
 const EMPTY_FORM: Partial<Policy> = {
   name: '', provider: '', policy_number: '', category_id: null, description: '', insured_object: '',
