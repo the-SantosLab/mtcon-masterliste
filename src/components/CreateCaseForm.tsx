@@ -507,6 +507,20 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   return (
     <>
       <div className="space-y-4">
+        {draftRestored && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+            <span className="text-foreground">
+              Entwurf wiederhergestellt – deine letzten Eingaben wurden geladen.
+            </span>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              Entwurf verwerfen
+            </button>
+          </div>
+        )}
         {/* Stepper */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
