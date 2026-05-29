@@ -161,6 +161,10 @@ export default function AdminInsurance() {
   const [docsLoading, setDocsLoading] = useState(false);
   const [showAllVersions, setShowAllVersions] = useState(false);
 
+  const [catManagerOpen, setCatManagerOpen] = useState(false);
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
+  const toggleExpand = (id: string) => setExpandedCats(s => ({ ...s, [id]: !s[id] }));
+
   useEffect(() => { setDetailId(routeId || null); }, [routeId]);
 
   const load = async () => {
