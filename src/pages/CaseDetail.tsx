@@ -70,6 +70,7 @@ export default function CaseDetail() {
   const [dueChange, setDueChange] = useState<{ at: string; by_name: string | null } | null>(null);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [bugOpen, setBugOpen] = useState(false);
   const [sendStatusEmail, setSendStatusEmail] = useState(true);
   const [hasUrgentSubtasks, setHasUrgentSubtasks] = useState(false);
   const { lastByType, refresh: refreshLog } = useNotificationLog(id, refreshKey);
@@ -559,6 +560,10 @@ export default function CaseDetail() {
                 <Copy className="h-3.5 w-3.5" />Duplizieren
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={() => setBugOpen(true)} className="h-8 text-xs gap-1.5">
+              <Bug className="h-3.5 w-3.5" />Problem melden
+            </Button>
+            <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} caseId={c.id} caseNo={c.case_no || c.case_number?.toString()} />
             <Dialog open={duplicateOpen} onOpenChange={setDuplicateOpen}>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
