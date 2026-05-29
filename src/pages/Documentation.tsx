@@ -69,6 +69,7 @@ const SECTIONS: Section[] = [
   { id: 'soft-delete', label: 'Papierkorb & Wiederherstellung', icon: Trash2 },
   { id: 'session-security', label: 'Session-Sicherheit', icon: Timer },
   { id: 'design-tokens', label: 'Design-System & Tokens', icon: Palette },
+  { id: 'gobd', label: 'GoBD-Konformität', icon: ShieldCheck },
   { id: 'shortcuts', label: 'Tastenkürzel', icon: Columns },
 ];
 
