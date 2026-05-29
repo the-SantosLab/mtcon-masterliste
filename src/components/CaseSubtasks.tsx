@@ -1394,6 +1394,86 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!editTask} onOpenChange={(o) => { if (!o && !savingEdit) setEditTask(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Unteraufgabe bearbeiten</DialogTitle>
+          </DialogHeader>
+          {editTask && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Titel *</p>
+                <Input
+                  value={editForm.title}
+                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Beschreibung</p>
+                <Textarea
+                  value={editForm.description}
+                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  className="text-xs min-h-[80px]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground">Abteilung</p>
+                  <Select value={editForm.department_id || 'none'} onValueChange={v => setEditForm(f => ({ ...f, department_id: v === 'none' ? '' : v, assigned_to: '' }))}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" className="text-xs">— Keine —</SelectItem>
+                      {departments.map(d => (
+                        <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] text-muted-foreground">Bearbeiter</p>
+                  <Select value={editForm.assigned_to || 'none'} onValueChange={v => setEditForm(f => ({ ...f, assigned_to: v === 'none' ? '' : v }))}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" className="text-xs">— Nicht zugewiesen —</SelectItem>
+                      {profiles
+                        .filter(p => !editForm.department_id || p.department_id === editForm.department_id)
+                        .map(p => (
+                          <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">Fällig bis{dueRequired ? ' *' : ''}</p>
+                <Input
+                  type="date"
+                  value={editForm.due_at}
+                  onChange={e => setEditForm(f => ({ ...f, due_at: e.target.value }))}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="rounded-md border border-border/60 bg-muted/30 px-2.5 py-2">
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  Alle Änderungen werden erst beim Klick auf <span className="font-medium text-foreground">Speichern</span> übernommen.
+                  E-Mail-Benachrichtigungen werden gesammelt: Es wird höchstens eine Zuweisungs-E-Mail versendet – und nur, wenn sich der Bearbeiter tatsächlich geändert hat und die Benachrichtigung aktiviert ist.
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditTask(null)} disabled={savingEdit}>
+              Abbrechen
+            </Button>
+            <Button size="sm" className="h-8 text-xs" onClick={saveEdit} disabled={savingEdit}>
+              {savingEdit ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+              Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
