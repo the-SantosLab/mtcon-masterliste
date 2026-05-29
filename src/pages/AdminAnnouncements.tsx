@@ -116,7 +116,17 @@ export default function AdminAnnouncements() {
     return <AppLayout><p className="text-sm text-muted-foreground">Kein Zugriff.</p></AppLayout>;
   }
 
-  const openCreate = () => { setForm(emptyForm()); setEditorOpen(true); };
+  const openCreate = () => {
+    const draft = loadAnnouncementDraft();
+    if (draft) {
+      setForm({ ...emptyForm(), ...draft, id: '' });
+      setAnnouncementDraftRestored(true);
+    } else {
+      setForm(emptyForm());
+      setAnnouncementDraftRestored(false);
+    }
+    setEditorOpen(true);
+  };
   const openEdit = (a: Announcement) => {
     setForm({
       id: a.id,
@@ -127,6 +137,7 @@ export default function AdminAnnouncements() {
       published_at: a.published_at.slice(0, 16),
       expires_at: a.expires_at ? a.expires_at.slice(0, 16) : '',
     });
+    setAnnouncementDraftRestored(false);
     setEditorOpen(true);
   };
 
@@ -150,6 +161,8 @@ export default function AdminAnnouncements() {
       const { error } = await (supabase as any).from('announcements').insert(payload);
       if (error) { toast.error('Fehler beim Erstellen'); return; }
       toast.success('Veröffentlicht');
+      try { localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY); } catch {}
+      setAnnouncementDraftRestored(false);
     }
     setEditorOpen(false);
     load();
