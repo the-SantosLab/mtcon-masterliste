@@ -48,6 +48,18 @@ const emptyForm = () => ({
   expires_at: '' as string,
 });
 
+const ANNOUNCEMENT_DRAFT_KEY = 'createAnnouncementDraft:v1';
+
+const loadAnnouncementDraft = () => {
+  try {
+    const raw = localStorage.getItem(ANNOUNCEMENT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.title !== undefined) return parsed;
+  } catch {}
+  return null;
+};
+
 export default function AdminAnnouncements() {
   const { user, isAdmin } = useAuth();
   const [tab, setTab] = useState<'active' | 'archived'>('active');
@@ -56,7 +68,24 @@ export default function AdminAnnouncements() {
   const [receipts, setReceipts] = useState<Record<string, ReceiptRow[]>>({});
   const [editorOpen, setEditorOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
+  const [announcementDraftRestored, setAnnouncementDraftRestored] = useState(false);
   const [statsOpen, setStatsOpen] = useState<Announcement | null>(null);
+
+  // Auto-save draft (only for new announcements, not edits)
+  useEffect(() => {
+    if (form.id) return;
+    try {
+      const hasContent = form.title.trim() || form.body.trim();
+      if (hasContent) localStorage.setItem(ANNOUNCEMENT_DRAFT_KEY, JSON.stringify(form));
+      else localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY);
+    } catch {}
+  }, [form]);
+
+  const discardAnnouncementDraft = () => {
+    try { localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY); } catch {}
+    setForm(emptyForm());
+    setAnnouncementDraftRestored(false);
+  };
 
   const totalUsers = profiles.length;
 
@@ -87,7 +116,17 @@ export default function AdminAnnouncements() {
     return <AppLayout><p className="text-sm text-muted-foreground">Kein Zugriff.</p></AppLayout>;
   }
 
-  const openCreate = () => { setForm(emptyForm()); setEditorOpen(true); };
+  const openCreate = () => {
+    const draft = loadAnnouncementDraft();
+    if (draft) {
+      setForm({ ...emptyForm(), ...draft, id: '' });
+      setAnnouncementDraftRestored(true);
+    } else {
+      setForm(emptyForm());
+      setAnnouncementDraftRestored(false);
+    }
+    setEditorOpen(true);
+  };
   const openEdit = (a: Announcement) => {
     setForm({
       id: a.id,
@@ -98,6 +137,7 @@ export default function AdminAnnouncements() {
       published_at: a.published_at.slice(0, 16),
       expires_at: a.expires_at ? a.expires_at.slice(0, 16) : '',
     });
+    setAnnouncementDraftRestored(false);
     setEditorOpen(true);
   };
 
@@ -121,6 +161,8 @@ export default function AdminAnnouncements() {
       const { error } = await (supabase as any).from('announcements').insert(payload);
       if (error) { toast.error('Fehler beim Erstellen'); return; }
       toast.success('Veröffentlicht');
+      try { localStorage.removeItem(ANNOUNCEMENT_DRAFT_KEY); } catch {}
+      setAnnouncementDraftRestored(false);
     }
     setEditorOpen(false);
     load();
@@ -230,11 +272,27 @@ export default function AdminAnnouncements() {
 
       {/* Editor */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent
+          className="max-w-xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-sm">{form.id ? 'Mitteilung bearbeiten' : 'Neue Mitteilung'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            {announcementDraftRestored && !form.id && (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+                <span className="text-foreground">Entwurf wiederhergestellt – deine letzten Eingaben wurden geladen.</span>
+                <button
+                  type="button"
+                  onClick={discardAnnouncementDraft}
+                  className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Entwurf verwerfen
+                </button>
+              </div>
+            )}
             <div>
               <Label className="text-xs">Titel</Label>
               <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-sm" />

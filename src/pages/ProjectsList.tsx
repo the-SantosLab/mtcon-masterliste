@@ -86,9 +86,34 @@ export default function ProjectsList() {
   });
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({
+  const PROJECT_DRAFT_KEY = 'createProjectDraft:v1';
+  const initialProjectDraft = (() => {
+    try {
+      const raw = localStorage.getItem(PROJECT_DRAFT_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.name !== undefined) return parsed;
+    } catch {}
+    return null;
+  })();
+  const [form, setForm] = useState(initialProjectDraft || {
     name: '', description: '', department_id: '', visibility: 'project_members',
   });
+  const [projectDraftRestored, setProjectDraftRestored] = useState<boolean>(!!initialProjectDraft);
+
+  useEffect(() => {
+    try {
+      const hasContent = (form.name || form.description || form.department_id);
+      if (hasContent) localStorage.setItem(PROJECT_DRAFT_KEY, JSON.stringify(form));
+      else localStorage.removeItem(PROJECT_DRAFT_KEY);
+    } catch {}
+  }, [form]);
+
+  const discardProjectDraft = () => {
+    try { localStorage.removeItem(PROJECT_DRAFT_KEY); } catch {}
+    setForm({ name: '', description: '', department_id: '', visibility: 'project_members' });
+    setProjectDraftRestored(false);
+  };
 
   const fetchProjects = async () => {
     const { data } = await supabase
@@ -221,6 +246,8 @@ export default function ProjectsList() {
     setCreateOpen(false);
     setCreating(false);
     setForm({ name: '', description: '', department_id: '', visibility: 'project_members' });
+    setProjectDraftRestored(false);
+    try { localStorage.removeItem(PROJECT_DRAFT_KEY); } catch {}
     fetchProjects();
   };
 
@@ -400,12 +427,28 @@ export default function ProjectsList() {
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={o => !o && setCreateOpen(false)}>
-        <DialogContent className="max-w-md">
+        <DialogContent
+          className="max-w-md"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold">Neues Projekt anlegen</DialogTitle>
             <p className="text-[11px] text-muted-foreground">Die Projektnummer (PRJ-YYYY-xxxx) wird automatisch vergeben.</p>
           </DialogHeader>
           <div className="space-y-4">
+            {projectDraftRestored && (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+                <span className="text-foreground">Entwurf wiederhergestellt – deine letzten Eingaben wurden geladen.</span>
+                <button
+                  type="button"
+                  onClick={discardProjectDraft}
+                  className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Entwurf verwerfen
+                </button>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Projektname *</Label>
               <Input
