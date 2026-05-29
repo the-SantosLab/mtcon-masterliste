@@ -376,6 +376,7 @@ export default function AdminInsurance() {
       tags: form.tags || [],
       updated_by: user?.id || null,
     };
+    let newPolicyId: string | null = null;
     if (editingId) {
       const { error } = await supabase.from('insurance_policies' as any).update(payload).eq('id', editingId);
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
@@ -385,12 +386,17 @@ export default function AdminInsurance() {
       const { data, error } = await supabase.from('insurance_policies' as any).insert(payload).select('id').single();
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
       toast.success('Police angelegt');
-      if (data) setDetailId((data as any).id);
+      if (data) { newPolicyId = (data as any).id; setDetailId(newPolicyId); }
     }
+    if (pendingFile && newPolicyId) {
+      await uploadDocument(pendingFile, undefined, newPolicyId);
+    }
+    setPendingFile(null);
     setSaving(false);
     setEditorOpen(false);
     await load();
   };
+
 
   const deletePolicy = async (p: Policy) => {
     if (!confirm(`Police "${p.name}" inkl. aller Dokumente löschen?`)) return;
