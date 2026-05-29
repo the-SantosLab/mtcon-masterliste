@@ -246,6 +246,8 @@ export default function ProjectsList() {
     setCreateOpen(false);
     setCreating(false);
     setForm({ name: '', description: '', department_id: '', visibility: 'project_members' });
+    setProjectDraftRestored(false);
+    try { localStorage.removeItem(PROJECT_DRAFT_KEY); } catch {}
     fetchProjects();
   };
 
