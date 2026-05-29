@@ -563,7 +563,10 @@ export default function Dashboard() {
                   >
                     <UrgencyDot status={c.status} dueAt={c.due_at} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground font-mono">{c.case_no}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono inline-flex items-center gap-1.5">
+                        <span>{c.case_no}</span>
+                        <UnreadBadge count={unreadMap[c.id] ?? 0} size="xs" />
+                      </p>
                       <p className="text-sm text-foreground truncate">{c.project_name}</p>
                     </div>
                     {c.assignee?.short_code && (
