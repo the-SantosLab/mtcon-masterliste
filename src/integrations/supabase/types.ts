@@ -2975,42 +2975,63 @@ export type Database = {
       }
       support_tickets: {
         Row: {
+          ai_triage: Json | null
           assigned_to: string | null
+          case_id: string | null
+          client_meta: Json | null
           closed_at: string | null
           created_at: string
-          customer_id: string
+          customer_id: string | null
           description: string
           id: string
+          kind: string | null
           priority: Database["public"]["Enums"]["support_ticket_priority"]
+          reporter_user_id: string | null
           resolved_at: string | null
+          route: string | null
+          source: string
           status: Database["public"]["Enums"]["support_ticket_status"]
           ticket_number: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          ai_triage?: Json | null
           assigned_to?: string | null
+          case_id?: string | null
+          client_meta?: Json | null
           closed_at?: string | null
           created_at?: string
-          customer_id: string
+          customer_id?: string | null
           description: string
           id?: string
+          kind?: string | null
           priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          reporter_user_id?: string | null
           resolved_at?: string | null
+          route?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["support_ticket_status"]
           ticket_number?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          ai_triage?: Json | null
           assigned_to?: string | null
+          case_id?: string | null
+          client_meta?: Json | null
           closed_at?: string | null
           created_at?: string
-          customer_id?: string
+          customer_id?: string | null
           description?: string
           id?: string
+          kind?: string | null
           priority?: Database["public"]["Enums"]["support_ticket_priority"]
+          reporter_user_id?: string | null
           resolved_at?: string | null
+          route?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["support_ticket_status"]
           ticket_number?: string | null
           title?: string
@@ -3022,6 +3043,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
           {

@@ -40,6 +40,7 @@ import MfaChallenge from "./pages/MfaChallenge";
 import MfaGuide from "./pages/MfaGuide";
 import SupportTickets from "./pages/SupportTickets";
 import SupportTicketDetail from "./pages/SupportTicketDetail";
+import MyFeedback from "./pages/MyFeedback";
 import Notes from "./pages/Notes";
 import MtiqDrafts from "./pages/MtiqDrafts";
 import PortalAuth from "./pages/portal/PortalAuth";
@@ -140,6 +141,7 @@ function AuthenticatedApp() {
         <Route path="/mtiq/drafts" element={<ProtectedRoute><MtiqDrafts /></ProtectedRoute>} />
         <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
         <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><MyFeedback /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />

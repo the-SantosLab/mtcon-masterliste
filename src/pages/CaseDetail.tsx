@@ -41,6 +41,8 @@ import { NotificationCockpit } from '@/components/NotificationCockpit';
 import { NotifyToggle } from '@/components/NotifyToggle';
 import { useNotificationLog } from '@/hooks/useNotificationLog';
 import { CaseConflictDialog } from '@/components/CaseConflictDialog';
+import { BugReportDialog } from '@/components/BugReportDialog';
+import { Bug } from 'lucide-react';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
@@ -251,6 +253,7 @@ export default function CaseDetail() {
 
   const refresh = () => { fetchCase(); setRefreshKey(k => k + 1); };
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, refresh);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
   const [titleEditing, setTitleEditing] = useState(false);

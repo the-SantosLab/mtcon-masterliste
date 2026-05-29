@@ -10,8 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug,
 } from 'lucide-react';
+import { BugReportDialog } from '@/components/BugReportDialog';
 
 import mtconLogo from '@/assets/mtcon_logo.png';
 import mtconErpLabel from '@/assets/mtcon-erp-label.png';
@@ -119,6 +120,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [newPwConfirm, setNewPwConfirm] = useState('');
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
   usePresenceHeartbeat();
 
   const handleChangePassword = async () => {
@@ -228,6 +230,17 @@ export function AppLayout({ children }: AppLayoutProps) {
               ))}
             </>
           )}
+          <div className="border-t border-sidebar-border my-1" />
+          <button
+            onClick={() => setBugDialogOpen(true)}
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+          >
+            <Bug className="h-4 w-4" />
+            <span className="flex-1 text-left">Bug / Feedback melden</span>
+          </button>
+          <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-9 text-[12px]')}>
+            <span>Meine Meldungen</span>
+          </Link>
         </nav>
 
         <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-between gap-2">
@@ -383,6 +396,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </DialogContent>
       </Dialog>
       <MtiqWidget />
+      <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
     </div>
   );
 }
