@@ -272,11 +272,27 @@ export default function AdminAnnouncements() {
 
       {/* Editor */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent
+          className="max-w-xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-sm">{form.id ? 'Mitteilung bearbeiten' : 'Neue Mitteilung'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            {announcementDraftRestored && !form.id && (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-[11px]">
+                <span className="text-foreground">Entwurf wiederhergestellt – deine letzten Eingaben wurden geladen.</span>
+                <button
+                  type="button"
+                  onClick={discardAnnouncementDraft}
+                  className="text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Entwurf verwerfen
+                </button>
+              </div>
+            )}
             <div>
               <Label className="text-xs">Titel</Label>
               <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-sm" />
