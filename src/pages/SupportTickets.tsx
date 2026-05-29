@@ -33,10 +33,17 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 type TicketRow = {
   id: string; ticket_number: string; title: string; description: string;
-  status: string; priority: string; customer_id: string; assigned_to: string | null;
+  status: string; priority: string; customer_id: string | null; assigned_to: string | null;
+  source: 'intern' | 'extern' | null; kind: string | null; reporter_user_id: string | null;
+  case_id: string | null; ai_triage: any;
   created_at: string; updated_at: string; resolved_at: string | null; closed_at: string | null;
   customer: { display_name: string; company_name: string | null } | null;
   assignee: { display_name: string; short_code: string } | null;
+  reporter: { display_name: string; short_code: string } | null;
+};
+
+const KIND_LABELS: Record<string, string> = {
+  bug: 'Bug', idee: 'Idee', frage: 'Frage', sonstige: 'Sonstiges',
 };
 
 export default function SupportTickets() {
@@ -51,12 +58,13 @@ export default function SupportTickets() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'intern' | 'extern'>('all');
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const fetchTickets = async () => {
     const { data } = await supabase
       .from('support_tickets')
-      .select('*, customer:portal_customers!support_tickets_customer_id_fkey(display_name, company_name), assignee:users_profile!support_tickets_assigned_to_fkey(display_name, short_code)')
+      .select('*, customer:portal_customers!support_tickets_customer_id_fkey(display_name, company_name), assignee:users_profile!support_tickets_assigned_to_fkey(display_name, short_code), reporter:users_profile!support_tickets_reporter_user_id_fkey(display_name, short_code)')
       .order('created_at', { ascending: false });
     setTickets((data as TicketRow[]) || []);
     setLoading(false);
