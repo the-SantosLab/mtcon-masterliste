@@ -384,7 +384,11 @@ export default function ProjectDetail() {
                   <Plus className="h-3.5 w-3.5" />Vorgang hinzufügen
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogContent
+                className="max-w-lg max-h-[90vh] overflow-y-auto"
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+              >
                 <DialogHeader>
                   <DialogTitle className="text-sm font-semibold">
                     Neuen Vorgang anlegen
