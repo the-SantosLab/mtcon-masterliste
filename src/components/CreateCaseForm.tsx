@@ -41,15 +41,34 @@ const STEPS = [
   { id: 5, title: 'Bemerkung & Abschluss' },
 ];
 
+const DRAFT_KEY_PREFIX = 'createCaseDraft:v1:';
+const draftKeyFor = (projectId?: string) => `${DRAFT_KEY_PREFIX}${projectId || 'global'}`;
+
 export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }: CreateCaseFormProps) {
-  const [step, setStep] = useState(1);
+  // Only auto-restore drafts when there is no explicit prefill (e.g. duplicate flow).
+  const draftKey = draftKeyFor(defaultProjectId);
+  const initialDraft = (() => {
+    if (prefill) return null;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.form) return parsed as { form: Record<string, string>; step?: number };
+    } catch {}
+    return null;
+  })();
+
+  const [step, setStep] = useState<number>(initialDraft?.step ?? 1);
   const [form, setForm] = useState({
     project_name: '', project_id: defaultProjectId || '', department_id: '', team_id: '', assignee_id: '',
     customer_no: '', client_name: '', internal_area_code: '', product_code: '',
     project_article_no: '', received_at: new Date().toISOString().slice(0, 10), due_at: '', note: '', estimated_hours: '',
     sop: '', quantity: '', project_duration: '', description: '',
     ...(prefill || {}),
+    ...(initialDraft?.form || {}),
   });
+  const [draftRestored, setDraftRestored] = useState<boolean>(!!initialDraft);
+
   const [prefillDeptMapped, setPrefillDeptMapped] = useState(false);
 
   const [customers, setCustomers] = useState<Tables<'customers'>[]>([]);
