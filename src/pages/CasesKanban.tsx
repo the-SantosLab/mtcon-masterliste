@@ -27,6 +27,8 @@ import { format } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { useCaseActions } from '@/hooks/useCaseActions';
+import { useChatUnread } from '@/hooks/useChatUnread';
+import { UnreadBadge } from '@/components/UnreadBadge';
 
 type ViewMode = 'projects' | 'cases';
 
