@@ -186,12 +186,41 @@ export default function AdminInsurance() {
   };
   useEffect(() => { if (detailId) loadDocs(detailId); }, [detailId]);
 
+  const childrenByParent = useMemo(() => {
+    const m: Record<string, Category[]> = {};
+    for (const c of categories) {
+      const key = c.parent_id || '__root__';
+      (m[key] ||= []).push(c);
+    }
+    for (const k of Object.keys(m)) m[k].sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name));
+    return m;
+  }, [categories]);
+  const rootCategories = childrenByParent['__root__'] || [];
+
+  const descendantIds = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    const walk = (id: string): string[] => {
+      if (map[id]) return map[id];
+      const kids = childrenByParent[id] || [];
+      const all = [id, ...kids.flatMap(k => walk(k.id))];
+      map[id] = all;
+      return all;
+    };
+    for (const c of categories) walk(c.id);
+    return map;
+  }, [categories, childrenByParent]);
+
   const counts = useMemo(() => {
     const map: Record<string, number> = { all: policies.length, uncategorized: 0 };
     for (const c of categories) map[c.id] = 0;
     for (const p of policies) {
-      if (!p.category_id) map.uncategorized++;
-      else map[p.category_id] = (map[p.category_id] || 0) + 1;
+      if (!p.category_id) { map.uncategorized++; continue; }
+      // count up the chain so parents include children
+      let cur: Category | undefined = categories.find(c => c.id === p.category_id);
+      while (cur) {
+        map[cur.id] = (map[cur.id] || 0) + 1;
+        cur = cur.parent_id ? categories.find(c => c.id === cur!.parent_id) : undefined;
+      }
     }
     return map;
   }, [policies, categories]);
@@ -203,9 +232,12 @@ export default function AdminInsurance() {
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
+    const selectedSet = selectedCat !== 'all' && selectedCat !== 'uncategorized'
+      ? new Set(descendantIds[selectedCat] || [selectedCat])
+      : null;
     return policies.filter(p => {
       if (selectedCat === 'uncategorized' && p.category_id) return false;
-      if (selectedCat !== 'all' && selectedCat !== 'uncategorized' && p.category_id !== selectedCat) return false;
+      if (selectedSet && (!p.category_id || !selectedSet.has(p.category_id))) return false;
       if (statusFilter !== 'all' && getEffectiveStatus(p) !== statusFilter) return false;
       if (s) {
         const hay = [p.name, p.provider, p.policy_number, p.insured_object, p.description, p.notes, (p.tags || []).join(' ')]
@@ -214,7 +246,7 @@ export default function AdminInsurance() {
       }
       return true;
     });
-  }, [policies, selectedCat, statusFilter, search]);
+  }, [policies, selectedCat, statusFilter, search, descendantIds]);
 
   const detailPolicy = policies.find(p => p.id === detailId) || null;
   const detailCategory = detailPolicy ? categories.find(c => c.id === detailPolicy.category_id) : null;
