@@ -481,6 +481,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
       }
     }
     try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
+    try { localStorage.removeItem(draftKey); } catch {}
     toast.success('Vorgang erstellt');
     onCreated();
   };
