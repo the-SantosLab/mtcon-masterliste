@@ -211,6 +211,12 @@ export function AppLayout({ children }: AppLayoutProps) {
               {(item as any).mtiq && <MtiqPendingBadge />}
             </Link>
           ))}
+          {(isAdmin || (profile as any)?.is_manager) && (
+            <Link to="/insurance" onClick={() => setOpen(false)} className={linkClass('/insurance')}>
+              <ShieldCheck className="h-4 w-4" />
+              <span className="flex-1">Versicherungen</span>
+            </Link>
+          )}
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
 
           {isAdmin && (
