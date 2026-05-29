@@ -120,6 +120,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [newPwConfirm, setNewPwConfirm] = useState('');
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
   usePresenceHeartbeat();
 
   const handleChangePassword = async () => {
