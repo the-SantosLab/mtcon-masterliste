@@ -339,13 +339,16 @@ export default function AdminInsurance() {
   const openCreate = () => {
     setEditingId(null);
     setForm({ ...EMPTY_FORM, category_id: selectedCat !== 'all' && selectedCat !== 'uncategorized' ? selectedCat : null });
+    setPendingFile(null);
     setEditorOpen(true);
   };
   const openEdit = (p: Policy) => {
     setEditingId(p.id);
     setForm({ ...p });
+    setPendingFile(null);
     setEditorOpen(true);
   };
+
   const addTag = () => {
     const t = tagInput.trim();
     if (!t) return;
