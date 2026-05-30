@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Headphones, AlertCircle, CheckCircle, Clock, MessageSquare, UserPlus, Loader2 } from 'lucide-react';
+import { Search, Headphones, AlertCircle, CheckCircle, Clock, MessageSquare, UserPlus, Loader2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
