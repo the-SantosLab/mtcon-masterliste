@@ -115,6 +115,24 @@ Deno.serve(async (req) => {
     return new Response("Invalid JSON", { status: 400, headers: corsHeaders });
   }
 
+  // Insurance intake takes precedence (own MailboxHash/address)
+  if (isInsuranceMail(payload)) {
+    try {
+      const fwd = await fetch(`${SUPABASE_URL}/functions/v1/receive-email-insurance`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: req.headers.get("authorization") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+      const text = await fwd.text();
+      return new Response(text, { status: fwd.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      console.error("forward to receive-email-insurance failed", e);
+    }
+  }
+
   // If this looks like a case email, forward to the case intake function
   if (hasCaseNo(payload)) {
     try {
