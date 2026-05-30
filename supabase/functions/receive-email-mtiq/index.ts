@@ -101,6 +101,22 @@ function isInsuranceMail(payload: any): boolean {
   return false;
 }
 
+function isOrderMail(payload: any): boolean {
+  const hash = String(payload?.MailboxHash || "").toLowerCase();
+  if (hash === "orders" || hash === "order" || hash === "bestellung" || hash === "bestellungen") return true;
+  const recipientFields = ["ToFull", "CcFull", "BccFull"];
+  for (const f of recipientFields) {
+    const arr = payload?.[f];
+    if (Array.isArray(arr)) {
+      for (const a of arr) {
+        const email = String(a?.Email || "").toLowerCase();
+        if (/^(orders?|bestellung(en)?)[+@]/.test(email)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -132,6 +148,25 @@ Deno.serve(async (req) => {
       console.error("forward to receive-email-insurance failed", e);
     }
   }
+
+  // Order intake (own MailboxHash/address)
+  if (isOrderMail(payload)) {
+    try {
+      const fwd = await fetch(`${SUPABASE_URL}/functions/v1/receive-email-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: req.headers.get("authorization") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+      const text = await fwd.text();
+      return new Response(text, { status: fwd.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      console.error("forward to receive-email-order failed", e);
+    }
+  }
+
 
   // If this looks like a case email, forward to the case intake function
   if (hasCaseNo(payload)) {

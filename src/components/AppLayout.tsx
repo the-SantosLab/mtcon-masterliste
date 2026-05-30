@@ -217,6 +217,10 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="flex-1">Ablage</span>
             </Link>
           )}
+          <Link to="/orders" onClick={() => setOpen(false)} className={linkClass('/orders')}>
+            <Package className="h-4 w-4" />
+            <span className="flex-1">Bestellungen</span>
+          </Link>
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
 
           {isAdmin && (
