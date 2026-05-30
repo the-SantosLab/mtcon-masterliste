@@ -44,9 +44,110 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const dropRef = useRef<HTMLDivElement>(null);
 
   const reset = () => {
     setTitle(''); setDescription(''); setKind('bug'); setPriority('medium'); setFiles([]);
+  };
+
+  // Thumbnail-URLs für Bilder generieren
+  useEffect(() => {
+    const map: Record<string, string> = {};
+    files.forEach((f, i) => {
+      if (f.type.startsWith('image/')) {
+        map[`${i}_${f.name}_${f.size}`] = URL.createObjectURL(f);
+      }
+    });
+    setPreviews(map);
+    return () => { Object.values(map).forEach(u => URL.revokeObjectURL(u)); };
+  }, [files]);
+
+  // Strg+V Screenshot-Einfügen im gesamten Dialog
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imgs: File[] = [];
+      for (const it of items) {
+        if (it.kind === 'file' && it.type.startsWith('image/')) {
+          const f = it.getAsFile();
+          if (f) {
+            const ext = f.type.split('/')[1] || 'png';
+            const renamed = new File([f], `screenshot-${Date.now()}.${ext}`, { type: f.type });
+            imgs.push(renamed);
+          }
+        }
+      }
+      if (imgs.length > 0) {
+        e.preventDefault();
+        setFiles(prev => [...prev, ...imgs]);
+        toast.success(`${imgs.length} Screenshot${imgs.length > 1 ? 's' : ''} hinzugefügt`);
+      }
+    };
+    window.addEventListener('paste', handler);
+    return () => window.removeEventListener('paste', handler);
+  }, [open]);
+
+  const pasteFromClipboard = async () => {
+    try {
+      if (!navigator.clipboard?.read) {
+        toast.error('Zwischenablage-API nicht verfügbar — bitte Strg+V verwenden');
+        return;
+      }
+      const items = await navigator.clipboard.read();
+      const imgs: File[] = [];
+      for (const item of items) {
+        const type = item.types.find(t => t.startsWith('image/'));
+        if (type) {
+          const blob = await item.getType(type);
+          const ext = type.split('/')[1] || 'png';
+          imgs.push(new File([blob], `screenshot-${Date.now()}.${ext}`, { type }));
+        }
+      }
+      if (imgs.length === 0) { toast.error('Kein Bild in der Zwischenablage'); return; }
+      setFiles(prev => [...prev, ...imgs]);
+      toast.success(`${imgs.length} Screenshot${imgs.length > 1 ? 's' : ''} hinzugefügt`);
+    } catch (err: any) {
+      toast.error('Einfügen fehlgeschlagen: ' + (err.message || 'Unbekannt'));
+    }
+  };
+
+  const captureScreen = async () => {
+    try {
+      const md: any = navigator.mediaDevices;
+      if (!md?.getDisplayMedia) {
+        toast.error('Bildschirmaufnahme im Browser nicht verfügbar');
+        return;
+      }
+      const stream: MediaStream = await md.getDisplayMedia({ video: true, audio: false });
+      const track = stream.getVideoTracks()[0];
+      // Kurzes Warten, damit der erste Frame stabil ist
+      await new Promise(r => setTimeout(r, 250));
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await video.play();
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d')!.drawImage(video, 0, 0, w, h);
+      track.stop();
+      stream.getTracks().forEach(t => t.stop());
+      const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
+      const file = new File([blob], `screenshot-${Date.now()}.png`, { type: 'image/png' });
+      setFiles(prev => [...prev, file]);
+      toast.success('Screenshot aufgenommen');
+    } catch (err: any) {
+      if (err?.name !== 'NotAllowedError') {
+        toast.error('Aufnahme fehlgeschlagen: ' + (err.message || 'Unbekannt'));
+      }
+    }
+  };
+
+  const removeFile = (idx: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== idx));
   };
 
   const submit = async () => {
