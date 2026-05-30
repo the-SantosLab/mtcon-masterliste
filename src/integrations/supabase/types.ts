@@ -1821,6 +1821,44 @@ export type Database = {
           },
         ]
       }
+      insurance_intake_corrections: {
+        Row: {
+          ai_value: string | null
+          corrected_by: string | null
+          corrected_value: string | null
+          created_at: string
+          field: string
+          id: string
+          policy_id: string
+        }
+        Insert: {
+          ai_value?: string | null
+          corrected_by?: string | null
+          corrected_value?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          policy_id: string
+        }
+        Update: {
+          ai_value?: string | null
+          corrected_by?: string | null
+          corrected_value?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          policy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insurance_intake_corrections_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurance_policies: {
         Row: {
           category_id: string | null
@@ -1843,6 +1881,7 @@ export type Database = {
           provider: string | null
           renewal_date: string | null
           search_tsv: unknown
+          source: string
           start_date: string | null
           status: string
           tags: string[] | null
@@ -1870,6 +1909,7 @@ export type Database = {
           provider?: string | null
           renewal_date?: string | null
           search_tsv?: unknown
+          source?: string
           start_date?: string | null
           status?: string
           tags?: string[] | null
@@ -1897,6 +1937,7 @@ export type Database = {
           provider?: string | null
           renewal_date?: string | null
           search_tsv?: unknown
+          source?: string
           start_date?: string | null
           status?: string
           tags?: string[] | null
