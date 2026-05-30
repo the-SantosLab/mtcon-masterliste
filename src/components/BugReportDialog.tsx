@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Bug } from 'lucide-react';
+import { Loader2, Bug, Clipboard, Monitor, X, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 import { collectClientMeta } from '@/lib/clientMeta';
 import { sanitizeFileName } from '@/lib/utils';
