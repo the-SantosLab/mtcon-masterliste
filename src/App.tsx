@@ -145,6 +145,10 @@ function AuthenticatedApp() {
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
         <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
         <Route path="/mtiq/drafts" element={<ProtectedRoute><MtiqDrafts /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+        <Route path="/admin/document-types" element={<ProtectedRoute><AdminDocumentTypes /></ProtectedRoute>} />
+        <Route path="/admin/action-rules" element={<ProtectedRoute><AdminActionRules /></ProtectedRoute>} />
+        <Route path="/admin/inbox-stats" element={<ProtectedRoute><AdminInboxStats /></ProtectedRoute>} />
         <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
         <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
         <Route path="/feedback" element={<ProtectedRoute><MyFeedback /></ProtectedRoute>} />
