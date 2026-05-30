@@ -149,6 +149,25 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Order intake (own MailboxHash/address)
+  if (isOrderMail(payload)) {
+    try {
+      const fwd = await fetch(`${SUPABASE_URL}/functions/v1/receive-email-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: req.headers.get("authorization") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+      const text = await fwd.text();
+      return new Response(text, { status: fwd.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      console.error("forward to receive-email-order failed", e);
+    }
+  }
+
+
   // If this looks like a case email, forward to the case intake function
   if (hasCaseNo(payload)) {
     try {
