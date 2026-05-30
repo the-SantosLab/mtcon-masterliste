@@ -2589,6 +2589,222 @@ export type Database = {
           },
         ]
       }
+      order_documents: {
+        Row: {
+          created_at: string
+          doc_kind: string | null
+          file_name: string
+          file_size: number | null
+          id: string
+          is_current: boolean
+          mime_type: string | null
+          order_id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_kind?: string | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean
+          mime_type?: string | null
+          order_id: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_kind?: string | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean
+          mime_type?: string | null
+          order_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_documents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_intake_corrections: {
+        Row: {
+          ai_value: Json | null
+          corrected_by: string | null
+          corrected_value: Json | null
+          created_at: string
+          field: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          ai_value?: Json | null
+          corrected_by?: string | null
+          corrected_value?: Json | null
+          created_at?: string
+          field: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          ai_value?: Json | null
+          corrected_by?: string | null
+          corrected_value?: Json | null
+          created_at?: string
+          field?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_intake_corrections_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          line_total: number | null
+          notes: string | null
+          order_id: string
+          position: number
+          quantity: number
+          sku: string | null
+          tax_rate: number | null
+          unit: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          line_total?: number | null
+          notes?: string | null
+          order_id: string
+          position?: number
+          quantity?: number
+          sku?: string | null
+          tax_rate?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          line_total?: number | null
+          notes?: string | null
+          order_id?: string
+          position?: number
+          quantity?: number
+          sku?: string | null
+          tax_rate?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_no: string | null
+          delivery_date: string | null
+          department_id: string | null
+          external_order_no: string | null
+          id: string
+          notes: string | null
+          order_date: string | null
+          order_kind: string
+          order_no: string
+          payment_terms: string | null
+          source: string
+          status: string
+          subtotal_amount: number | null
+          tags: string[]
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_no?: string | null
+          delivery_date?: string | null
+          department_id?: string | null
+          external_order_no?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string | null
+          order_kind?: string
+          order_no?: string
+          payment_terms?: string | null
+          source?: string
+          status?: string
+          subtotal_amount?: number | null
+          tags?: string[]
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_no?: string | null
+          delivery_date?: string | null
+          department_id?: string | null
+          external_order_no?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string | null
+          order_kind?: string
+          order_no?: string
+          payment_terms?: string | null
+          source?: string
+          status?: string
+          subtotal_amount?: number | null
+          tags?: string[]
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portal_customers: {
         Row: {
           auth_user_id: string | null
@@ -3739,6 +3955,7 @@ export type Database = {
       }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
       generate_insurance_reminders: { Args: never; Returns: number }
+      generate_order_no: { Args: never; Returns: string }
       get_case_chat_unread: {
         Args: { p_case_ids: string[] }
         Returns: {
