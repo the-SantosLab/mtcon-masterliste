@@ -277,18 +277,80 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
             <p className="text-[10px] text-muted-foreground">{description.length}/4000</p>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">Anhänge (optional)</Label>
-            <Input
-              type="file"
-              multiple
-              accept="image/*,video/*,application/pdf,.txt,.log"
-              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-              className="h-8 text-xs cursor-pointer"
-            />
-            {files.length > 0 && (
-              <p className="text-[10px] text-muted-foreground">{files.length} Datei(en) ausgewählt</p>
-            )}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Anhänge & Screenshots (optional)</Label>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button" variant="outline" size="sm"
+                  className="h-7 text-[11px] gap-1 px-2"
+                  onClick={pasteFromClipboard}
+                  title="Bild aus Zwischenablage einfügen (oder Strg+V)"
+                >
+                  <Clipboard className="h-3 w-3" />Einfügen
+                </Button>
+                <Button
+                  type="button" variant="outline" size="sm"
+                  className="h-7 text-[11px] gap-1 px-2"
+                  onClick={captureScreen}
+                  title="Bildschirm / Fenster aufnehmen"
+                >
+                  <Monitor className="h-3 w-3" />Aufnehmen
+                </Button>
+              </div>
+            </div>
+            <div
+              ref={dropRef}
+              onDragOver={(e) => { e.preventDefault(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const dropped = Array.from(e.dataTransfer.files);
+                if (dropped.length > 0) setFiles(prev => [...prev, ...dropped]);
+              }}
+              className="rounded-md border border-dashed border-border/60 bg-muted/20 px-3 py-2 space-y-2"
+            >
+              <Input
+                type="file"
+                multiple
+                accept="image/*,video/*,application/pdf,.txt,.log"
+                onChange={(e) => setFiles(prev => [...prev, ...Array.from(e.target.files ?? [])])}
+                className="h-8 text-xs cursor-pointer"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Tipp: Screenshot mit <kbd className="px-1 py-0.5 rounded bg-muted text-foreground text-[9px] font-mono">Strg+V</kbd> direkt einfügen, per Drag-and-Drop ablegen oder oben "Aufnehmen".
+              </p>
+              {files.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {files.map((f, i) => {
+                    const key = `${i}_${f.name}_${f.size}`;
+                    const url = previews[key];
+                    return (
+                      <div key={key} className="relative group rounded-md border border-border bg-card overflow-hidden">
+                        {url ? (
+                          <img src={url} alt={f.name} className="h-16 w-16 object-cover" />
+                        ) : (
+                          <div className="h-16 w-16 flex flex-col items-center justify-center px-1 text-center">
+                            <Paperclip className="h-4 w-4 text-muted-foreground mb-0.5" />
+                            <span className="text-[8px] text-muted-foreground truncate w-full">{f.name}</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeFile(i)}
+                          className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-background/90 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Entfernen"
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {files.length > 0 && (
+                <p className="text-[10px] text-muted-foreground">{files.length} Datei(en) ausgewählt</p>
+              )}
+            </div>
           </div>
         </div>
 
