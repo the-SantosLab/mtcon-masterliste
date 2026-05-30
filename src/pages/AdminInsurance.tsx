@@ -384,9 +384,31 @@ export default function AdminInsurance() {
     };
     let newPolicyId: string | null = null;
     if (editingId) {
+      const original = policies.find(p => p.id === editingId);
       const { error } = await supabase.from('insurance_policies' as any).update(payload).eq('id', editingId);
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
       toast.success('Police aktualisiert');
+      // Log AI corrections for learning loop
+      if (original && original.source === 'email_intake') {
+        const trackFields: (keyof Policy)[] = [
+          'name','provider','policy_number','insured_object','description',
+          'start_date','end_date','renewal_date','notice_period_days',
+          'premium_amount','premium_currency','premium_interval',
+          'contact_name','contact_email','contact_phone','category_id',
+        ];
+        const corrections = trackFields
+          .filter(f => String((original as any)[f] ?? '') !== String((payload as any)[f] ?? ''))
+          .map(f => ({
+            policy_id: editingId,
+            field: String(f),
+            ai_value: (original as any)[f] == null ? null : String((original as any)[f]),
+            corrected_value: (payload as any)[f] == null ? null : String((payload as any)[f]),
+            corrected_by: user?.id || null,
+          }));
+        if (corrections.length) {
+          await supabase.from('insurance_intake_corrections' as any).insert(corrections);
+        }
+      }
     } else {
       payload.created_by = user?.id || null;
       const { data, error } = await supabase.from('insurance_policies' as any).insert(payload).select('id').single();
