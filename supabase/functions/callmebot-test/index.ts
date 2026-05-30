@@ -6,8 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const PHONE = '+4915239601825';
-const APIKEY = '4396290';
+const RECIPIENTS: Array<{ phone: string; apikey: string }> = [
+  { phone: '+4915239601825', apikey: '4396290' },
+  { phone: '+4916092420656', apikey: '2459823' },
+];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
