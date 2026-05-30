@@ -52,6 +52,7 @@ interface Policy {
   contact_phone: string | null;
   tags: string[] | null;
   status: string;
+  source?: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -100,9 +101,10 @@ const EMPTY_FORM: Partial<Policy> = {
   tags: [], status: 'active', notes: '',
 };
 
-type EffectiveStatus = 'active' | 'expiring_soon' | 'expired' | 'cancelled' | 'archived';
+type EffectiveStatus = 'draft' | 'active' | 'expiring_soon' | 'expired' | 'cancelled' | 'archived';
 
 function getEffectiveStatus(p: Policy): EffectiveStatus {
+  if (p.status === 'draft') return 'draft';
   if (p.status === 'cancelled' || p.status === 'archived') return p.status as EffectiveStatus;
   if (p.end_date) {
     const days = differenceInDays(parseISO(p.end_date), new Date());
@@ -113,6 +115,7 @@ function getEffectiveStatus(p: Policy): EffectiveStatus {
 }
 
 const STATUS_META: Record<EffectiveStatus, { label: string; cls: string; icon: any }> = {
+  draft:         { label: 'KI-Entwurf',   cls: 'bg-violet-500/10 text-violet-300 ring-violet-500/30',     icon: Sparkles },
   active:        { label: 'Aktiv',        cls: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/30', icon: CheckCircle2 },
   expiring_soon: { label: 'Läuft bald',   cls: 'bg-amber-500/10 text-amber-400 ring-amber-500/30',       icon: CalendarClock },
   expired:       { label: 'Abgelaufen',   cls: 'bg-rose-500/10 text-rose-400 ring-rose-500/30',          icon: AlertTriangle },
@@ -381,9 +384,31 @@ export default function AdminInsurance() {
     };
     let newPolicyId: string | null = null;
     if (editingId) {
+      const original = policies.find(p => p.id === editingId);
       const { error } = await supabase.from('insurance_policies' as any).update(payload).eq('id', editingId);
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
       toast.success('Police aktualisiert');
+      // Log AI corrections for learning loop
+      if (original && original.source === 'email_intake') {
+        const trackFields: (keyof Policy)[] = [
+          'name','provider','policy_number','insured_object','description',
+          'start_date','end_date','renewal_date','notice_period_days',
+          'premium_amount','premium_currency','premium_interval',
+          'contact_name','contact_email','contact_phone','category_id',
+        ];
+        const corrections = trackFields
+          .filter(f => String((original as any)[f] ?? '') !== String((payload as any)[f] ?? ''))
+          .map(f => ({
+            policy_id: editingId,
+            field: String(f),
+            ai_value: (original as any)[f] == null ? null : String((original as any)[f]),
+            corrected_value: (payload as any)[f] == null ? null : String((payload as any)[f]),
+            corrected_by: user?.id || null,
+          }));
+        if (corrections.length) {
+          await supabase.from('insurance_intake_corrections' as any).insert(corrections);
+        }
+      }
     } else {
       payload.created_by = user?.id || null;
       const { data, error } = await supabase.from('insurance_policies' as any).insert(payload).select('id').single();
@@ -537,6 +562,7 @@ export default function AdminInsurance() {
               <SelectTrigger className="h-9 text-xs bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle Status</SelectItem>
+                <SelectItem value="draft">KI-Entwurf</SelectItem>
                 <SelectItem value="active">Aktiv</SelectItem>
                 <SelectItem value="expiring_soon">Läuft bald</SelectItem>
                 <SelectItem value="expired">Abgelaufen</SelectItem>
@@ -658,7 +684,37 @@ export default function AdminInsurance() {
                   </div>
                 </SheetHeader>
 
+                {detailPolicy.status === 'draft' && (
+                  <div className="mt-4 rounded-md border border-violet-500/30 bg-violet-500/5 p-3 flex items-start gap-3">
+                    <Sparkles className="h-4 w-4 text-violet-300 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-foreground">KI-Entwurf aus E-Mail</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        Diese Police wurde automatisch aus einem eingehenden PDF erstellt. Bitte Felder prüfen und bestätigen.
+                      </div>
+                    </div>
+                    {canWrite && (
+                      <Button
+                        size="sm"
+                        className="h-7 text-[11px] shrink-0"
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from('insurance_policies' as any)
+                            .update({ status: 'active', updated_by: user?.id || null })
+                            .eq('id', detailPolicy.id);
+                          if (error) { toast.error('Fehler: ' + error.message); return; }
+                          toast.success('Als aktiv übernommen');
+                          await load();
+                        }}
+                      >
+                        Als aktiv übernehmen
+                      </Button>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-6 space-y-6">
+
                   {/* Key facts */}
                   <div className="grid grid-cols-2 gap-3">
                     <Fact label="Versichertes Objekt" value={detailPolicy.insured_object} full />
