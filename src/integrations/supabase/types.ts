@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_executions: {
+        Row: {
+          action_type: string | null
+          error_message: string | null
+          executed_at: string
+          id: string
+          inbox_document_id: string | null
+          payload: Json | null
+          result: string
+          rule_id: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          inbox_document_id?: string | null
+          payload?: Json | null
+          result: string
+          rule_id?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          inbox_document_id?: string | null
+          payload?: Json | null
+          result?: string
+          rule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_executions_inbox_document_id_fkey"
+            columns: ["inbox_document_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_executions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "action_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_rules: {
+        Row: {
+          actions: Json
+          conditions: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          document_type_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          trigger: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_type_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          trigger: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_type_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          trigger?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_rules_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_messages: {
         Row: {
           content: string
@@ -1710,6 +1811,191 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_types: {
+        Row: {
+          auto_apply_threshold: number | null
+          classification_hints: string | null
+          code: string
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          extraction_schema: Json
+          icon: string | null
+          id: string
+          is_active: boolean
+          label_de: string
+          sort_order: number
+          target_table: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_apply_threshold?: number | null
+          classification_hints?: string | null
+          code: string
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          extraction_schema?: Json
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label_de: string
+          sort_order?: number
+          target_table?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_apply_threshold?: number | null
+          classification_hints?: string | null
+          code?: string
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          extraction_schema?: Json
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label_de?: string
+          sort_order?: number
+          target_table?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inbox_corrections: {
+        Row: {
+          ai_value: Json | null
+          corrected_at: string
+          corrected_by: string | null
+          document_type_id: string | null
+          field_path: string
+          id: string
+          inbox_document_id: string
+          user_value: Json | null
+        }
+        Insert: {
+          ai_value?: Json | null
+          corrected_at?: string
+          corrected_by?: string | null
+          document_type_id?: string | null
+          field_path: string
+          id?: string
+          inbox_document_id: string
+          user_value?: Json | null
+        }
+        Update: {
+          ai_value?: Json | null
+          corrected_at?: string
+          corrected_by?: string | null
+          document_type_id?: string | null
+          field_path?: string
+          id?: string
+          inbox_document_id?: string
+          user_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_corrections_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbox_corrections_inbox_document_id_fkey"
+            columns: ["inbox_document_id"]
+            isOneToOne: false
+            referencedRelation: "inbox_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbox_documents: {
+        Row: {
+          classification_confidence: number | null
+          classification_reasoning: string | null
+          classified_type_id: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          extracted_data: Json
+          filename: string | null
+          from_email: string | null
+          from_name: string | null
+          id: string
+          inbox_no: string | null
+          linked_id: string | null
+          linked_table: string | null
+          raw_email_id: string | null
+          received_at: string
+          status: string
+          storage_path: string | null
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          classification_confidence?: number | null
+          classification_reasoning?: string | null
+          classified_type_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          extracted_data?: Json
+          filename?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          inbox_no?: string | null
+          linked_id?: string | null
+          linked_table?: string | null
+          raw_email_id?: string | null
+          received_at?: string
+          status?: string
+          storage_path?: string | null
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          classification_confidence?: number | null
+          classification_reasoning?: string | null
+          classified_type_id?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          extracted_data?: Json
+          filename?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          inbox_no?: string | null
+          linked_id?: string | null
+          linked_table?: string | null
+          raw_email_id?: string | null
+          received_at?: string
+          status?: string
+          storage_path?: string | null
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbox_documents_classified_type_id_fkey"
+            columns: ["classified_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
             referencedColumns: ["id"]
           },
         ]
