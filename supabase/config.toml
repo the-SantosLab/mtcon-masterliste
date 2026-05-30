@@ -9,5 +9,8 @@ verify_jwt = false
 [functions.receive-email-insurance]
 verify_jwt = false
 
+[functions.receive-email-order]
+verify_jwt = false
+
 [functions.send-welcome-credentials]
 verify_jwt = false
