@@ -195,6 +195,49 @@ Deno.serve(async (req) => {
   const bodyHtml: string = payload?.HtmlBody || "";
   const emailBody = bodyPlain || bodyHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
+  // ===== Intelligent Inbox (Step 3): if mail has a PDF attachment, also create
+  // an inbox_documents entry and trigger classification. Runs in parallel to the
+  // legacy MTIQ draft creation below so nothing changes for existing flows.
+  try {
+    const attachments: any[] = Array.isArray(payload?.Attachments) ? payload.Attachments : [];
+    const pdfAtt = attachments.find((a) =>
+      String(a?.ContentType || "").toLowerCase().includes("pdf") ||
+      String(a?.Name || "").toLowerCase().endsWith(".pdf")
+    );
+    if (pdfAtt && pdfAtt.Content) {
+      const bin = atob(pdfAtt.Content);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const safeName = String(pdfAtt.Name || "document.pdf").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${safeName}`;
+      const { error: upErr } = await admin.storage.from("inbox-documents").upload(storagePath, bytes, {
+        contentType: pdfAtt.ContentType || "application/pdf", upsert: false,
+      });
+      if (upErr) {
+        console.error("inbox-documents upload failed", upErr);
+      } else {
+        const { data: ins, error: insErr } = await admin.from("inbox_documents").insert({
+          received_at: new Date().toISOString(),
+          from_email: fromEmail, from_name: fromName, subject,
+          raw_email_id: messageId, storage_path: storagePath, filename: safeName,
+          status: "needs_triage",
+        }).select("id").single();
+        if (insErr) {
+          console.error("inbox_documents insert failed", insErr);
+        } else if (ins?.id) {
+          // Fire & forget classification
+          fetch(`${SUPABASE_URL}/functions/v1/classify-inbox-document`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_ROLE}` },
+            body: JSON.stringify({ inbox_document_id: ins.id }),
+          }).catch((e) => console.error("classify fire-and-forget failed", e));
+        }
+      }
+    }
+  } catch (e) {
+    console.error("inbox intake failed", e);
+  }
+
   // Dedup by message_id
   if (messageId) {
     const { data: existing } = await admin
