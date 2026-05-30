@@ -158,6 +158,9 @@ export default function SupportTickets() {
               </DialogContent>
             </Dialog>
           </div>
+        </div>
+
+
 
         {/* KPIs */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
