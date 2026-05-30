@@ -60,6 +60,21 @@ export default function SupportTickets() {
   const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'intern' | 'extern'>('all');
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [testingWa, setTestingWa] = useState(false);
+
+  const sendCallmebotTest = async () => {
+    setTestingWa(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('callmebot-test');
+      if (error) throw error;
+      if ((data as any)?.ok) toast.success('Test-WhatsApp gesendet');
+      else toast.error('CallMeBot-Antwort: ' + ((data as any)?.body || 'unbekannt'));
+    } catch (e: any) {
+      toast.error('Fehler: ' + (e?.message || 'Test fehlgeschlagen'));
+    } finally {
+      setTestingWa(false);
+    }
+  };
 
   const fetchTickets = async () => {
     const { data } = await supabase
