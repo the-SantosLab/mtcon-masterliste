@@ -132,18 +132,32 @@ export default function SupportTickets() {
             <h1 className="text-lg font-semibold text-foreground">Support-Tickets</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Kundenanfragen sowie interne Bug-/Feedback-Meldungen verwalten · {internCount} intern</p>
           </div>
-          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="h-8 text-xs">
-                <UserPlus className="h-3.5 w-3.5 mr-1.5" />Kunden einladen
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs"
+                onClick={sendCallmebotTest}
+                disabled={testingWa}
+                title="Test-WhatsApp an +49 152 39601825"
+              >
+                {testingWa ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
+                WhatsApp-Test
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-sm">
-              <DialogHeader><DialogTitle className="text-sm">Kunden einladen</DialogTitle></DialogHeader>
-              <InviteCustomerForm userId={user?.id || ''} onDone={() => setInviteOpen(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
+            )}
+            <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8 text-xs">
+                  <UserPlus className="h-3.5 w-3.5 mr-1.5" />Kunden einladen
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader><DialogTitle className="text-sm">Kunden einladen</DialogTitle></DialogHeader>
+                <InviteCustomerForm userId={user?.id || ''} onDone={() => setInviteOpen(false)} />
+              </DialogContent>
+            </Dialog>
+          </div>
 
         {/* KPIs */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
