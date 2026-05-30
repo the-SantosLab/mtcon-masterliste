@@ -85,6 +85,7 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
+  { href: '/inbox', label: 'Inbox', icon: Inbox },
   { href: '/mtiq/drafts', label: 'MTIQ Posteingang', icon: Inbox, mtiq: true },
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
@@ -100,6 +101,9 @@ const adminItems = [
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles },
+  { href: '/admin/document-types', label: 'Dokumenttypen', icon: FileText },
+  { href: '/admin/action-rules', label: 'Aktions-Regeln', icon: Workflow },
+  { href: '/admin/inbox-stats', label: 'Inbox-Statistik', icon: LayoutDashboard },
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },

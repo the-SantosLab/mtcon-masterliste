@@ -45,6 +45,10 @@ import SupportTicketDetail from "./pages/SupportTicketDetail";
 import MyFeedback from "./pages/MyFeedback";
 import Notes from "./pages/Notes";
 import MtiqDrafts from "./pages/MtiqDrafts";
+import Inbox from "./pages/Inbox";
+import AdminDocumentTypes from "./pages/AdminDocumentTypes";
+import AdminActionRules from "./pages/AdminActionRules";
+import AdminInboxStats from "./pages/AdminInboxStats";
 import PortalAuth from "./pages/portal/PortalAuth";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalTickets from "./pages/portal/PortalTickets";
@@ -141,6 +145,10 @@ function AuthenticatedApp() {
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
         <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
         <Route path="/mtiq/drafts" element={<ProtectedRoute><MtiqDrafts /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+        <Route path="/admin/document-types" element={<ProtectedRoute><AdminDocumentTypes /></ProtectedRoute>} />
+        <Route path="/admin/action-rules" element={<ProtectedRoute><AdminActionRules /></ProtectedRoute>} />
+        <Route path="/admin/inbox-stats" element={<ProtectedRoute><AdminInboxStats /></ProtectedRoute>} />
         <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
         <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
         <Route path="/feedback" element={<ProtectedRoute><MyFeedback /></ProtectedRoute>} />
