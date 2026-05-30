@@ -101,6 +101,22 @@ function isInsuranceMail(payload: any): boolean {
   return false;
 }
 
+function isOrderMail(payload: any): boolean {
+  const hash = String(payload?.MailboxHash || "").toLowerCase();
+  if (hash === "orders" || hash === "order" || hash === "bestellung" || hash === "bestellungen") return true;
+  const recipientFields = ["ToFull", "CcFull", "BccFull"];
+  for (const f of recipientFields) {
+    const arr = payload?.[f];
+    if (Array.isArray(arr)) {
+      for (const a of arr) {
+        const email = String(a?.Email || "").toLowerCase();
+        if (/^(orders?|bestellung(en)?)[+@]/.test(email)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
