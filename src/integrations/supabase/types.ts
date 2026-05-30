@@ -1666,6 +1666,54 @@ export type Database = {
           },
         ]
       }
+      document_category_permissions: {
+        Row: {
+          category_id: string
+          department_id: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          permission: string
+          principal_type: string
+          user_id: string | null
+        }
+        Insert: {
+          category_id: string
+          department_id?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: string
+          principal_type: string
+          user_id?: string | null
+        }
+        Update: {
+          category_id?: string
+          department_id?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: string
+          principal_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_category_permissions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "insurance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_category_permissions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insurance_categories: {
         Row: {
           color: string
@@ -3624,11 +3672,19 @@ export type Database = {
         Args: { p_dept_id: string; p_uid?: string }
         Returns: boolean
       }
+      can_read_doc_category: {
+        Args: { p_category_id: string; p_uid?: string }
+        Returns: boolean
+      }
       can_write_board:
         | { Args: { _board_id: string }; Returns: boolean }
         | { Args: { p_board_id: string; p_uid?: string }; Returns: boolean }
       can_write_dept: {
         Args: { p_dept_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      can_write_doc_category: {
+        Args: { p_category_id: string; p_uid?: string }
         Returns: boolean
       }
       case_department: { Args: { p_case_id: string }; Returns: string }
@@ -3695,6 +3751,7 @@ export type Database = {
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       next_counter: { Args: { p_key: string }; Returns: number }
+      policy_category: { Args: { p_policy_id: string }; Returns: string }
       purge_old_trashed_boards: { Args: never; Returns: undefined }
       purge_old_trashed_notes: { Args: never; Returns: undefined }
       purge_trashed_cases: { Args: never; Returns: number }
