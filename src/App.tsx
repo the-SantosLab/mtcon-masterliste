@@ -32,6 +32,7 @@ import AdminSecurity from "./pages/AdminSecurity";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminAiPrompts from "./pages/AdminAiPrompts";
 import AdminInsurance from "./pages/AdminInsurance";
+import AdminOrders from "./pages/AdminOrders";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
