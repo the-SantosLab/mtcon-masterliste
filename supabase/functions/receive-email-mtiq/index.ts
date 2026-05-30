@@ -85,6 +85,22 @@ function hasCaseNo(payload: any): boolean {
   return false;
 }
 
+function isInsuranceMail(payload: any): boolean {
+  const hash = String(payload?.MailboxHash || "").toLowerCase();
+  if (hash === "insurance" || hash === "versicherung") return true;
+  const recipientFields = ["ToFull", "CcFull", "BccFull"];
+  for (const f of recipientFields) {
+    const arr = payload?.[f];
+    if (Array.isArray(arr)) {
+      for (const a of arr) {
+        const email = String(a?.Email || "").toLowerCase();
+        if (/^(insurance|versicherung)[+@]/.test(email)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
