@@ -540,6 +540,7 @@ export default function AdminInsurance() {
               <SelectTrigger className="h-9 text-xs bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle Status</SelectItem>
+                <SelectItem value="draft">KI-Entwurf</SelectItem>
                 <SelectItem value="active">Aktiv</SelectItem>
                 <SelectItem value="expiring_soon">Läuft bald</SelectItem>
                 <SelectItem value="expired">Abgelaufen</SelectItem>
