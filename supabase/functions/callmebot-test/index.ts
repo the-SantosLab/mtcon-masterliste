@@ -6,8 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const PHONE = '+4915239601825';
-const APIKEY = '4396290';
+const RECIPIENTS: Array<{ phone: string; apikey: string }> = [
+  { phone: '+4915239601825', apikey: '4396290' },
+  { phone: '+4916092420656', apikey: '2459823' },
+];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -40,17 +42,21 @@ Deno.serve(async (req) => {
     const now = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });
     const text = `[MTCON] Test-Benachrichtigung\nCallMeBot Integration aktiv\n${now}`;
 
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(PHONE)}&apikey=${APIKEY}&text=${encodeURIComponent(text)}`;
-    const res = await fetch(url);
-    const body = await res.text();
+    const results = await Promise.all(RECIPIENTS.map(async (r) => {
+      try {
+        const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(r.phone)}&apikey=${r.apikey}&text=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const body = await res.text();
+        return { phone: r.phone, ok: res.ok, status: res.status, body: body.slice(0, 300) };
+      } catch (e: any) {
+        return { phone: r.phone, ok: false, status: 0, body: e?.message || String(e) };
+      }
+    }));
 
-    if (!res.ok) {
-      return new Response(JSON.stringify({ ok: false, status: res.status, body }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    return new Response(JSON.stringify({ ok: true, status: res.status, body }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const allOk = results.every((x) => x.ok);
+    return new Response(JSON.stringify({ ok: allOk, results }), {
+      status: allOk ? 200 : 502,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err?.message || String(err) }), {
