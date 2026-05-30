@@ -12,6 +12,7 @@ import { Loader2, Bug } from 'lucide-react';
 import { toast } from 'sonner';
 import { collectClientMeta } from '@/lib/clientMeta';
 import { sanitizeFileName } from '@/lib/utils';
+import { MtiqButton } from '@/components/MtiqButton';
 
 interface Props {
   open: boolean;
