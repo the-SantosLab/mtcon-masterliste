@@ -156,7 +156,14 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Beschreibung</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Beschreibung</Label>
+              <MtiqButton
+                text={description}
+                onResult={(t) => setDescription(t)}
+                minChars={10}
+              />
+            </div>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
