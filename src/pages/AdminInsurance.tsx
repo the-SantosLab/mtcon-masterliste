@@ -1216,6 +1216,9 @@ function CategoryManager({
           </div>
           {canWrite && (
             <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => setPermsForCategory(c)} title="Rechte verwalten" className="p-1 text-muted-foreground hover:text-foreground">
+                <KeyRound className="h-3 w-3" />
+              </button>
               <button onClick={() => startNew(c.id)} title="Unterkategorie anlegen" className="p-1 text-muted-foreground hover:text-foreground">
                 <Plus className="h-3 w-3" />
               </button>
