@@ -662,7 +662,37 @@ export default function AdminInsurance() {
                   </div>
                 </SheetHeader>
 
+                {detailPolicy.status === 'draft' && (
+                  <div className="mt-4 rounded-md border border-violet-500/30 bg-violet-500/5 p-3 flex items-start gap-3">
+                    <Sparkles className="h-4 w-4 text-violet-300 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-foreground">KI-Entwurf aus E-Mail</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        Diese Police wurde automatisch aus einem eingehenden PDF erstellt. Bitte Felder prüfen und bestätigen.
+                      </div>
+                    </div>
+                    {canWrite && (
+                      <Button
+                        size="sm"
+                        className="h-7 text-[11px] shrink-0"
+                        onClick={async () => {
+                          const { error } = await supabase
+                            .from('insurance_policies' as any)
+                            .update({ status: 'active', updated_by: user?.id || null })
+                            .eq('id', detailPolicy.id);
+                          if (error) { toast.error('Fehler: ' + error.message); return; }
+                          toast.success('Als aktiv übernommen');
+                          await load();
+                        }}
+                      >
+                        Als aktiv übernehmen
+                      </Button>
+                    )}
+                  </div>
+                )}
+
                 <div className="mt-6 space-y-6">
+
                   {/* Key facts */}
                   <div className="grid grid-cols-2 gap-3">
                     <Fact label="Versichertes Objekt" value={detailPolicy.insured_object} full />
