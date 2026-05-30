@@ -1347,6 +1347,191 @@ function CategoryManager({
           </div>
         )}
       </DialogContent>
+      {permsForCategory && (
+        <CategoryPermissionsDialog
+          category={permsForCategory}
+          onClose={() => setPermsForCategory(null)}
+        />
+      )}
+    </Dialog>
+  );
+}
+
+// ---- Category permissions dialog ----
+interface DocCategoryPermission {
+  id: string;
+  category_id: string;
+  principal_type: 'user' | 'department';
+  user_id: string | null;
+  department_id: string | null;
+  permission: 'read' | 'write';
+}
+
+function CategoryPermissionsDialog({ category, onClose }: { category: Category; onClose: () => void }) {
+  const [perms, setPerms] = useState<DocCategoryPermission[]>([]);
+  const [users, setUsers] = useState<{ id: string; display_name: string | null; short_code: string | null }[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  // new entry form
+  const [newType, setNewType] = useState<'user' | 'department'>('user');
+  const [newPrincipal, setNewPrincipal] = useState<string>('');
+  const [newPermission, setNewPermission] = useState<'read' | 'write'>('read');
+
+  const load = async () => {
+    setLoading(true);
+    const [p, u, d] = await Promise.all([
+      supabase.from('document_category_permissions' as any).select('*').eq('category_id', category.id),
+      supabase.from('users_profile').select('id, display_name, short_code').order('display_name'),
+      supabase.from('departments').select('id, name').order('name'),
+    ]);
+    if (p.data) setPerms(p.data as any);
+    if (u.data) setUsers(u.data as any);
+    if (d.data) setDepartments(d.data as any);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [category.id]);
+
+  const userLabel = (id: string) => {
+    const u = users.find(x => x.id === id);
+    return u?.display_name || u?.short_code || id.slice(0, 8);
+  };
+  const deptLabel = (id: string) => departments.find(d => d.id === id)?.name || id.slice(0, 8);
+
+  const add = async () => {
+    if (!newPrincipal) { toast.error('Bitte Nutzer oder Abteilung wählen'); return; }
+    setBusy(true);
+    const payload: any = {
+      category_id: category.id,
+      principal_type: newType,
+      user_id: newType === 'user' ? newPrincipal : null,
+      department_id: newType === 'department' ? newPrincipal : null,
+      permission: newPermission,
+    };
+    // Upsert-like: delete existing for same principal first to allow permission change
+    if (newType === 'user') {
+      await supabase.from('document_category_permissions' as any)
+        .delete().eq('category_id', category.id).eq('principal_type', 'user').eq('user_id', newPrincipal);
+    } else {
+      await supabase.from('document_category_permissions' as any)
+        .delete().eq('category_id', category.id).eq('principal_type', 'department').eq('department_id', newPrincipal);
+    }
+    const { error } = await supabase.from('document_category_permissions' as any).insert(payload);
+    setBusy(false);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    toast.success('Berechtigung gespeichert');
+    setNewPrincipal('');
+    setNewPermission('read');
+    await load();
+  };
+
+  const updatePerm = async (id: string, permission: 'read' | 'write') => {
+    const { error } = await supabase.from('document_category_permissions' as any)
+      .update({ permission }).eq('id', id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    await load();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from('document_category_permissions' as any).delete().eq('id', id);
+    if (error) { toast.error('Fehler: ' + error.message); return; }
+    await load();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-sm">Rechte · {category.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Admins haben immer vollen Zugriff. Manager können standardmäßig lesen.
+            Hier zusätzlich freischalten: Nutzer oder Abteilung mit Lese- oder Schreibrecht.
+          </p>
+
+          <div className="rounded-md border border-border bg-card/40 divide-y divide-border">
+            {loading ? (
+              <div className="text-center text-xs text-muted-foreground py-6">Lädt…</div>
+            ) : perms.length === 0 ? (
+              <div className="text-center text-xs text-muted-foreground py-6">
+                Keine zusätzlichen Berechtigungen — nur Admin (+ Manager lesend).
+              </div>
+            ) : (
+              perms.map(p => (
+                <div key={p.id} className="flex items-center gap-2 px-3 py-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-foreground truncate">
+                      {p.principal_type === 'user'
+                        ? userLabel(p.user_id!)
+                        : deptLabel(p.department_id!)}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {p.principal_type === 'user' ? 'Nutzer' : 'Abteilung'}
+                    </div>
+                  </div>
+                  <Select value={p.permission} onValueChange={(v: any) => updatePerm(p.id, v)}>
+                    <SelectTrigger className="h-7 text-[11px] w-24"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="read">Lesen</SelectItem>
+                      <SelectItem value="write">Schreiben</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <button onClick={() => remove(p.id)} className="p-1 text-muted-foreground hover:text-rose-400" title="Entfernen">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="space-y-2 rounded-md border border-border bg-card/40 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Neuen Eintrag hinzufügen</div>
+            <div className="grid grid-cols-12 gap-2">
+              <Select value={newType} onValueChange={(v: any) => { setNewType(v); setNewPrincipal(''); }}>
+                <SelectTrigger className="h-8 text-xs col-span-3"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Nutzer</SelectItem>
+                  <SelectItem value="department">Abteilung</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={newPrincipal} onValueChange={setNewPrincipal}>
+                <SelectTrigger className="h-8 text-xs col-span-5">
+                  <SelectValue placeholder={newType === 'user' ? 'Nutzer wählen…' : 'Abteilung wählen…'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {newType === 'user'
+                    ? users.map(u => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.display_name || u.short_code || u.id.slice(0, 8)}
+                        </SelectItem>
+                      ))
+                    : departments.map(d => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                </SelectContent>
+              </Select>
+              <Select value={newPermission} onValueChange={(v: any) => setNewPermission(v)}>
+                <SelectTrigger className="h-8 text-xs col-span-2"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="read">Lesen</SelectItem>
+                  <SelectItem value="write">Schreiben</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={add} disabled={busy || !newPrincipal} className="h-8 text-xs col-span-2">
+                Hinzufügen
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 text-xs">Schließen</Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }
