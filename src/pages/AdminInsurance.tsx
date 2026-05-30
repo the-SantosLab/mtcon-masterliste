@@ -1154,6 +1154,7 @@ function CategoryManager({
 }) {
   const [editing, setEditing] = useState<Partial<Category> & { id?: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [permsForCategory, setPermsForCategory] = useState<Category | null>(null);
 
   const startNew = (parent_id: string | null = null) => {
     setEditing({ name: '', description: '', color: 'slate', icon: 'folder', sort_order: 100, parent_id });
