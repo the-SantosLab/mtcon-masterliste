@@ -101,9 +101,10 @@ const EMPTY_FORM: Partial<Policy> = {
   tags: [], status: 'active', notes: '',
 };
 
-type EffectiveStatus = 'active' | 'expiring_soon' | 'expired' | 'cancelled' | 'archived';
+type EffectiveStatus = 'draft' | 'active' | 'expiring_soon' | 'expired' | 'cancelled' | 'archived';
 
 function getEffectiveStatus(p: Policy): EffectiveStatus {
+  if (p.status === 'draft') return 'draft';
   if (p.status === 'cancelled' || p.status === 'archived') return p.status as EffectiveStatus;
   if (p.end_date) {
     const days = differenceInDays(parseISO(p.end_date), new Date());
@@ -114,6 +115,7 @@ function getEffectiveStatus(p: Policy): EffectiveStatus {
 }
 
 const STATUS_META: Record<EffectiveStatus, { label: string; cls: string; icon: any }> = {
+  draft:         { label: 'KI-Entwurf',   cls: 'bg-violet-500/10 text-violet-300 ring-violet-500/30',     icon: Sparkles },
   active:        { label: 'Aktiv',        cls: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/30', icon: CheckCircle2 },
   expiring_soon: { label: 'Läuft bald',   cls: 'bg-amber-500/10 text-amber-400 ring-amber-500/30',       icon: CalendarClock },
   expired:       { label: 'Abgelaufen',   cls: 'bg-rose-500/10 text-rose-400 ring-rose-500/30',          icon: AlertTriangle },
