@@ -91,7 +91,7 @@ function statusClasses(s: string): string {
   }
 }
 
-export default function MtiqDrafts() {
+export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -368,9 +368,11 @@ export default function MtiqDrafts() {
   };
 
 
+  const Wrapper: any = embedded ? 'div' : AppLayout;
   return (
-    <AppLayout>
+    <Wrapper>
       <div className="relative flex flex-col h-full overflow-hidden">
+
         {/* Ambient background mesh */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl opacity-40" />
@@ -1072,7 +1074,7 @@ export default function MtiqDrafts() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AppLayout>
+    </Wrapper>
   );
 }
 

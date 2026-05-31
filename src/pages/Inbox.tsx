@@ -52,7 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
   failed: 'Fehler',
 };
 
-export default function Inbox() {
+export default function Inbox({ embedded = false }: { embedded?: boolean } = {}) {
   const [params, setParams] = useSearchParams();
   const [docs, setDocs] = useState<InboxDoc[]>([]);
   const [types, setTypes] = useState<DocType[]>([]);
@@ -113,9 +113,11 @@ export default function Inbox() {
     }
   };
 
+  const Wrapper: any = embedded ? 'div' : AppLayout;
   return (
-    <AppLayout>
+    <Wrapper>
       <div className="space-y-4 p-4 md:p-6">
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold flex items-center gap-2">
@@ -214,7 +216,7 @@ export default function Inbox() {
           onChanged={load}
         />
       )}
-    </AppLayout>
+    </Wrapper>
   );
 }
 

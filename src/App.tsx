@@ -46,6 +46,7 @@ import MyFeedback from "./pages/MyFeedback";
 import Notes from "./pages/Notes";
 import MtiqDrafts from "./pages/MtiqDrafts";
 import Inbox from "./pages/Inbox";
+import InboxHub from "./pages/InboxHub";
 import AdminDocumentTypes from "./pages/AdminDocumentTypes";
 import AdminActionRules from "./pages/AdminActionRules";
 import AdminInboxStats from "./pages/AdminInboxStats";
@@ -144,8 +145,10 @@ function AuthenticatedApp() {
         <Route path="/projects/:id/files" element={<ProtectedRoute><ProjectFiles /></ProtectedRoute>} />
         <Route path="/docs" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
         <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
-        <Route path="/mtiq/drafts" element={<ProtectedRoute><MtiqDrafts /></ProtectedRoute>} />
-        <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+        <Route path="/mtiq/drafts" element={<ProtectedRoute><InboxHub /></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><InboxHub /></ProtectedRoute>} />
+        <Route path="/inbox/documents" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+        <Route path="/inbox/mtiq" element={<ProtectedRoute><MtiqDrafts /></ProtectedRoute>} />
         <Route path="/admin/document-types" element={<ProtectedRoute><AdminDocumentTypes /></ProtectedRoute>} />
         <Route path="/admin/action-rules" element={<ProtectedRoute><AdminActionRules /></ProtectedRoute>} />
         <Route path="/admin/inbox-stats" element={<ProtectedRoute><AdminInboxStats /></ProtectedRoute>} />
