@@ -446,9 +446,17 @@ ${signedImages.length ? `\n(${signedImages.length} Bild-Anhänge sind als Vorsch
           }
           messages.push({ role: "tool", tool_call_id: tc.id, name, content: JSON.stringify(result) });
         } else if (name === "query_projects") {
-          let q = client.from("projects").select("id, name, project_number, status, urgency, department_id, departments:department_id(name)");
+          let q = client.from("projects").select("id, name, project_number, project_code, status, urgency, department_id, departments:department_id(name)");
           if (args.status) q = q.eq("status", args.status);
+          if (args.include_archived === false) q = q.not("status", "in", "(archived,completed)");
           if (args.name_like) q = q.ilike("name", `%${args.name_like}%`);
+          if (args.search_text) {
+            const needle = String(args.search_text).replace(/[%,()]/g, " ").trim();
+            if (needle) {
+              const pat = `%${needle}%`;
+              q = q.or(`name.ilike.${pat},project_number.ilike.${pat},project_code.ilike.${pat}`);
+            }
+          }
           q = q.order("urgency", { ascending: false, nullsFirst: false }).limit(Math.min(args.limit ?? 10, 25));
           const { data: rows, error } = await q;
           let result: any = error ? { error: error.message } : [];
