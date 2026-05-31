@@ -364,13 +364,22 @@ ${signedImages.length ? `\n(${signedImages.length} Bild-Anhänge sind als Vorsch
         try { args = JSON.parse(tc.function?.arguments ?? "{}"); } catch { args = {}; }
 
         if (name === "query_cases") {
-          let q = client.from("cases").select("case_no, project_name, client_name, status, urgency, due_at, departments:department_id(name)").eq("deleted", false);
-          if (args.only_open) q = q.neq("status", "abgeschlossen");
+          let q = client.from("cases").select("case_no, project_name, client_name, status, urgency, due_at, completed_at, departments:department_id(name)").eq("deleted", false);
+          if (args.only_open || args.include_archived === false) {
+            q = q.not("status", "in", "(abgeschlossen,archiv,verworfen)");
+          }
           if (args.status) q = q.eq("status", args.status);
           if (args.min_urgency) q = q.gte("urgency", args.min_urgency);
           if (args.assignee_me) q = q.eq("assignee_id", user.id);
           if (args.project_id) q = q.eq("project_id", args.project_id);
           if (args.overdue) q = q.lt("due_at", new Date().toISOString().slice(0,10)).neq("status", "abgeschlossen");
+          if (args.search_text) {
+            const needle = String(args.search_text).replace(/[%,()]/g, " ").trim();
+            if (needle) {
+              const pat = `%${needle}%`;
+              q = q.or(`project_name.ilike.${pat},client_name.ilike.${pat},case_no.ilike.${pat},customer_no.ilike.${pat},note.ilike.${pat}`);
+            }
+          }
           const sort = args.sort_by ?? "urgency";
           const dir = (args.direction ?? "desc") === "asc";
           q = q.order(sort, { ascending: dir, nullsFirst: false }).limit(Math.min(args.limit ?? 10, 25));
@@ -382,7 +391,7 @@ ${signedImages.length ? `\n(${signedImages.length} Bild-Anhänge sind als Vorsch
           }
           const result = error ? { error: error.message } : filtered.map((r: any) => ({
             case_no: r.case_no, title: r.project_name, kunde: r.client_name,
-            status: r.status, chilis: r.urgency, fällig: r.due_at, abteilung: r.departments?.name ?? null,
+            status: r.status, chilis: r.urgency, fällig: r.due_at, abgeschlossen_am: r.completed_at, abteilung: r.departments?.name ?? null,
           }));
           messages.push({ role: "tool", tool_call_id: tc.id, name, content: JSON.stringify(result) });
         } else if (name === "report_cases") {
