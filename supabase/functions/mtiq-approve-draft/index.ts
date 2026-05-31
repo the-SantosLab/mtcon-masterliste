@@ -146,9 +146,14 @@ Deno.serve(async (req) => {
         let task_dept_id: string | null = department_id;
         if (t.department) {
           const { data: dm } = await client
-            .from("departments").select("id").ilike("name", `%${String(t.department).trim()}%`).limit(1);
+            .from("departments")
+            .select("id, parent_id")
+            .ilike("name", String(t.department).trim())
+            .order("parent_id", { ascending: true, nullsFirst: true })
+            .limit(1);
           if (dm && dm[0]) task_dept_id = dm[0].id;
         }
+
         return {
           case_id: newCase.id,
           title: String(t.title ?? "").slice(0, 500) || `Aufgabe ${idx + 1}`,
