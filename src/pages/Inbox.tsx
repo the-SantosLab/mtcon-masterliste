@@ -216,7 +216,7 @@ export default function Inbox({ embedded = false }: { embedded?: boolean } = {})
           onChanged={load}
         />
       )}
-    </AppLayout>
+    </Wrapper>
   );
 }
 
