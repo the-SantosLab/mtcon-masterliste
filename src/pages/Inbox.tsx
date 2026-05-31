@@ -52,7 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
   failed: 'Fehler',
 };
 
-export default function Inbox() {
+export default function Inbox({ embedded = false }: { embedded?: boolean } = {}) {
   const [params, setParams] = useSearchParams();
   const [docs, setDocs] = useState<InboxDoc[]>([]);
   const [types, setTypes] = useState<DocType[]>([]);
