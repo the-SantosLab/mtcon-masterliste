@@ -84,8 +84,11 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
   };
 
+  const folderOf = (fileName: string) =>
+    files.find(f => f.name === fileName)?._folder || folder;
+
   const getSignedUrl = async (fileName: string) => {
-    const path = `${folder}/${fileName}`;
+    const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300);
     if (error || !data?.signedUrl) {
       toast.error('Datei konnte nicht geöffnet werden');
@@ -117,7 +120,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleDownload = async (fileName: string) => {
-    const path = `${folder}/${fileName}`;
+    const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
       toast.error('Download fehlgeschlagen');
@@ -127,7 +130,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleDelete = async (fileName: string) => {
-    const path = `${folder}/${fileName}`;
+    const path = `${folderOf(fileName)}/${fileName}`;
     const { error } = await supabase.storage.from(bucket).remove([path]);
     if (error) {
       toast.error('Löschen fehlgeschlagen');
@@ -136,6 +139,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     toast.success('Datei gelöscht');
     fetchFiles();
   };
+
 
   const formatSize = (bytes?: number) => {
     if (!bytes) return '';
