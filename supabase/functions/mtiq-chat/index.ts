@@ -8,7 +8,7 @@ const DEFAULT_CHAT_PROMPT = `Du bist MTIQ, der KI-Assistent für die Masterliste
 Stil: präzise, neutral, Deutsch, kurz, keine Floskeln, keine Emojis außer 🌶 für Chilis, kein Konjunktiv. Antworte direkt. Wenn etwas unklar ist, frage genau eine konkrete Rückfrage.
 
 Werkzeuge:
-- query_cases / report_cases / query_projects: lesend, vorgangs-/projektübergreifend (Filter, Aggregation, Berichte).
+- query_cases / report_cases / query_projects: lesend, vorgangs-/projektübergreifend (Filter, Aggregation, Berichte). Wichtig: Auch abgeschlossene, verworfene und archivierte Vorgänge sowie archivierte Projekte und deren Unteraufgaben bleiben durchsuchbar. Nutze search_text aktiv, um zu einem Stichwort frühere, ähnliche oder verwandte Fälle aus dem Archiv zu finden und Beziehungen/Historie aufzuzeigen.
 - set_case_status / set_case_urgency / set_case_assignee / create_subtask / update_subtask / add_case_note / post_case_chat / send_email: Änderungen am aktuellen Vorgang bzw. E-Mail-Versand VORSCHLAGEN. Diese werden NICHT direkt ausgeführt — der Nutzer muss bestätigen. Rufe das passende Tool, wenn der Nutzer eine Änderung verlangt, und beschreibe danach in 1–2 Sätzen, was zur Bestätigung vorgeschlagen wurde.
 - Wenn dem aktuellen Vorgang Bilder anhängen, werden sie dir mit der Nachricht mitgeliefert. Analysiere sie sachlich und beschreibe relevante Inhalte.`;
 
@@ -27,7 +27,7 @@ const tools = [
     type: "function",
     function: {
       name: "query_cases",
-      description: "Liest mehrere Vorgänge aus der Masterliste, gefiltert/sortiert. Nur lesend.",
+      description: "Liest mehrere Vorgänge aus der Masterliste, gefiltert/sortiert. Nur lesend. Standardmäßig sind abgeschlossene und archivierte Vorgänge eingeschlossen, damit auch frühere/ähnliche Fälle aus dem Archiv gefunden werden.",
       parameters: {
         type: "object",
         properties: {
@@ -35,7 +35,9 @@ const tools = [
           direction: { type: "string", enum: ["asc", "desc"] },
           limit: { type: "integer", minimum: 1, maximum: 25 },
           status: { type: "string" },
-          only_open: { type: "boolean" },
+          only_open: { type: "boolean", description: "Wenn true: archivierte/abgeschlossene Vorgänge ausschließen. Default false." },
+          include_archived: { type: "boolean", description: "Default true. Wenn false, werden Status archiv/abgeschlossen/verworfen ausgeschlossen." },
+          search_text: { type: "string", description: "Suche über Vorgangsnummer, Projektname, Kunde, Kundennummer und Notiz – inkl. Archiv." },
           min_urgency: { type: "integer", minimum: 1, maximum: 5 },
           assignee_me: { type: "boolean" },
           overdue: { type: "boolean" },
@@ -67,12 +69,14 @@ const tools = [
     type: "function",
     function: {
       name: "query_projects",
-      description: "Listet Projekte mit Anzahl Vorgänge, optional gefiltert. Nur lesend.",
+      description: "Listet Projekte mit Anzahl Vorgänge, optional gefiltert. Nur lesend. Archivierte und abgeschlossene Projekte sind standardmäßig enthalten, damit auch frühere/ähnliche Projekte aus dem Archiv gefunden werden.",
       parameters: {
         type: "object",
         properties: {
           status: { type: "string", enum: ["active", "completed", "archived"] },
+          include_archived: { type: "boolean", description: "Default true. Wenn false, werden archived/completed-Projekte ausgeschlossen." },
           name_like: { type: "string", description: "Teilstring im Projektnamen" },
+          search_text: { type: "string", description: "Suche über Projektnummer, Name und Code – inkl. Archiv." },
           limit: { type: "integer", minimum: 1, maximum: 25 },
         },
       },
@@ -360,13 +364,22 @@ ${signedImages.length ? `\n(${signedImages.length} Bild-Anhänge sind als Vorsch
         try { args = JSON.parse(tc.function?.arguments ?? "{}"); } catch { args = {}; }
 
         if (name === "query_cases") {
-          let q = client.from("cases").select("case_no, project_name, client_name, status, urgency, due_at, departments:department_id(name)").eq("deleted", false);
-          if (args.only_open) q = q.neq("status", "abgeschlossen");
+          let q = client.from("cases").select("case_no, project_name, client_name, status, urgency, due_at, completed_at, departments:department_id(name)").eq("deleted", false);
+          if (args.only_open || args.include_archived === false) {
+            q = q.not("status", "in", "(abgeschlossen,archiv,verworfen)");
+          }
           if (args.status) q = q.eq("status", args.status);
           if (args.min_urgency) q = q.gte("urgency", args.min_urgency);
           if (args.assignee_me) q = q.eq("assignee_id", user.id);
           if (args.project_id) q = q.eq("project_id", args.project_id);
           if (args.overdue) q = q.lt("due_at", new Date().toISOString().slice(0,10)).neq("status", "abgeschlossen");
+          if (args.search_text) {
+            const needle = String(args.search_text).replace(/[%,()]/g, " ").trim();
+            if (needle) {
+              const pat = `%${needle}%`;
+              q = q.or(`project_name.ilike.${pat},client_name.ilike.${pat},case_no.ilike.${pat},customer_no.ilike.${pat},note.ilike.${pat}`);
+            }
+          }
           const sort = args.sort_by ?? "urgency";
           const dir = (args.direction ?? "desc") === "asc";
           q = q.order(sort, { ascending: dir, nullsFirst: false }).limit(Math.min(args.limit ?? 10, 25));
@@ -378,7 +391,7 @@ ${signedImages.length ? `\n(${signedImages.length} Bild-Anhänge sind als Vorsch
           }
           const result = error ? { error: error.message } : filtered.map((r: any) => ({
             case_no: r.case_no, title: r.project_name, kunde: r.client_name,
-            status: r.status, chilis: r.urgency, fällig: r.due_at, abteilung: r.departments?.name ?? null,
+            status: r.status, chilis: r.urgency, fällig: r.due_at, abgeschlossen_am: r.completed_at, abteilung: r.departments?.name ?? null,
           }));
           messages.push({ role: "tool", tool_call_id: tc.id, name, content: JSON.stringify(result) });
         } else if (name === "report_cases") {
@@ -433,9 +446,17 @@ ${signedImages.length ? `\n(${signedImages.length} Bild-Anhänge sind als Vorsch
           }
           messages.push({ role: "tool", tool_call_id: tc.id, name, content: JSON.stringify(result) });
         } else if (name === "query_projects") {
-          let q = client.from("projects").select("id, name, project_number, status, urgency, department_id, departments:department_id(name)");
+          let q = client.from("projects").select("id, name, project_number, project_code, status, urgency, department_id, departments:department_id(name)");
           if (args.status) q = q.eq("status", args.status);
+          if (args.include_archived === false) q = q.not("status", "in", "(archived,completed)");
           if (args.name_like) q = q.ilike("name", `%${args.name_like}%`);
+          if (args.search_text) {
+            const needle = String(args.search_text).replace(/[%,()]/g, " ").trim();
+            if (needle) {
+              const pat = `%${needle}%`;
+              q = q.or(`name.ilike.${pat},project_number.ilike.${pat},project_code.ilike.${pat}`);
+            }
+          }
           q = q.order("urgency", { ascending: false, nullsFirst: false }).limit(Math.min(args.limit ?? 10, 25));
           const { data: rows, error } = await q;
           let result: any = error ? { error: error.message } : [];
