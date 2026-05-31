@@ -55,17 +55,21 @@ Deno.serve(async (req) => {
     // Resolve department:
     //  1) explicit team (sub-department) wins,
     //  2) then explicit draft_department_id (if you ever pass one),
-    //  3) finally the legacy fuzzy name match.
+    //  3) finally an EXACT (case-insensitive) name match against the chosen department —
+    //     never a fuzzy LIKE, because "%IT%" matches dozens of departments and silently
+    //     overrides the user's selection.
     let department_id: string | null = draft.draft_team_id ?? null;
     if (!department_id && draft.draft_department) {
       const needle = String(draft.draft_department).trim();
       const { data: deptMatches } = await client
         .from("departments")
-        .select("id, name")
-        .ilike("name", `%${needle}%`)
+        .select("id, name, parent_id")
+        .ilike("name", needle)
+        .order("parent_id", { ascending: true, nullsFirst: true })
         .limit(1);
       if (deptMatches && deptMatches[0]) department_id = deptMatches[0].id;
     }
+
 
     const urgency = PRIORITY_TO_URGENCY[draft.draft_priority ?? "Mittel"] ?? 2;
 
@@ -142,9 +146,14 @@ Deno.serve(async (req) => {
         let task_dept_id: string | null = department_id;
         if (t.department) {
           const { data: dm } = await client
-            .from("departments").select("id").ilike("name", `%${String(t.department).trim()}%`).limit(1);
+            .from("departments")
+            .select("id, parent_id")
+            .ilike("name", String(t.department).trim())
+            .order("parent_id", { ascending: true, nullsFirst: true })
+            .limit(1);
           if (dm && dm[0]) task_dept_id = dm[0].id;
         }
+
         return {
           case_id: newCase.id,
           title: String(t.title ?? "").slice(0, 500) || `Aufgabe ${idx + 1}`,
