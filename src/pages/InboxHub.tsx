@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import Inbox from './Inbox';
@@ -9,7 +9,9 @@ type TabKey = 'documents' | 'mtiq';
 
 export default function InboxHub() {
   const [params, setParams] = useSearchParams();
-  const initial = (params.get('tab') as TabKey) || 'documents';
+  const { pathname } = useLocation();
+  const fromPath: TabKey | null = pathname.startsWith('/mtiq') ? 'mtiq' : null;
+  const initial: TabKey = (params.get('tab') as TabKey) || fromPath || 'documents';
 
   useEffect(() => {
     if (!params.get('tab')) {
