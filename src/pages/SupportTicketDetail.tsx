@@ -206,9 +206,11 @@ export default function SupportTicketDetail() {
             <FileAttachments
               bucket="support-attachments"
               folder={`tickets/${id}`}
+              fallbackFolders={[`internal/${id}`]}
               canUpload
               canDelete
             />
+
           </CardContent>
         </Card>
 
