@@ -90,11 +90,16 @@ export default function SupportTicketDetail() {
   };
 
   const handleAssign = async (userId: string) => {
-    const { error } = await supabase.from('support_tickets')
-      .update({ assigned_to: userId, status: 'in_progress' as any, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    // Status NICHT automatisch ändern — Zuweisung und Bearbeitungsstatus sind unabhängig.
+    // Nur bei "Offen" wird automatisch auf "In Bearbeitung" gewechselt, weil eine offene
+    // Meldung nach Zuweisung de facto in Arbeit ist. Abgeschlossene/gelöste/wartende Tickets
+    // bleiben unverändert.
+    const updates: any = { assigned_to: userId, updated_at: new Date().toISOString() };
+    if (ticket?.status === 'open') updates.status = 'in_progress';
+    const { error } = await supabase.from('support_tickets').update(updates).eq('id', id);
     if (error) toast.error('Fehler'); else { toast.success('Zugewiesen'); fetchTicket(); }
   };
+
 
   const handleReply = async () => {
     if (!replyText.trim()) return;
