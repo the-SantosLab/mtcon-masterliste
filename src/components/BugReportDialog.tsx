@@ -393,15 +393,27 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Abbrechen
+        <div className="flex justify-between items-center gap-2 pt-2">
+          <Button
+            variant="ghost" size="sm"
+            className="h-8 text-[11px] text-muted-foreground"
+            onClick={discardDraft}
+            disabled={submitting || (!title && !description && files.length === 0)}
+            title="Entwurf verwerfen und Dialog schließen"
+          >
+            Entwurf verwerfen
           </Button>
-          <Button size="sm" className="h-8 text-xs gap-1.5" onClick={submit} disabled={submitting}>
-            {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bug className="h-3.5 w-3.5" />}
-            Meldung senden
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)} disabled={submitting}>
+              Schließen
+            </Button>
+            <Button size="sm" className="h-8 text-xs gap-1.5" onClick={submit} disabled={submitting}>
+              {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bug className="h-3.5 w-3.5" />}
+              Meldung senden
+            </Button>
+          </div>
         </div>
+
       </DialogContent>
     </Dialog>
   );
