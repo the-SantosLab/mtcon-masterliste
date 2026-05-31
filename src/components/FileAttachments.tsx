@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 
 interface FileAttachmentsProps {
   bucket: string;
-  folder: string; // e.g. "tickets/abc123" or "cases/abc123"
+  folder: string; // primary folder e.g. "tickets/abc123"
+  fallbackFolders?: string[]; // additional read-only folders to merge (legacy paths)
   canUpload?: boolean;
   canDelete?: boolean;
   compact?: boolean;
@@ -18,23 +19,27 @@ interface StorageFile {
   id: string;
   created_at: string;
   metadata?: { size?: number; mimetype?: string };
+  _folder?: string;
 }
 
-export function FileAttachments({ bucket, folder, canUpload = false, canDelete = false, compact = false }: FileAttachmentsProps) {
+export function FileAttachments({ bucket, folder, fallbackFolders = [], canUpload = false, canDelete = false, compact = false }: FileAttachmentsProps) {
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   const fetchFiles = async () => {
-    const { data, error } = await supabase.storage.from(bucket).list(folder, { sortBy: { column: 'created_at', order: 'desc' } });
-    if (!error && data) {
-      setFiles(data.filter(f => f.name !== '.emptyFolderPlaceholder') as StorageFile[]);
-    }
+    const folders = [folder, ...fallbackFolders];
+    const results = await Promise.all(folders.map(f =>
+      supabase.storage.from(bucket).list(f, { sortBy: { column: 'created_at', order: 'desc' } })
+        .then(r => (r.data || []).filter(x => x.name !== '.emptyFolderPlaceholder').map(x => ({ ...x, _folder: f } as StorageFile)))
+    ));
+    setFiles(results.flat());
     setLoading(false);
   };
 
-  useEffect(() => { fetchFiles(); }, [bucket, folder]);
+  useEffect(() => { fetchFiles(); }, [bucket, folder, fallbackFolders.join('|')]);
+
 
   const uploadFiles = async (fileList: FileList | File[]) => {
     const arr = Array.from(fileList);
