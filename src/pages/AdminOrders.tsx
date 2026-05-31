@@ -494,5 +494,6 @@ export default function AdminOrders() {
         </DialogContent>
       </Dialog>
     </div>
+    </AppLayout>
   );
 }
