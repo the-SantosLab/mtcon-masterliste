@@ -253,6 +253,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <item.icon className="h-4 w-4" />
               <span className="flex-1">{item.label}</span>
               {(item as any).mtiq && <MtiqPendingBadge />}
+              {item.href === '/cases' && <CasesUnreadBadge />}
             </Link>
           ))}
           {(isAdmin || (profile as any)?.is_manager) && (
