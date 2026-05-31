@@ -91,7 +91,7 @@ function statusClasses(s: string): string {
   }
 }
 
-export default function MtiqDrafts() {
+export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const [drafts, setDrafts] = useState<Draft[]>([]);
