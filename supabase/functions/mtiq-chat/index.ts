@@ -69,12 +69,14 @@ const tools = [
     type: "function",
     function: {
       name: "query_projects",
-      description: "Listet Projekte mit Anzahl Vorgänge, optional gefiltert. Nur lesend.",
+      description: "Listet Projekte mit Anzahl Vorgänge, optional gefiltert. Nur lesend. Archivierte und abgeschlossene Projekte sind standardmäßig enthalten, damit auch frühere/ähnliche Projekte aus dem Archiv gefunden werden.",
       parameters: {
         type: "object",
         properties: {
           status: { type: "string", enum: ["active", "completed", "archived"] },
+          include_archived: { type: "boolean", description: "Default true. Wenn false, werden archived/completed-Projekte ausgeschlossen." },
           name_like: { type: "string", description: "Teilstring im Projektnamen" },
+          search_text: { type: "string", description: "Suche über Projektnummer, Name und Code – inkl. Archiv." },
           limit: { type: "integer", minimum: 1, maximum: 25 },
         },
       },
