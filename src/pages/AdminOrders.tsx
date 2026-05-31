@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sparkles, FileText, Download, Package } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
