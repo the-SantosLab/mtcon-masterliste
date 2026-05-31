@@ -254,7 +254,13 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
               ? `Meldung mit Bezug zu Vorgang ${caseNo}. Browser, Pfad und letzte Konsolenfehler werden automatisch mitgesendet.`
               : 'Bitte Titel und Beschreibung möglichst konkret formulieren. Browser, Pfad und letzte Konsolenfehler werden automatisch mitgesendet.'}
           </DialogDescription>
+          {(title || description) && (
+            <p className="text-[10px] text-muted-foreground/80 italic">
+              Entwurf wird automatisch zwischengespeichert.
+            </p>
+          )}
         </DialogHeader>
+
 
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
