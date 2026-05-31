@@ -185,7 +185,7 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
       // Anhänge hochladen
       if (files.length > 0) {
         for (const file of files) {
-          const path = `internal/${ticketId}/${Date.now()}_${sanitizeFileName(file.name)}`;
+          const path = `tickets/${ticketId}/${Date.now()}_${sanitizeFileName(file.name)}`;
           const { error: upErr } = await supabase.storage.from('support-attachments').upload(path, file);
           if (upErr) console.warn('Upload fehlgeschlagen:', upErr.message);
         }
