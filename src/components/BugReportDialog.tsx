@@ -35,20 +35,53 @@ const PRIORITY_OPTIONS = [
   { value: 'critical', label: 'Kritisch (Blocker)' },
 ] as const;
 
+const DRAFT_KEY = 'bug-report-draft-v1';
+
+const loadDraft = (): { title?: string; description?: string; kind?: any; priority?: any } => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+};
+
 export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [kind, setKind] = useState<'bug' | 'idee' | 'frage' | 'sonstige'>('bug');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+  const initial = loadDraft();
+  const [title, setTitle] = useState<string>(initial.title ?? '');
+  const [description, setDescription] = useState<string>(initial.description ?? '');
+  const [kind, setKind] = useState<'bug' | 'idee' | 'frage' | 'sonstige'>(initial.kind ?? 'bug');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>(initial.priority ?? 'medium');
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const dropRef = useRef<HTMLDivElement>(null);
 
+  // Entwurf automatisch zwischenspeichern, damit Eingaben beim versehentlichen Schließen erhalten bleiben
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        if (title || description || kind !== 'bug' || priority !== 'medium') {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, description, kind, priority }));
+        } else {
+          localStorage.removeItem(DRAFT_KEY);
+        }
+      } catch { /* ignore */ }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [title, description, kind, priority]);
+
   const reset = () => {
     setTitle(''); setDescription(''); setKind('bug'); setPriority('medium'); setFiles([]);
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+  };
+
+  const discardDraft = () => {
+    if (title || description) {
+      if (!window.confirm('Entwurf wirklich verwerfen? Eingaben gehen verloren.')) return;
+    }
+    reset();
+    onOpenChange(false);
   };
 
   // Thumbnail-URLs für Bilder generieren
@@ -209,7 +242,7 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!submitting) { onOpenChange(o); if (!o) reset(); } }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold flex items-center gap-2">
@@ -221,7 +254,13 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
               ? `Meldung mit Bezug zu Vorgang ${caseNo}. Browser, Pfad und letzte Konsolenfehler werden automatisch mitgesendet.`
               : 'Bitte Titel und Beschreibung möglichst konkret formulieren. Browser, Pfad und letzte Konsolenfehler werden automatisch mitgesendet.'}
           </DialogDescription>
+          {(title || description) && (
+            <p className="text-[10px] text-muted-foreground/80 italic">
+              Entwurf wird automatisch zwischengespeichert.
+            </p>
+          )}
         </DialogHeader>
+
 
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -354,15 +393,27 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)} disabled={submitting}>
-            Abbrechen
+        <div className="flex justify-between items-center gap-2 pt-2">
+          <Button
+            variant="ghost" size="sm"
+            className="h-8 text-[11px] text-muted-foreground"
+            onClick={discardDraft}
+            disabled={submitting || (!title && !description && files.length === 0)}
+            title="Entwurf verwerfen und Dialog schließen"
+          >
+            Entwurf verwerfen
           </Button>
-          <Button size="sm" className="h-8 text-xs gap-1.5" onClick={submit} disabled={submitting}>
-            {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bug className="h-3.5 w-3.5" />}
-            Meldung senden
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)} disabled={submitting}>
+              Schließen
+            </Button>
+            <Button size="sm" className="h-8 text-xs gap-1.5" onClick={submit} disabled={submitting}>
+              {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bug className="h-3.5 w-3.5" />}
+              Meldung senden
+            </Button>
+          </div>
         </div>
+
       </DialogContent>
     </Dialog>
   );
