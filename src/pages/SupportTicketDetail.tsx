@@ -215,10 +215,24 @@ export default function SupportTicketDetail() {
         {/* Messages */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Verlauf ({messages.length})</CardTitle>
+            <CardTitle className="text-sm">Verlauf ({messages.length + 1})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="max-h-[500px] overflow-y-auto space-y-3 pr-1">
+              {ticket.description && (
+                <div className="rounded-lg px-4 py-3 text-sm bg-muted mr-12 border border-border">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-medium">
+                      {ticket.customer?.display_name || profiles.find(p => p.id === ticket.reporter_user_id)?.display_name || 'Meldung'}
+                    </span>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0">Erstmeldung</Badge>
+                    <span className="text-[11px] text-muted-foreground">
+                      {format(new Date(ticket.created_at), 'dd.MM.yyyy HH:mm', { locale: de })}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap text-foreground/90">{ticket.description}</p>
+                </div>
+              )}
               {messages.map(msg => (
                 <div
                   key={msg.id}
