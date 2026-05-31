@@ -14,8 +14,6 @@ export function useCaseActions(userId: string | undefined, onSuccess?: () => voi
       .from('cases')
       .update({
         assignee_id: userId,
-        status: 'in_arbeit' as const,
-        started_at: now,
         last_changed_by: userId,
         last_changed_at: now,
       })
