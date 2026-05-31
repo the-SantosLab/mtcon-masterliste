@@ -1074,7 +1074,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AppLayout>
+    </Wrapper>
   );
 }
 
