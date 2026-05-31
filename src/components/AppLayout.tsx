@@ -74,6 +74,46 @@ function MtiqPendingBadge() {
   );
 }
 
+function CasesUnreadBadge() {
+  const { user } = useAuth();
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+
+    const load = async () => {
+      // Fetch all accessible case ids (RLS restricts to visible ones)
+      const { data: cs, error: csErr } = await supabase
+        .from('cases')
+        .select('id')
+        .eq('deleted', false)
+        .limit(1000);
+      if (csErr || !cs?.length) { if (!cancelled) setCount(0); return; }
+      const ids = cs.map((c: any) => c.id);
+      const { data, error } = await (supabase as any).rpc('get_case_chat_unread', { p_case_ids: ids });
+      if (error) { if (!cancelled) setCount(0); return; }
+      const total = ((data as any[]) || []).reduce((s, r) => s + (r.unread_count || 0), 0);
+      if (!cancelled) setCount(total);
+    };
+
+    load();
+    const ch = supabase
+      .channel(`sidebar-cases-unread-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_messages' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_reads', filter: `user_id=eq.${user.id}` }, load)
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(ch); };
+  }, [user?.id]);
+
+  if (count === 0) return null;
+  return (
+    <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-foreground text-background text-[10px] font-semibold tabular-nums leading-none">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
 
 interface AppLayoutProps {
   children: React.ReactNode;
