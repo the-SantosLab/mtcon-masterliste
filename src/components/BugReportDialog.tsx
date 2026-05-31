@@ -35,20 +35,53 @@ const PRIORITY_OPTIONS = [
   { value: 'critical', label: 'Kritisch (Blocker)' },
 ] as const;
 
+const DRAFT_KEY = 'bug-report-draft-v1';
+
+const loadDraft = (): { title?: string; description?: string; kind?: any; priority?: any } => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+};
+
 export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [kind, setKind] = useState<'bug' | 'idee' | 'frage' | 'sonstige'>('bug');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
+  const initial = loadDraft();
+  const [title, setTitle] = useState<string>(initial.title ?? '');
+  const [description, setDescription] = useState<string>(initial.description ?? '');
+  const [kind, setKind] = useState<'bug' | 'idee' | 'frage' | 'sonstige'>(initial.kind ?? 'bug');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>(initial.priority ?? 'medium');
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const dropRef = useRef<HTMLDivElement>(null);
 
+  // Entwurf automatisch zwischenspeichern, damit Eingaben beim versehentlichen Schließen erhalten bleiben
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        if (title || description || kind !== 'bug' || priority !== 'medium') {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, description, kind, priority }));
+        } else {
+          localStorage.removeItem(DRAFT_KEY);
+        }
+      } catch { /* ignore */ }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [title, description, kind, priority]);
+
   const reset = () => {
     setTitle(''); setDescription(''); setKind('bug'); setPriority('medium'); setFiles([]);
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+  };
+
+  const discardDraft = () => {
+    if (title || description) {
+      if (!window.confirm('Entwurf wirklich verwerfen? Eingaben gehen verloren.')) return;
+    }
+    reset();
+    onOpenChange(false);
   };
 
   // Thumbnail-URLs für Bilder generieren
