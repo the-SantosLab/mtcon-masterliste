@@ -27,7 +27,7 @@ const tools = [
     type: "function",
     function: {
       name: "query_cases",
-      description: "Liest mehrere Vorgänge aus der Masterliste, gefiltert/sortiert. Nur lesend.",
+      description: "Liest mehrere Vorgänge aus der Masterliste, gefiltert/sortiert. Nur lesend. Standardmäßig sind abgeschlossene und archivierte Vorgänge eingeschlossen, damit auch frühere/ähnliche Fälle aus dem Archiv gefunden werden.",
       parameters: {
         type: "object",
         properties: {
@@ -35,7 +35,9 @@ const tools = [
           direction: { type: "string", enum: ["asc", "desc"] },
           limit: { type: "integer", minimum: 1, maximum: 25 },
           status: { type: "string" },
-          only_open: { type: "boolean" },
+          only_open: { type: "boolean", description: "Wenn true: archivierte/abgeschlossene Vorgänge ausschließen. Default false." },
+          include_archived: { type: "boolean", description: "Default true. Wenn false, werden Status archiv/abgeschlossen/verworfen ausgeschlossen." },
+          search_text: { type: "string", description: "Suche über Vorgangsnummer, Projektname, Kunde, Kundennummer und Notiz – inkl. Archiv." },
           min_urgency: { type: "integer", minimum: 1, maximum: 5 },
           assignee_me: { type: "boolean" },
           overdue: { type: "boolean" },
