@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ShieldCheck } from 'lucide-react';
+import { clearStoredAuthRedirect, getRedirectParam, getStoredAuthRedirect } from '@/lib/authRedirect';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 export default function MfaChallenge() {
@@ -16,7 +17,7 @@ export default function MfaChallenge() {
   const fromState = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
   const redirectTarget = fromState?.pathname
     ? `${fromState.pathname}${fromState.search ?? ''}${fromState.hash ?? ''}`
-    : '/';
+    : getRedirectParam(location.search) ?? getStoredAuthRedirect() ?? '/';
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -70,7 +71,10 @@ export default function MfaChallenge() {
     return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   }
   if (!session) return <Navigate to="/auth" replace />;
-  if (!needsMfa) return <Navigate to={redirectTarget} replace />;
+  if (!needsMfa) {
+    clearStoredAuthRedirect();
+    return <Navigate to={redirectTarget} replace />;
+  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +84,7 @@ export default function MfaChallenge() {
     setSubmitting(false);
     if (error) { toast.error(error.message || 'Code ungültig'); return; }
     toast.success('Erfolgreich angemeldet');
+    clearStoredAuthRedirect();
     navigate(redirectTarget, { replace: true });
   };
 
