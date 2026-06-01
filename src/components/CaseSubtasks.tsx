@@ -562,10 +562,20 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     // Case 3: Auto-forward disabled → skip
     if (!forwardEnabled) return;
 
+    // SCHUTZ: Wenn der Abschließende ein Master-User (CEO/CTO) ist, NIEMALS automatisch
+    // an eine andere Abteilung weiterleiten oder umverteilen. Folgemaßnahmen aus dem
+    // CEO-/CTO-Bereich dürfen nur explizit/manuell an Dritte (inkl. den jeweils anderen
+    // Master-User) übergeben werden.
+    if (isMasterUser(userId)) {
+      return;
+    }
+
     // Case 4: Next subtask has a different department → forward
     if (nextTask.department_id !== completedTask.department_id) {
       const dept = departments.find(d => d.id === nextTask.department_id);
-      const deptManager = autoAssign ? dept && profiles.find(p => p.department_id === nextTask.department_id) : null;
+      // Auto-Assign nur wenn der gefundene Abteilungsleiter KEIN Master-User ist.
+      const candidate = autoAssign ? dept && profiles.find(p => p.department_id === nextTask.department_id) : null;
+      const deptManager = candidate && !isMasterUser(candidate.id) ? candidate : null;
 
       const { error } = await supabase.from('cases').update({
         department_id: nextTask.department_id,
@@ -591,6 +601,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
         toast.success(`Vorgang automatisch an ${dept.name} weitergeleitet`);
       }
     }
+
   };
 
   const updateAssignee = async (taskId: string, assigneeId: string) => {
