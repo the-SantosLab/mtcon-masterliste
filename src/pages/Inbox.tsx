@@ -53,6 +53,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Inbox({ embedded = false }: { embedded?: boolean } = {}) {
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [docs, setDocs] = useState<InboxDoc[]>([]);
   const [types, setTypes] = useState<DocType[]>([]);
