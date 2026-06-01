@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { storeAuthRedirect } from '@/lib/authRedirect';
 
 const ACTIVITY_EVENTS = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const;
 const WARNING_MS = 15 * 60 * 1000; // 15 min before logout
@@ -38,7 +39,9 @@ export function useSessionTimeout(enabled: boolean) {
     clearTimers();
     setWarningOpen(false);
     await supabase.auth.signOut();
-    window.location.href = '/auth';
+    const target = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    storeAuthRedirect(target);
+    window.location.href = `/auth?redirect=${encodeURIComponent(target)}`;
   }, [clearTimers]);
 
   const resetTimer = useCallback(() => {
