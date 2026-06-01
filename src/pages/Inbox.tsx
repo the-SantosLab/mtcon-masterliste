@@ -119,13 +119,18 @@ export default function Inbox({ embedded = false }: { embedded?: boolean } = {})
       <div className="space-y-4 p-4 md:p-6">
 
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <InboxIcon className="h-6 w-6" /> Intelligent Inbox
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Eingehende Dokumente, KI-klassifiziert und extrahiert
-            </p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold flex items-center gap-2">
+                <InboxIcon className="h-6 w-6" /> Intelligent Inbox
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Eingehende Dokumente, KI-klassifiziert und extrahiert
+              </p>
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
