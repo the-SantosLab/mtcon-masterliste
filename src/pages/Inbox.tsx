@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Inbox as InboxIcon, RefreshCw, FileText, Loader2, CheckCircle2, XCircle, Sparkles, ExternalLink } from 'lucide-react';
+import { Inbox as InboxIcon, RefreshCw, FileText, Loader2, CheckCircle2, XCircle, Sparkles, ExternalLink, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -53,6 +53,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Inbox({ embedded = false }: { embedded?: boolean } = {}) {
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [docs, setDocs] = useState<InboxDoc[]>([]);
   const [types, setTypes] = useState<DocType[]>([]);
@@ -119,13 +120,18 @@ export default function Inbox({ embedded = false }: { embedded?: boolean } = {})
       <div className="space-y-4 p-4 md:p-6">
 
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <InboxIcon className="h-6 w-6" /> Intelligent Inbox
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Eingehende Dokumente, KI-klassifiziert und extrahiert
-            </p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold flex items-center gap-2">
+                <InboxIcon className="h-6 w-6" /> Intelligent Inbox
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Eingehende Dokumente, KI-klassifiziert und extrahiert
+              </p>
+            </div>
           </div>
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />

@@ -1,18 +1,19 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, Loader2, Search, Archive, Download } from 'lucide-react';
+import { FileText, Upload, Loader2, Search, Archive, Download, ArrowLeft } from 'lucide-react';
 import { uploadDocument, getSignedUrl, formatBytes, type DocumentRow } from '@/lib/documents';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 export default function Documents() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [linkCounts, setLinkCounts] = useState<Record<string, number>>({});
@@ -76,9 +77,14 @@ export default function Documents() {
     <AppLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-lg font-semibold">Dokumente</h1>
-            <p className="text-xs text-muted-foreground">Zentrales Repository — ein Dokument, beliebig viele Verknüpfungen.</p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold">Dokumente</h1>
+              <p className="text-xs text-muted-foreground">Zentrales Repository — ein Dokument, beliebig viele Verknüpfungen.</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setShowArchived(s => !s)}>

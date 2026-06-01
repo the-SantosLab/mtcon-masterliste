@@ -15,7 +15,7 @@ import {
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
   CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X, ChevronRight, Settings2,
   Briefcase, Wallet, Hammer, Truck, Gavel, FileSignature, Paperclip, Archive, Receipt,
-  Sparkles, Loader2, KeyRound,
+  Sparkles, Loader2, KeyRound, ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -520,12 +520,15 @@ export default function AdminInsurance() {
           <div className="relative flex items-start justify-between gap-4 flex-wrap">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={() => nav('/container')} title="Zurück zum 3D Container">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
                 <div className="h-8 w-8 rounded-md bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center">
                   <FolderArchive className="h-4 w-4 text-primary" />
                 </div>
                 <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
               </div>
-              <p className="text-xs text-muted-foreground">Zentrale Ablage für Verträge, Dokumente und Versicherungen – mit Versionierung, Volltextsuche und Ablauf-Erinnerung.</p>
+              <p className="text-xs text-muted-foreground ml-8">Zentrale Ablage für Verträge, Dokumente und Versicherungen – mit Versionierung, Volltextsuche und Ablauf-Erinnerung.</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
