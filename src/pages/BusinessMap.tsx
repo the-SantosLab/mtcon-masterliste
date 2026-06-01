@@ -42,6 +42,8 @@ function MapInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<MapNodeData>>([]);
   const [edges, setEdges] = useEdgesState([]);
   const [filter, setFilter] = useState<Filter>("Alle");
+  const [deptFilter, setDeptFilter] = useState<string>("all");
+  const [personFilter, setPersonFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState<Node<MapNodeData> | null>(null);
