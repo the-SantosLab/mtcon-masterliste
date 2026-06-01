@@ -330,7 +330,7 @@ export default function Issos() {
               {active.summary && (
                 <div>
                   <div className="text-muted-foreground mb-1">Zusammenfassung</div>
-                  <p className="leading-relaxed whitespace-pre-wrap break-words max-h-60 overflow-y-auto rounded border bg-muted/20 p-2 text-xs">{active.summary}</p>
+                  <p className="leading-relaxed whitespace-pre-wrap break-words rounded border bg-muted/20 p-2 text-xs">{active.summary}</p>
                 </div>
               )}
 
