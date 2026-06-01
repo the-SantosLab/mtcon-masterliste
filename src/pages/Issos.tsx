@@ -201,11 +201,16 @@ export default function Issos() {
     <AppLayout>
       <div className="p-4 md:p-6 space-y-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">ISSOS (APS Delta)</h1>
-            <p className="text-sm text-muted-foreground">
-              Automatisch erkannte APS-Delta-Eingänge. Jeder Anhang wird einzeln archiviert und ist hier strukturiert auffindbar.
-            </p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">ISSOS (APS Delta)</h1>
+              <p className="text-sm text-muted-foreground">
+                Automatisch erkannte APS-Delta-Eingänge. Jeder Anhang wird einzeln archiviert und ist hier strukturiert auffindbar.
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
