@@ -493,9 +493,28 @@ export default function CasesKanban() {
 
   const q = searchQuery.toLowerCase();
 
+  const getDateRangeBounds = (filter: typeof dateRangeFilter): { from: Date; to: Date } | null => {
+    const now = new Date();
+    switch (filter) {
+      case 'lastMonth': { const m = subMonths(now, 1); return { from: startOfMonth(m), to: endOfMonth(m) }; }
+      case 'last2Months': { const m = subMonths(now, 2); return { from: startOfMonth(m), to: endOfMonth(m) }; }
+      case 'last3Months': return { from: startOfMonth(subMonths(now, 2)), to: now };
+      case 'last6Months': return { from: startOfMonth(subMonths(now, 5)), to: now };
+      default: return null;
+    }
+  };
+
+  const dateBounds = getDateRangeBounds(dateRangeFilter);
+  const matchesDateRange = (createdAt: string | null) => {
+    if (!dateBounds || !createdAt) return true;
+    const d = new Date(createdAt);
+    return d >= dateBounds.from && d <= dateBounds.to;
+  };
+
   const projectColumns = PROJECT_STATUSES.map(s => {
     const filtered = scopeByDept(projects)
       .filter(p => !searchQuery || p.name.toLowerCase().includes(q) || (p.project_number || '').toLowerCase().includes(q))
+      .filter(p => matchesDateRange(p.created_at))
       .filter(p => p.status === s.id)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     return { ...s, cards: filtered };
@@ -504,6 +523,7 @@ export default function CasesKanban() {
   const caseColumns = CASE_STATUSES.map(s => {
     const filtered = scopeByDept(cases)
       .filter(c => !searchQuery || c.project_name.toLowerCase().includes(q) || c.case_no.toLowerCase().includes(q))
+      .filter(c => matchesDateRange(c.created_at))
       .filter(c => c.status === s.id)
       .sort((a, b) => (a.priority_order - b.priority_order) || (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
     return { ...s, cards: filtered };
