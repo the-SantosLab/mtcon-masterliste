@@ -256,15 +256,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               {item.href === '/cases' && <CasesUnreadBadge />}
             </Link>
           ))}
-          {(isAdmin || (profile as any)?.is_manager) && (
-            <Link to="/insurance" onClick={() => setOpen(false)} className={linkClass('/insurance')}>
-              <FolderArchive className="h-4 w-4" />
-              <span className="flex-1">3D Container</span>
-            </Link>
-          )}
-          <Link to="/issos" onClick={() => setOpen(false)} className={linkClass('/issos')}>
+          <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
             <FolderArchive className="h-4 w-4" />
-            <span className="flex-1">ISSOS (APS Delta)</span>
+            <span className="flex-1">3D Container</span>
           </Link>
           <Link to="/orders" onClick={() => setOpen(false)} className={linkClass('/orders')}>
             <Package className="h-4 w-4" />
