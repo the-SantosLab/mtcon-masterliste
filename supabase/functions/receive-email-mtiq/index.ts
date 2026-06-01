@@ -118,6 +118,10 @@ function isOrderMail(payload: any): boolean {
 }
 
 function isIssosMail(payload: any): boolean {
+  // Strikte Erkennung: nur über MailboxHash oder explizite Empfänger-Adresse
+  // (issos@… / aps-delta@…). Inhaltliche Heuristiken auf Subject/Body/Anhang
+  // sind absichtlich entfernt – sonst landen reguläre Mails, in denen nur
+  // das Wort "ISSOS" vorkommt, fälschlich im /issos-Archiv statt in MTIQ.
   const hash = String(payload?.MailboxHash || "").toLowerCase();
   if (hash === "issos" || hash === "aps-delta" || hash === "apsdelta" || hash === "aps_delta") return true;
   const recipientFields = ["ToFull", "CcFull", "BccFull"];
@@ -130,17 +134,6 @@ function isIssosMail(payload: any): boolean {
       }
     }
   }
-  // Heuristic on subject / attachment names (case-insensitive)
-  const hay = [
-    String(payload?.Subject || ""),
-    ...((Array.isArray(payload?.Attachments) ? payload.Attachments : []) as any[])
-      .map((a) => String(a?.Name || "")),
-  ].join(" \n ").toLowerCase();
-  if (/\baps[\s_\-]?delta\b/.test(hay)) return true;
-  if (/\bissos\b/.test(hay)) return true;
-  // Body fallback (only checked when subject already smells like a delta export)
-  const body = String(payload?.TextBody || "").toLowerCase();
-  if (/\baps[\s_\-]?delta\b/.test(body) && /(delta|bedarf|lieferplan|forecast)/.test(body)) return true;
   return false;
 }
 
