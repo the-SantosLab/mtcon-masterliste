@@ -117,6 +117,34 @@ function isOrderMail(payload: any): boolean {
   return false;
 }
 
+function isIssosMail(payload: any): boolean {
+  const hash = String(payload?.MailboxHash || "").toLowerCase();
+  if (hash === "issos" || hash === "aps-delta" || hash === "apsdelta" || hash === "aps_delta") return true;
+  const recipientFields = ["ToFull", "CcFull", "BccFull"];
+  for (const f of recipientFields) {
+    const arr = payload?.[f];
+    if (Array.isArray(arr)) {
+      for (const a of arr) {
+        const email = String(a?.Email || "").toLowerCase();
+        if (/^(issos|aps[-_.]?delta)[+@]/.test(email)) return true;
+      }
+    }
+  }
+  // Heuristic on subject / attachment names (case-insensitive)
+  const hay = [
+    String(payload?.Subject || ""),
+    ...((Array.isArray(payload?.Attachments) ? payload.Attachments : []) as any[])
+      .map((a) => String(a?.Name || "")),
+  ].join(" \n ").toLowerCase();
+  if (/\baps[\s_\-]?delta\b/.test(hay)) return true;
+  if (/\bissos\b/.test(hay)) return true;
+  // Body fallback (only checked when subject already smells like a delta export)
+  const body = String(payload?.TextBody || "").toLowerCase();
+  if (/\baps[\s_\-]?delta\b/.test(body) && /(delta|bedarf|lieferplan|forecast)/.test(body)) return true;
+  return false;
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -166,6 +194,26 @@ Deno.serve(async (req) => {
       console.error("forward to receive-email-order failed", e);
     }
   }
+
+  // ISSOS / APS-Delta intake (own MailboxHash/address or strong heuristic on subject/attachments)
+  if (isIssosMail(payload)) {
+    try {
+      const fwd = await fetch(`${SUPABASE_URL}/functions/v1/receive-email-issos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: req.headers.get("authorization") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+      const text = await fwd.text();
+      return new Response(text, { status: fwd.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      console.error("forward to receive-email-issos failed", e);
+    }
+  }
+
+
 
 
   // If this looks like a case email, forward to the case intake function

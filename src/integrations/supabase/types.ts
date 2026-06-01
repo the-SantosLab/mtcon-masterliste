@@ -2424,6 +2424,81 @@ export type Database = {
         }
         Relationships: []
       }
+      issos_documents: {
+        Row: {
+          ai_reasoning: string | null
+          created_at: string
+          created_by: string | null
+          document_type: string | null
+          file_name: string
+          file_size: number | null
+          id: string
+          intake_id: string
+          mime_type: string | null
+          notes: string | null
+          received_at: string
+          sender_hint: string | null
+          snapshot_date: string | null
+          source_email_from: string | null
+          source_email_message_id: string | null
+          source_email_subject: string | null
+          status: string
+          storage_path: string
+          summary: string | null
+          tags: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ai_reasoning?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_type?: string | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          intake_id?: string
+          mime_type?: string | null
+          notes?: string | null
+          received_at?: string
+          sender_hint?: string | null
+          snapshot_date?: string | null
+          source_email_from?: string | null
+          source_email_message_id?: string | null
+          source_email_subject?: string | null
+          status?: string
+          storage_path: string
+          summary?: string | null
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ai_reasoning?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_type?: string | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          intake_id?: string
+          mime_type?: string | null
+          notes?: string | null
+          received_at?: string
+          sender_hint?: string | null
+          snapshot_date?: string | null
+          source_email_from?: string | null
+          source_email_message_id?: string | null
+          source_email_subject?: string | null
+          status?: string
+          storage_path?: string
+          summary?: string | null
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           company_name: string
