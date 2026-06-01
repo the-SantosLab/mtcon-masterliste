@@ -195,6 +195,26 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ISSOS / APS-Delta intake (own MailboxHash/address or strong heuristic on subject/attachments)
+  if (isIssosMail(payload)) {
+    try {
+      const fwd = await fetch(`${SUPABASE_URL}/functions/v1/receive-email-issos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: req.headers.get("authorization") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+      const text = await fwd.text();
+      return new Response(text, { status: fwd.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      console.error("forward to receive-email-issos failed", e);
+    }
+  }
+
+
+
 
   // If this looks like a case email, forward to the case intake function
   if (hasCaseNo(payload)) {
