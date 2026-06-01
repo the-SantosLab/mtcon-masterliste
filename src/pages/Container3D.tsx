@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, ArrowUpRight, Inbox } from "lucide-react";
+import { Shield, FolderArchive, Boxes, ArrowUpRight, Inbox, Sparkles } from "lucide-react";
 
 type Module = {
   href: string;
@@ -21,6 +21,15 @@ const MODULES: Module[] = [
     icon: Inbox,
     hue: "from-fuchsia-500/30 via-pink-500/10 to-transparent",
     accent: "text-fuchsia-300",
+  },
+  {
+    href: "/mtiq/drafts",
+    label: "MTIQ Posteingang",
+    sub: "Entwürfe · KI-Vorschläge",
+    desc: "Von MTIQ vorbereitete Antworten, Notizen und Subtask-Vorschläge zur Freigabe – getrennt vom klassischen Eingang.",
+    icon: Sparkles,
+    hue: "from-amber-500/30 via-orange-500/10 to-transparent",
+    accent: "text-amber-300",
   },
   {
     href: "/insurance",
