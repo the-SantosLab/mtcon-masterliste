@@ -53,6 +53,7 @@ import InboxHub from "./pages/InboxHub";
 import AdminDocumentTypes from "./pages/AdminDocumentTypes";
 import Issos from "./pages/Issos";
 import Container3D from "./pages/Container3D";
+import BusinessMap from "./pages/BusinessMap";
 import AdminActionRules from "./pages/AdminActionRules";
 import AdminInboxStats from "./pages/AdminInboxStats";
 import PortalAuth from "./pages/portal/PortalAuth";
@@ -189,6 +190,7 @@ function AuthenticatedApp() {
         <Route path="/insurance/:id" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
         <Route path="/issos" element={<ProtectedRoute><Issos /></ProtectedRoute>} />
         <Route path="/container" element={<ProtectedRoute><Container3D /></ProtectedRoute>} />
+        <Route path="/map" element={<ProtectedRoute><BusinessMap /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/bestellungen" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
