@@ -1815,6 +1815,44 @@ export type Database = {
           },
         ]
       }
+      document_links: {
+        Row: {
+          document_id: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["document_entity_type"]
+          id: string
+          linked_at: string
+          linked_by: string
+          role: string | null
+        }
+        Insert: {
+          document_id: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["document_entity_type"]
+          id?: string
+          linked_at?: string
+          linked_by: string
+          role?: string | null
+        }
+        Update: {
+          document_id?: string
+          entity_id?: string
+          entity_type?: Database["public"]["Enums"]["document_entity_type"]
+          id?: string
+          linked_at?: string
+          linked_by?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_types: {
         Row: {
           auto_apply_threshold: number | null
@@ -1865,6 +1903,110 @@ export type Database = {
           label_de?: string
           sort_order?: number
           target_table?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      document_versions: {
+        Row: {
+          change_note: string | null
+          checksum_sha256: string | null
+          document_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string
+          version_no: number
+        }
+        Insert: {
+          change_note?: string | null
+          checksum_sha256?: string | null
+          document_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by: string
+          version_no: number
+        }
+        Update: {
+          change_note?: string | null
+          checksum_sha256?: string | null
+          document_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          archived_at: string | null
+          category: string | null
+          checksum_sha256: string | null
+          created_at: string
+          current_version: number
+          description: string | null
+          file_name: string
+          id: string
+          mime_type: string | null
+          owner_id: string
+          size_bytes: number
+          storage_path: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          category?: string | null
+          checksum_sha256?: string | null
+          created_at?: string
+          current_version?: number
+          description?: string | null
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          owner_id: string
+          size_bytes?: number
+          storage_path: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          category?: string | null
+          checksum_sha256?: string | null
+          created_at?: string
+          current_version?: number
+          description?: string | null
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          owner_id?: string
+          size_bytes?: number
+          storage_path?: string
+          tags?: string[]
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -4203,6 +4345,14 @@ export type Database = {
         Args: { p_case_id: string; p_uid?: string }
         Returns: boolean
       }
+      can_link_entity: {
+        Args: {
+          p_entity_id: string
+          p_entity_type: Database["public"]["Enums"]["document_entity_type"]
+          p_uid?: string
+        }
+        Returns: boolean
+      }
       can_read_board: {
         Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
@@ -4219,6 +4369,10 @@ export type Database = {
         Args: { p_category_id: string; p_uid?: string }
         Returns: boolean
       }
+      can_read_document: {
+        Args: { p_document_id: string; p_uid?: string }
+        Returns: boolean
+      }
       can_write_board:
         | { Args: { _board_id: string }; Returns: boolean }
         | { Args: { p_board_id: string; p_uid?: string }; Returns: boolean }
@@ -4228,6 +4382,10 @@ export type Database = {
       }
       can_write_doc_category: {
         Args: { p_category_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      can_write_document: {
+        Args: { p_document_id: string; p_uid?: string }
         Returns: boolean
       }
       case_department: { Args: { p_case_id: string }; Returns: string }
@@ -4340,6 +4498,7 @@ export type Database = {
         | "lost"
       dept_member_role: "read" | "write" | "lead"
       dept_permission: "none" | "read" | "write"
+      document_entity_type: "case" | "project" | "company" | "support_ticket"
       enrollment_status:
         | "aktiv"
         | "pausiert"
@@ -4526,6 +4685,7 @@ export const Constants = {
       ],
       dept_member_role: ["read", "write", "lead"],
       dept_permission: ["none", "read", "write"],
+      document_entity_type: ["case", "project", "company", "support_ticket"],
       enrollment_status: [
         "aktiv",
         "pausiert",
