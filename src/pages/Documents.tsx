@@ -77,9 +77,14 @@ export default function Documents() {
     <AppLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-lg font-semibold">Dokumente</h1>
-            <p className="text-xs text-muted-foreground">Zentrales Repository — ein Dokument, beliebig viele Verknüpfungen.</p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold">Dokumente</h1>
+              <p className="text-xs text-muted-foreground">Zentrales Repository — ein Dokument, beliebig viele Verknüpfungen.</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setShowArchived(s => !s)}>
