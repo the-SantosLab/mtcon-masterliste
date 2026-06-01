@@ -35,6 +35,8 @@ import AdminInsurance from "./pages/AdminInsurance";
 import AdminOrders from "./pages/AdminOrders";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
+import Documents from "./pages/Documents";
+import DocumentDetail from "./pages/DocumentDetail";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
