@@ -536,7 +536,7 @@ export default function Dashboard() {
                     <Users className="h-3 w-3" /> Alle
                   </button>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveFilters([])} aria-label="Schließen">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setActiveFilters([]); setDateRangeFilter('all'); }} aria-label="Schließen">
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
