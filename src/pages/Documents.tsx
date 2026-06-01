@@ -13,6 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 export default function Documents() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [docs, setDocs] = useState<DocumentRow[]>([]);
   const [linkCounts, setLinkCounts] = useState<Record<string, number>>({});
