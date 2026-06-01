@@ -93,28 +93,33 @@ export default function Container3D() {
           }}
         />
 
-        <div className="relative p-6 md:p-10 space-y-6 animate-fade-in">
-          <header className="flex flex-col gap-2">
+        <div className="relative flex h-[calc(100vh-4rem)] flex-col p-4 md:p-6 gap-4 animate-fade-in">
+          <header className="flex flex-col gap-1 shrink-0">
             <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase text-white/50">
               <span className="inline-block h-1 w-1 rounded-full bg-fuchsia-400 animate-pulse" />
               Neural Storage Layer · v2
             </div>
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-white">
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white">
               3D Container
             </h1>
-            <p className="text-sm text-white/60 max-w-2xl">
+            <p className="text-xs md:text-sm text-white/60 max-w-2xl">
               Die Intelligent Inbox ist der zentrale Verteiler. Von hier fließt jeder Eingang
               automatisch in das passende Modul.
             </p>
           </header>
 
-          {/* Graph */}
-          <div className="relative mx-auto w-full max-w-5xl aspect-square">
+          {/* Graph — square sized to fit remaining viewport */}
+          <div className="relative flex-1 min-h-0 flex items-center justify-center">
+            <div
+              className="relative"
+              style={{ width: "min(100%, calc(100vh - 14rem))", aspectRatio: "1 / 1" }}
+            >
             <svg
               viewBox={`0 0 ${VB} ${VB}`}
               className="absolute inset-0 h-full w-full"
               aria-hidden
             >
+
               <defs>
                 <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="hsl(320 90% 65%)" stopOpacity="0.55" />
