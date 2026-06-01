@@ -23,7 +23,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { format } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { useCaseActions } from '@/hooks/useCaseActions';
