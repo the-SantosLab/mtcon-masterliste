@@ -507,14 +507,14 @@ export default function CaseDetail() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => canEdit && !isTerminalStatus(c.status) && startEditTitle()}
-                  disabled={!canEdit || isTerminalStatus(c.status)}
+                  onClick={() => canEditTitle && startEditTitle()}
+                  disabled={!canEditTitle}
                   className="group inline-flex items-center gap-2 text-left disabled:cursor-default"
-                  title={canEdit && !isTerminalStatus(c.status) ? 'Titel bearbeiten' : undefined}
+                  title={canEditTitle ? 'Titel bearbeiten' : undefined}
                 >
                   <h1 className="text-lg font-semibold text-foreground">{c.project_name}</h1>
-                  {canEdit && !isTerminalStatus(c.status) && (
-                    <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {canEditTitle && (
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-60 group-hover:opacity-100 transition-opacity" />
                   )}
                 </button>
               )}
