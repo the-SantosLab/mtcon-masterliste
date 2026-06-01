@@ -258,6 +258,7 @@ export default function CaseDetail() {
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
 
   const canEdit = !isViewer && (isAdmin || c?.assignee_id === user?.id);
+  const canEditTitle = !isViewer && !isTerminalStatus(c?.status) && (isAdmin || !!profile?.is_manager || c?.created_by === user?.id || c?.assignee_id === user?.id);
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [titleSaving, setTitleSaving] = useState(false);
