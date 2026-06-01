@@ -236,7 +236,7 @@ ${(bodyPlain || bodyHtml.replace(/<[^>]+>/g, " ")).slice(0, 1500)}`;
         mime_type: "message/rfc822",
         file_size: emlBytes.byteLength,
         document_type: "Trigger-E-Mail",
-        summary: bodyPlain ? bodyPlain.slice(0, 600) : null,
+        summary: (bodyPlain || bodyHtml.replace(/<[^>]+>/g, " ")).slice(0, 50000) || null,
         status: "new",
       });
     }
