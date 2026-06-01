@@ -236,6 +236,53 @@ function MapInner() {
               {f}
             </button>
           ))}
+
+          {/* Department & person dropdowns */}
+          {(() => {
+            const depts = nodes.filter((n) => n.data.kind === "department");
+            const personIds = deptFilter === "all"
+              ? new Set(nodes.filter((n) => n.data.kind === "person").map((n) => n.id))
+              : descendantSet(`department:${deptFilter}`);
+            const persons = nodes.filter((n) => n.data.kind === "person" && personIds.has(n.id));
+            const selectCls = "h-7 rounded-full bg-white/5 border border-white/10 text-[11px] text-white/80 px-2 hover:bg-white/10 focus:outline-none";
+            return (
+              <>
+                <select
+                  value={deptFilter}
+                  onChange={(e) => { setDeptFilter(e.target.value); setPersonFilter("all"); }}
+                  className={selectCls}
+                >
+                  <option value="all" className="bg-[hsl(230_30%_10%)]">Alle Abteilungen</option>
+                  {depts.map((d) => (
+                    <option key={d.id} value={d.id.replace(/^department:/, "")} className="bg-[hsl(230_30%_10%)]">
+                      {d.data.title}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={personFilter}
+                  onChange={(e) => setPersonFilter(e.target.value)}
+                  className={selectCls}
+                  disabled={persons.length === 0}
+                >
+                  <option value="all" className="bg-[hsl(230_30%_10%)]">Alle Mitarbeiter</option>
+                  {persons.map((p) => (
+                    <option key={p.id} value={p.id.replace(/^person:/, "")} className="bg-[hsl(230_30%_10%)]">
+                      {p.data.title}
+                    </option>
+                  ))}
+                </select>
+                {(deptFilter !== "all" || personFilter !== "all") && (
+                  <button
+                    onClick={() => { setDeptFilter("all"); setPersonFilter("all"); }}
+                    className="text-[11px] text-white/50 hover:text-white px-2"
+                  >
+                    zurücksetzen
+                  </button>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div className="flex items-center gap-3">
