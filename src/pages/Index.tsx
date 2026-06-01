@@ -368,20 +368,28 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                 <h2 className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
                   <span>
-                    {chartRange === 'week'
-                      ? 'Erstellte Vorgänge diese Woche'
-                      : chartRange === 'month'
-                        ? 'Erstellte Vorgänge diesen Monat'
-                        : 'Erstellte Vorgänge dieses Jahr'}
+                    {dateRangeFilter === 'lastMonth'
+                      ? 'Erstellte Vorgänge Vormonat'
+                      : dateRangeFilter === 'last2Months'
+                        ? 'Erstellte Vorgänge Vorvormonat'
+                        : dateRangeFilter === 'last3Months'
+                          ? 'Erstellte Vorgänge letzte 3 Monate'
+                          : dateRangeFilter === 'last6Months'
+                            ? 'Erstellte Vorgänge letzte 6 Monate'
+                            : chartRange === 'week'
+                              ? 'Erstellte Vorgänge diese Woche'
+                              : chartRange === 'month'
+                                ? 'Erstellte Vorgänge diesen Monat'
+                                : 'Erstellte Vorgänge dieses Jahr'}
                   </span>
-                  {activeFilters.length > 0 && (
+                  {(activeFilters.length > 0 || dateRangeFilter !== 'all') && (
                     <button
                       type="button"
-                      onClick={() => setActiveFilters([])}
+                      onClick={() => { setActiveFilters([]); setDateRangeFilter('all'); }}
                       className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
                       title="Alle Filter zurücksetzen"
                     >
-                      {activeFilters.length} Filter aktiv
+                      {activeFilters.length + (dateRangeFilter !== 'all' ? 1 : 0)} Filter aktiv
                       <X className="h-2.5 w-2.5" />
                     </button>
                   )}
