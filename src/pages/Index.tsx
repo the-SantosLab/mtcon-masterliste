@@ -139,6 +139,7 @@ export default function Dashboard() {
     .slice(0, 5);
 
   const [chartRange, setChartRange] = useState<ChartRange>('week');
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
 
   // Load persisted dashboard preferences from server
   useEffect(() => {
