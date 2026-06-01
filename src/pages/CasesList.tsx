@@ -21,9 +21,11 @@ import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { useChatUnread } from '@/hooks/useChatUnread';
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 type CaseSortKey = 'status' | 'case_no' | 'project_name' | 'project' | 'assignee' | 'department' | 'customer' | 'due_at' | 'urgency';
 type DueFilter = 'all' | 'overdue' | 'today' | 'week' | 'next14' | 'none';
+type DateRangeFilter = 'all' | 'lastMonth' | 'last2Months' | 'last3Months' | 'last6Months';
 
 type CaseRow = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
@@ -57,6 +59,7 @@ export default function CasesList() {
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [deptFilter, setDeptFilter] = useState<string>('all');
   const [dueFilter, setDueFilter] = useState<DueFilter>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
   const [onlyMine, setOnlyMine] = useState<boolean>(() => {
     try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
   });
