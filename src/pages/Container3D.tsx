@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, ArrowUpRight, Inbox } from "lucide-react";
+import { Shield, FolderArchive, Boxes, ArrowUpRight, Inbox, Sparkles } from "lucide-react";
 
 type Module = {
   href: string;
