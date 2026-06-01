@@ -16,11 +16,13 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
 type FilterKey = 'open' | 'in_progress' | 'overdue' | 'today' | 'week';
 type ChartRange = 'week' | 'month' | 'year';
+type DateRangeFilter = 'all' | 'lastMonth' | 'last2Months' | 'last3Months' | 'last6Months';
 
 const FILTER_LABELS: Record<FilterKey, string> = {
   open: 'Offen',
@@ -137,6 +139,7 @@ export default function Dashboard() {
     .slice(0, 5);
 
   const [chartRange, setChartRange] = useState<ChartRange>('week');
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
 
   // Load persisted dashboard preferences from server
   useEffect(() => {
@@ -179,12 +182,41 @@ export default function Dashboard() {
     ? activeFilters
     : (Object.keys(FILTER_LABELS) as FilterKey[]);
 
+  const getDateRangeBounds = (filter: DateRangeFilter) => {
+    const now = new Date();
+    switch (filter) {
+      case 'lastMonth':
+        return { from: startOfMonth(subMonths(now, 1)), to: endOfMonth(subMonths(now, 1)) };
+      case 'last2Months':
+        return { from: startOfMonth(subMonths(now, 2)), to: endOfMonth(subMonths(now, 2)) };
+      case 'last3Months':
+        return { from: startOfMonth(subMonths(now, 2)), to: now };
+      case 'last6Months':
+        return { from: startOfMonth(subMonths(now, 5)), to: now };
+      default:
+        return null;
+    }
+  };
+
   // Pool für Drilldown / Säulen: aktive Vorgänge, die mindestens einen aktiven Filter erfüllen
   // Falls kein Filter aktiv -> alle aktiven Vorgänge
   const filteredActive = useMemo(() => {
-    if (activeFilters.length === 0) return active;
-    return active.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
-  }, [active, activeFilters, today, weekEnd]);
+    let pool = active;
+    if (activeFilters.length > 0) {
+      pool = pool.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
+    }
+    if (dateRangeFilter !== 'all') {
+      const bounds = getDateRangeBounds(dateRangeFilter);
+      if (bounds) {
+        pool = pool.filter(c => {
+          if (!c.created_at) return false;
+          const created = new Date(c.created_at);
+          return created >= bounds.from && created <= bounds.to;
+        });
+      }
+    }
+    return pool;
+  }, [active, activeFilters, today, weekEnd, dateRangeFilter]);
 
   // Säulendaten: pro Bucket je Status ein Wert (Stacked Bar)
   const weekChart = useMemo(() => {
@@ -336,40 +368,73 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
                 <h2 className="text-sm font-medium text-foreground flex items-center gap-2 flex-wrap">
                   <span>
-                    {chartRange === 'week'
-                      ? 'Erstellte Vorgänge diese Woche'
-                      : chartRange === 'month'
-                        ? 'Erstellte Vorgänge diesen Monat'
-                        : 'Erstellte Vorgänge dieses Jahr'}
+                    {dateRangeFilter === 'lastMonth'
+                      ? 'Erstellte Vorgänge Vormonat'
+                      : dateRangeFilter === 'last2Months'
+                        ? 'Erstellte Vorgänge Vorvormonat'
+                        : dateRangeFilter === 'last3Months'
+                          ? 'Erstellte Vorgänge letzte 3 Monate'
+                          : dateRangeFilter === 'last6Months'
+                            ? 'Erstellte Vorgänge letzte 6 Monate'
+                            : chartRange === 'week'
+                              ? 'Erstellte Vorgänge diese Woche'
+                              : chartRange === 'month'
+                                ? 'Erstellte Vorgänge diesen Monat'
+                                : 'Erstellte Vorgänge dieses Jahr'}
                   </span>
-                  {activeFilters.length > 0 && (
+                  {(activeFilters.length > 0 || dateRangeFilter !== 'all') && (
                     <button
                       type="button"
-                      onClick={() => setActiveFilters([])}
+                      onClick={() => { setActiveFilters([]); setDateRangeFilter('all'); }}
                       className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
                       title="Alle Filter zurücksetzen"
                     >
-                      {activeFilters.length} Filter aktiv
+                      {activeFilters.length + (dateRangeFilter !== 'all' ? 1 : 0)} Filter aktiv
                       <X className="h-2.5 w-2.5" />
                     </button>
                   )}
                 </h2>
-                <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
-                  {(['week', 'month', 'year'] as const).map(r => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setChartRange(r)}
-                      className={cn(
-                        'px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded transition-colors',
-                        chartRange === r
-                          ? 'bg-card text-foreground shadow-sm border border-border'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {r === 'week' ? 'Woche' : r === 'month' ? 'Monat' : 'Jahr'}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Zeitraum-Schnellfilter */}
+                  <div className="flex items-center gap-1">
+                    {([
+                      { key: 'lastMonth', label: 'Vormonat' },
+                      { key: 'last2Months', label: 'Vorvormonat' },
+                      { key: 'last3Months', label: '3 Monate' },
+                      { key: 'last6Months', label: '6 Monate' },
+                    ] as { key: DateRangeFilter; label: string }[]).map(({ key, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setDateRangeFilter(prev => prev === key ? 'all' : key)}
+                        className={cn(
+                          'h-7 px-2 rounded-md border text-[10px] font-medium transition-colors shrink-0',
+                          dateRangeFilter === key
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
+                    {(['week', 'month', 'year'] as const).map(r => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setChartRange(r)}
+                        className={cn(
+                          'px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded transition-colors',
+                          chartRange === r
+                            ? 'bg-card text-foreground shadow-sm border border-border'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {r === 'week' ? 'Woche' : r === 'month' ? 'Monat' : 'Jahr'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="h-[180px]">
@@ -429,12 +494,12 @@ export default function Dashboard() {
         </div>
 
         {/* Drilldown panel */}
-        {activeFilters.length > 0 && (
+        {(activeFilters.length > 0 || dateRangeFilter !== 'all') && (
           <div className="glass-card overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/50 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-sm font-medium text-foreground">
-                  {activeFilters.length === 1 ? FILTER_LABELS[activeFilters[0]] : 'Auswahl'}
+                  {activeFilters.length === 1 ? FILTER_LABELS[activeFilters[0]] : activeFilters.length > 1 ? 'Auswahl' : dateRangeFilter !== 'all' ? 'Zeitraum-Filter' : 'Auswahl'}
                 </h2>
                 {activeFilters.length > 1 && (
                   <div className="flex items-center gap-1 flex-wrap">
@@ -471,7 +536,7 @@ export default function Dashboard() {
                     <Users className="h-3 w-3" /> Alle
                   </button>
                 </div>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setActiveFilters([])} aria-label="Schließen">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setActiveFilters([]); setDateRangeFilter('all'); }} aria-label="Schließen">
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
