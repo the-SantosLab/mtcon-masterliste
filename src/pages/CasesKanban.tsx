@@ -23,7 +23,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { format } from 'date-fns';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import type { Enums } from '@/integrations/supabase/types';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { useCaseActions } from '@/hooks/useCaseActions';
@@ -338,6 +338,7 @@ export default function CasesKanban() {
   const [activeProject, setActiveProject] = useState<ProjectCard | null>(null);
   const [activeCase, setActiveCase] = useState<CaseCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'lastMonth' | 'last2Months' | 'last3Months' | 'last6Months'>('all');
   const [pendingCloseIds, setPendingCloseIds] = useState<string[] | null>(null);
   const { completeCase } = useCaseActions(user?.id, () => fetchCases());
   const { unreadMap } = useChatUnread(cases.map(c => c.id));
@@ -492,9 +493,28 @@ export default function CasesKanban() {
 
   const q = searchQuery.toLowerCase();
 
+  const getDateRangeBounds = (filter: typeof dateRangeFilter): { from: Date; to: Date } | null => {
+    const now = new Date();
+    switch (filter) {
+      case 'lastMonth': { const m = subMonths(now, 1); return { from: startOfMonth(m), to: endOfMonth(m) }; }
+      case 'last2Months': { const m = subMonths(now, 2); return { from: startOfMonth(m), to: endOfMonth(m) }; }
+      case 'last3Months': return { from: startOfMonth(subMonths(now, 2)), to: now };
+      case 'last6Months': return { from: startOfMonth(subMonths(now, 5)), to: now };
+      default: return null;
+    }
+  };
+
+  const dateBounds = getDateRangeBounds(dateRangeFilter);
+  const matchesDateRange = (createdAt: string | null) => {
+    if (!dateBounds || !createdAt) return true;
+    const d = new Date(createdAt);
+    return d >= dateBounds.from && d <= dateBounds.to;
+  };
+
   const projectColumns = PROJECT_STATUSES.map(s => {
     const filtered = scopeByDept(projects)
       .filter(p => !searchQuery || p.name.toLowerCase().includes(q) || (p.project_number || '').toLowerCase().includes(q))
+      .filter(p => matchesDateRange(p.created_at))
       .filter(p => p.status === s.id)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     return { ...s, cards: filtered };
@@ -503,6 +523,7 @@ export default function CasesKanban() {
   const caseColumns = CASE_STATUSES.map(s => {
     const filtered = scopeByDept(cases)
       .filter(c => !searchQuery || c.project_name.toLowerCase().includes(q) || c.case_no.toLowerCase().includes(q))
+      .filter(c => matchesDateRange(c.created_at))
       .filter(c => c.status === s.id)
       .sort((a, b) => (a.priority_order - b.priority_order) || (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()));
     return { ...s, cards: filtered };
@@ -658,6 +679,30 @@ export default function CasesKanban() {
             </ToggleGroup>
 
             <div className="flex-1" />
+
+            {/* Zeitraum-Schnellfilter */}
+            <div className="flex items-center gap-1 mr-2">
+              {([
+                { key: 'lastMonth', label: 'Vormonat' },
+                { key: 'last2Months', label: 'Vorvormonat' },
+                { key: 'last3Months', label: '3 Monate' },
+                { key: 'last6Months', label: '6 Monate' },
+              ] as { key: typeof dateRangeFilter; label: string }[]).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDateRangeFilter(prev => prev === key ? 'all' : key)}
+                  className={cn(
+                    'h-7 px-2 rounded-md border text-[11px] font-medium transition-colors shrink-0',
+                    dateRangeFilter === key
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
             {isAdmin && !isProjects && (
               selectMode ? (

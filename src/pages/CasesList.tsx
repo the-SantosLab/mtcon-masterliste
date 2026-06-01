@@ -21,9 +21,11 @@ import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { useChatUnread } from '@/hooks/useChatUnread';
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 type CaseSortKey = 'status' | 'case_no' | 'project_name' | 'project' | 'assignee' | 'department' | 'customer' | 'due_at' | 'urgency';
 type DueFilter = 'all' | 'overdue' | 'today' | 'week' | 'next14' | 'none';
+type DateRangeFilter = 'all' | 'lastMonth' | 'last2Months' | 'last3Months' | 'last6Months';
 
 type CaseRow = Tables<'cases'> & {
   assignee: { display_name: string; short_code: string } | null;
@@ -57,6 +59,7 @@ export default function CasesList() {
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [deptFilter, setDeptFilter] = useState<string>('all');
   const [dueFilter, setDueFilter] = useState<DueFilter>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
   const [onlyMine, setOnlyMine] = useState<boolean>(() => {
     try { return localStorage.getItem('casesFilter_onlyMine') === 'true'; } catch { return false; }
   });
@@ -142,6 +145,7 @@ export default function CasesList() {
     setProjectFilter('all');
     setDeptFilter('all');
     setDueFilter('all');
+    setDateRangeFilter('all');
     setOnlyMine(false);
     try {
       localStorage.removeItem('casesFilter_statuses');
@@ -156,12 +160,35 @@ export default function CasesList() {
     projectFilter !== 'all' ||
     deptFilter !== 'all' ||
     dueFilter !== 'all' ||
+    dateRangeFilter !== 'all' ||
     onlyMine;
 
   const creatorDeptMap = Object.fromEntries(profiles.map(p => [p.id, p.department_id]));
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const inDays = (d: Date, n: number) => { const x = new Date(today); x.setDate(x.getDate() + n); return d <= x; };
+
+  const getDateRangeBounds = (filter: DateRangeFilter): { from: Date; to: Date } | null => {
+    const now = new Date();
+    switch (filter) {
+      case 'lastMonth': {
+        const m = subMonths(now, 1);
+        return { from: startOfMonth(m), to: endOfMonth(m) };
+      }
+      case 'last2Months': {
+        const m = subMonths(now, 2);
+        return { from: startOfMonth(m), to: endOfMonth(m) };
+      }
+      case 'last3Months': {
+        return { from: startOfMonth(subMonths(now, 2)), to: now };
+      }
+      case 'last6Months': {
+        return { from: startOfMonth(subMonths(now, 5)), to: now };
+      }
+      default:
+        return null;
+    }
+  };
 
   const filtered = cases.filter(c => {
     if (onlyMine && c.assignee_id !== user?.id) return false;
@@ -191,6 +218,13 @@ export default function CasesList() {
         if (dueFilter === 'today' && d.getTime() !== today.getTime()) return false;
         if (dueFilter === 'week' && (d < today || !inDays(d, 7))) return false;
         if (dueFilter === 'next14' && (d < today || !inDays(d, 14))) return false;
+      }
+    }
+    if (dateRangeFilter !== 'all' && c.created_at) {
+      const bounds = getDateRangeBounds(dateRangeFilter);
+      if (bounds) {
+        const created = new Date(c.created_at);
+        if (created < bounds.from || created > bounds.to) return false;
       }
     }
     if (search) {
@@ -318,6 +352,30 @@ export default function CasesList() {
               <SelectItem value="none">Ohne Termin</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Zeitraum-Schnellfilter */}
+          <div className="flex items-center gap-1">
+            {([
+              { key: 'lastMonth', label: 'Vormonat' },
+              { key: 'last2Months', label: 'Vorvormonat' },
+              { key: 'last3Months', label: '3 Monate' },
+              { key: 'last6Months', label: '6 Monate' },
+            ] as { key: DateRangeFilter; label: string }[]).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setDateRangeFilter(prev => prev === key ? 'all' : key)}
+                className={cn(
+                  'h-8 px-2.5 rounded-md border text-[11px] font-medium transition-colors shrink-0',
+                  dateRangeFilter === key
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <button
             onClick={toggleOnlyMine}
             className={cn(
