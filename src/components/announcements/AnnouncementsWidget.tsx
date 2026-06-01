@@ -96,13 +96,36 @@ export function AnnouncementsWidget() {
   };
 
   const fetchArchive = async () => {
+    // Personal archive: include explicitly archived AND already expired announcements,
+    // so users returning from absence can catch up on missed messages.
+    const nowIso = new Date().toISOString();
     const { data } = await (supabase as any)
       .from('announcements')
       .select('*')
-      .not('archived_at', 'is', null)
-      .order('archived_at', { ascending: false })
-      .limit(50);
-    setArchive((data || []) as Announcement[]);
+      .or(`archived_at.not.is.null,and(expires_at.not.is.null,expires_at.lt.${nowIso})`)
+      .order('published_at', { ascending: false })
+      .limit(100);
+    const list = (data || []) as Announcement[];
+    setArchive(list);
+    if (user && list.length > 0) {
+      const { data: r } = await (supabase as any)
+        .from('announcement_receipts')
+        .select('announcement_id, delivered_at, seen_at, read_at')
+        .eq('user_id', user.id)
+        .in('announcement_id', list.map(a => a.id));
+      const map: Record<string, Receipt> = { ...receipts };
+      (r || []).forEach((x: any) => { map[x.announcement_id] = x; });
+      setReceipts(map);
+    }
+  };
+
+  const markArchiveRead = async (id: string) => {
+    if (!user) return;
+    await upsertReceipt(id, {
+      delivered_at: receipts[id]?.delivered_at ?? new Date().toISOString(),
+      seen_at: receipts[id]?.seen_at ?? new Date().toISOString(),
+      read_at: new Date().toISOString(),
+    });
   };
 
   useEffect(() => {
