@@ -381,6 +381,9 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
         <div className="px-6 py-5 border-b border-border dark:border-white/5 bg-background/40 backdrop-blur-xl flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="h-8 w-8 -ml-1" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/30 to-primary/5 border border-white/10 backdrop-blur-md flex items-center justify-center">
                 <Inbox className="h-4 w-4 text-primary" />
               </div>
