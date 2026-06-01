@@ -176,6 +176,7 @@ function AuthenticatedApp() {
         <Route path="/admin/ai-prompts" element={<ProtectedRoute><AdminAiPrompts /></ProtectedRoute>} />
         <Route path="/insurance" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
         <Route path="/insurance/:id" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
+        <Route path="/issos" element={<ProtectedRoute><Issos /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
