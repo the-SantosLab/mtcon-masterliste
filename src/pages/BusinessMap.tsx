@@ -52,11 +52,11 @@ function MapInner() {
     const [cases, projects, companies, deals, contacts, profiles, departments, customNodes, customEdges, positions] =
       await Promise.all([
         supabase.from("cases").select("id, project_name, case_no, status, project_id, assignee_id, department_id").eq("deleted", false).limit(500),
-        supabase.from("projects").select("id, name, status").limit(500),
+        supabase.from("projects").select("id, name, status, owner_id, department_id").limit(500),
         supabase.from("companies").select("id, name, type, industry").limit(500),
         supabase.from("deals").select("id, title, stage, company_id, primary_contact_id").limit(500),
         supabase.from("contacts").select("id, first_name, last_name, position, company_id").limit(500),
-        supabase.from("users_profile").select("id, display_name, short_code").limit(500),
+        supabase.from("users_profile").select("id, display_name, short_code, department_id").limit(500),
         supabase.from("departments").select("id, name").limit(200),
         supabase.from("map_custom_nodes").select("*"),
         supabase.from("map_custom_edges").select("*"),

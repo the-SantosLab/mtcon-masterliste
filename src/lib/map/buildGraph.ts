@@ -203,10 +203,23 @@ export function buildGraph(input: BuildInputs): { nodes: Node<MapNodeData>[]; ed
     });
   };
 
+  // Hierarchical edges: Department -> Person -> Project -> Case
+  // plus side-relations for CRM (Company -> Deal/Contact)
+  for (const p of input.profiles) {
+    if (p.department_id) edge(`e-pd-${p.id}`, nid("department", p.department_id), nid("person", p.id));
+  }
+  for (const pr of input.projects) {
+    if (pr.owner_id) edge(`e-po-${pr.id}`, nid("person", pr.owner_id), nid("project", pr.id), "leitet");
+    else if (pr.department_id) edge(`e-pdp-${pr.id}`, nid("department", pr.department_id), nid("project", pr.id));
+  }
   for (const c of input.cases) {
-    if (c.project_id) edge(`e-cp-${c.id}`, nid("project", c.project_id), nid("case", c.id), "enthält");
-    if (c.assignee_id) edge(`e-ca-${c.id}`, nid("person", c.assignee_id), nid("case", c.id), "bearbeitet");
-    if (c.department_id) edge(`e-cd-${c.id}`, nid("department", c.department_id), nid("case", c.id));
+    if (c.project_id) {
+      edge(`e-cp-${c.id}`, nid("project", c.project_id), nid("case", c.id), "enthält");
+    } else if (c.assignee_id) {
+      edge(`e-ca-${c.id}`, nid("person", c.assignee_id), nid("case", c.id), "bearbeitet");
+    } else if (c.department_id) {
+      edge(`e-cd-${c.id}`, nid("department", c.department_id), nid("case", c.id));
+    }
   }
   for (const d of input.deals) {
     if (d.company_id) edge(`e-dc-${d.id}`, nid("company", d.company_id), nid("deal", d.id), "deal");
@@ -230,8 +243,8 @@ export function buildGraph(input: BuildInputs): { nodes: Node<MapNodeData>[]; ed
   if (needsLayout.length > 0) {
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
-    g.setGraph({ rankdir: "LR", nodesep: 60, ranksep: 120 });
-    for (const n of needsLayout) g.setNode(n.id, { width: 200, height: 92 });
+    g.setGraph({ rankdir: "LR", nodesep: 40, ranksep: 160, ranker: "tight-tree" });
+    for (const n of needsLayout) g.setNode(n.id, { width: 210, height: 92 });
     for (const e of edges) {
       if (needsLayout.find((n) => n.id === e.source) || needsLayout.find((n) => n.id === e.target)) {
         g.setEdge(e.source, e.target);
@@ -240,7 +253,7 @@ export function buildGraph(input: BuildInputs): { nodes: Node<MapNodeData>[]; ed
     dagre.layout(g);
     for (const n of needsLayout) {
       const p = g.node(n.id);
-      if (p) n.position = { x: p.x - 100, y: p.y - 46 };
+      if (p) n.position = { x: p.x - 105, y: p.y - 46 };
     }
   }
 
