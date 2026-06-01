@@ -2577,6 +2577,99 @@ export type Database = {
         }
         Relationships: []
       }
+      map_custom_edges: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_id: string
+          from_type: string
+          id: string
+          label: string | null
+          to_id: string
+          to_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_id: string
+          from_type: string
+          id?: string
+          label?: string | null
+          to_id: string
+          to_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_id?: string
+          from_type?: string
+          id?: string
+          label?: string | null
+          to_id?: string
+          to_type?: string
+        }
+        Relationships: []
+      }
+      map_custom_nodes: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          kind: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          kind?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          kind?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      map_node_positions: {
+        Row: {
+          node_id: string
+          node_type: string
+          updated_at: string
+          updated_by: string | null
+          x: number
+          y: number
+        }
+        Insert: {
+          node_id: string
+          node_type: string
+          updated_at?: string
+          updated_by?: string | null
+          x: number
+          y: number
+        }
+        Update: {
+          node_id?: string
+          node_type?: string
+          updated_at?: string
+          updated_by?: string | null
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
       mtiq_draft_attachments: {
         Row: {
           created_at: string
