@@ -190,6 +190,7 @@ function AuthenticatedApp() {
         <Route path="/issos" element={<ProtectedRoute><Issos /></ProtectedRoute>} />
         <Route path="/container" element={<ProtectedRoute><Container3D /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+        <Route path="/bestellungen" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
