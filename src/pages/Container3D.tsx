@@ -23,6 +23,15 @@ const MODULES: Module[] = [
     accent: "text-fuchsia-300",
   },
   {
+    href: "/mtiq/drafts",
+    label: "MTIQ Posteingang",
+    sub: "Entwürfe · KI-Vorschläge",
+    desc: "Von MTIQ vorbereitete Antworten, Notizen und Subtask-Vorschläge zur Freigabe – getrennt vom klassischen Eingang.",
+    icon: Sparkles,
+    hue: "from-amber-500/30 via-orange-500/10 to-transparent",
+    accent: "text-amber-300",
+  },
+  {
     href: "/insurance",
     label: "Versicherungen",
     sub: "Policies · Verträge · Schäden",
