@@ -386,22 +386,47 @@ export default function Dashboard() {
                     </button>
                   )}
                 </h2>
-                <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
-                  {(['week', 'month', 'year'] as const).map(r => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setChartRange(r)}
-                      className={cn(
-                        'px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded transition-colors',
-                        chartRange === r
-                          ? 'bg-card text-foreground shadow-sm border border-border'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {r === 'week' ? 'Woche' : r === 'month' ? 'Monat' : 'Jahr'}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Zeitraum-Schnellfilter */}
+                  <div className="flex items-center gap-1">
+                    {([
+                      { key: 'lastMonth', label: 'Vormonat' },
+                      { key: 'last2Months', label: 'Vorvormonat' },
+                      { key: 'last3Months', label: '3 Monate' },
+                      { key: 'last6Months', label: '6 Monate' },
+                    ] as { key: DateRangeFilter; label: string }[]).map(({ key, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setDateRangeFilter(prev => prev === key ? 'all' : key)}
+                        className={cn(
+                          'h-7 px-2 rounded-md border text-[10px] font-medium transition-colors shrink-0',
+                          dateRangeFilter === key
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5">
+                    {(['week', 'month', 'year'] as const).map(r => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setChartRange(r)}
+                        className={cn(
+                          'px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded transition-colors',
+                          chartRange === r
+                            ? 'bg-card text-foreground shadow-sm border border-border'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {r === 'week' ? 'Woche' : r === 'month' ? 'Monat' : 'Jahr'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="h-[180px]">
