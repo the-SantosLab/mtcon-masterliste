@@ -15,7 +15,7 @@ import {
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
   CalendarClock, AlertTriangle, CheckCircle2, XCircle, Tag, X, ChevronRight, Settings2,
   Briefcase, Wallet, Hammer, Truck, Gavel, FileSignature, Paperclip, Archive, Receipt,
-  Sparkles, Loader2, KeyRound,
+  Sparkles, Loader2, KeyRound, ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
