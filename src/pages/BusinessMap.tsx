@@ -141,9 +141,7 @@ function MapInner() {
   const nodeCount = visibleNodes.filter((n) => !n.hidden).length;
 
   return (
-    <div className="relative flex h-[calc(100vh-3.5rem)] w-screen max-w-none flex-col bg-[hsl(230_30%_6%)] -m-3 sm:-m-5 lg:-m-8" style={{ width: "calc(100% + 4rem)" }}>
-      {/* fill parent padding */}
-      <style>{`@media (max-width: 640px){ .biz-map-fill{ width: calc(100% + 1.5rem) !important; } } @media (min-width: 641px) and (max-width: 1024px){ .biz-map-fill{ width: calc(100% + 2.5rem) !important; } }`}</style>
+    <div className="relative flex h-[calc(100vh-3.5rem)] w-full flex-col bg-[hsl(230_30%_6%)] -mx-3 sm:-mx-5 lg:-mx-8 -my-3 sm:-my-5 lg:-my-8" style={{ width: "auto" }}>
       {/* Background mesh */}
       <div
         aria-hidden
