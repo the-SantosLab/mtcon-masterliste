@@ -338,6 +338,7 @@ export default function CasesKanban() {
   const [activeProject, setActiveProject] = useState<ProjectCard | null>(null);
   const [activeCase, setActiveCase] = useState<CaseCard | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'lastMonth' | 'last2Months' | 'last3Months' | 'last6Months'>('all');
   const [pendingCloseIds, setPendingCloseIds] = useState<string[] | null>(null);
   const { completeCase } = useCaseActions(user?.id, () => fetchCases());
   const { unreadMap } = useChatUnread(cases.map(c => c.id));
