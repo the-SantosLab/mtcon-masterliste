@@ -105,17 +105,45 @@ function MapInner() {
     }
   }, [onNodesChange]);
 
+  // Build adjacency for downward traversal
+  const childMap = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const e of edges) {
+      if (!m.has(e.source)) m.set(e.source, []);
+      m.get(e.source)!.push(e.target);
+    }
+    return m;
+  }, [edges]);
+
+  const descendantSet = (rootId: string): Set<string> => {
+    const out = new Set<string>([rootId]);
+    const stack = [rootId];
+    while (stack.length) {
+      const cur = stack.pop()!;
+      for (const ch of childMap.get(cur) ?? []) {
+        if (!out.has(ch)) { out.add(ch); stack.push(ch); }
+      }
+    }
+    return out;
+  };
+
   // Filter visibility
   const visibleNodes = useMemo(() => {
     const allowed = new Set(FILTER_GROUPS[filter]);
     const q = search.trim().toLowerCase();
+
+    let scope: Set<string> | null = null;
+    if (personFilter !== "all") scope = descendantSet(`person:${personFilter}`);
+    else if (deptFilter !== "all") scope = descendantSet(`department:${deptFilter}`);
+
     return nodes.map((n) => {
       const d = n.data;
       const passKind = allowed.has(d.kind);
       const passSearch = !q || d.title.toLowerCase().includes(q) || (d.subtitle ?? "").toLowerCase().includes(q);
-      return { ...n, hidden: !(passKind && passSearch) };
+      const passScope = !scope || scope.has(n.id);
+      return { ...n, hidden: !(passKind && passSearch && passScope) };
     });
-  }, [nodes, filter, search]);
+  }, [nodes, filter, search, deptFilter, personFilter, childMap]);
 
   const visibleEdges = useMemo(() => {
     const hidden = new Set(visibleNodes.filter((n) => n.hidden).map((n) => n.id));
