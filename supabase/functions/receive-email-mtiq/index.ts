@@ -228,6 +228,94 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ===== AI-based content routing =====
+  // Wenn keine explizite Adresse/Hash gegriffen hat, klassifiziert die KI den
+  // Inhalt und leitet an die passende Intake-Funktion weiter. So können alle
+  // Mails an mtiq@inbox.<domain> geschickt werden und werden trotzdem korrekt
+  // verteilt (Vorgang, ISSOS, Versicherung, Bestellung). Bei "draft" oder bei
+  // Fehlern fällt die Funktion auf das bestehende MTIQ-Draft-Verhalten zurück.
+  const aiSubject: string = payload?.Subject || "";
+  const aiBodyPlain: string = payload?.TextBody || "";
+  const aiBodyHtml: string = payload?.HtmlBody || "";
+  const aiBody = (aiBodyPlain || aiBodyHtml.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim().slice(0, 4000);
+  const aiFromEmail: string = payload?.FromFull?.Email || payload?.From || "";
+  const aiAttachments: any[] = Array.isArray(payload?.Attachments) ? payload.Attachments : [];
+  const aiAttachmentNames = aiAttachments.map((a) => String(a?.Name || "")).filter(Boolean).join(", ").slice(0, 500);
+
+  let aiRoute: "case" | "issos" | "insurance" | "order" | "draft" = "draft";
+  if (LOVABLE_API_KEY) {
+    try {
+      const routerPrompt = `Du bist der Posteingangs-Router von MtCon. Klassifiziere eingehende E-Mails in genau EINE Kategorie:
+
+- "issos": APS-Delta-Inputs, ISSOS-PRO/RKS-Berichte, MSL-/Forecast-Listen von APS (Automotive Production Solutions). Typisch: Anhänge oder Inhalt zu Delta-Mengen, Lieferplänen, MSL, Forecast je Werk.
+- "insurance": Versicherungspolicen, Schadenfälle, Prämienrechnungen, Versicherungs-Korrespondenz.
+- "order": Eingehende Kundenbestellungen, Auftragsbestätigungen, Bestellungen von Lieferanten an uns.
+- "case": Konkrete Anfrage/Problem/Aufgabe, die als interner Vorgang (Ticket) bearbeitet werden soll (Reklamation, technische Anfrage, Angebot etc.).
+- "draft": Wenn unklar oder keine der obigen Kategorien klar zutrifft.
+
+Antworte NUR mit JSON: {"route":"case|issos|insurance|order|draft","confidence":0.0-1.0,"reason":"kurz"}`;
+      const userPrompt = `Absender: ${aiFromEmail}
+Betreff: ${aiSubject}
+Anhänge: ${aiAttachmentNames || "(keine)"}
+Body:
+${aiBody || "(leer)"}`;
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: routerPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const raw = j?.choices?.[0]?.message?.content ?? "{}";
+        const parsedRoute = typeof raw === "string" ? JSON.parse(raw) : raw;
+        const route = String(parsedRoute?.route || "").toLowerCase();
+        const conf = Number(parsedRoute?.confidence ?? 0);
+        if (["case", "issos", "insurance", "order", "draft"].includes(route) && conf >= 0.6) {
+          aiRoute = route as typeof aiRoute;
+        }
+        console.log("AI-Router:", { route, conf, reason: parsedRoute?.reason });
+      } else {
+        console.error("AI router error", r.status, await r.text());
+      }
+    } catch (e) {
+      console.error("AI router failed", e);
+    }
+  }
+
+  const routeTo: Record<string, string | null> = {
+    case: "receive-email",
+    issos: "receive-email-issos",
+    insurance: "receive-email-insurance",
+    order: "receive-email-order",
+    draft: null,
+  };
+  const targetFn = routeTo[aiRoute];
+  if (targetFn) {
+    try {
+      const fwd = await fetch(`${SUPABASE_URL}/functions/v1/${targetFn}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: req.headers.get("authorization") || "",
+        },
+        body: JSON.stringify(payload),
+      });
+      const text = await fwd.text();
+      return new Response(text, { status: fwd.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      console.error(`AI-Router forward to ${targetFn} failed`, e);
+    }
+  }
+
+
+
   const messageId: string | null = payload?.MessageID || payload?.MessageId || null;
   const fromEmail: string = payload?.FromFull?.Email || payload?.From || "unknown@unknown";
   const fromName: string | null = payload?.FromFull?.Name || null;
