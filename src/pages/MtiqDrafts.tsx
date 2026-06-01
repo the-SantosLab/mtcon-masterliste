@@ -534,6 +534,9 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                   )}
                 </div>
 
+                <DraftAttachments draftId={edit.id} />
+
+
                 {edit.possible_duplicate_of && edit.status === 'pending' && (
                   <DuplicateBanner caseId={edit.possible_duplicate_of} onDismiss={async () => {
                     await (supabase as any).from('mtiq_drafts').update({ possible_duplicate_of: null }).eq('id', edit.id);
