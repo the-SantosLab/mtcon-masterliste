@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -125,6 +125,7 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
+  { href: '/map', label: 'Business Map', icon: Network },
   
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
