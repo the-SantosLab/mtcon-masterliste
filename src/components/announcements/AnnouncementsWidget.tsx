@@ -260,28 +260,49 @@ export function AnnouncementsWidget() {
       <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-sm font-medium">Archivierte Mitteilungen</DialogTitle>
+            <DialogTitle className="text-sm font-medium">Persönliches Archiv – Mitteilungen</DialogTitle>
           </DialogHeader>
+          <p className="px-1 text-[11px] text-muted-foreground -mt-2">
+            Enthält archivierte und abgelaufene Mitteilungen. Auch bisher ungelesene Nachrichten bleiben hier dauerhaft nachvollziehbar.
+          </p>
           <div className="max-h-[60vh] overflow-y-auto divide-y divide-border -mx-6">
             {archive.length === 0 ? (
               <p className="px-6 py-4 text-xs text-muted-foreground">Keine archivierten Mitteilungen</p>
             ) : archive.map(a => {
               const s = severityStyle[a.severity];
               const Icon = s.icon;
+              const r = receipts[a.id];
+              const isRead = !!r?.read_at;
+              const isExpired = !!a.expires_at && new Date(a.expires_at) <= new Date();
               return (
-                <div key={a.id} className="px-6 py-3">
+                <div key={a.id} className={cn('px-6 py-3', !isRead && 'bg-foreground/[0.03]')}>
                   <div className="flex items-start gap-2">
                     <Icon className="h-3.5 w-3.5 mt-0.5 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-foreground">{a.title}</span>
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
+                        {!isRead && (
+                          <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Ungelesen</span>
+                        )}
                         <span className="text-[10px] text-muted-foreground tabular-nums ml-auto">
                           Veröffentlicht: {formatDateTime(a.published_at)}
                           {a.archived_at && ` · Archiviert: ${formatDateTime(a.archived_at)}`}
+                          {!a.archived_at && isExpired && a.expires_at && ` · Abgelaufen: ${formatDateTime(a.expires_at)}`}
                         </span>
                       </div>
                       {a.body && <p className="text-xs text-foreground/80 whitespace-pre-wrap mt-1 leading-relaxed">{a.body}</p>}
+                      <div className="mt-2 flex items-center gap-2">
+                        {isRead ? (
+                          <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
+                            <Check className="h-3 w-3" /> Gelesen{r?.read_at && ` · ${formatDateTime(r.read_at)}`}
+                          </span>
+                        ) : (
+                          <Button size="sm" variant="ghost" className="h-6 text-[11px]" onClick={() => markArchiveRead(a.id)}>
+                            <Check className="h-3 w-3 mr-1" /> Als gelesen markieren
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
