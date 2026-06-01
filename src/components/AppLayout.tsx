@@ -259,7 +259,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {(isAdmin || (profile as any)?.is_manager) && (
             <Link to="/insurance" onClick={() => setOpen(false)} className={linkClass('/insurance')}>
               <FolderArchive className="h-4 w-4" />
-              <span className="flex-1">Ablage</span>
+              <span className="flex-1">3D Container</span>
             </Link>
           )}
           <Link to="/issos" onClick={() => setOpen(false)} className={linkClass('/issos')}>
