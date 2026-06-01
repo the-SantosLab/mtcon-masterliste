@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { storeAuthRedirect } from '@/lib/authRedirect';
 
 const TAB_TOKEN_KEY = 'mtcon.session_token';
 const BROWSER_TOKEN_KEY = 'mtcon.browser_session_token';
@@ -51,7 +52,11 @@ function getBrowserSessionToken(): string | null {
 }
 
 function goToAuth() {
-  if (window.location.pathname !== '/auth') window.location.href = '/auth';
+  if (window.location.pathname !== '/auth') {
+    const target = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    storeAuthRedirect(target);
+    window.location.href = `/auth?redirect=${encodeURIComponent(target)}`;
+  }
 }
 
 export function useSessionEnforcement(enabled: boolean, userId: string | undefined) {

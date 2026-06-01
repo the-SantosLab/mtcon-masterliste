@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { getLocalSessionToken, isCurrentTabSessionBlocked, setLocalSessionToken } from '@/hooks/useSessionEnforcement';
+import { clearStoredAuthRedirect, getRedirectParam, getStoredAuthRedirect } from '@/lib/authRedirect';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
@@ -34,13 +35,14 @@ export default function Auth() {
   const fromState = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
   const redirectTarget = fromState?.pathname
     ? `${fromState.pathname}${fromState.search ?? ''}${fromState.hash ?? ''}`
-    : null;
+    : getRedirectParam(location.search) ?? getStoredAuthRedirect();
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   if (session && hasTabSessionToken && !confirmTakeover && !isBlockedSession) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
     const isCrmBeta = session.user?.email === 'js@santoslab.de';
     if (redirectTarget && redirectTarget !== '/auth') {
+      clearStoredAuthRedirect();
       return <Navigate to={redirectTarget} replace />;
     }
     if (!isCrmBeta) {

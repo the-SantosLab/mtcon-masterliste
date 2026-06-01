@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PortalAuthProvider, usePortalAuth } from "@/contexts/PortalAuthContext";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
 import { isCurrentTabSessionBlocked } from "@/hooks/useSessionEnforcement";
+import { storeAuthRedirect } from "@/lib/authRedirect";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import CasesList from "./pages/CasesList";
@@ -110,8 +111,14 @@ function ProtectedRoute({ children, enforceMfa = true }: { children: React.React
   }, [session, enforceMfa]);
 
   if (loading || (session && mfaState === 'unknown')) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace state={{ from: location }} />;
-  if (mfaState === 'required') return <Navigate to="/mfa-challenge" replace state={{ from: location }} />;
+  if (!session || isCurrentTabSessionBlocked()) {
+    storeAuthRedirect(location);
+    return <Navigate to={`/auth?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`} replace state={{ from: location }} />;
+  }
+  if (mfaState === 'required') {
+    storeAuthRedirect(location);
+    return <Navigate to="/mfa-challenge" replace state={{ from: location }} />;
+  }
   return <>{children}</>;
 }
 
@@ -128,7 +135,10 @@ function CrmProtectedRoute({ children }: { children: React.ReactNode }) {
   const { allowed, loading: accessLoading } = useCrmAccess();
   const location = useLocation();
   if (loading || accessLoading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace state={{ from: location }} />;
+  if (!session || isCurrentTabSessionBlocked()) {
+    storeAuthRedirect(location);
+    return <Navigate to={`/auth?redirect=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`} replace state={{ from: location }} />;
+  }
   if (!allowed) return <CrmNoAccess />;
   return <>{children}</>;
 }
