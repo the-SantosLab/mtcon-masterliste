@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, Inbox, Sparkles } from "lucide-react";
+import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package } from "lucide-react";
 
 type Module = {
   href: string;
@@ -26,7 +26,15 @@ const SATELLITES: Module[] = [
     sub: "Policies · Verträge",
     icon: Shield,
     color: "190 90% 55%", // cyan
-    angle: -18,
+    angle: -30,
+  },
+  {
+    href: "/bestellungen",
+    label: "Bestellungen",
+    sub: "Eingänge · Aufträge",
+    icon: Package,
+    color: "25 90% 55%", // orange
+    angle: 30,
   },
   {
     href: "/documents",
@@ -34,7 +42,7 @@ const SATELLITES: Module[] = [
     sub: "Verträge · Dateien",
     icon: FolderArchive,
     color: "255 85% 65%", // violet
-    angle: 54,
+    angle: 90,
   },
   {
     href: "/issos",
@@ -42,7 +50,7 @@ const SATELLITES: Module[] = [
     sub: "APS-Delta · Trigger",
     icon: Boxes,
     color: "160 80% 50%", // emerald
-    angle: 126,
+    angle: 150,
   },
   {
     href: "/inbox/documents",
@@ -50,7 +58,7 @@ const SATELLITES: Module[] = [
     sub: "Verarbeitete Eingänge",
     icon: Inbox,
     color: "320 85% 65%", // fuchsia
-    angle: 198,
+    angle: 210,
   },
 ];
 

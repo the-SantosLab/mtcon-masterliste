@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Sparkles, FileText, Download, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -71,6 +72,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -187,14 +189,19 @@ export default function AdminOrders() {
     <AppLayout>
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-medium flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Bestellungen
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Eingehende Bestellungen — automatisch via E-Mail erfasst oder manuell angelegt.
-          </p>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/container')} title="Zurück zum 3D Container">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-medium flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Bestellungen
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Eingehende Bestellungen — automatisch via E-Mail erfasst oder manuell angelegt.
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           {["all", "draft", "active", "in_progress", "completed", "cancelled"].map((s) => (
