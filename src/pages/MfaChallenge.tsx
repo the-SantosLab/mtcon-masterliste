@@ -70,7 +70,7 @@ export default function MfaChallenge() {
     return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   }
   if (!session) return <Navigate to="/auth" replace />;
-  if (!needsMfa) return <Navigate to="/" replace />;
+  if (!needsMfa) return <Navigate to={redirectTarget} replace />;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
