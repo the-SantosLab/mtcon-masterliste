@@ -125,7 +125,6 @@ const navItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
 
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
-  { href: '/map', label: 'Business Map', icon: Network },
   
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
@@ -262,6 +261,13 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="flex-1">3D Container</span>
           </Link>
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
+
+          {isAdmin && (
+            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
+              <Network className="h-4 w-4" />
+              <span className="flex-1">Business Map</span>
+            </Link>
+          )}
 
           {isAdmin && (
             <>
