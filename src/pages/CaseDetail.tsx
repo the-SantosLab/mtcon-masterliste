@@ -714,18 +714,20 @@ export default function CaseDetail() {
                      <Field label="Projekt-/Artikelnr." value={c.project_article_no} />
                      <Field label="Geschätzte Std." value={c.estimated_hours?.toString()} />
                      <Field label="Erstellt von" value={c.creator?.short_code} />
-                     {c.project && (
-                       <div>
-                         <p className="text-[11px] text-muted-foreground mb-0.5">Verknüpftes Projekt</p>
-                         <Link
-                           to={`/projects/${c.project.id}/files`}
-                           className="text-sm text-primary hover:underline flex items-center gap-1"
-                         >
-                           <span className="font-mono text-[11px] text-muted-foreground">{c.project.project_number}</span>
-                           <span className="ml-1">{c.project.name}</span>
-                         </Link>
-                       </div>
-                     )}
+                      {(c.project || c.project_id) && (
+                        <div>
+                          <p className="text-[11px] text-muted-foreground mb-0.5">Verknüpftes Projekt</p>
+                          <Link
+                            to={`/projects/${c.project?.id ?? c.project_id}/files`}
+                            className="text-sm text-primary hover:underline flex items-center gap-1"
+                          >
+                            {c.project?.project_number && (
+                              <span className="font-mono text-[11px] text-muted-foreground">{c.project.project_number}</span>
+                            )}
+                            <span className={c.project?.project_number ? 'ml-1' : ''}>{c.project?.name ?? c.project_name}</span>
+                          </Link>
+                        </div>
+                      )}
                    </div>
                 </details>
               );
