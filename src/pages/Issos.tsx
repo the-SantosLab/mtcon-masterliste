@@ -84,6 +84,7 @@ function formatDate(iso: string | null): string {
 }
 
 export default function Issos() {
+  const navigate = useNavigate();
   const [docs, setDocs] = useState<IssosDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
