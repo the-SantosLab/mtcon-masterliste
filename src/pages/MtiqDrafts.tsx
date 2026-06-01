@@ -368,10 +368,8 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
   };
 
 
-  const Wrapper: any = embedded ? 'div' : AppLayout;
-  return (
-    <Wrapper>
-      <div className="relative flex flex-col h-full overflow-hidden">
+  const content = (
+      <div className="relative flex flex-col h-full min-h-0 overflow-hidden">
 
         {/* Ambient background mesh */}
         <div className="pointer-events-none absolute inset-0 -z-10">
@@ -506,7 +504,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
           </div>
 
           {/* RIGHT — detail */}
-          <div className="min-h-0 overflow-y-auto bg-background/10 backdrop-blur-xl">
+          <div className="h-full min-h-0 overflow-y-auto overscroll-contain bg-background/10 backdrop-blur-xl">
             {!edit ? (
               <EmptyState />
             ) : (
@@ -1075,7 +1073,12 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </Wrapper>
+  );
+
+  return embedded ? (
+    <div className="h-full min-h-0 flex flex-col">{content}</div>
+  ) : (
+    <AppLayout>{content}</AppLayout>
   );
 }
 
