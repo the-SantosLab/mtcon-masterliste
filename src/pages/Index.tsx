@@ -494,12 +494,12 @@ export default function Dashboard() {
         </div>
 
         {/* Drilldown panel */}
-        {activeFilters.length > 0 && (
+        {(activeFilters.length > 0 || dateRangeFilter !== 'all') && (
           <div className="glass-card overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/50 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-sm font-medium text-foreground">
-                  {activeFilters.length === 1 ? FILTER_LABELS[activeFilters[0]] : 'Auswahl'}
+                  {activeFilters.length === 1 ? FILTER_LABELS[activeFilters[0]] : activeFilters.length > 1 ? 'Auswahl' : dateRangeFilter !== 'all' ? 'Zeitraum-Filter' : 'Auswahl'}
                 </h2>
                 {activeFilters.length > 1 && (
                   <div className="flex items-center gap-1 flex-wrap">
