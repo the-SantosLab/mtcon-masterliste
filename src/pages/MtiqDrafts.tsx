@@ -443,9 +443,10 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
           )}
         </div>
 
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr] min-h-0 overflow-hidden">
           {/* LEFT — list */}
-          <div className="border-r border-border dark:border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
+          <div className="min-h-0 border-r border-border dark:border-white/5 overflow-y-auto bg-background/20 backdrop-blur-xl">
+
             {loading ? (
               <div className="p-6 text-sm text-muted-foreground">Lädt…</div>
             ) : visibleDrafts.length === 0 ? (
@@ -505,7 +506,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
           </div>
 
           {/* RIGHT — detail */}
-          <div className="overflow-y-auto bg-background/10 backdrop-blur-xl">
+          <div className="min-h-0 overflow-y-auto bg-background/10 backdrop-blur-xl">
             {!edit ? (
               <EmptyState />
             ) : (
