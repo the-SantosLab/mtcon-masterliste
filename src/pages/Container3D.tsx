@@ -14,6 +14,15 @@ type Module = {
 
 const MODULES: Module[] = [
   {
+    href: "/inbox",
+    label: "Intelligent Inbox",
+    sub: "Eingang · KI-Verteiler · Triage",
+    desc: "Erster Schritt aller Eingänge: KI klassifiziert, extrahiert und verteilt automatisch an Vorgänge, Versicherungen, Dokumente oder ISSOS.",
+    icon: Inbox,
+    hue: "from-fuchsia-500/30 via-pink-500/10 to-transparent",
+    accent: "text-fuchsia-300",
+  },
+  {
     href: "/insurance",
     label: "Versicherungen",
     sub: "Policies · Verträge · Schäden",
