@@ -80,7 +80,7 @@ export default function MfaChallenge() {
     setSubmitting(false);
     if (error) { toast.error(error.message || 'Code ungültig'); return; }
     toast.success('Erfolgreich angemeldet');
-    navigate('/', { replace: true });
+    navigate(redirectTarget, { replace: true });
   };
 
   const cancel = async () => {
