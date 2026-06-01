@@ -12,6 +12,11 @@ import mtconLogo from '@/assets/mtcon_logo.png';
 export default function MfaChallenge() {
   const { session, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromState = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+  const redirectTarget = fromState?.pathname
+    ? `${fromState.pathname}${fromState.search ?? ''}${fromState.hash ?? ''}`
+    : '/';
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
