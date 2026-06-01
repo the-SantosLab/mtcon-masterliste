@@ -352,6 +352,30 @@ export default function CasesList() {
               <SelectItem value="none">Ohne Termin</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Zeitraum-Schnellfilter */}
+          <div className="flex items-center gap-1">
+            {([
+              { key: 'lastMonth', label: 'Vormonat' },
+              { key: 'last2Months', label: 'Vorvormonat' },
+              { key: 'last3Months', label: '3 Monate' },
+              { key: 'last6Months', label: '6 Monate' },
+            ] as { key: DateRangeFilter; label: string }[]).map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setDateRangeFilter(prev => prev === key ? 'all' : key)}
+                className={cn(
+                  'h-8 px-2.5 rounded-md border text-[11px] font-medium transition-colors shrink-0',
+                  dateRangeFilter === key
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <button
             onClick={toggleOnlyMine}
             className={cn(
