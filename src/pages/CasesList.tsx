@@ -168,6 +168,28 @@ export default function CasesList() {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const inDays = (d: Date, n: number) => { const x = new Date(today); x.setDate(x.getDate() + n); return d <= x; };
 
+  const getDateRangeBounds = (filter: DateRangeFilter): { from: Date; to: Date } | null => {
+    const now = new Date();
+    switch (filter) {
+      case 'lastMonth': {
+        const m = subMonths(now, 1);
+        return { from: startOfMonth(m), to: endOfMonth(m) };
+      }
+      case 'last2Months': {
+        const m = subMonths(now, 2);
+        return { from: startOfMonth(m), to: endOfMonth(m) };
+      }
+      case 'last3Months': {
+        return { from: startOfMonth(subMonths(now, 2)), to: now };
+      }
+      case 'last6Months': {
+        return { from: startOfMonth(subMonths(now, 5)), to: now };
+      }
+      default:
+        return null;
+    }
+  };
+
   const filtered = cases.filter(c => {
     if (onlyMine && c.assignee_id !== user?.id) return false;
     if (!statusFilter.includes(c.status)) return false;
@@ -196,6 +218,13 @@ export default function CasesList() {
         if (dueFilter === 'today' && d.getTime() !== today.getTime()) return false;
         if (dueFilter === 'week' && (d < today || !inDays(d, 7))) return false;
         if (dueFilter === 'next14' && (d < today || !inDays(d, 14))) return false;
+      }
+    }
+    if (dateRangeFilter !== 'all' && c.created_at) {
+      const bounds = getDateRangeBounds(dateRangeFilter);
+      if (bounds) {
+        const created = new Date(c.created_at);
+        if (created < bounds.from || created > bounds.to) return false;
       }
     }
     if (search) {
