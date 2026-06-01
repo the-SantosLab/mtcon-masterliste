@@ -56,7 +56,7 @@ function MapInner() {
         supabase.from("companies").select("id, name, type, industry").limit(500),
         supabase.from("deals").select("id, title, stage, company_id, primary_contact_id").limit(500),
         supabase.from("contacts").select("id, first_name, last_name, position, company_id").limit(500),
-        supabase.from("profiles").select("id, display_name, short_code").limit(500),
+        supabase.from("users_profile").select("id, display_name, short_code").limit(500),
         supabase.from("departments").select("id, name").limit(200),
         supabase.from("map_custom_nodes").select("*"),
         supabase.from("map_custom_edges").select("*"),
@@ -88,7 +88,7 @@ function MapInner() {
   useEffect(() => { load(); }, [load]);
 
   // Persist drag positions
-  const handleNodesChange = useCallback((changes: NodeChange[]) => {
+  const handleNodesChange = useCallback((changes: NodeChange<Node<MapNodeData>>[]) => {
     onNodesChange(changes);
     for (const ch of changes) {
       if (ch.type === "position" && !ch.dragging && ch.position) {
