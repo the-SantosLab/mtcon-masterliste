@@ -680,6 +680,30 @@ export default function CasesKanban() {
 
             <div className="flex-1" />
 
+            {/* Zeitraum-Schnellfilter */}
+            <div className="flex items-center gap-1 mr-2">
+              {([
+                { key: 'lastMonth', label: 'Vormonat' },
+                { key: 'last2Months', label: 'Vorvormonat' },
+                { key: 'last3Months', label: '3 Monate' },
+                { key: 'last6Months', label: '6 Monate' },
+              ] as { key: typeof dateRangeFilter; label: string }[]).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDateRangeFilter(prev => prev === key ? 'all' : key)}
+                  className={cn(
+                    'h-7 px-2 rounded-md border text-[11px] font-medium transition-colors shrink-0',
+                    dateRangeFilter === key
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {isAdmin && !isProjects && (
               selectMode ? (
                 <div className="flex items-center gap-2">
