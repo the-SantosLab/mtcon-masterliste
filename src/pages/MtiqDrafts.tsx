@@ -13,7 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink, Paperclip, Download } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
@@ -533,6 +533,9 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                     </div>
                   )}
                 </div>
+
+                <DraftAttachments draftId={edit.id} />
+
 
                 {edit.possible_duplicate_of && edit.status === 'pending' && (
                   <DuplicateBanner caseId={edit.possible_duplicate_of} onDismiss={async () => {
@@ -1128,6 +1131,89 @@ function DuplicateBanner({ caseId, onDismiss }: { caseId: string; onDismiss: () 
       >
         Kein Duplikat
       </button>
+    </div>
+  );
+}
+
+type DraftAtt = {
+  id: string;
+  file_name: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  storage_path: string;
+  source: string;
+};
+
+function DraftAttachments({ draftId }: { draftId: string }) {
+  const [items, setItems] = useState<DraftAtt[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      setLoading(true);
+      const { data } = await (supabase as any)
+        .from('mtiq_draft_attachments')
+        .select('id, file_name, mime_type, size_bytes, storage_path, source')
+        .eq('draft_id', draftId)
+        .order('created_at', { ascending: true });
+      if (!cancel) { setItems((data as DraftAtt[]) ?? []); setLoading(false); }
+    })();
+    return () => { cancel = true; };
+  }, [draftId]);
+
+  const download = async (a: DraftAtt) => {
+    const { data, error } = await (supabase as any).storage
+      .from('mtiq-draft-attachments')
+      .createSignedUrl(a.storage_path, 300);
+    if (error || !data?.signedUrl) { toast.error('Datei konnte nicht geöffnet werden'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+  };
+
+  if (!loading && items.length === 0) return null;
+
+  const fmtSize = (b: number | null) => {
+    if (!b) return '';
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
+    return `${(b / 1024 / 1024).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="glass-panel rounded-2xl border border-border dark:border-white/5">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-white/[0.03] transition-colors rounded-2xl"
+      >
+        <span className="flex items-center gap-2">
+          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <Paperclip className="h-4 w-4 text-muted-foreground" /> Anhänge der Trigger-E-Mail
+        </span>
+        <span className="text-xs text-muted-foreground">{items.length}</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 pt-1 border-t border-border dark:border-white/5 space-y-1.5">
+          {loading && <div className="text-xs text-muted-foreground">Lade…</div>}
+          {items.map(a => (
+            <div key={a.id} className="flex items-center gap-2 text-xs">
+              <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" />
+              <span className="truncate flex-1">{a.file_name}</span>
+              {a.source === 'trigger_email' && (
+                <Badge variant="secondary" className="h-5 text-[10px]">Original-Mail</Badge>
+              )}
+              <span className="text-muted-foreground tabular-nums">{fmtSize(a.size_bytes)}</span>
+              <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => download(a)}>
+                <Download className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+          <p className="text-[10px] text-muted-foreground pt-1">
+            Werden bei Genehmigung automatisch dem Vorgang angehängt.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

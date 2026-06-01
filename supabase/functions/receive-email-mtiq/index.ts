@@ -336,6 +336,76 @@ ${emailBody || "(empty)"}`;
     });
   }
 
+  // ===== Persist trigger email + its attachments on the draft, so they can be
+  // forwarded to the Vorgang on approval and shown in the draft review UI.
+  try {
+    const draftId = inserted.id as string;
+    const attachments: any[] = Array.isArray(payload?.Attachments) ? payload.Attachments : [];
+
+    // a) Each original attachment as a separate file
+    for (const att of attachments) {
+      try {
+        const name: string = att?.Name || "anhang.bin";
+        const mime: string = att?.ContentType || "application/octet-stream";
+        const content: string = att?.Content || "";
+        if (!content) continue;
+        const bytes = Uint8Array.from(atob(content), (c) => c.charCodeAt(0));
+        const safe = name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const path = `${draftId}/attachments/${Date.now()}-${safe}`;
+        const { error: upErr } = await admin.storage
+          .from("mtiq-draft-attachments")
+          .upload(path, bytes, { contentType: mime, upsert: false });
+        if (upErr) { console.error("draft attachment upload failed", upErr.message); continue; }
+        await admin.from("mtiq_draft_attachments").insert({
+          draft_id: draftId,
+          file_name: name,
+          mime_type: mime,
+          size_bytes: bytes.byteLength,
+          storage_path: path,
+          source: "email_attachment",
+        });
+      } catch (e) {
+        console.error("draft attachment error", e);
+      }
+    }
+
+    // b) The trigger email itself as a single .eml-style snapshot file
+    try {
+      const headerLines = [
+        `From: ${fromName ? `${fromName} <${fromEmail}>` : fromEmail}`,
+        `Subject: ${subject}`,
+        `Date: ${payload?.Date || new Date().toUTCString()}`,
+        messageId ? `Message-ID: ${messageId}` : null,
+        "Content-Type: text/plain; charset=utf-8",
+        "",
+      ].filter(Boolean).join("\r\n");
+      const emlContent = headerLines + "\r\n" + (bodyPlain || bodyHtml || "");
+      const emlBytes = new TextEncoder().encode(emlContent);
+      const safeSubject = (subject || "trigger-email").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+      const emlPath = `${draftId}/trigger/${Date.now()}-${safeSubject}.eml`;
+      const { error: emlErr } = await admin.storage
+        .from("mtiq-draft-attachments")
+        .upload(emlPath, emlBytes, { contentType: "message/rfc822", upsert: false });
+      if (emlErr) {
+        console.error("trigger eml upload failed", emlErr.message);
+      } else {
+        await admin.from("mtiq_draft_attachments").insert({
+          draft_id: draftId,
+          file_name: `Trigger-E-Mail – ${safeSubject}.eml`,
+          mime_type: "message/rfc822",
+          size_bytes: emlBytes.byteLength,
+          storage_path: emlPath,
+          source: "trigger_email",
+        });
+      }
+    } catch (e) {
+      console.error("trigger eml error", e);
+    }
+  } catch (e) {
+    console.error("draft attachment persistence failed", e);
+  }
+
+
   return new Response(JSON.stringify({ status: "ok", draft_id: inserted.id }), {
     status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
   });

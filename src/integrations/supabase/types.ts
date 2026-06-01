@@ -2502,6 +2502,47 @@ export type Database = {
         }
         Relationships: []
       }
+      mtiq_draft_attachments: {
+        Row: {
+          created_at: string
+          draft_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          source: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          draft_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          source?: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          draft_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          source?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mtiq_draft_attachments_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "mtiq_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mtiq_draft_corrections: {
         Row: {
           corrected_fields: Json

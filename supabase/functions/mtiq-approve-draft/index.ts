@@ -228,6 +228,73 @@ Deno.serve(async (req) => {
       console.error("merged note generation failed (non-fatal)", mergeErr);
     }
 
+    // Forward trigger email + draft attachments to the new Vorgang.
+    // Uses service-role storage client (the user does not have direct write access
+    // to the case-attachments bucket via RLS path conventions).
+    try {
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (serviceKey) {
+        const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
+        // a) Create a case_emails row mirroring the trigger mail so the Vorgang
+        //    chronology shows where it came from.
+        let emailRowId: string | null = null;
+        if ((draft as any).source_email_subject || (draft as any).source_email_from || (draft as any).source_email_body) {
+          const fromRaw = String((draft as any).source_email_from ?? "");
+          const m = fromRaw.match(/^(.*)<([^>]+)>\s*$/);
+          const fromName = m ? m[1].trim().replace(/(^"|"$)/g, "") : null;
+          const fromEmail = m ? m[2].trim() : fromRaw.trim();
+          const { data: emailRow } = await admin.from("case_emails").insert({
+            case_id: newCase.id,
+            message_id: (draft as any).source_email_message_id ?? null,
+            from_email: fromEmail || "unknown@unknown",
+            from_name: fromName,
+            to_email: null,
+            subject: (draft as any).source_email_subject ?? "(kein Betreff)",
+            body_plain: (draft as any).source_email_body ?? "",
+            body_html: null,
+            received_at: (draft as any).created_at ?? new Date().toISOString(),
+            raw: null,
+          }).select("id").single();
+          emailRowId = emailRow?.id ?? null;
+        }
+
+        // b) Copy each draft attachment into the case-attachments bucket and
+        //    register it as a case_email_attachment so it appears on the case.
+        const { data: drAtts } = await admin
+          .from("mtiq_draft_attachments")
+          .select("file_name, mime_type, size_bytes, storage_path")
+          .eq("draft_id", draft_id);
+
+        for (const a of (drAtts ?? [])) {
+          try {
+            const dl = await admin.storage.from("mtiq-draft-attachments").download(a.storage_path);
+            if (dl.error || !dl.data) { console.error("draft download failed", a.storage_path, dl.error); continue; }
+            const buf = new Uint8Array(await dl.data.arrayBuffer());
+            const safe = String(a.file_name || "anhang.bin").replace(/[^a-zA-Z0-9._-]/g, "_");
+            const segment = emailRowId ? `email/${emailRowId}` : "mtiq-trigger";
+            const newPath = `${newCase.id}/${segment}/${Date.now()}-${safe}`;
+            const up = await admin.storage.from("case-attachments").upload(newPath, buf, {
+              contentType: a.mime_type || "application/octet-stream", upsert: false,
+            });
+            if (up.error) { console.error("case attachment upload failed", up.error.message); continue; }
+            await admin.from("case_email_attachments").insert({
+              email_id: emailRowId,
+              case_id: newCase.id,
+              file_name: a.file_name,
+              mime_type: a.mime_type,
+              size_bytes: a.size_bytes,
+              storage_path: newPath,
+            });
+          } catch (e) {
+            console.error("attachment forward error", e);
+          }
+        }
+      }
+    } catch (fwdErr) {
+      console.error("trigger email/attachment forward failed (non-fatal)", fwdErr);
+    }
+
     // Mark draft approved
     await client.from("mtiq_drafts").update({
       status: "approved",
