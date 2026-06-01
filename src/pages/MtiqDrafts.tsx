@@ -506,7 +506,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
           </div>
 
           {/* RIGHT — detail */}
-          <div className="overflow-y-auto bg-background/10 backdrop-blur-xl">
+          <div className="min-h-0 overflow-y-auto bg-background/10 backdrop-blur-xl">
             {!edit ? (
               <EmptyState />
             ) : (
