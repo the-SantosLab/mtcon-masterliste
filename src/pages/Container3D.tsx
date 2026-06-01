@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, ArrowUpRight } from "lucide-react";
+import { Shield, FolderArchive, Boxes, ArrowUpRight, Inbox } from "lucide-react";
 
 type Module = {
   href: string;
@@ -13,6 +13,15 @@ type Module = {
 };
 
 const MODULES: Module[] = [
+  {
+    href: "/inbox",
+    label: "Intelligent Inbox",
+    sub: "Eingang · KI-Verteiler · Triage",
+    desc: "Erster Schritt aller Eingänge: KI klassifiziert, extrahiert und verteilt automatisch an Vorgänge, Versicherungen, Dokumente oder ISSOS.",
+    icon: Inbox,
+    hue: "from-fuchsia-500/30 via-pink-500/10 to-transparent",
+    accent: "text-fuchsia-300",
+  },
   {
     href: "/insurance",
     label: "Versicherungen",
