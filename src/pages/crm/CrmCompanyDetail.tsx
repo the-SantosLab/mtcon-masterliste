@@ -94,7 +94,7 @@ export default function CrmCompanyDetail() {
             </Section>
           </div>
           <div className="mt-4">
-            <DocumentSection entityType="crm_company" entityId={company.id} />
+            <DocumentSection entityType="company" entityId={company.id} />
           </div>
         </TabsContent>
         <TabsContent value="protection" className="mt-4 max-w-3xl">
