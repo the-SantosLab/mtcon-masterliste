@@ -29,18 +29,18 @@ export default function InboxHub() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-full">
-        <Tabs value={initial} onValueChange={onChange} className="flex flex-col h-full">
-          <div className="px-4 md:px-6 pt-4 border-b border-border dark:border-white/5">
+      <div className="flex flex-col h-full min-h-0 -m-3 sm:-m-5 lg:-m-8">
+        <Tabs value={initial} onValueChange={onChange} className="flex flex-col h-full min-h-0">
+          <div className="px-4 md:px-6 pt-4 border-b border-border dark:border-white/5 shrink-0">
             <TabsList>
               <TabsTrigger value="documents">Dokumente (Intelligent Inbox)</TabsTrigger>
               <TabsTrigger value="mtiq">MTIQ Posteingang</TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="documents" className="flex-1 overflow-auto mt-0">
+          <TabsContent value="documents" className="flex-1 min-h-0 overflow-auto mt-0 p-3 sm:p-5 lg:p-8">
             <Inbox embedded />
           </TabsContent>
-          <TabsContent value="mtiq" className="flex-1 overflow-hidden mt-0">
+          <TabsContent value="mtiq" className="flex-1 min-h-0 overflow-hidden mt-0 data-[state=active]:flex flex-col">
             <MtiqDrafts embedded />
           </TabsContent>
         </Tabs>
