@@ -145,6 +145,7 @@ export default function CasesList() {
     setProjectFilter('all');
     setDeptFilter('all');
     setDueFilter('all');
+    setDateRangeFilter('all');
     setOnlyMine(false);
     try {
       localStorage.removeItem('casesFilter_statuses');
@@ -159,6 +160,7 @@ export default function CasesList() {
     projectFilter !== 'all' ||
     deptFilter !== 'all' ||
     dueFilter !== 'all' ||
+    dateRangeFilter !== 'all' ||
     onlyMine;
 
   const creatorDeptMap = Object.fromEntries(profiles.map(p => [p.id, p.department_id]));
