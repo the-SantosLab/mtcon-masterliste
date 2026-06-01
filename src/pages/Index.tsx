@@ -182,12 +182,41 @@ export default function Dashboard() {
     ? activeFilters
     : (Object.keys(FILTER_LABELS) as FilterKey[]);
 
+  const getDateRangeBounds = (filter: DateRangeFilter) => {
+    const now = new Date();
+    switch (filter) {
+      case 'lastMonth':
+        return { from: startOfMonth(subMonths(now, 1)), to: endOfMonth(subMonths(now, 1)) };
+      case 'last2Months':
+        return { from: startOfMonth(subMonths(now, 2)), to: endOfMonth(subMonths(now, 2)) };
+      case 'last3Months':
+        return { from: startOfMonth(subMonths(now, 2)), to: now };
+      case 'last6Months':
+        return { from: startOfMonth(subMonths(now, 5)), to: now };
+      default:
+        return null;
+    }
+  };
+
   // Pool für Drilldown / Säulen: aktive Vorgänge, die mindestens einen aktiven Filter erfüllen
   // Falls kein Filter aktiv -> alle aktiven Vorgänge
   const filteredActive = useMemo(() => {
-    if (activeFilters.length === 0) return active;
-    return active.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
-  }, [active, activeFilters, today, weekEnd]);
+    let pool = active;
+    if (activeFilters.length > 0) {
+      pool = pool.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
+    }
+    if (dateRangeFilter !== 'all') {
+      const bounds = getDateRangeBounds(dateRangeFilter);
+      if (bounds) {
+        pool = pool.filter(c => {
+          if (!c.created_at) return false;
+          const created = new Date(c.created_at);
+          return created >= bounds.from && created <= bounds.to;
+        });
+      }
+    }
+    return pool;
+  }, [active, activeFilters, today, weekEnd, dateRangeFilter]);
 
   // Säulendaten: pro Bucket je Status ein Wert (Stacked Bar)
   const weekChart = useMemo(() => {
