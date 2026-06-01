@@ -141,7 +141,7 @@ function MapInner() {
   const nodeCount = visibleNodes.filter((n) => !n.hidden).length;
 
   return (
-    <div className="relative flex h-[calc(100vh-3.5rem)] w-full flex-col bg-[hsl(230_30%_6%)]">
+    <div className="relative flex h-[calc(100vh-3.5rem)] w-full flex-col bg-[hsl(230_30%_6%)] -mx-3 sm:-mx-5 lg:-mx-8 -my-3 sm:-my-5 lg:-my-8" style={{ width: "auto" }}>
       {/* Background mesh */}
       <div
         aria-hidden
