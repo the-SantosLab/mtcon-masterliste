@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
   Tag,
   Calendar,
   RefreshCcw,
+  ArrowLeft,
 } from "lucide-react";
 
 type IssosDoc = {
