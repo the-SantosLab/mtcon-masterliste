@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ type View = 'login' | 'forgot';
 
 export default function Auth() {
   const { session, loading, signIn } = useAuth();
+  const location = useLocation();
   const [view, setView] = useState<View>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,10 +30,19 @@ export default function Auth() {
   const isBlockedSession = isCurrentTabSessionBlocked();
   const hasTabSessionToken = !!getLocalSessionToken();
 
+  // Ziel-URL nach erfolgreichem Login (z. B. via E-Mail-Deeplink)
+  const fromState = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+  const redirectTarget = fromState?.pathname
+    ? `${fromState.pathname}${fromState.search ?? ''}${fromState.hash ?? ''}`
+    : null;
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   if (session && hasTabSessionToken && !confirmTakeover && !isBlockedSession) {
     const mod = typeof window !== 'undefined' ? localStorage.getItem('mtcon.module') : null;
     const isCrmBeta = session.user?.email === 'js@santoslab.de';
+    if (redirectTarget && redirectTarget !== '/auth') {
+      return <Navigate to={redirectTarget} replace />;
+    }
     if (!isCrmBeta) {
       localStorage.removeItem('mtcon.module');
       return <Navigate to="/" replace />;

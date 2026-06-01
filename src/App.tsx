@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PortalAuthProvider, usePortalAuth } from "@/contexts/PortalAuthContext";
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
@@ -84,6 +84,7 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, enforceMfa = true }: { children: React.ReactNode; enforceMfa?: boolean }) {
   const { session, loading } = useAuth();
+  const location = useLocation();
   const [mfaState, setMfaState] = useState<'unknown' | 'ok' | 'required'>('unknown');
 
   useEffect(() => {
@@ -108,23 +109,25 @@ function ProtectedRoute({ children, enforceMfa = true }: { children: React.React
   }, [session, enforceMfa]);
 
   if (loading || (session && mfaState === 'unknown')) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace />;
-  if (mfaState === 'required') return <Navigate to="/mfa-challenge" replace />;
+  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace state={{ from: location }} />;
+  if (mfaState === 'required') return <Navigate to="/mfa-challenge" replace state={{ from: location }} />;
   return <>{children}</>;
 }
 
 function PortalProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, customer, loading } = usePortalAuth();
+  const location = useLocation();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session || !customer) return <Navigate to="/portal/auth" replace />;
+  if (!session || !customer) return <Navigate to="/portal/auth" replace state={{ from: location }} />;
   return <>{children}</>;
 }
 
 function CrmProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   const { allowed, loading: accessLoading } = useCrmAccess();
+  const location = useLocation();
   if (loading || accessLoading) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
-  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace />;
+  if (!session || isCurrentTabSessionBlocked()) return <Navigate to="/auth" replace state={{ from: location }} />;
   if (!allowed) return <CrmNoAccess />;
   return <>{children}</>;
 }

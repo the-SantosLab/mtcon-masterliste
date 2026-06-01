@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,11 @@ import mtconLogo from '@/assets/mtcon_logo.png';
 export default function MfaChallenge() {
   const { session, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromState = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+  const redirectTarget = fromState?.pathname
+    ? `${fromState.pathname}${fromState.search ?? ''}${fromState.hash ?? ''}`
+    : '/';
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -65,7 +70,7 @@ export default function MfaChallenge() {
     return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
   }
   if (!session) return <Navigate to="/auth" replace />;
-  if (!needsMfa) return <Navigate to="/" replace />;
+  if (!needsMfa) return <Navigate to={redirectTarget} replace />;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +80,7 @@ export default function MfaChallenge() {
     setSubmitting(false);
     if (error) { toast.error(error.message || 'Code ungültig'); return; }
     toast.success('Erfolgreich angemeldet');
-    navigate('/', { replace: true });
+    navigate(redirectTarget, { replace: true });
   };
 
   const cancel = async () => {
