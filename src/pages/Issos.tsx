@@ -312,25 +312,25 @@ export default function Issos() {
       </div>
 
       <Dialog open={!!active} onOpenChange={(o) => { if (!o) setActive(null); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="truncate">{active?.file_name}</DialogTitle>
+            <DialogTitle className="break-all pr-6 text-sm md:text-base">{active?.file_name}</DialogTitle>
           </DialogHeader>
           {active && (
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div><span className="text-muted-foreground">Typ:</span> {active.document_type || "—"}</div>
-                <div><span className="text-muted-foreground">Stichtag:</span> {active.snapshot_date || "—"}</div>
-                <div><span className="text-muted-foreground">Eingang:</span> {formatDate(active.received_at)}</div>
-                <div><span className="text-muted-foreground">Größe:</span> {formatBytes(active.file_size)}</div>
-                <div className="col-span-2"><span className="text-muted-foreground">Absender:</span> {active.source_email_from || "—"}</div>
-                <div className="col-span-2"><span className="text-muted-foreground">Betreff:</span> {active.source_email_subject || "—"}</div>
+            <div className="space-y-3 text-sm break-words">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="break-words"><span className="text-muted-foreground">Typ:</span> {active.document_type || "—"}</div>
+                <div className="break-words"><span className="text-muted-foreground">Stichtag:</span> {active.snapshot_date || "—"}</div>
+                <div className="break-words"><span className="text-muted-foreground">Eingang:</span> {formatDate(active.received_at)}</div>
+                <div className="break-words"><span className="text-muted-foreground">Größe:</span> {formatBytes(active.file_size)}</div>
+                <div className="sm:col-span-2 break-all"><span className="text-muted-foreground">Absender:</span> {active.source_email_from || "—"}</div>
+                <div className="sm:col-span-2 break-words"><span className="text-muted-foreground">Betreff:</span> {active.source_email_subject || "—"}</div>
               </div>
 
               {active.summary && (
                 <div>
                   <div className="text-muted-foreground mb-1">Zusammenfassung</div>
-                  <p className="leading-relaxed">{active.summary}</p>
+                  <p className="leading-relaxed whitespace-pre-wrap break-words max-h-60 overflow-y-auto rounded border bg-muted/20 p-2 text-xs">{active.summary}</p>
                 </div>
               )}
 
