@@ -16,11 +16,13 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
 type FilterKey = 'open' | 'in_progress' | 'overdue' | 'today' | 'week';
 type ChartRange = 'week' | 'month' | 'year';
+type DateRangeFilter = 'all' | 'lastMonth' | 'last2Months' | 'last3Months' | 'last6Months';
 
 const FILTER_LABELS: Record<FilterKey, string> = {
   open: 'Offen',
