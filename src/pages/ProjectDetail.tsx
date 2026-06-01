@@ -22,6 +22,7 @@ import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 
 type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at' | 'urgency';
 
@@ -655,6 +656,8 @@ export default function ProjectDetail() {
               </div>
               <ProjectActivityTimeline projectId={project.id} refreshKey={activityRefreshKey} />
             </div>
+
+            <DocumentSection entityType="project" entityId={project.id} />
           </div>
         </div>
       </div>

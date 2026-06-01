@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ProjectProtectionTab } from '@/components/crm/ProjectProtectionTab';
 import { LookalikeDialog } from '@/components/crm/LookalikeDialog';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 
 export default function CrmCompanyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -91,6 +92,9 @@ export default function CrmCompanyDetail() {
                 </ul>
               )}
             </Section>
+          </div>
+          <div className="mt-4">
+            <DocumentSection entityType="company" entityId={company.id} />
           </div>
         </TabsContent>
         <TabsContent value="protection" className="mt-4 max-w-3xl">

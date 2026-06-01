@@ -173,6 +173,8 @@ function AuthenticatedApp() {
         <Route path="/insurance" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
         <Route path="/insurance/:id" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+        <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+        <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/2fa-anleitung" element={<ProtectedRoute enforceMfa={false}><MfaGuide /></ProtectedRoute>} />
         <Route path="/modules" element={<ProtectedRoute><ModuleSelect /></ProtectedRoute>} />

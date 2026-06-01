@@ -28,6 +28,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { FileAttachments } from '@/components/FileAttachments';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { CompleteCaseDialog } from '@/components/CompleteCaseDialog';
@@ -1009,6 +1010,8 @@ export default function CaseDetail() {
                 <CaseEmails caseId={c.id} />
               </div>
             </div>
+
+            <DocumentSection entityType="case" entityId={c.id} title="Dokumenten-Repository" />
 
             {/* Email-Adresse für diesen Vorgang */}
             <div className="rounded-md border border-border bg-card p-5 space-y-2">
