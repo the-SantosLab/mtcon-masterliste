@@ -50,6 +50,7 @@ import MtiqDrafts from "./pages/MtiqDrafts";
 import Inbox from "./pages/Inbox";
 import InboxHub from "./pages/InboxHub";
 import AdminDocumentTypes from "./pages/AdminDocumentTypes";
+import Issos from "./pages/Issos";
 import AdminActionRules from "./pages/AdminActionRules";
 import AdminInboxStats from "./pages/AdminInboxStats";
 import PortalAuth from "./pages/portal/PortalAuth";
