@@ -243,7 +243,7 @@ export function buildGraph(input: BuildInputs): { nodes: Node<MapNodeData>[]; ed
   if (needsLayout.length > 0) {
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
-    g.setGraph({ rankdir: "LR", nodesep: 40, ranksep: 160, ranker: "tight-tree" });
+    g.setGraph({ rankdir: "TB", nodesep: 30, ranksep: 110, ranker: "tight-tree" });
     for (const n of needsLayout) g.setNode(n.id, { width: 210, height: 92 });
     for (const e of edges) {
       if (needsLayout.find((n) => n.id === e.source) || needsLayout.find((n) => n.id === e.target)) {
