@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { Pencil, Plus, Building2, X, UserPlus } from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
+import { useLedDepartments } from '@/hooks/useDeptLead';
 
 interface Department {
   id: string;
@@ -30,6 +31,7 @@ interface Profile {
 
 export default function AdminDepartments() {
   const { isAdmin, loading: authLoading } = useAuth();
+  const { ledIds, isLead, loading: leadLoading } = useLedDepartments();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [members, setMembers] = useState<{ id: string; department_id: string; user_id: string; role: 'read' | 'write' | 'lead' }[]>([]);
@@ -55,7 +57,11 @@ export default function AdminDepartments() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  if (!authLoading && !isAdmin) return <Navigate to="/" replace />;
+  if (!authLoading && !leadLoading && !isAdmin && !isLead) return <Navigate to="/" replace />;
+
+  // Non-admin leads only see their own departments
+  const visibleDepartments = isAdmin ? departments : departments.filter(d => ledIds.includes(d.id));
+  const canManageDept = (deptId: string) => isAdmin || ledIds.includes(deptId);
 
   const openCreate = () => {
     setForm({ name: '', code: '', manager_user_id: '' });
