@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package } from "lucide-react";
+import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
 
 type Module = {
   href: string;
@@ -64,6 +65,13 @@ const SATELLITES: Module[] = [
 
 export default function Container3D() {
   const navigate = useNavigate();
+  const { counts, total } = useContainerUnread();
+
+  const go = (href: string) => {
+    markContainerSeen(href);
+    navigate(href);
+  };
+
 
   // Layout (SVG viewBox coordinate space)
   const VB = 1000;
@@ -107,9 +115,17 @@ export default function Container3D() {
               <span className="inline-block h-1 w-1 rounded-full bg-fuchsia-400 animate-pulse" />
               Neural Storage Layer · v2
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white">
-              3D Container
-            </h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white">
+                3D Container
+              </h1>
+              {total > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.2em] text-fuchsia-200 shadow-[0_0_20px_hsl(320_90%_60%/0.35)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-300 animate-pulse" />
+                  Neuigkeiten · {total}
+                </span>
+              )}
+            </div>
             <p className="text-xs md:text-sm text-white/60 max-w-2xl">
               Die Intelligent Inbox ist der zentrale Verteiler. Von hier fließt jeder Eingang
               automatisch in das passende Modul.
@@ -236,10 +252,11 @@ export default function Container3D() {
             {SATELLITES.map((s, i) => {
               const p = toXY(s.angle, R);
               const Icon = s.icon;
+              const unread = counts[s.href] ?? 0;
               return (
                 <button
                   key={s.href}
-                  onClick={() => navigate(s.href)}
+                  onClick={() => go(s.href)}
                   className="group absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl transition-transform hover:scale-110 focus:outline-none"
                   style={{
                     left: `${(p.x * 100) / VB}%`,
@@ -248,7 +265,7 @@ export default function Container3D() {
                     height: `${(NODE_R * 2 * 100) / VB}%`,
                     animation: `fade-in 0.6s ease-out ${i * 120}ms both`,
                   }}
-                  title={s.label}
+                  title={unread > 0 ? `${s.label} · ${unread} neu` : s.label}
                 >
                   <span
                     className="absolute inset-0 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-opacity"
@@ -273,6 +290,18 @@ export default function Container3D() {
                     />
                     <span className="text-[10px] font-semibold leading-tight">{s.label}</span>
                   </span>
+
+                  {/* unread badge (overlapping top-right) */}
+                  {unread > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 z-10 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold text-white border border-white/30 shadow-[0_0_12px_hsl(0_85%_55%/0.7)] tabular-nums"
+                      style={{
+                        background: `linear-gradient(135deg, hsl(${s.color}), hsl(${s.color} / 0.7))`,
+                      }}
+                    >
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
 
                   {/* label below */}
                   <span className="absolute left-1/2 top-full -translate-x-1/2 mt-2 whitespace-nowrap text-[9px] tracking-[0.2em] uppercase text-white/45">
