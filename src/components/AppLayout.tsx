@@ -117,8 +117,7 @@ function CasesUnreadBadge() {
 }
 
 function ContainerUnreadBadge() {
-  const { counts } = useContainerUnread();
-  const total = Object.values(counts).reduce((s, n) => s + (n || 0), 0);
+  const { total } = useContainerUnread();
   if (!total) return null;
   return (
     <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-foreground text-background text-[10px] font-semibold tabular-nums leading-none">
