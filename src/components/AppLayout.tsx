@@ -8,6 +8,7 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MfaReminderBanner } from '@/components/MfaReminderBanner';
 import { supabase } from '@/integrations/supabase/client';
+import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
