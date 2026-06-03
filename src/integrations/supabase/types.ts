@@ -4638,6 +4638,7 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: never; Returns: boolean }
+      is_any_dept_lead: { Args: { p_uid?: string }; Returns: boolean }
       is_board_member: {
         Args: { p_board_id: string; p_uid?: string }
         Returns: boolean
@@ -4649,6 +4650,10 @@ export type Database = {
       is_case_frozen: { Args: { p_case_id: string }; Returns: boolean }
       is_case_watcher: {
         Args: { p_case_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      is_dept_lead: {
+        Args: { p_dept_id: string; p_uid?: string }
         Returns: boolean
       }
       is_direct_report: {
