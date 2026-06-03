@@ -1014,7 +1014,7 @@ export default function CaseDetail() {
               </div>
             </div>
 
-            <DocumentSection entityType="case" entityId={c.id} title="Dokumenten-Repository" />
+            <DocumentSection entityType="case" entityId={c.id} title="3D-Container" />
 
             {/* Email-Adresse für diesen Vorgang */}
             <div className="rounded-md border border-border bg-card p-5 space-y-2">
