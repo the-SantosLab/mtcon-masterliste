@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { Pencil, Plus, Building2, X, UserPlus } from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
+import { useLedDepartments } from '@/hooks/useDeptLead';
 
 interface Department {
   id: string;
@@ -30,6 +31,7 @@ interface Profile {
 
 export default function AdminDepartments() {
   const { isAdmin, loading: authLoading } = useAuth();
+  const { ledIds, isLead, loading: leadLoading } = useLedDepartments();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [members, setMembers] = useState<{ id: string; department_id: string; user_id: string; role: 'read' | 'write' | 'lead' }[]>([]);
@@ -55,7 +57,11 @@ export default function AdminDepartments() {
 
   useEffect(() => { fetchAll(); }, []);
 
-  if (!authLoading && !isAdmin) return <Navigate to="/" replace />;
+  if (!authLoading && !leadLoading && !isAdmin && !isLead) return <Navigate to="/" replace />;
+
+  // Non-admin leads only see their own departments
+  const visibleDepartments = isAdmin ? departments : departments.filter(d => ledIds.includes(d.id));
+  const canManageDept = (deptId: string) => isAdmin || ledIds.includes(deptId);
 
   const openCreate = () => {
     setForm({ name: '', code: '', manager_user_id: '' });
@@ -128,51 +134,57 @@ export default function AdminDepartments() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Abteilungen</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Abteilungen und Teamstruktur verwalten</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isAdmin ? 'Abteilungen und Teamstruktur verwalten' : 'Mitglieder Ihrer Abteilung verwalten'}
+            </p>
           </div>
-          <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5">
-            <Plus className="h-3.5 w-3.5" />Abteilung anlegen
-          </Button>
-        </div>
-
-        <div className="rounded-md border border-border bg-card overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-xs text-muted-foreground">Laden…</div>
-          ) : departments.length === 0 ? (
-            <div className="p-8 text-center">
-              <Building2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-xs text-muted-foreground">Noch keine Abteilungen angelegt</p>
-            </div>
-          ) : (
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Abteilungsleiter</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {departments.map(d => (
-                  <tr key={d.id} className="hover:bg-muted/40 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-foreground">{d.name}</td>
-                    <td className="px-4 py-2.5 font-mono text-muted-foreground">{d.code}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{managerName(d.manager_user_id)}</td>
-                    <td className="px-4 py-2.5">
-                      <button onClick={() => openEdit(d)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {isAdmin && (
+            <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5">
+              <Plus className="h-3.5 w-3.5" />Abteilung anlegen
+            </Button>
           )}
         </div>
 
+        {isAdmin && (
+          <div className="rounded-md border border-border bg-card overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center text-xs text-muted-foreground">Laden…</div>
+            ) : departments.length === 0 ? (
+              <div className="p-8 text-center">
+                <Building2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-xs text-muted-foreground">Noch keine Abteilungen angelegt</p>
+              </div>
+            ) : (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Abteilungsleiter</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {departments.map(d => (
+                    <tr key={d.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="px-4 py-2.5 font-medium text-foreground">{d.name}</td>
+                      <td className="px-4 py-2.5 font-mono text-muted-foreground">{d.code}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{managerName(d.manager_user_id)}</td>
+                      <td className="px-4 py-2.5">
+                        <button onClick={() => openEdit(d)} className="text-muted-foreground hover:text-foreground transition-colors">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
         {/* Team-Übersicht je Abteilung */}
-        {!loading && departments.length > 0 && (() => {
+        {!loading && visibleDepartments.length > 0 && (() => {
           const ROLE_LABEL: Record<'read' | 'write' | 'lead', string> = {
             read: 'Lesen', write: 'Schreiben', lead: 'Leitung',
           };
@@ -205,7 +217,7 @@ export default function AdminDepartments() {
           return (
             <div className="space-y-4">
               <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams &amp; Rechte</h2>
-              {departments.map(d => {
+              {visibleDepartments.map(d => {
                 const rows = members
                   .filter(m => m.department_id === d.id)
                   .map(m => ({ row: m, profile: profiles.find(p => p.id === m.user_id) }))
@@ -214,9 +226,10 @@ export default function AdminDepartments() {
                     const order = { lead: 0, write: 1, read: 2 } as const;
                     return order[a.row.role] - order[b.row.role];
                   });
-                if (rows.length === 0 && addMemberFor !== d.id) return null;
+                if (rows.length === 0 && addMemberFor !== d.id && !canManageDept(d.id)) return null;
                 const assignedIds = new Set(rows.map(r => r.profile!.id));
                 const candidates = profiles.filter(p => !assignedIds.has(p.id));
+                const canManage = canManageDept(d.id);
                 return (
                   <div key={d.id} className="rounded-md border border-border bg-card p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -225,10 +238,12 @@ export default function AdminDepartments() {
                         <h3 className="text-sm font-medium text-foreground">{d.name}</h3>
                         <span className="text-[11px] text-muted-foreground">({rows.length})</span>
                       </div>
-                      <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1.5"
-                        onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); setAddMemberRole('write'); }}>
-                        <UserPlus className="h-3 w-3" />Mitglied hinzufügen
-                      </Button>
+                      {canManage && (
+                        <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1.5"
+                          onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); setAddMemberRole('write'); }}>
+                          <UserPlus className="h-3 w-3" />Mitglied hinzufügen
+                        </Button>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {rows.map(({ row, profile }) => (
@@ -238,19 +253,25 @@ export default function AdminDepartments() {
                             <p className="text-sm font-medium text-foreground truncate">{profile!.display_name}</p>
                             <p className="text-[11px] font-mono text-muted-foreground">{profile!.short_code}</p>
                           </div>
-                          <Select value={row.role} onValueChange={v => updateRole(row.id, v as any)}>
-                            <SelectTrigger className={`h-6 px-2 text-[10px] gap-1 border-0 w-auto min-w-0 ${ROLE_CHIP[row.role]}`}>
-                              <SelectValue>{ROLE_LABEL[row.role]}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="read" className="text-xs">Lesen</SelectItem>
-                              <SelectItem value="write" className="text-xs">Schreiben</SelectItem>
-                              <SelectItem value="lead" className="text-xs">Leitung</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <button onClick={() => removeMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                          {canManage ? (
+                            <Select value={row.role} onValueChange={v => updateRole(row.id, v as any)}>
+                              <SelectTrigger className={`h-6 px-2 text-[10px] gap-1 border-0 w-auto min-w-0 ${ROLE_CHIP[row.role]}`}>
+                                <SelectValue>{ROLE_LABEL[row.role]}</SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="read" className="text-xs">Lesen</SelectItem>
+                                <SelectItem value="write" className="text-xs">Schreiben</SelectItem>
+                                <SelectItem value="lead" className="text-xs">Leitung</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className={`h-6 px-2 inline-flex items-center text-[10px] rounded ${ROLE_CHIP[row.role]}`}>{ROLE_LABEL[row.role]}</span>
+                          )}
+                          {canManage && (
+                            <button onClick={() => removeMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>

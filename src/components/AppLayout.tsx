@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLedDepartments } from '@/hooks/useDeptLead';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -153,6 +154,7 @@ const adminItems = [
 export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
+  const { isLead } = useLedDepartments();
   const { preferences, setTheme, setCompactTables } = usePreferences();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -269,7 +271,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           )}
 
-          {isAdmin && (
+          {(isAdmin || isLead) && (
             <>
               <div className="border-t border-sidebar-border my-1" />
               <button
@@ -279,11 +281,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Settings className="h-4 w-4" />Verwaltung
                 <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', adminOpen && 'rotate-180')} />
               </button>
-              {adminOpen && adminItems.filter(i => !(i as any).masterOnly || isMaster).map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
-                  <item.icon className="h-4 w-4" />{item.label}
-                </Link>
-              ))}
+              {adminOpen && adminItems
+                .filter(i => isAdmin ? (!(i as any).masterOnly || isMaster) : i.href === '/admin/departments')
+                .map(item => (
+                  <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                    <item.icon className="h-4 w-4" />{item.label}
+                  </Link>
+                ))}
             </>
           )}
           <div className="border-t border-sidebar-border my-1" />
