@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ShieldCheck } from 'lucide-react';
 import { clearStoredAuthRedirect, getRedirectParam, getStoredAuthRedirect } from '@/lib/authRedirect';
+import { isSessionPolicyExemptEmail } from '@/lib/authExemptions';
 import mtconLogo from '@/assets/mtcon_logo.png';
 
 export default function MfaChallenge() {
@@ -30,7 +31,7 @@ export default function MfaChallenge() {
     ranRef.current = true;
     (async () => {
       // 2FA-Enforcement deaktiviert für Dev-/Ausnahme-Accounts.
-      if (session.user?.email === 'js@santoslab.de' || session.user?.email === 'nathalie.kress@mtcon.eu') {
+      if (isSessionPolicyExemptEmail(session.user?.email)) {
         setNeedsMfa(false);
         return;
       }

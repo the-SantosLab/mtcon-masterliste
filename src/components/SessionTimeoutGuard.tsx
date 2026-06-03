@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { isSessionPolicyExemptEmail } from '@/lib/authExemptions';
 
 function formatMs(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -17,7 +18,7 @@ export function SessionTimeoutGuard() {
   const location = useLocation();
   const isAuthFlow = location.pathname === '/auth' || location.pathname === '/reset-password' || location.pathname === '/mfa-challenge';
   // Single-Session-Enforcement deaktiviert für js@santoslab.de (Dev-Account).
-  const enforcementExempt = user?.email === 'js@santoslab.de' || user?.email === 'nathalie.kress@mtcon.eu';
+  const enforcementExempt = isSessionPolicyExemptEmail(user?.email);
   const { warningOpen, remainingMs, stayLoggedIn, logoutNow } = useSessionTimeout(!!session);
   useSessionEnforcement(!!session && !isAuthFlow && !enforcementExempt, user?.id);
 

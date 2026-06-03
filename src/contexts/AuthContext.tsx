@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import { clearSessionEnforcementState } from '@/hooks/useSessionEnforcement';
+import { isSessionPolicyExemptEmail } from '@/lib/authExemptions';
 
 type UserProfile = Tables<'users_profile'>;
 type AppRole = Enums<'app_role'>;
@@ -90,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Auto-Logout deaktiviert für Dev-/Ausnahme-Accounts.
         const currentEmail = session?.user?.email
           ?? (() => { try { return JSON.parse(localStorage.getItem('sb-tfzwssplxetptxnhrxse-auth-token') || 'null')?.user?.email ?? null; } catch { return null; } })();
-        if (currentEmail === 'js@santoslab.de' || currentEmail === 'nathalie.kress@mtcon.eu') return;
+        if (isSessionPolicyExemptEmail(currentEmail)) return;
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
