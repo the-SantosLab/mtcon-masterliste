@@ -469,6 +469,22 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       message: `Unteraufgabe „${task.title}" erledigt: ${note}`,
     } as any);
 
+    // Bisherigen Bearbeiter als Watcher des Vorgangs eintragen (lesender Zugriff)
+    if (task.assigned_to) {
+      const { data: caseRow } = await supabase
+        .from('cases')
+        .select('watchers')
+        .eq('id', caseId)
+        .maybeSingle();
+      const current: string[] = ((caseRow as any)?.watchers as string[] | null) || [];
+      if (!current.includes(task.assigned_to)) {
+        await supabase
+          .from('cases')
+          .update({ watchers: [...current, task.assigned_to] } as any)
+          .eq('id', caseId);
+      }
+    }
+
     await autoForward(task);
 
     // Notify watchers via email (fire-and-forget)
