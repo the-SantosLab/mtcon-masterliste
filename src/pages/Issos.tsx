@@ -356,15 +356,17 @@ export default function Issos() {
                 </div>
               )}
 
-              <div>
+              <div className="min-w-0">
                 <div className="text-muted-foreground mb-1">Interne Notiz</div>
                 <Textarea
                   value={notesDraft}
                   onChange={(e) => setNotesDraft(e.target.value)}
                   rows={3}
                   placeholder="Bemerkung hinzufügen …"
+                  className="w-full resize-none block"
                 />
               </div>
+
 
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-xs">Status:</span>
