@@ -981,15 +981,13 @@ export default function CaseDetail() {
             )}
 
             {/* Watchers */}
-            {!isViewer && (
-              <WatchersSection
-                caseId={c.id}
-                watchers={(c.watchers as string[] | null) || []}
-                profiles={profiles}
-                canEdit={canEdit && !isTerminalStatus(c.status)}
-                onChange={refresh}
-              />
-            )}
+            <WatchersSection
+              caseId={c.id}
+              watchers={(c.watchers as string[] | null) || []}
+              profiles={profiles}
+              canEdit={canEdit && !isTerminalStatus(c.status)}
+              onChange={refresh}
+            />
 
             {/* Tasks checklist */}
             <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} lockMode={((c as any).lock_mode === 'soft' ? 'soft' : 'hard')} />
