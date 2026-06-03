@@ -10,6 +10,7 @@ import { PortalAuthProvider, usePortalAuth } from "@/contexts/PortalAuthContext"
 import { PreferencesProvider } from "@/contexts/PreferencesContext";
 import { isCurrentTabSessionBlocked } from "@/hooks/useSessionEnforcement";
 import { storeAuthRedirect } from "@/lib/authRedirect";
+import { isSessionPolicyExemptEmail } from "@/lib/authExemptions";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import CasesList from "./pages/CasesList";
@@ -94,8 +95,8 @@ function ProtectedRoute({ children, enforceMfa = true }: { children: React.React
   useEffect(() => {
     if (!session) { setMfaState('unknown'); return; }
     if (!enforceMfa) { setMfaState('ok'); return; }
-    // 2FA-Enforcement deaktiviert für js@santoslab.de (Dev-Account).
-    if (session.user?.email === 'js@santoslab.de') { setMfaState('ok'); return; }
+    // 2FA-Enforcement deaktiviert für Dev-/Ausnahme-Accounts.
+    if (isSessionPolicyExemptEmail(session.user?.email)) { setMfaState('ok'); return; }
     let cancelled = false;
     (async () => {
       const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
