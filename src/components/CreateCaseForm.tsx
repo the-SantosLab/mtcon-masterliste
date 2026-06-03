@@ -420,8 +420,9 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
 
   const submit = async () => {
     if (!form.project_name) { toast.error('Projektname ist Pflicht'); setStep(1); return; }
+    if (!form.department_id) { toast.error('Abteilung ist Pflicht'); setStep(1); return; }
     setSaving(true);
-    const finalDeptId = form.team_id || form.department_id || null;
+    const finalDeptId = form.team_id || form.department_id;
     const tplForCase = pendingTemplateId ? templates.find(t => t.id === pendingTemplateId) : null;
     const { data: newCase, error } = await supabase.from('cases').insert({
       project_name: form.project_name,
