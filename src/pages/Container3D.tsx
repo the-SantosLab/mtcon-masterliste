@@ -252,10 +252,11 @@ export default function Container3D() {
             {SATELLITES.map((s, i) => {
               const p = toXY(s.angle, R);
               const Icon = s.icon;
+              const unread = counts[s.href] ?? 0;
               return (
                 <button
                   key={s.href}
-                  onClick={() => navigate(s.href)}
+                  onClick={() => go(s.href)}
                   className="group absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl transition-transform hover:scale-110 focus:outline-none"
                   style={{
                     left: `${(p.x * 100) / VB}%`,
@@ -264,7 +265,7 @@ export default function Container3D() {
                     height: `${(NODE_R * 2 * 100) / VB}%`,
                     animation: `fade-in 0.6s ease-out ${i * 120}ms both`,
                   }}
-                  title={s.label}
+                  title={unread > 0 ? `${s.label} · ${unread} neu` : s.label}
                 >
                   <span
                     className="absolute inset-0 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-opacity"
@@ -289,6 +290,18 @@ export default function Container3D() {
                     />
                     <span className="text-[10px] font-semibold leading-tight">{s.label}</span>
                   </span>
+
+                  {/* unread badge (overlapping top-right) */}
+                  {unread > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 z-10 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold text-white border border-white/30 shadow-[0_0_12px_hsl(0_85%_55%/0.7)] tabular-nums"
+                      style={{
+                        background: `linear-gradient(135deg, hsl(${s.color}), hsl(${s.color} / 0.7))`,
+                      }}
+                    >
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
 
                   {/* label below */}
                   <span className="absolute left-1/2 top-full -translate-x-1/2 mt-2 whitespace-nowrap text-[9px] tracking-[0.2em] uppercase text-white/45">
