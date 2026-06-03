@@ -8,6 +8,7 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MfaReminderBanner } from '@/components/MfaReminderBanner';
 import { supabase } from '@/integrations/supabase/client';
+import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
@@ -111,6 +112,16 @@ function CasesUnreadBadge() {
   return (
     <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-foreground text-background text-[10px] font-semibold tabular-nums leading-none">
       {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
+function ContainerUnreadBadge() {
+  const { total } = useContainerUnread();
+  if (!total) return null;
+  return (
+    <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-foreground text-background text-[10px] font-semibold tabular-nums leading-none">
+      {total > 99 ? '99+' : total}
     </span>
   );
 }
@@ -261,6 +272,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
             <FolderArchive className="h-4 w-4" />
             <span className="flex-1">3D Container</span>
+            <ContainerUnreadBadge />
+
           </Link>
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
 
