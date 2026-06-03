@@ -71,10 +71,10 @@ export default function SupportTickets() {
   const [profiles, setProfiles] = useState<{ id: string; display_name: string; short_code: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'intern' | 'extern'>('all');
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const [priorityFilter, setPriorityFilter] = useState<Set<string>>(new Set());
+  const [assigneeFilter, setAssigneeFilter] = useState<Set<string>>(new Set());
+  const [sourceFilter, setSourceFilter] = useState<Set<string>>(new Set());
   const [inviteOpen, setInviteOpen] = useState(false);
   const [testingWa, setTestingWa] = useState(false);
 
