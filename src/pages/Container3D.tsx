@@ -115,9 +115,17 @@ export default function Container3D() {
               <span className="inline-block h-1 w-1 rounded-full bg-fuchsia-400 animate-pulse" />
               Neural Storage Layer · v2
             </div>
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white">
-              3D Container
-            </h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white">
+                3D Container
+              </h1>
+              {total > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.2em] text-fuchsia-200 shadow-[0_0_20px_hsl(320_90%_60%/0.35)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-300 animate-pulse" />
+                  Neuigkeiten · {total}
+                </span>
+              )}
+            </div>
             <p className="text-xs md:text-sm text-white/60 max-w-2xl">
               Die Intelligent Inbox ist der zentrale Verteiler. Von hier fließt jeder Eingang
               automatisch in das passende Modul.
