@@ -297,7 +297,10 @@ ${aiBody || "(leer)"}`;
     draft: null,
   };
   const targetFn = routeTo[aiRoute];
-  if (targetFn) {
+  // WICHTIG: "case" nur weiterleiten, wenn auch eine Vorgangsnummer (VOR-YYYY-NNNN)
+  // existiert – sonst verwirft receive-email die Mail still ("no case_no found").
+  // Neue/unbekannte Vorgänge fallen stattdessen auf die MTIQ-Draft-Erstellung zurück.
+  if (targetFn && aiRoute !== "case") {
     try {
       const fwd = await fetch(`${SUPABASE_URL}/functions/v1/${targetFn}`, {
         method: "POST",
@@ -312,6 +315,9 @@ ${aiBody || "(leer)"}`;
     } catch (e) {
       console.error(`AI-Router forward to ${targetFn} failed`, e);
     }
+  }
+  if (targetFn && aiRoute === "case") {
+    console.log("AI-Router: 'case' ohne VOR-Nummer → fällt auf MTIQ-Draft zurück");
   }
 
 
