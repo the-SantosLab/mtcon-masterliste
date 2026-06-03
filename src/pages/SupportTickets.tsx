@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Headphones, AlertCircle, CheckCircle, Clock, MessageSquare, UserPlus, Loader2, Send } from 'lucide-react';
+import { Search, Headphones, AlertCircle, CheckCircle, Clock, MessageSquare, UserPlus, Loader2, Send, Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -69,10 +71,10 @@ export default function SupportTickets() {
   const [profiles, setProfiles] = useState<{ id: string; display_name: string; short_code: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [assigneeFilter, setAssigneeFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'intern' | 'extern'>('all');
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const [priorityFilter, setPriorityFilter] = useState<Set<string>>(new Set());
+  const [assigneeFilter, setAssigneeFilter] = useState<Set<string>>(new Set());
+  const [sourceFilter, setSourceFilter] = useState<Set<string>>(new Set());
   const [inviteOpen, setInviteOpen] = useState(false);
   const [testingWa, setTestingWa] = useState(false);
 
@@ -120,11 +122,13 @@ export default function SupportTickets() {
   const reporterById = (id: string | null) => id ? profiles.find(p => p.id === id) : null;
 
   const filtered = tickets.filter(t => {
-    if (sourceFilter !== 'all' && (t.source ?? 'extern') !== sourceFilter) return false;
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
-    if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
-    if (assigneeFilter === 'unassigned' && t.assigned_to !== null) return false;
-    if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && t.assigned_to !== assigneeFilter) return false;
+    if (sourceFilter.size > 0 && !sourceFilter.has(t.source ?? 'extern')) return false;
+    if (statusFilter.size > 0 && !statusFilter.has(t.status)) return false;
+    if (priorityFilter.size > 0 && !priorityFilter.has(t.priority)) return false;
+    if (assigneeFilter.size > 0) {
+      const key = t.assigned_to ?? '__unassigned__';
+      if (!assigneeFilter.has(key)) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const reporter = reporterById(t.reporter_user_id);
@@ -210,37 +214,57 @@ export default function SupportTickets() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche" className="pl-9 h-8 text-xs" />
           </div>
-          <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
-            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Quelle" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Quellen</SelectItem>
-              <SelectItem value="extern">Extern (Kunde)</SelectItem>
-              <SelectItem value="intern">Intern (Bug/Idee)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Status</SelectItem>
-              {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Priorität" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle</SelectItem>
-              {Object.entries(PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle</SelectItem>
-              <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
-              {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.short_code}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <MultiFilter
+            label="Quelle"
+            options={[
+              { value: 'extern', label: 'Extern (Kunde)' },
+              { value: 'intern', label: 'Intern (Bug/Idee)' },
+            ]}
+            selected={sourceFilter}
+            onChange={setSourceFilter}
+            width="w-[140px]"
+          />
+          <MultiFilter
+            label="Status"
+            options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+            selected={statusFilter}
+            onChange={setStatusFilter}
+            width="w-[150px]"
+          />
+          <MultiFilter
+            label="Priorität"
+            options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))}
+            selected={priorityFilter}
+            onChange={setPriorityFilter}
+            width="w-[130px]"
+          />
+          <MultiFilter
+            label="Bearbeiter"
+            options={[
+              { value: '__unassigned__', label: 'Nicht zugewiesen' },
+              ...profiles.map(p => ({ value: p.id, label: p.short_code })),
+            ]}
+            selected={assigneeFilter}
+            onChange={setAssigneeFilter}
+            width="w-[150px]"
+          />
+          {(sourceFilter.size + statusFilter.size + priorityFilter.size + assigneeFilter.size) > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs"
+              onClick={() => {
+                setSourceFilter(new Set());
+                setStatusFilter(new Set());
+                setPriorityFilter(new Set());
+                setAssigneeFilter(new Set());
+              }}
+            >
+              <X className="h-3 w-3 mr-1" /> Zurücksetzen
+            </Button>
+          )}
         </div>
+
 
         {/* Table */}
         <div className="rounded-md border border-border bg-card overflow-x-auto">
@@ -363,5 +387,76 @@ function InviteCustomerForm({ userId, onDone }: { userId: string; onDone: () => 
         Einladen
       </Button>
     </form>
+  );
+}
+
+function MultiFilter({
+  label,
+  options,
+  selected,
+  onChange,
+  width = 'w-[140px]',
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  selected: Set<string>;
+  onChange: (s: Set<string>) => void;
+  width?: string;
+}) {
+  const toggle = (v: string) => {
+    const next = new Set(selected);
+    if (next.has(v)) next.delete(v); else next.add(v);
+    onChange(next);
+  };
+  const count = selected.size;
+  const display = count === 0
+    ? `Alle ${label}`
+    : count === 1
+      ? options.find(o => o.value === Array.from(selected)[0])?.label ?? label
+      : `${label}: ${count}`;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={`${width} h-8 text-xs justify-between font-normal ${count > 0 ? 'border-primary/60' : ''}`}
+        >
+          <span className="flex items-center gap-1.5 truncate">
+            <Filter className="h-3 w-3 shrink-0" />
+            <span className="truncate">{display}</span>
+          </span>
+          {count > 0 && (
+            <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-1">{count}</Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1" align="start">
+        <div className="max-h-72 overflow-y-auto">
+          {options.map(o => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => toggle(o.value)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-accent rounded-sm text-left"
+            >
+              <Checkbox checked={selected.has(o.value)} className="h-3.5 w-3.5" />
+              <span className="truncate">{o.label}</span>
+            </button>
+          ))}
+        </div>
+        {selected.size > 0 && (
+          <div className="border-t border-border mt-1 pt-1">
+            <button
+              type="button"
+              onClick={() => onChange(new Set())}
+              className="w-full text-xs px-2 py-1.5 hover:bg-accent rounded-sm text-muted-foreground text-left"
+            >
+              Auswahl löschen
+            </button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
