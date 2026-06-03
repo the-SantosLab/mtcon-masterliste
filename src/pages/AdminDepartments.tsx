@@ -134,48 +134,54 @@ export default function AdminDepartments() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Abteilungen</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Abteilungen und Teamstruktur verwalten</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isAdmin ? 'Abteilungen und Teamstruktur verwalten' : 'Mitglieder Ihrer Abteilung verwalten'}
+            </p>
           </div>
-          <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5">
-            <Plus className="h-3.5 w-3.5" />Abteilung anlegen
-          </Button>
-        </div>
-
-        <div className="rounded-md border border-border bg-card overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-xs text-muted-foreground">Laden…</div>
-          ) : departments.length === 0 ? (
-            <div className="p-8 text-center">
-              <Building2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-xs text-muted-foreground">Noch keine Abteilungen angelegt</p>
-            </div>
-          ) : (
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Abteilungsleiter</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {departments.map(d => (
-                  <tr key={d.id} className="hover:bg-muted/40 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-foreground">{d.name}</td>
-                    <td className="px-4 py-2.5 font-mono text-muted-foreground">{d.code}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{managerName(d.manager_user_id)}</td>
-                    <td className="px-4 py-2.5">
-                      <button onClick={() => openEdit(d)} className="text-muted-foreground hover:text-foreground transition-colors">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {isAdmin && (
+            <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5">
+              <Plus className="h-3.5 w-3.5" />Abteilung anlegen
+            </Button>
           )}
         </div>
+
+        {isAdmin && (
+          <div className="rounded-md border border-border bg-card overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center text-xs text-muted-foreground">Laden…</div>
+            ) : departments.length === 0 ? (
+              <div className="p-8 text-center">
+                <Building2 className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-xs text-muted-foreground">Noch keine Abteilungen angelegt</p>
+              </div>
+            ) : (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Name</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Kürzel</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Abteilungsleiter</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {departments.map(d => (
+                    <tr key={d.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="px-4 py-2.5 font-medium text-foreground">{d.name}</td>
+                      <td className="px-4 py-2.5 font-mono text-muted-foreground">{d.code}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground">{managerName(d.manager_user_id)}</td>
+                      <td className="px-4 py-2.5">
+                        <button onClick={() => openEdit(d)} className="text-muted-foreground hover:text-foreground transition-colors">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
         {/* Team-Übersicht je Abteilung */}
         {!loading && departments.length > 0 && (() => {
