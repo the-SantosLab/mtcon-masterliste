@@ -31,6 +31,20 @@ const PRIORITY_LABELS: Record<string, string> = {
   low: 'Niedrig', medium: 'Mittel', high: 'Hoch', critical: 'Kritisch',
 };
 
+const PRIORITY_COLORS: Record<string, string> = {
+  critical: 'bg-[hsl(var(--priority-critical))] text-white',
+  high: 'bg-[hsl(var(--priority-high))] text-white',
+  medium: 'bg-[hsl(var(--priority-medium))] text-white',
+  low: 'bg-[hsl(var(--priority-low))] text-white',
+};
+
+const PRIORITY_BORDER: Record<string, string> = {
+  critical: 'border-l-[3px] border-l-[hsl(var(--priority-critical))]',
+  high: 'border-l-[3px] border-l-[hsl(var(--priority-high))]',
+  medium: 'border-l-[3px] border-l-[hsl(var(--priority-medium))]',
+  low: '',
+};
+
 type TicketRow = {
   id: string; ticket_number: string; title: string; description: string;
   status: string; priority: string; customer_id: string | null; assigned_to: string | null;
@@ -248,7 +262,7 @@ export default function SupportTickets() {
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={7} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Tickets gefunden</td></tr>
               ) : filtered.map(t => (
-                <tr key={t.id} className="hover:bg-muted/40 transition-colors">
+                <tr key={t.id} className={cn("hover:bg-muted/40 transition-colors", PRIORITY_BORDER[t.priority] || '')}>
                   <td className={cn(cellCls, 'font-mono')}>
                     <Link to={`/support/${t.id}`} className="text-primary hover:underline">{t.ticket_number}</Link>
                   </td>
@@ -277,7 +291,7 @@ export default function SupportTickets() {
                     )}
                   </td>
                   <td className={cellCls}>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{PRIORITY_LABELS[t.priority]}</Badge>
+                    <Badge className={`${PRIORITY_COLORS[t.priority]} text-[10px] px-1.5 py-0`}>{PRIORITY_LABELS[t.priority]}</Badge>
                     {t.source === 'intern' && t.ai_triage?.severity && t.ai_triage.severity !== t.priority && (
                       <div className="text-[9px] text-muted-foreground mt-0.5">MTIQ: {PRIORITY_LABELS[t.ai_triage.severity] ?? t.ai_triage.severity}</div>
                     )}
