@@ -184,7 +184,7 @@ export default function AdminDepartments() {
         )}
 
         {/* Team-Übersicht je Abteilung */}
-        {!loading && departments.length > 0 && (() => {
+        {!loading && visibleDepartments.length > 0 && (() => {
           const ROLE_LABEL: Record<'read' | 'write' | 'lead', string> = {
             read: 'Lesen', write: 'Schreiben', lead: 'Leitung',
           };
@@ -217,7 +217,7 @@ export default function AdminDepartments() {
           return (
             <div className="space-y-4">
               <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Teams &amp; Rechte</h2>
-              {departments.map(d => {
+              {visibleDepartments.map(d => {
                 const rows = members
                   .filter(m => m.department_id === d.id)
                   .map(m => ({ row: m, profile: profiles.find(p => p.id === m.user_id) }))
