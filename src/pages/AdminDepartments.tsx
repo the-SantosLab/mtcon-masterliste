@@ -226,9 +226,10 @@ export default function AdminDepartments() {
                     const order = { lead: 0, write: 1, read: 2 } as const;
                     return order[a.row.role] - order[b.row.role];
                   });
-                if (rows.length === 0 && addMemberFor !== d.id) return null;
+                if (rows.length === 0 && addMemberFor !== d.id && !canManageDept(d.id)) return null;
                 const assignedIds = new Set(rows.map(r => r.profile!.id));
                 const candidates = profiles.filter(p => !assignedIds.has(p.id));
+                const canManage = canManageDept(d.id);
                 return (
                   <div key={d.id} className="rounded-md border border-border bg-card p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -237,10 +238,12 @@ export default function AdminDepartments() {
                         <h3 className="text-sm font-medium text-foreground">{d.name}</h3>
                         <span className="text-[11px] text-muted-foreground">({rows.length})</span>
                       </div>
-                      <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1.5"
-                        onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); setAddMemberRole('write'); }}>
-                        <UserPlus className="h-3 w-3" />Mitglied hinzufügen
-                      </Button>
+                      {canManage && (
+                        <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1.5"
+                          onClick={() => { setAddMemberFor(d.id); setAddMemberUserId(''); setAddMemberRole('write'); }}>
+                          <UserPlus className="h-3 w-3" />Mitglied hinzufügen
+                        </Button>
+                      )}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {rows.map(({ row, profile }) => (
@@ -250,19 +253,25 @@ export default function AdminDepartments() {
                             <p className="text-sm font-medium text-foreground truncate">{profile!.display_name}</p>
                             <p className="text-[11px] font-mono text-muted-foreground">{profile!.short_code}</p>
                           </div>
-                          <Select value={row.role} onValueChange={v => updateRole(row.id, v as any)}>
-                            <SelectTrigger className={`h-6 px-2 text-[10px] gap-1 border-0 w-auto min-w-0 ${ROLE_CHIP[row.role]}`}>
-                              <SelectValue>{ROLE_LABEL[row.role]}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="read" className="text-xs">Lesen</SelectItem>
-                              <SelectItem value="write" className="text-xs">Schreiben</SelectItem>
-                              <SelectItem value="lead" className="text-xs">Leitung</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <button onClick={() => removeMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                          {canManage ? (
+                            <Select value={row.role} onValueChange={v => updateRole(row.id, v as any)}>
+                              <SelectTrigger className={`h-6 px-2 text-[10px] gap-1 border-0 w-auto min-w-0 ${ROLE_CHIP[row.role]}`}>
+                                <SelectValue>{ROLE_LABEL[row.role]}</SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="read" className="text-xs">Lesen</SelectItem>
+                                <SelectItem value="write" className="text-xs">Schreiben</SelectItem>
+                                <SelectItem value="lead" className="text-xs">Leitung</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className={`h-6 px-2 inline-flex items-center text-[10px] rounded ${ROLE_CHIP[row.role]}`}>{ROLE_LABEL[row.role]}</span>
+                          )}
+                          {canManage && (
+                            <button onClick={() => removeMember(row.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
