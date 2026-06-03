@@ -1183,6 +1183,12 @@ function DraftAttachments({ draftId }: { draftId: string }) {
     return `${(b / 1024 / 1024).toFixed(1)} MB`;
   };
 
+  const SMALL_THRESHOLD = 100 * 1024; // 100 KB
+  const smallItems = items.filter(a => a.source === 'email_attachment' && (a.size_bytes ?? 0) > 0 && (a.size_bytes ?? 0) < SMALL_THRESHOLD);
+  const smallIds = new Set(smallItems.map(a => a.id));
+  const otherItems = items.filter(a => !smallIds.has(a.id));
+  const smallTotal = smallItems.reduce((s, a) => s + (a.size_bytes ?? 0), 0);
+
   return (
     <div className="glass-panel rounded-2xl border border-border dark:border-white/5">
       <button
@@ -1199,7 +1205,7 @@ function DraftAttachments({ draftId }: { draftId: string }) {
       {open && (
         <div className="px-4 pb-4 pt-1 border-t border-border dark:border-white/5 space-y-1.5">
           {loading && <div className="text-xs text-muted-foreground">Lade…</div>}
-          {items.map(a => (
+          {otherItems.map(a => (
             <div key={a.id} className="flex items-center gap-2 text-xs">
               <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" />
               <span className="truncate flex-1">{a.file_name}</span>
@@ -1212,9 +1218,53 @@ function DraftAttachments({ draftId }: { draftId: string }) {
               </Button>
             </div>
           ))}
+          {smallItems.length > 0 && <SmallAttachmentsGroup items={smallItems} totalBytes={smallTotal} fmtSize={fmtSize} download={download} />}
           <p className="text-[10px] text-muted-foreground pt-1">
             Werden bei Genehmigung automatisch dem Vorgang angehängt.
           </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SmallAttachmentsGroup({
+  items,
+  totalBytes,
+  fmtSize,
+  download,
+}: {
+  items: DraftAtt[];
+  totalBytes: number;
+  fmtSize: (b: number | null) => string;
+  download: (a: DraftAtt) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-lg border border-border/60 dark:border-white/5 bg-white/[0.02]">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2 text-xs px-2 py-1.5 hover:bg-white/[0.03] rounded-lg"
+      >
+        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" />
+        <span className="flex-1 text-left truncate">Kleine Anhänge (&lt; 100 KB)</span>
+        <Badge variant="secondary" className="h-5 text-[10px]">{items.length}</Badge>
+        <span className="text-muted-foreground tabular-nums">{fmtSize(totalBytes)}</span>
+      </button>
+      {open && (
+        <div className="px-2 pb-2 pt-1 space-y-1 border-t border-border/60 dark:border-white/5">
+          {items.map(a => (
+            <div key={a.id} className="flex items-center gap-2 text-xs pl-5">
+              <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" />
+              <span className="truncate flex-1">{a.file_name}</span>
+              <span className="text-muted-foreground tabular-nums">{fmtSize(a.size_bytes)}</span>
+              <Button size="sm" variant="ghost" className="h-6 px-2" onClick={() => download(a)}>
+                <Download className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
         </div>
       )}
     </div>
