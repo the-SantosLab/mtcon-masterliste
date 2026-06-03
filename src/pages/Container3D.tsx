@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package } from "lucide-react";
+import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
 
 type Module = {
   href: string;
