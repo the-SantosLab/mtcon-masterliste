@@ -214,37 +214,57 @@ export default function SupportTickets() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suche" className="pl-9 h-8 text-xs" />
           </div>
-          <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
-            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Quelle" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Quellen</SelectItem>
-              <SelectItem value="extern">Extern (Kunde)</SelectItem>
-              <SelectItem value="intern">Intern (Bug/Idee)</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Status</SelectItem>
-              {Object.entries(STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Priorität" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle</SelectItem>
-              {Object.entries(PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle</SelectItem>
-              <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
-              {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.short_code}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <MultiFilter
+            label="Quelle"
+            options={[
+              { value: 'extern', label: 'Extern (Kunde)' },
+              { value: 'intern', label: 'Intern (Bug/Idee)' },
+            ]}
+            selected={sourceFilter}
+            onChange={setSourceFilter}
+            width="w-[140px]"
+          />
+          <MultiFilter
+            label="Status"
+            options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+            selected={statusFilter}
+            onChange={setStatusFilter}
+            width="w-[150px]"
+          />
+          <MultiFilter
+            label="Priorität"
+            options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))}
+            selected={priorityFilter}
+            onChange={setPriorityFilter}
+            width="w-[130px]"
+          />
+          <MultiFilter
+            label="Bearbeiter"
+            options={[
+              { value: '__unassigned__', label: 'Nicht zugewiesen' },
+              ...profiles.map(p => ({ value: p.id, label: p.short_code })),
+            ]}
+            selected={assigneeFilter}
+            onChange={setAssigneeFilter}
+            width="w-[150px]"
+          />
+          {(sourceFilter.size + statusFilter.size + priorityFilter.size + assigneeFilter.size) > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs"
+              onClick={() => {
+                setSourceFilter(new Set());
+                setStatusFilter(new Set());
+                setPriorityFilter(new Set());
+                setAssigneeFilter(new Set());
+              }}
+            >
+              <X className="h-3 w-3 mr-1" /> Zurücksetzen
+            </Button>
+          )}
         </div>
+
 
         {/* Table */}
         <div className="rounded-md border border-border bg-card overflow-x-auto">
