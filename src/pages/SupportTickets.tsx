@@ -389,3 +389,74 @@ function InviteCustomerForm({ userId, onDone }: { userId: string; onDone: () => 
     </form>
   );
 }
+
+function MultiFilter({
+  label,
+  options,
+  selected,
+  onChange,
+  width = 'w-[140px]',
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  selected: Set<string>;
+  onChange: (s: Set<string>) => void;
+  width?: string;
+}) {
+  const toggle = (v: string) => {
+    const next = new Set(selected);
+    if (next.has(v)) next.delete(v); else next.add(v);
+    onChange(next);
+  };
+  const count = selected.size;
+  const display = count === 0
+    ? `Alle ${label}`
+    : count === 1
+      ? options.find(o => o.value === Array.from(selected)[0])?.label ?? label
+      : `${label}: ${count}`;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={`${width} h-8 text-xs justify-between font-normal ${count > 0 ? 'border-primary/60' : ''}`}
+        >
+          <span className="flex items-center gap-1.5 truncate">
+            <Filter className="h-3 w-3 shrink-0" />
+            <span className="truncate">{display}</span>
+          </span>
+          {count > 0 && (
+            <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-1">{count}</Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1" align="start">
+        <div className="max-h-72 overflow-y-auto">
+          {options.map(o => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => toggle(o.value)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-accent rounded-sm text-left"
+            >
+              <Checkbox checked={selected.has(o.value)} className="h-3.5 w-3.5" />
+              <span className="truncate">{o.label}</span>
+            </button>
+          ))}
+        </div>
+        {selected.size > 0 && (
+          <div className="border-t border-border mt-1 pt-1">
+            <button
+              type="button"
+              onClick={() => onChange(new Set())}
+              className="w-full text-xs px-2 py-1.5 hover:bg-accent rounded-sm text-muted-foreground text-left"
+            >
+              Auswahl löschen
+            </button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
