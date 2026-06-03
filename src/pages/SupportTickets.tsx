@@ -122,11 +122,13 @@ export default function SupportTickets() {
   const reporterById = (id: string | null) => id ? profiles.find(p => p.id === id) : null;
 
   const filtered = tickets.filter(t => {
-    if (sourceFilter !== 'all' && (t.source ?? 'extern') !== sourceFilter) return false;
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
-    if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
-    if (assigneeFilter === 'unassigned' && t.assigned_to !== null) return false;
-    if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && t.assigned_to !== assigneeFilter) return false;
+    if (sourceFilter.size > 0 && !sourceFilter.has(t.source ?? 'extern')) return false;
+    if (statusFilter.size > 0 && !statusFilter.has(t.status)) return false;
+    if (priorityFilter.size > 0 && !priorityFilter.has(t.priority)) return false;
+    if (assigneeFilter.size > 0) {
+      const key = t.assigned_to ?? '__unassigned__';
+      if (!assigneeFilter.has(key)) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const reporter = reporterById(t.reporter_user_id);
