@@ -65,6 +65,13 @@ const SATELLITES: Module[] = [
 
 export default function Container3D() {
   const navigate = useNavigate();
+  const { counts, total } = useContainerUnread();
+
+  const go = (href: string) => {
+    markContainerSeen(href);
+    navigate(href);
+  };
+
 
   // Layout (SVG viewBox coordinate space)
   const VB = 1000;
