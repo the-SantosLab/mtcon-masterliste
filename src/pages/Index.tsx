@@ -125,12 +125,13 @@ export default function Dashboard() {
   const today = new Date().toISOString().split('T')[0];
   const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
   const active = cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status));
+  const scopedActive = scope === 'mine' ? active.filter(c => c.assignee_id === user?.id) : active;
   const counts: Record<FilterKey, number> = {
-    open: active.filter(c => c.status === 'nicht_begonnen').length,
-    in_progress: active.filter(c => ['in_arbeit', 'in_planung'].includes(c.status)).length,
-    overdue: active.filter(c => c.status === 'in_verzug' || (c.due_at && c.due_at < today)).length,
-    today: active.filter(c => c.due_at === today).length,
-    week: active.filter(c => c.due_at && c.due_at >= today && c.due_at <= weekEnd).length,
+    open: scopedActive.filter(c => c.status === 'nicht_begonnen').length,
+    in_progress: scopedActive.filter(c => ['in_arbeit', 'in_planung'].includes(c.status)).length,
+    overdue: scopedActive.filter(c => c.status === 'in_verzug' || (c.due_at && c.due_at < today)).length,
+    today: scopedActive.filter(c => c.due_at === today).length,
+    week: scopedActive.filter(c => c.due_at && c.due_at >= today && c.due_at <= weekEnd).length,
   };
 
   const available = cases
