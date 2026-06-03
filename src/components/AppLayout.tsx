@@ -272,6 +272,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
             <FolderArchive className="h-4 w-4" />
             <span className="flex-1">3D Container</span>
+            <ContainerUnreadBadge />
+
           </Link>
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
 
