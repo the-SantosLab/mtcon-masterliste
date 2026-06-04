@@ -1265,3 +1265,63 @@ function SmallAttachmentsGroup({
     </div>
   );
 }
+
+function CustomerCombobox({
+  customers, value, onChange, disabled,
+}: {
+  customers: { id: string; customer_no: string; name: string }[];
+  value: string | null;
+  onChange: (v: string | null) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = customers.find(c => c.customer_no === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          disabled={disabled}
+          className={cn('w-full justify-between font-normal', !selected && 'text-muted-foreground')}
+        >
+          {selected ? `${selected.customer_no} · ${selected.name}` : 'Wählen…'}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command
+          filter={(val, search) => {
+            if (val.toLowerCase().includes(search.toLowerCase())) return 1;
+            return 0;
+          }}
+        >
+          <CommandInput placeholder="Kunde suchen…" />
+          <CommandList>
+            <CommandEmpty>Kein Kunde gefunden.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="__none__ kein kunde"
+                onSelect={() => { onChange(null); setOpen(false); }}
+              >
+                <Check className={cn('mr-2 h-4 w-4', !selected ? 'opacity-100' : 'opacity-0')} />
+                — Kein Kunde —
+              </CommandItem>
+              {customers.map(c => (
+                <CommandItem
+                  key={c.id}
+                  value={`${c.customer_no} ${c.name}`}
+                  onSelect={() => { onChange(c.customer_no); setOpen(false); }}
+                >
+                  <Check className={cn('mr-2 h-4 w-4', selected?.id === c.id ? 'opacity-100' : 'opacity-0')} />
+                  {c.customer_no} · {c.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
