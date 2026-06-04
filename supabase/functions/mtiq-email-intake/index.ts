@@ -164,7 +164,16 @@ ${emailBody || "(empty)"}`;
       : [];
 
     const draftTitle = String(parsed?.title ?? "").slice(0, 500) || subject || "(ohne Titel)";
-    const duplicate = findDuplicate(similar, { title: draftTitle });
+
+    // Validate AI customer pick against candidate list
+    const aiCustomerNo = typeof parsed?.customer_no === "string" ? parsed.customer_no.trim() : null;
+    const matchedCustomer = aiCustomerNo
+      ? customerCandidates.find(c => c.customer_no === aiCustomerNo)
+      : null;
+    const customerNo = matchedCustomer?.customer_no ?? null;
+    const clientName = matchedCustomer?.name ?? null;
+
+    const duplicate = findDuplicate(similar, { title: draftTitle, customer_no: customerNo, client_name: clientName });
 
     const originalSnapshot = {
       title: draftTitle,
@@ -173,6 +182,7 @@ ${emailBody || "(empty)"}`;
       priority,
       due_date: dueDate,
       tasks,
+      customer_no: customerNo,
     };
 
     const admin = createClient(supabaseUrl, serviceKey);
@@ -187,6 +197,8 @@ ${emailBody || "(empty)"}`;
       draft_priority: priority,
       draft_due_date: dueDate,
       draft_tasks: tasks,
+      draft_customer_no: customerNo,
+      draft_client_name: clientName,
       mtiq_reasoning: String(parsed?.reasoning ?? "") || null,
       status: "pending",
       possible_duplicate_of: duplicate?.id ?? null,
