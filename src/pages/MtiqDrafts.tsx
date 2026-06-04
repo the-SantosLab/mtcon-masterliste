@@ -725,23 +725,15 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <Label>Kunde (Stammdaten)</Label>
-                            <Select
-                              value={edit.draft_customer_no ?? '__none__'}
-                              onValueChange={v => {
-                                if (v === '__none__') handleField('draft_customer_no', null);
-                                else handleField('draft_customer_no', v);
+                            <CustomerCombobox
+                              customers={customers}
+                              value={edit.draft_customer_no}
+                              disabled={disabled}
+                              onChange={(v) => {
+                                handleField('draft_customer_no', v);
                                 setTimeout(persistAll, 50);
                               }}
-                              disabled={disabled}
-                            >
-                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">— Kein Kunde —</SelectItem>
-                                {customers.map(c => (
-                                  <SelectItem key={c.id} value={c.customer_no}>{c.customer_no} · {c.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            />
                           </div>
                           <div>
                             <Label>Auftraggeber (Freitext)</Label>
