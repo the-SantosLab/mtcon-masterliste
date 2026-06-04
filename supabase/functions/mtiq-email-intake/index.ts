@@ -217,3 +217,77 @@ ${emailBody || "(empty)"}`;
     });
   }
 });
+
+// Find candidate customers from the 1700+ master list using token-based matching
+// against the email's from/subject/body. Returns up to `limit` best matches.
+async function findCustomerCandidates(
+  supabaseUrl: string,
+  serviceKey: string,
+  text: string,
+  limit = 30,
+): Promise<{ customer_no: string; name: string }[]> {
+  try {
+    const admin = createClient(supabaseUrl, serviceKey);
+    const { data, error } = await admin.from("customers").select("customer_no, name");
+    if (error || !data) return [];
+
+    const STOP = new Set([
+      "gmbh","ag","kg","ohg","co","ltd","inc","mbh","se","ug","gesellschaft",
+      "der","die","das","und","von","fur","für","mit","the","and","for","of",
+      "email","mail","tel","fax","www","http","https","com","de","org","net",
+    ]);
+    const norm = (s: string) => s.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/ß/g, "ss");
+    const tokenize = (s: string) => norm(s)
+      .replace(/[^a-z0-9\s.@-]/g, " ")
+      .split(/\s+/)
+      .filter(w => w.length >= 3 && !STOP.has(w));
+
+    const haystack = norm(text);
+    const haystackTokens = new Set(tokenize(text));
+
+    // Extract sender email domain (excluding common providers)
+    const domainMatch = text.match(/@([a-z0-9.-]+\.[a-z]{2,})/i);
+    const senderDomain = domainMatch ? norm(domainMatch[1]) : "";
+    const PUBLIC_DOMAINS = new Set([
+      "gmail.com","googlemail.com","outlook.com","hotmail.com","live.com",
+      "yahoo.com","yahoo.de","gmx.de","gmx.net","gmx.com","web.de","t-online.de",
+      "icloud.com","me.com","aol.com","mail.com","mailbox.org","posteo.de",
+    ]);
+    const domainCore = senderDomain && !PUBLIC_DOMAINS.has(senderDomain)
+      ? senderDomain.split(".").slice(0, -1).join(".")
+      : "";
+
+    const scored = (data as { customer_no: string; name: string }[]).map(c => {
+      const nameNorm = norm(c.name);
+      let score = 0;
+
+      // Full name appears verbatim
+      if (nameNorm.length >= 4 && haystack.includes(nameNorm)) score += 10;
+
+      // Domain contains a meaningful chunk of customer name (or vice versa)
+      if (domainCore) {
+        const dcore = domainCore.replace(/[.-]/g, "");
+        const ncore = nameNorm.replace(/[^a-z0-9]/g, "");
+        if (ncore.length >= 4 && (dcore.includes(ncore) || ncore.includes(dcore))) score += 8;
+      }
+
+      // Token overlap
+      const nameTokens = tokenize(c.name);
+      let overlap = 0;
+      for (const t of nameTokens) if (haystackTokens.has(t)) overlap++;
+      if (overlap > 0) score += overlap * 2;
+
+      return { c, score };
+    }).filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(x => x.c);
+
+    return scored;
+  } catch (e) {
+    console.warn("findCustomerCandidates failed", e);
+    return [];
+  }
+}
