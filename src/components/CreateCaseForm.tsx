@@ -145,8 +145,21 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
 
   useEffect(() => {
+    const fetchAllCustomers = async () => {
+      const pageSize = 1000;
+      let from = 0;
+      let all: Tables<'customers'>[] = [];
+      while (true) {
+        const { data, error } = await supabase.from('customers').select('*').order('name').range(from, from + pageSize - 1);
+        if (error || !data) break;
+        all = all.concat(data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+      return { data: all };
+    };
     Promise.all([
-      supabase.from('customers').select('*').order('name'),
+      fetchAllCustomers(),
       supabase.from('products').select('*').order('name'),
       supabase.from('internal_areas').select('*').order('name'),
       supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false }),
