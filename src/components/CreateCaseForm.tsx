@@ -763,7 +763,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-0" align="start">
-                      <Command>
+                      <Command shouldFilter={false}>
                         <CommandInput placeholder="Suchen…" value={customerSearch} onValueChange={setCustomerSearch} className="text-xs" />
                         <CommandList>
                           <CommandEmpty className="py-2 text-xs text-center text-muted-foreground">Kein Kunde gefunden</CommandEmpty>
