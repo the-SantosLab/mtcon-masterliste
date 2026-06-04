@@ -86,16 +86,23 @@ Deno.serve(async (req) => {
 
     // Context retrieval (parallel)
     const searchBlob = `${subject} ${emailBody}`;
-    const [similar, corrections] = await Promise.all([
+    const [similar, corrections, customerCandidates] = await Promise.all([
       getSimilarCases(supabaseUrl, serviceKey, searchBlob, 20),
       getRecentCorrections(supabaseUrl, serviceKey, 5),
+      findCustomerCandidates(supabaseUrl, serviceKey, `${from} ${subject} ${emailBody}`, 30),
     ]);
+
+    const customerBlock = customerCandidates.length
+      ? `\n\nMögliche Kunden aus den Stammdaten (wähle den passenden customer_no oder null, wenn keiner sicher passt):\n${customerCandidates.map(c => `  • ${c.customer_no} — ${c.name}`).join("\n")}\n`
+      : "";
 
     const basePrompt = await loadPrompt("mtiq_email_intake", DEFAULT_EMAIL_INTAKE_PROMPT);
     const augmentedSystem =
       basePrompt +
       similarCasesPromptBlock(similar) +
-      correctionsPromptBlock(corrections);
+      correctionsPromptBlock(corrections) +
+      customerBlock +
+      `\n\nWICHTIG: Gib zusätzlich im JSON das Feld "customer_no" (string aus der obigen Liste oder null) zurück, basierend auf Absender-Domain, Firmenname in Signatur/Body/Subject.`;
 
     const userPrompt = `Forwarded email to analyze:
 
