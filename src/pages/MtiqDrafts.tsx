@@ -11,9 +11,12 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink, Paperclip, Download, ArrowLeft } from 'lucide-react';
+import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink, Paperclip, Download, ArrowLeft, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
