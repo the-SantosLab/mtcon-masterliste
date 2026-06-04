@@ -86,16 +86,23 @@ Deno.serve(async (req) => {
 
     // Context retrieval (parallel)
     const searchBlob = `${subject} ${emailBody}`;
-    const [similar, corrections] = await Promise.all([
+    const [similar, corrections, customerCandidates] = await Promise.all([
       getSimilarCases(supabaseUrl, serviceKey, searchBlob, 20),
       getRecentCorrections(supabaseUrl, serviceKey, 5),
+      findCustomerCandidates(supabaseUrl, serviceKey, `${from} ${subject} ${emailBody}`, 30),
     ]);
+
+    const customerBlock = customerCandidates.length
+      ? `\n\nMögliche Kunden aus den Stammdaten (wähle den passenden customer_no oder null, wenn keiner sicher passt):\n${customerCandidates.map(c => `  • ${c.customer_no} — ${c.name}`).join("\n")}\n`
+      : "";
 
     const basePrompt = await loadPrompt("mtiq_email_intake", DEFAULT_EMAIL_INTAKE_PROMPT);
     const augmentedSystem =
       basePrompt +
       similarCasesPromptBlock(similar) +
-      correctionsPromptBlock(corrections);
+      correctionsPromptBlock(corrections) +
+      customerBlock +
+      `\n\nWICHTIG: Gib zusätzlich im JSON das Feld "customer_no" (string aus der obigen Liste oder null) zurück, basierend auf Absender-Domain, Firmenname in Signatur/Body/Subject.`;
 
     const userPrompt = `Forwarded email to analyze:
 
@@ -157,7 +164,16 @@ ${emailBody || "(empty)"}`;
       : [];
 
     const draftTitle = String(parsed?.title ?? "").slice(0, 500) || subject || "(ohne Titel)";
-    const duplicate = findDuplicate(similar, { title: draftTitle });
+
+    // Validate AI customer pick against candidate list
+    const aiCustomerNo = typeof parsed?.customer_no === "string" ? parsed.customer_no.trim() : null;
+    const matchedCustomer = aiCustomerNo
+      ? customerCandidates.find(c => c.customer_no === aiCustomerNo)
+      : null;
+    const customerNo = matchedCustomer?.customer_no ?? null;
+    const clientName = matchedCustomer?.name ?? null;
+
+    const duplicate = findDuplicate(similar, { title: draftTitle, customer_no: customerNo, client_name: clientName });
 
     const originalSnapshot = {
       title: draftTitle,
@@ -166,6 +182,7 @@ ${emailBody || "(empty)"}`;
       priority,
       due_date: dueDate,
       tasks,
+      customer_no: customerNo,
     };
 
     const admin = createClient(supabaseUrl, serviceKey);
@@ -180,6 +197,8 @@ ${emailBody || "(empty)"}`;
       draft_priority: priority,
       draft_due_date: dueDate,
       draft_tasks: tasks,
+      draft_customer_no: customerNo,
+      draft_client_name: clientName,
       mtiq_reasoning: String(parsed?.reasoning ?? "") || null,
       status: "pending",
       possible_duplicate_of: duplicate?.id ?? null,
@@ -198,3 +217,77 @@ ${emailBody || "(empty)"}`;
     });
   }
 });
+
+// Find candidate customers from the 1700+ master list using token-based matching
+// against the email's from/subject/body. Returns up to `limit` best matches.
+async function findCustomerCandidates(
+  supabaseUrl: string,
+  serviceKey: string,
+  text: string,
+  limit = 30,
+): Promise<{ customer_no: string; name: string }[]> {
+  try {
+    const admin = createClient(supabaseUrl, serviceKey);
+    const { data, error } = await admin.from("customers").select("customer_no, name");
+    if (error || !data) return [];
+
+    const STOP = new Set([
+      "gmbh","ag","kg","ohg","co","ltd","inc","mbh","se","ug","gesellschaft",
+      "der","die","das","und","von","fur","für","mit","the","and","for","of",
+      "email","mail","tel","fax","www","http","https","com","de","org","net",
+    ]);
+    const norm = (s: string) => s.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/ß/g, "ss");
+    const tokenize = (s: string) => norm(s)
+      .replace(/[^a-z0-9\s.@-]/g, " ")
+      .split(/\s+/)
+      .filter(w => w.length >= 3 && !STOP.has(w));
+
+    const haystack = norm(text);
+    const haystackTokens = new Set(tokenize(text));
+
+    // Extract sender email domain (excluding common providers)
+    const domainMatch = text.match(/@([a-z0-9.-]+\.[a-z]{2,})/i);
+    const senderDomain = domainMatch ? norm(domainMatch[1]) : "";
+    const PUBLIC_DOMAINS = new Set([
+      "gmail.com","googlemail.com","outlook.com","hotmail.com","live.com",
+      "yahoo.com","yahoo.de","gmx.de","gmx.net","gmx.com","web.de","t-online.de",
+      "icloud.com","me.com","aol.com","mail.com","mailbox.org","posteo.de",
+    ]);
+    const domainCore = senderDomain && !PUBLIC_DOMAINS.has(senderDomain)
+      ? senderDomain.split(".").slice(0, -1).join(".")
+      : "";
+
+    const scored = (data as { customer_no: string; name: string }[]).map(c => {
+      const nameNorm = norm(c.name);
+      let score = 0;
+
+      // Full name appears verbatim
+      if (nameNorm.length >= 4 && haystack.includes(nameNorm)) score += 10;
+
+      // Domain contains a meaningful chunk of customer name (or vice versa)
+      if (domainCore) {
+        const dcore = domainCore.replace(/[.-]/g, "");
+        const ncore = nameNorm.replace(/[^a-z0-9]/g, "");
+        if (ncore.length >= 4 && (dcore.includes(ncore) || ncore.includes(dcore))) score += 8;
+      }
+
+      // Token overlap
+      const nameTokens = tokenize(c.name);
+      let overlap = 0;
+      for (const t of nameTokens) if (haystackTokens.has(t)) overlap++;
+      if (overlap > 0) score += overlap * 2;
+
+      return { c, score };
+    }).filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(x => x.c);
+
+    return scored;
+  } catch (e) {
+    console.warn("findCustomerCandidates failed", e);
+    return [];
+  }
+}

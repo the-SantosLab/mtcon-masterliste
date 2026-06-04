@@ -11,9 +11,12 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink, Paperclip, Download, ArrowLeft } from 'lucide-react';
+import { Loader2, Trash2, Plus, ChevronDown, ChevronRight, Inbox, Mail, Send, Users, User as UserIcon, AlertTriangle, ExternalLink, Paperclip, Download, ArrowLeft, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
@@ -722,23 +725,15 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <Label>Kunde (Stammdaten)</Label>
-                            <Select
-                              value={edit.draft_customer_no ?? '__none__'}
-                              onValueChange={v => {
-                                if (v === '__none__') handleField('draft_customer_no', null);
-                                else handleField('draft_customer_no', v);
+                            <CustomerCombobox
+                              customers={customers}
+                              value={edit.draft_customer_no}
+                              disabled={disabled}
+                              onChange={(v) => {
+                                handleField('draft_customer_no', v);
                                 setTimeout(persistAll, 50);
                               }}
-                              disabled={disabled}
-                            >
-                              <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">— Kein Kunde —</SelectItem>
-                                {customers.map(c => (
-                                  <SelectItem key={c.id} value={c.customer_no}>{c.customer_no} · {c.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            />
                           </div>
                           <div>
                             <Label>Auftraggeber (Freitext)</Label>
@@ -1268,5 +1263,65 @@ function SmallAttachmentsGroup({
         </div>
       )}
     </div>
+  );
+}
+
+function CustomerCombobox({
+  customers, value, onChange, disabled,
+}: {
+  customers: { id: string; customer_no: string; name: string }[];
+  value: string | null;
+  onChange: (v: string | null) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = customers.find(c => c.customer_no === value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          disabled={disabled}
+          className={cn('w-full justify-between font-normal', !selected && 'text-muted-foreground')}
+        >
+          {selected ? `${selected.customer_no} · ${selected.name}` : 'Wählen…'}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command
+          filter={(val, search) => {
+            if (val.toLowerCase().includes(search.toLowerCase())) return 1;
+            return 0;
+          }}
+        >
+          <CommandInput placeholder="Kunde suchen…" />
+          <CommandList>
+            <CommandEmpty>Kein Kunde gefunden.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="__none__ kein kunde"
+                onSelect={() => { onChange(null); setOpen(false); }}
+              >
+                <Check className={cn('mr-2 h-4 w-4', !selected ? 'opacity-100' : 'opacity-0')} />
+                — Kein Kunde —
+              </CommandItem>
+              {customers.map(c => (
+                <CommandItem
+                  key={c.id}
+                  value={`${c.customer_no} ${c.name}`}
+                  onSelect={() => { onChange(c.customer_no); setOpen(false); }}
+                >
+                  <Check className={cn('mr-2 h-4 w-4', selected?.id === c.id ? 'opacity-100' : 'opacity-0')} />
+                  {c.customer_no} · {c.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
