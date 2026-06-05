@@ -195,6 +195,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [tasks, setTasks] = useState<Subtask[]>([]);
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newDeptId, setNewDeptId] = useState('');
@@ -379,6 +380,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       .then(r => setDepartments((r.data || []) as Dept[]));
     supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true)
       .then(r => setProfiles((r.data || []) as Profile[]));
+    (supabase as any).from('department_members').select('department_id, user_id')
+      .then((r: any) => setDeptMembers((r.data || []) as { department_id: string; user_id: string }[]));
   }, [caseId]);
 
   const addTask = async () => {
@@ -1331,7 +1334,13 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-              {(newDeptId ? profiles.filter(p => p.department_id === newDeptId) : profiles).map(p => (
+              {(newDeptId
+                ? (() => {
+                    const extra = new Set(deptMembers.filter(m => m.department_id === newDeptId).map(m => m.user_id));
+                    return profiles.filter(p => p.department_id === newDeptId || extra.has(p.id));
+                  })()
+                : profiles
+              ).map(p => (
                 <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
               ))}
             </SelectContent>
