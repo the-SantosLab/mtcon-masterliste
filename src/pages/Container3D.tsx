@@ -70,6 +70,18 @@ const SATELLITES: Module[] = [
 export default function Container3D() {
   const navigate = useNavigate();
   const { counts, total } = useContainerUnread();
+  const [copied, setCopied] = useState(false);
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(INTAKE_EMAIL);
+      setCopied(true);
+      toast.success("E-Mail-Adresse kopiert");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Kopieren fehlgeschlagen");
+    }
+  };
 
   const go = (href: string) => {
     markContainerSeen(href);
