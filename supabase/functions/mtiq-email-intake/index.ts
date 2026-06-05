@@ -228,8 +228,18 @@ async function findCustomerCandidates(
 ): Promise<{ customer_no: string; name: string }[]> {
   try {
     const admin = createClient(supabaseUrl, serviceKey);
-    const { data, error } = await admin.from("customers").select("customer_no, name");
-    if (error || !data) return [];
+    const all: { customer_no: string; name: string }[] = [];
+    const PAGE = 1000;
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await admin
+        .from("customers")
+        .select("customer_no, name")
+        .range(from, from + PAGE - 1);
+      if (error || !data) break;
+      all.push(...(data as { customer_no: string; name: string }[]));
+      if (data.length < PAGE) break;
+    }
+    if (all.length === 0) return [];
 
     const STOP = new Set([
       "gmbh","ag","kg","ohg","co","ltd","inc","mbh","se","ug","gesellschaft",
