@@ -380,6 +380,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       .then(r => setDepartments((r.data || []) as Dept[]));
     supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true)
       .then(r => setProfiles((r.data || []) as Profile[]));
+    (supabase as any).from('department_members').select('department_id, user_id')
+      .then((r: any) => setDeptMembers((r.data || []) as { department_id: string; user_id: string }[]));
   }, [caseId]);
 
   const addTask = async () => {
