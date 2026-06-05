@@ -269,7 +269,7 @@ async function findCustomerCandidates(
       ? senderDomain.split(".").slice(0, -1).join(".")
       : "";
 
-    const scored = (data as { customer_no: string; name: string }[]).map(c => {
+    const scored = all.map(c => {
       const nameNorm = norm(c.name);
       let score = 0;
 
