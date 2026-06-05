@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package } from "lucide-react";
+import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail } from "lucide-react";
 import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
+import { toast } from "sonner";
+
+const INTAKE_EMAIL = "mtiq@inbox.kscommand.com";
 
 type Module = {
   href: string;
