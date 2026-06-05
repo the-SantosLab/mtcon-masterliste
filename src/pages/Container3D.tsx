@@ -146,6 +146,42 @@ export default function Container3D() {
               Die Intelligent Inbox ist der zentrale Verteiler. Von hier fließt jeder Eingang
               automatisch in das passende Modul.
             </p>
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <div className="group inline-flex items-stretch overflow-hidden rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-fuchsia-500/10 backdrop-blur-xl shadow-[0_0_30px_hsl(38_95%_60%/0.25)]">
+                <button
+                  type="button"
+                  onClick={copyEmail}
+                  onFocus={(e) => {
+                    const range = document.createRange();
+                    range.selectNodeContents(e.currentTarget);
+                    const sel = window.getSelection();
+                    sel?.removeAllRanges();
+                    sel?.addRange(range);
+                  }}
+                  title="Klicken zum Kopieren"
+                  className="flex items-center gap-2 pl-3.5 pr-2 py-1.5 text-xs md:text-sm font-mono tracking-tight text-amber-100 hover:text-white transition-colors select-all cursor-pointer"
+                >
+                  <Mail className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+                  <span>{INTAKE_EMAIL}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={copyEmail}
+                  aria-label="E-Mail-Adresse kopieren"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.15em] border-l border-amber-400/30 bg-amber-500/20 hover:bg-amber-500/30 text-amber-50 transition-colors"
+                >
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? "Kopiert" : "Kopieren"}
+                </button>
+              </div>
+              <a
+                href={`mailto:${INTAKE_EMAIL}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.15em] text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <Mail className="h-3 w-3" />
+                E-Mail öffnen
+              </a>
+            </div>
           </header>
 
           {/* Graph — square sized to fit remaining viewport */}
