@@ -182,9 +182,21 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
     sb.from('case_templates').select('id, title').order('title').then(({ data }: any) => {
       setTemplates(data || []);
     });
-    sb.from('customers').select('id, customer_no, name').order('name').then(({ data }: any) => {
-      setCustomers(data || []);
-    });
+    (async () => {
+      const all: any[] = [];
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await sb
+          .from('customers')
+          .select('id, customer_no, name')
+          .order('name')
+          .range(from, from + PAGE - 1);
+        if (error || !data) break;
+        all.push(...data);
+        if (data.length < PAGE) break;
+      }
+      setCustomers(all);
+    })();
     sb.from('products').select('id, code, name').order('name').then(({ data }: any) => {
       setProducts(data || []);
     });
