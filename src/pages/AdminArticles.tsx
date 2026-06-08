@@ -446,17 +446,21 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
               <TabsTrigger value="bom" className="text-xs">Stückliste ({bom.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="stamm" className="pt-3">
-              <DetailGrid data={article} />
+              <DetailGrid data={article} table="articles" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setArticle(d)} />
             </TabsContent>
             <TabsContent value="attr" className="pt-3">
               <SimpleTable rows={attributes} cols={[
                 { k: 'attr_key', l: 'Merkmal' },
+                { k: 'attr_label', l: 'Bezeichnung' },
                 { k: 'attr_value', l: 'Wert' },
               ]} />
             </TabsContent>
             <TabsContent value="pr" className="pt-3">
-              {price ? <DetailGrid data={price} /> : <div className="text-xs text-muted-foreground">Keine Preise hinterlegt</div>}
+              {price
+                ? <DetailGrid data={price} table="article_prices" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setPrice(d)} />
+                : <div className="text-xs text-muted-foreground">Keine Preise hinterlegt</div>}
             </TabsContent>
+
             <TabsContent value="pl" className="pt-3">
               <SimpleTable rows={priceList} cols={[
                 { k: 'prl_nr', l: 'Prl-Nr' }, { k: 'bez_pl', l: 'Preisliste' },
@@ -493,21 +497,88 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
   );
 }
 
-function DetailGrid({ data }: { data: Record<string, any> }) {
-  const entries = Object.entries(data).filter(([k]) =>
-    !['id', 'created_at', 'updated_at', 'updated_by'].includes(k),
-  );
+function DetailGrid({
+  data, table, pkCol, pkVal, onSaved,
+}: {
+  data: Record<string, any>;
+  table: string;
+  pkCol: string;
+  pkVal: string;
+  onSaved: (d: any) => void;
+}) {
+  const { isAdmin } = useAuth();
+  const SKIP = ['id', 'created_at', 'updated_at', 'updated_by', 'is_blocked', pkCol];
+  const entries = Object.entries(data).filter(([k]) => !SKIP.includes(k));
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
+
+  const startEdit = () => {
+    const f: Record<string, any> = {};
+    for (const [k, v] of entries) f[k] = v ?? '';
+    setForm(f);
+    setEditing(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    const patch: Record<string, any> = {};
+    for (const [k, v] of Object.entries(form)) {
+      const original = (data as any)[k] ?? '';
+      if (String(v ?? '') !== String(original)) {
+        patch[k] = v === '' ? null : v;
+      }
+    }
+    if (Object.keys(patch).length === 0) {
+      setEditing(false); setSaving(false); return;
+    }
+    const { data: updated, error } = await (supabase as any)
+      .from(table).update(patch).eq(pkCol, pkVal).select('*').maybeSingle();
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${Object.keys(patch).length} Feld(er) gespeichert`);
+    onSaved(updated);
+    setEditing(false);
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-      {entries.map(([k, v]) => (
-        <div key={k} className="rounded border border-border bg-secondary/30 p-2">
-          <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{k}</div>
-          <div className="text-xs font-mono truncate" title={String(v ?? '')}>{v === null || v === '' ? '—' : String(v)}</div>
+    <div className="space-y-3">
+      {isAdmin && (
+        <div className="flex justify-end gap-2">
+          {!editing ? (
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={startEdit}>Bearbeiten</Button>
+          ) : (
+            <>
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditing(false)} disabled={saving}>Abbrechen</Button>
+              <Button size="sm" className="h-7 text-xs" onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}Speichern
+              </Button>
+            </>
+          )}
         </div>
-      ))}
+      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {entries.map(([k, v]) => (
+          <div key={k} className="rounded border border-border bg-secondary/30 p-2">
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{k}</div>
+            {editing ? (
+              <Input
+                value={form[k] ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))}
+                className="h-7 text-xs font-mono mt-1"
+              />
+            ) : (
+              <div className="text-xs font-mono truncate" title={String(v ?? '')}>
+                {v === null || v === '' ? '—' : String(v)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
+
 
 function SimpleTable({ rows, cols }: { rows: any[]; cols: { k: string; l: string }[] }) {
   if (!rows.length) return <div className="text-xs text-muted-foreground">Keine Einträge</div>;
