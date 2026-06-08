@@ -558,6 +558,51 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
 
                 <DraftAttachments draftId={edit.id} />
 
+                {/* KI-Routing-Empfehlung: Vorgang vs. Dokumentablage */}
+                {edit.status === 'pending' && (edit.route || (edit.attachment_match_proposals?.length ?? 0) > 0) && (
+                  <div className="rounded-2xl border border-border dark:border-white/10 bg-white/[0.02] backdrop-blur-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">KI-Empfehlung</span>
+                        <Badge
+                          variant="outline"
+                          className={
+                            edit.route === 'dokument'
+                              ? 'border-amber-500/40 text-amber-600 dark:text-amber-300'
+                              : edit.route === 'unklar'
+                                ? 'border-muted-foreground/40 text-muted-foreground'
+                                : 'border-emerald-500/40 text-emerald-600 dark:text-emerald-300'
+                          }
+                        >
+                          {edit.route === 'dokument' ? 'Dokumentablage' : edit.route === 'unklar' ? 'Unklar' : 'Neuer Vorgang'}
+                        </Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          const next = edit.route === 'dokument' ? 'vorgang' : 'dokument';
+                          await (supabase as any).from('mtiq_drafts').update({ route: next }).eq('id', edit.id);
+                          setEdit({ ...edit, route: next });
+                        }}
+                      >
+                        Umschalten auf: {edit.route === 'dokument' ? 'Vorgang' : 'Dokumentablage'}
+                      </Button>
+                    </div>
+                    {edit.recommended_reason && (
+                      <p className="text-sm text-muted-foreground italic">{edit.recommended_reason}</p>
+                    )}
+                  </div>
+                )}
+
+                {edit.status === 'pending' && edit.route === 'dokument' && (
+                  <DocumentRouteSection
+                    draftId={edit.id}
+                    proposals={(edit.attachment_match_proposals as any[]) ?? []}
+                    onCompleted={() => { load(); }}
+                  />
+                )}
+
 
                 {edit.possible_duplicate_of && edit.status === 'pending' && (
                   <DuplicateBanner caseId={edit.possible_duplicate_of} onDismiss={async () => {
