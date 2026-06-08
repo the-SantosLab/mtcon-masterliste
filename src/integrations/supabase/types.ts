@@ -275,6 +275,579 @@ export type Database = {
         }
         Relationships: []
       }
+      article_attributes: {
+        Row: {
+          art_nr: string
+          attr_key: string
+          attr_label: string | null
+          attr_value: string | null
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          art_nr: string
+          attr_key: string
+          attr_label?: string | null
+          attr_value?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          art_nr?: string
+          attr_key?: string
+          attr_label?: string | null
+          attr_value?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_attributes_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+        ]
+      }
+      article_bom: {
+        Row: {
+          a_kz: boolean | null
+          anfahrmg: number | null
+          anzahl: number | null
+          ausschuss: number | null
+          breite: number | null
+          component_art_nr: string
+          component_art_stat: string | null
+          component_bezeichnung: string | null
+          component_kennung: string | null
+          component_matchcode: string | null
+          et_kz: boolean | null
+          hoehe: number | null
+          id: string
+          kst: string | null
+          kst_label: string | null
+          laenge_mm: number | null
+          me: string | null
+          mehrm_ber: number | null
+          mehrm_me: number | null
+          menge: number | null
+          parent_art_nr: string
+          pos: string | null
+          set_kz: boolean | null
+          updated_at: string
+          v_position: string | null
+        }
+        Insert: {
+          a_kz?: boolean | null
+          anfahrmg?: number | null
+          anzahl?: number | null
+          ausschuss?: number | null
+          breite?: number | null
+          component_art_nr: string
+          component_art_stat?: string | null
+          component_bezeichnung?: string | null
+          component_kennung?: string | null
+          component_matchcode?: string | null
+          et_kz?: boolean | null
+          hoehe?: number | null
+          id?: string
+          kst?: string | null
+          kst_label?: string | null
+          laenge_mm?: number | null
+          me?: string | null
+          mehrm_ber?: number | null
+          mehrm_me?: number | null
+          menge?: number | null
+          parent_art_nr: string
+          pos?: string | null
+          set_kz?: boolean | null
+          updated_at?: string
+          v_position?: string | null
+        }
+        Update: {
+          a_kz?: boolean | null
+          anfahrmg?: number | null
+          anzahl?: number | null
+          ausschuss?: number | null
+          breite?: number | null
+          component_art_nr?: string
+          component_art_stat?: string | null
+          component_bezeichnung?: string | null
+          component_kennung?: string | null
+          component_matchcode?: string | null
+          et_kz?: boolean | null
+          hoehe?: number | null
+          id?: string
+          kst?: string | null
+          kst_label?: string | null
+          laenge_mm?: number | null
+          me?: string | null
+          mehrm_ber?: number | null
+          mehrm_me?: number | null
+          menge?: number | null
+          parent_art_nr?: string
+          pos?: string | null
+          set_kz?: boolean | null
+          updated_at?: string
+          v_position?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_bom_parent_art_nr_fkey"
+            columns: ["parent_art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+        ]
+      }
+      article_customer_refs: {
+        Row: {
+          aend_dat: string | null
+          aend_ind: string | null
+          aend_nr: string | null
+          art_kunde: string | null
+          art_nr: string
+          bez_kunde: string | null
+          ean_einz: string | null
+          ean_samm: string | null
+          id: string
+          kunden_nr: string
+          la_datum: string | null
+          la_menge: number | null
+          la_preis: number | null
+          matchcode: string | null
+          me: string | null
+          memo: string | null
+          rtz_kz: string | null
+          updated_at: string
+          version_nr: string | null
+        }
+        Insert: {
+          aend_dat?: string | null
+          aend_ind?: string | null
+          aend_nr?: string | null
+          art_kunde?: string | null
+          art_nr: string
+          bez_kunde?: string | null
+          ean_einz?: string | null
+          ean_samm?: string | null
+          id?: string
+          kunden_nr: string
+          la_datum?: string | null
+          la_menge?: number | null
+          la_preis?: number | null
+          matchcode?: string | null
+          me?: string | null
+          memo?: string | null
+          rtz_kz?: string | null
+          updated_at?: string
+          version_nr?: string | null
+        }
+        Update: {
+          aend_dat?: string | null
+          aend_ind?: string | null
+          aend_nr?: string | null
+          art_kunde?: string | null
+          art_nr?: string
+          bez_kunde?: string | null
+          ean_einz?: string | null
+          ean_samm?: string | null
+          id?: string
+          kunden_nr?: string
+          la_datum?: string | null
+          la_menge?: number | null
+          la_preis?: number | null
+          matchcode?: string | null
+          me?: string | null
+          memo?: string | null
+          rtz_kz?: string | null
+          updated_at?: string
+          version_nr?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_customer_refs_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+        ]
+      }
+      article_import_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_details: Json | null
+          file_name: string
+          id: string
+          import_type: string
+          imported_by: string | null
+          rows_failed: number | null
+          rows_inserted: number | null
+          rows_processed: number | null
+          rows_updated: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_details?: Json | null
+          file_name: string
+          id?: string
+          import_type: string
+          imported_by?: string | null
+          rows_failed?: number | null
+          rows_inserted?: number | null
+          rows_processed?: number | null
+          rows_updated?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_details?: Json | null
+          file_name?: string
+          id?: string
+          import_type?: string
+          imported_by?: string | null
+          rows_failed?: number | null
+          rows_inserted?: number | null
+          rows_processed?: number | null
+          rows_updated?: number | null
+        }
+        Relationships: []
+      }
+      article_price_list_items: {
+        Row: {
+          art_nr: string
+          bereich: string | null
+          bez_pl: string | null
+          br_preis: number | null
+          id: string
+          m_vk_preis: number | null
+          me: string | null
+          menge_bis: number | null
+          menge_von: number | null
+          pe: number | null
+          pf_kz: boolean | null
+          prl_nr: string
+          rab: number | null
+          updated_at: string
+          vk_preis: number | null
+          waehrung: string | null
+        }
+        Insert: {
+          art_nr: string
+          bereich?: string | null
+          bez_pl?: string | null
+          br_preis?: number | null
+          id?: string
+          m_vk_preis?: number | null
+          me?: string | null
+          menge_bis?: number | null
+          menge_von?: number | null
+          pe?: number | null
+          pf_kz?: boolean | null
+          prl_nr: string
+          rab?: number | null
+          updated_at?: string
+          vk_preis?: number | null
+          waehrung?: string | null
+        }
+        Update: {
+          art_nr?: string
+          bereich?: string | null
+          bez_pl?: string | null
+          br_preis?: number | null
+          id?: string
+          m_vk_preis?: number | null
+          me?: string | null
+          menge_bis?: number | null
+          menge_von?: number | null
+          pe?: number | null
+          pf_kz?: boolean | null
+          prl_nr?: string
+          rab?: number | null
+          updated_at?: string
+          vk_preis?: number | null
+          waehrung?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_price_list_items_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+        ]
+      }
+      article_price_lists: {
+        Row: {
+          bezeichnung: string | null
+          prl_nr: string
+          updated_at: string
+        }
+        Insert: {
+          bezeichnung?: string | null
+          prl_nr: string
+          updated_at?: string
+        }
+        Update: {
+          bezeichnung?: string | null
+          prl_nr?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      article_prices: {
+        Row: {
+          abwertung: number | null
+          art_nr: string
+          bewertungspreis: number | null
+          buchung: string | null
+          dispo_lager: number | null
+          durchschnittspreis: number | null
+          durchschnittspreis_dat: string | null
+          einkaufspreis: number | null
+          einkaufspreis_dat: string | null
+          inventur: string | null
+          letzter_ep: number | null
+          letzter_ep_dat: string | null
+          standardpreis: number | null
+          standardpreis_dat: string | null
+          updated_at: string
+          waehrung: string | null
+        }
+        Insert: {
+          abwertung?: number | null
+          art_nr: string
+          bewertungspreis?: number | null
+          buchung?: string | null
+          dispo_lager?: number | null
+          durchschnittspreis?: number | null
+          durchschnittspreis_dat?: string | null
+          einkaufspreis?: number | null
+          einkaufspreis_dat?: string | null
+          inventur?: string | null
+          letzter_ep?: number | null
+          letzter_ep_dat?: string | null
+          standardpreis?: number | null
+          standardpreis_dat?: string | null
+          updated_at?: string
+          waehrung?: string | null
+        }
+        Update: {
+          abwertung?: number | null
+          art_nr?: string
+          bewertungspreis?: number | null
+          buchung?: string | null
+          dispo_lager?: number | null
+          durchschnittspreis?: number | null
+          durchschnittspreis_dat?: string | null
+          einkaufspreis?: number | null
+          einkaufspreis_dat?: string | null
+          inventur?: string | null
+          letzter_ep?: number | null
+          letzter_ep_dat?: string | null
+          standardpreis?: number | null
+          standardpreis_dat?: string | null
+          updated_at?: string
+          waehrung?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_prices_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: true
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+        ]
+      }
+      article_supplier_refs: {
+        Row: {
+          art_lief: string | null
+          art_nr: string
+          bestell_nr: string | null
+          bez_lief: string | null
+          dat_a_lz: string | null
+          datum_l: string | null
+          folge: string | null
+          id: string
+          lb_datum: string | null
+          lb_menge: number | null
+          lb_preis: number | null
+          lief_nr: string
+          lieferzeit: number | null
+          lieferzeit_a: number | null
+          me_liefer: string | null
+          me_preis: string | null
+          name_1: string | null
+          updated_at: string
+        }
+        Insert: {
+          art_lief?: string | null
+          art_nr: string
+          bestell_nr?: string | null
+          bez_lief?: string | null
+          dat_a_lz?: string | null
+          datum_l?: string | null
+          folge?: string | null
+          id?: string
+          lb_datum?: string | null
+          lb_menge?: number | null
+          lb_preis?: number | null
+          lief_nr: string
+          lieferzeit?: number | null
+          lieferzeit_a?: number | null
+          me_liefer?: string | null
+          me_preis?: string | null
+          name_1?: string | null
+          updated_at?: string
+        }
+        Update: {
+          art_lief?: string | null
+          art_nr?: string
+          bestell_nr?: string | null
+          bez_lief?: string | null
+          dat_a_lz?: string | null
+          datum_l?: string | null
+          folge?: string | null
+          id?: string
+          lb_datum?: string | null
+          lb_menge?: number | null
+          lb_preis?: number | null
+          lief_nr?: string
+          lieferzeit?: number | null
+          lieferzeit_a?: number | null
+          me_liefer?: string | null
+          me_preis?: string | null
+          name_1?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_supplier_refs_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+        ]
+      }
+      articles: {
+        Row: {
+          aend_dat: string | null
+          aend_ind: string | null
+          aend_nr: string | null
+          art_gr: string | null
+          art_nr: string
+          art_stat: string | null
+          art_stat_label: string | null
+          bautyp: string | null
+          bezeich_1: string | null
+          bezeich_2: string | null
+          created_at: string
+          dispo_kz: string | null
+          dispo_kz_label: string | null
+          ger_lfd_nr: string | null
+          is_blocked: boolean | null
+          kennung: string | null
+          kennung_label: string | null
+          mass_1: string | null
+          mat_art: string | null
+          matchcode: string | null
+          mb_menge: number | null
+          me: string | null
+          memo_ext: string | null
+          mwst_gr: string | null
+          mwst_gr_label: string | null
+          pe: number | null
+          t_art: string | null
+          updated_at: string
+          updated_by: string | null
+          verp_mg: number | null
+          weber_art_nr: string | null
+          zeichnung_nr: string | null
+          zolltarif_nr: string | null
+        }
+        Insert: {
+          aend_dat?: string | null
+          aend_ind?: string | null
+          aend_nr?: string | null
+          art_gr?: string | null
+          art_nr: string
+          art_stat?: string | null
+          art_stat_label?: string | null
+          bautyp?: string | null
+          bezeich_1?: string | null
+          bezeich_2?: string | null
+          created_at?: string
+          dispo_kz?: string | null
+          dispo_kz_label?: string | null
+          ger_lfd_nr?: string | null
+          is_blocked?: boolean | null
+          kennung?: string | null
+          kennung_label?: string | null
+          mass_1?: string | null
+          mat_art?: string | null
+          matchcode?: string | null
+          mb_menge?: number | null
+          me?: string | null
+          memo_ext?: string | null
+          mwst_gr?: string | null
+          mwst_gr_label?: string | null
+          pe?: number | null
+          t_art?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          verp_mg?: number | null
+          weber_art_nr?: string | null
+          zeichnung_nr?: string | null
+          zolltarif_nr?: string | null
+        }
+        Update: {
+          aend_dat?: string | null
+          aend_ind?: string | null
+          aend_nr?: string | null
+          art_gr?: string | null
+          art_nr?: string
+          art_stat?: string | null
+          art_stat_label?: string | null
+          bautyp?: string | null
+          bezeich_1?: string | null
+          bezeich_2?: string | null
+          created_at?: string
+          dispo_kz?: string | null
+          dispo_kz_label?: string | null
+          ger_lfd_nr?: string | null
+          is_blocked?: boolean | null
+          kennung?: string | null
+          kennung_label?: string | null
+          mass_1?: string | null
+          mat_art?: string | null
+          matchcode?: string | null
+          mb_menge?: number | null
+          me?: string | null
+          memo_ext?: string | null
+          mwst_gr?: string | null
+          mwst_gr_label?: string | null
+          pe?: number | null
+          t_art?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          verp_mg?: number | null
+          weber_art_nr?: string | null
+          zeichnung_nr?: string | null
+          zolltarif_nr?: string | null
+        }
+        Relationships: []
+      }
       backups: {
         Row: {
           created_at: string
@@ -3110,6 +3683,7 @@ export type Database = {
       }
       offer_items: {
         Row: {
+          art_nr: string | null
           description: string
           discount_pct: number
           id: string
@@ -3120,6 +3694,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          art_nr?: string | null
           description: string
           discount_pct?: number
           id?: string
@@ -3130,6 +3705,7 @@ export type Database = {
           unit_price?: number
         }
         Update: {
+          art_nr?: string | null
           description?: string
           discount_pct?: number
           id?: string
@@ -3316,6 +3892,7 @@ export type Database = {
       }
       order_items: {
         Row: {
+          art_nr: string | null
           created_at: string
           description: string
           id: string
@@ -3330,6 +3907,7 @@ export type Database = {
           unit_price: number | null
         }
         Insert: {
+          art_nr?: string | null
           created_at?: string
           description: string
           id?: string
@@ -3344,6 +3922,7 @@ export type Database = {
           unit_price?: number | null
         }
         Update: {
+          art_nr?: string | null
           created_at?: string
           description?: string
           id?: string
