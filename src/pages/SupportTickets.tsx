@@ -63,7 +63,7 @@ const KIND_LABELS: Record<string, string> = {
 };
 
 export default function SupportTickets() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { preferences } = usePreferences();
   const compact = preferences.compactTables;
   const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
