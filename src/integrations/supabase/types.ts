@@ -2391,6 +2391,67 @@ export type Database = {
           },
         ]
       }
+      document_intake_log: {
+        Row: {
+          action: string
+          attachment_id: string | null
+          change_note: string | null
+          created_at: string
+          created_by: string | null
+          document_id: string | null
+          id: string
+          mtiq_draft_id: string | null
+          new_version_no: number | null
+          signals: Json
+        }
+        Insert: {
+          action: string
+          attachment_id?: string | null
+          change_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          mtiq_draft_id?: string | null
+          new_version_no?: number | null
+          signals?: Json
+        }
+        Update: {
+          action?: string
+          attachment_id?: string | null
+          change_note?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          mtiq_draft_id?: string | null
+          new_version_no?: number | null
+          signals?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_intake_log_attachment_id_fkey"
+            columns: ["attachment_id"]
+            isOneToOne: false
+            referencedRelation: "mtiq_draft_attachments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_intake_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_intake_log_mtiq_draft_id_fkey"
+            columns: ["mtiq_draft_id"]
+            isOneToOne: false
+            referencedRelation: "mtiq_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_links: {
         Row: {
           document_id: string
@@ -3326,6 +3387,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          attachment_match_proposals: Json
           created_at: string
           created_by: string | null
           draft_assignee_id: string | null
@@ -3354,6 +3416,10 @@ export type Database = {
           mtiq_reasoning: string | null
           original_snapshot: Json | null
           possible_duplicate_of: string | null
+          recommended_reason: string | null
+          route: string
+          route_confirmed_at: string | null
+          route_confirmed_by: string | null
           source_email_body: string | null
           source_email_from: string | null
           source_email_message_id: string | null
@@ -3364,6 +3430,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          attachment_match_proposals?: Json
           created_at?: string
           created_by?: string | null
           draft_assignee_id?: string | null
@@ -3392,6 +3459,10 @@ export type Database = {
           mtiq_reasoning?: string | null
           original_snapshot?: Json | null
           possible_duplicate_of?: string | null
+          recommended_reason?: string | null
+          route?: string
+          route_confirmed_at?: string | null
+          route_confirmed_by?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
           source_email_message_id?: string | null
@@ -3402,6 +3473,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          attachment_match_proposals?: Json
           created_at?: string
           created_by?: string | null
           draft_assignee_id?: string | null
@@ -3430,6 +3502,10 @@ export type Database = {
           mtiq_reasoning?: string | null
           original_snapshot?: Json | null
           possible_duplicate_of?: string | null
+          recommended_reason?: string | null
+          route?: string
+          route_confirmed_at?: string | null
+          route_confirmed_by?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
           source_email_message_id?: string | null

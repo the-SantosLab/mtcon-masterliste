@@ -8,6 +8,11 @@
 // (so users can also send case mails to this same inbox). Everything else becomes a draft.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  proposeAttachmentMatches,
+  inferRoute,
+  type AttachmentInput,
+} from "../_shared/document-match.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -540,6 +545,43 @@ ${emailBody || "(empty)"}`;
     console.error("draft attachment persistence failed", e);
   }
 
+  // ===== Route inference + document version proposals =====================
+  // Look up the freshly inserted attachments for this draft and propose
+  // whether each one is a new version of an existing document.
+  try {
+    const draftId = inserted.id as string;
+    const { data: attRows } = await admin
+      .from("mtiq_draft_attachments")
+      .select("id,file_name,mime_type,size_bytes,storage_path")
+      .eq("draft_id", draftId);
+    const atts: AttachmentInput[] = (attRows ?? []) as AttachmentInput[];
+
+    const proposals = await proposeAttachmentMatches(
+      SUPABASE_URL,
+      SERVICE_ROLE,
+      atts,
+      {
+        from: fromName ? `${fromName} <${fromEmail}>` : fromEmail,
+        subject,
+        body: emailBody,
+        customer_no: null,
+        client_name: null,
+      },
+    );
+
+    const { route, reason } = inferRoute(emailBody, subject, atts, proposals);
+
+    await admin
+      .from("mtiq_drafts")
+      .update({
+        route,
+        recommended_reason: reason,
+        attachment_match_proposals: proposals,
+      })
+      .eq("id", draftId);
+  } catch (e) {
+    console.error("route inference failed", e);
+  }
 
   return new Response(JSON.stringify({ status: "ok", draft_id: inserted.id }), {
     status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
