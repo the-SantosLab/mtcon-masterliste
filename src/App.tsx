@@ -18,6 +18,7 @@ import CasesKanban from "./pages/CasesKanban";
 import CaseDetail from "./pages/CaseDetail";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
+import AdminArticles from "./pages/AdminArticles";
 import ProductRequests from "./pages/ProductRequests";
 import AdminDepartments from "./pages/AdminDepartments";
 
