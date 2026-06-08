@@ -1726,6 +1726,7 @@ export type Database = {
           name: string
           owner_id: string | null
           parent_id: string | null
+          private_inbox: boolean
           sort_order: number
         }
         Insert: {
@@ -1737,6 +1738,7 @@ export type Database = {
           name: string
           owner_id?: string | null
           parent_id?: string | null
+          private_inbox?: boolean
           sort_order?: number
         }
         Update: {
@@ -1748,6 +1750,7 @@ export type Database = {
           name?: string
           owner_id?: string | null
           parent_id?: string | null
+          private_inbox?: boolean
           sort_order?: number
         }
         Relationships: [
@@ -4661,6 +4664,7 @@ export type Database = {
         Returns: boolean
       }
       is_portal_customer: { Args: { uid?: string }; Returns: boolean }
+      is_private_inbox_dept: { Args: { p_dept_id: string }; Returns: boolean }
       is_project_member: {
         Args: { p_project_id: string; uid?: string }
         Returns: boolean

@@ -163,7 +163,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
       supabase.from('products').select('*').order('name'),
       supabase.from('internal_areas').select('*').order('name'),
       supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false }),
-      supabase.from('departments').select('id, name, code, parent_id, owner_id, is_active').eq('is_active', true).order('sort_order'),
+      supabase.from('departments').select('id, name, code, parent_id, owner_id, is_active, private_inbox').eq('is_active', true).order('sort_order'),
       supabase.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name'),
       supabase.from('user_roles').select('role').eq('user_id', userId),
       (supabase as any).from('department_members').select('department_id, user_id, role').eq('user_id', userId),
@@ -174,7 +174,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
       setAreas(ar.data || []);
       const projectsData = (proj.data || []) as ProjectOption[];
       setProjects(projectsData);
-      const deptData = (dept.data || []) as (DeptOption & { owner_id: string | null })[];
+      const deptData = (dept.data || []) as (DeptOption & { owner_id: string | null; private_inbox?: boolean })[];
       setDepartments(deptData);
       setProfiles((prof.data || []) as Profile[]);
       setDeptMembers(((members as any)?.data || []) as { department_id: string; user_id: string }[]);
@@ -187,7 +187,8 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
         const writePerms = new Set((perms.data || []).filter((p: any) => p.role === 'write' || p.role === 'lead').map((p: any) => p.department_id));
         const allowed = new Set<string>();
         for (const d of deptData) {
-          if (d.owner_id === userId) allowed.add(d.id);
+          if ((d as any).private_inbox) allowed.add(d.id);
+          else if (d.owner_id === userId) allowed.add(d.id);
           else if (!d.owner_id && writePerms.has(d.id)) allowed.add(d.id);
         }
         setWritableDeptIds(allowed);

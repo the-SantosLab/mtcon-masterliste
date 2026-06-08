@@ -55,8 +55,10 @@ export function CreateCaseFromDeptDialog({ open, onClose, departmentId, departme
             const writePerms = new Set((perms.data || []).filter((p: any) => p.role === 'write' || p.role === 'lead').map((p: any) => p.department_id));
             const allowed = new Set<string>();
             for (const d of departments as any[]) {
-              if (d.owner_id === user.id) allowed.add(d.id);
+              if (d.private_inbox) allowed.add(d.id);
+              else if (d.owner_id === user.id) allowed.add(d.id);
               else if (!d.owner_id && writePerms.has(d.id)) allowed.add(d.id);
+              else if (writePerms.has(d.id)) allowed.add(d.id);
             }
             setWritableDeptIds(allowed);
           }
