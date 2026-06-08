@@ -357,15 +357,15 @@ export async function runImport(
       break;
     }
     case 'attributes': {
-      // First make sure articles exist (light upsert)
-      const articleStubs = rows
-        .map((r) => ({ art_nr: str(r['Art.-Nr']), matchcode: str(r['Matchcode']), bezeich_1: str(r['Bezeich 1']) }))
-        .filter((r) => r.art_nr);
-      await batchedUpsert('articles', articleStubs, 'art_nr');
+      // Sachmerkmale-Datei enthält neben Merkmalen auch alle Stammfelder inkl. technischer Spezifikationen.
+      // Daher voller mapArticles-Upsert (keine reinen Stubs mehr) → 16 technische Felder werden auch hier befüllt.
+      const articleRecs = mapArticles(rows).map((r) => ({ ...r, updated_by: userId }));
+      if (articleRecs.length) await batchedUpsert('articles', articleRecs, 'art_nr');
       const attrs = mapAttributes(rows);
       result = await batchedUpsert('article_attributes', attrs, 'art_nr,attr_key');
       break;
     }
+
     case 'prices': {
       const recs = mapPrices(rows);
       result = await batchedUpsert('article_prices', recs, 'art_nr');
