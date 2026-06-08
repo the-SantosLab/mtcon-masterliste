@@ -207,7 +207,7 @@ export default function CasesList() {
   };
 
   const filtered = cases.filter(c => {
-    if (onlyMine && c.assignee_id !== user?.id) return false;
+    if (onlyMine && c.assignee_id !== user?.id && !myTaskCaseIds.has(c.id)) return false;
     if (!statusFilter.includes(c.status)) return false;
     if (assigneeFilter === 'unassigned' && c.assignee_id !== null) return false;
     if (assigneeFilter !== 'all' && assigneeFilter !== 'unassigned' && c.assignee_id !== assigneeFilter) return false;
