@@ -3,8 +3,13 @@ import type { Enums } from '@/integrations/supabase/types';
 type CaseStatus = Enums<'case_status'>;
 
 /** Tailwind/CSS-Klasse für die Zeilen-Hervorhebung anhand der Chili-Stufe (0–5).
- *  Liefert einen leeren String, wenn keine Chili gesetzt ist. */
-export function getUrgencyRowClass(urgency: number | null | undefined): string {
+ *  Liefert einen leeren String, wenn keine Chili gesetzt ist
+ *  oder der Vorgang in einem Endstatus ist (abgeschlossen/verworfen/archiv). */
+export function getUrgencyRowClass(
+  urgency: number | null | undefined,
+  status?: CaseStatus | null,
+): string {
+  if (status && ['abgeschlossen', 'verworfen', 'archiv'].includes(status)) return '';
   const n = typeof urgency === 'number' ? urgency : 0;
   if (n < 1 || n > 5) return '';
   return `urgency-row-${n}`;
