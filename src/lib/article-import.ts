@@ -119,9 +119,27 @@ function mapArticles(rows: Row[]) {
       mass_1: str(r['Maß 1']),
       verp_mg: num(r['Verp.Mg']),
       mb_menge: num(r['MB-Menge']),
+      // Technische Bauteilspezifikationen
+      koerper: str(r['Körper']),
+      ausfuehrung: str(r['Ausführung']),
+      pins: str(r['Pins']),
+      material: str(r['Material']),
+      galvanik: str(r['Galvanik']),
+      hoehe: str(r['Höhe']),
+      gewinde: str(r['Gewinde']),
+      nutz_gewinde: str(r['nutz.Gewinde']) ?? str(r['nutz. Gewi']),
+      pinlaenge: str(r['Pinlänge']),
+      rastermass: str(r['Rastermaß']) ?? str(r['Rasterm']),
+      dichtring: str(r['Dichtring']),
+      erni_nr: str(r['ERNI Nr']) ?? str(r['ERNI']),
+      ics_nr: str(r['ICS Nr']) ?? str(r['ICS']),
+      eisos_nr: str(r['EISOS Nr']) ?? str(r['eiSos']),
+      stw_nr: str(r['STW Nummer']) ?? str(r['STW Nr']),
+      weber_bez: str(r['Bez. Fa Weber']),
     }))
     .filter((r) => r.art_nr);
 }
+
 
 function mapAttributes(rows: Row[]) {
   const out: { art_nr: string; attr_key: string; attr_label: string | null; attr_value: string | null }[] = [];
