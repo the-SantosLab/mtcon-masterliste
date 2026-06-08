@@ -8,6 +8,11 @@
 // (so users can also send case mails to this same inbox). Everything else becomes a draft.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  proposeAttachmentMatches,
+  inferRoute,
+  type AttachmentInput,
+} from "../_shared/document-match.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
