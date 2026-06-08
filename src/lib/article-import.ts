@@ -180,6 +180,8 @@ function mapPrices(rows: Row[]) {
       art_nr: str(r['Art.-Nr']),
       waehrung: str(r['Währung']) ?? 'EUR',
       bewertungspreis: num(r['Bewertungspreis']),
+      bewertungspreis_dat: dat(r['Datim SK 1']) ?? dat(r['Datum SK 1']),
+
       standardpreis: num(r['Standardpreis (SP)']),
       standardpreis_dat: dat(r['Datum SP']),
       durchschnittspreis: num(r['Durchschnittspreis (DP)']),
