@@ -64,6 +64,9 @@ type Draft = {
   draft_note: string | null;
   mtiq_generated_note: string | null;
   possible_duplicate_of: string | null;
+  route?: 'vorgang' | 'dokument' | 'unklar' | null;
+  recommended_reason?: string | null;
+  attachment_match_proposals?: any[] | null;
 };
 
 type DeptOpt = { id: string; name: string; parent_id: string | null };
