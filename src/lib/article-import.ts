@@ -146,21 +146,33 @@ function mapAttributes(rows: Row[]) {
   for (const r of rows) {
     const art_nr = str(r['Art.-Nr']);
     if (!art_nr) continue;
-    for (const key of Object.keys(r)) {
+    const keys = Object.keys(r);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       const m = key.match(/^Merkmal\s+(\d+)$/i);
       if (!m) continue;
       const v = str(r[key]);
       if (!v) continue;
+      // Pair: the column directly before "[ Merkmal NNN ]" is "☰ <FriendlyName>"
+      // After cleanKey strips brackets and ☰, the previous key is the label.
+      const prevKey = i > 0 ? keys[i - 1] : null;
+      const label =
+        prevKey &&
+        !/^Merkmal\s+\d+$/i.test(prevKey) &&
+        !['Art.-Nr', 'Art-Nr', 'Matchcode', 'Bezeich 1', 'Bezeich 2'].includes(prevKey)
+          ? prevKey
+          : null;
       out.push({
         art_nr,
         attr_key: `merkmal_${m[1]}`,
-        attr_label: null,
+        attr_label: label,
         attr_value: v,
       });
     }
   }
   return out;
 }
+
 
 function mapPrices(rows: Row[]) {
   return rows
