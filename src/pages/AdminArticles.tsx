@@ -446,17 +446,21 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
               <TabsTrigger value="bom" className="text-xs">Stückliste ({bom.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="stamm" className="pt-3">
-              <DetailGrid data={article} />
+              <DetailGrid data={article} table="articles" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setArticle(d)} />
             </TabsContent>
             <TabsContent value="attr" className="pt-3">
               <SimpleTable rows={attributes} cols={[
                 { k: 'attr_key', l: 'Merkmal' },
+                { k: 'attr_label', l: 'Bezeichnung' },
                 { k: 'attr_value', l: 'Wert' },
               ]} />
             </TabsContent>
             <TabsContent value="pr" className="pt-3">
-              {price ? <DetailGrid data={price} /> : <div className="text-xs text-muted-foreground">Keine Preise hinterlegt</div>}
+              {price
+                ? <DetailGrid data={price} table="article_prices" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setPrice(d)} />
+                : <div className="text-xs text-muted-foreground">Keine Preise hinterlegt</div>}
             </TabsContent>
+
             <TabsContent value="pl" className="pt-3">
               <SimpleTable rows={priceList} cols={[
                 { k: 'prl_nr', l: 'Prl-Nr' }, { k: 'bez_pl', l: 'Preisliste' },
