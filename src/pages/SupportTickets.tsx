@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Headphones, AlertCircle, CheckCircle, Clock, MessageSquare, UserPlus, Loader2, Send, Filter, X } from 'lucide-react';
+import { Search, Headphones, AlertCircle, CheckCircle, Clock, MessageSquare, UserPlus, Loader2, Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
@@ -76,21 +76,6 @@ export default function SupportTickets() {
   const [assigneeFilter, setAssigneeFilter] = useState<Set<string>>(new Set());
   const [sourceFilter, setSourceFilter] = useState<Set<string>>(new Set());
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [testingWa, setTestingWa] = useState(false);
-
-  const sendCallmebotTest = async () => {
-    setTestingWa(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('callmebot-test');
-      if (error) throw error;
-      if ((data as any)?.ok) toast.success('Test-WhatsApp gesendet');
-      else toast.error('CallMeBot-Antwort: ' + ((data as any)?.body || 'unbekannt'));
-    } catch (e: any) {
-      toast.error('Fehler: ' + (e?.message || 'Test fehlgeschlagen'));
-    } finally {
-      setTestingWa(false);
-    }
-  };
 
   const fetchTickets = async () => {
     const { data } = await supabase
@@ -151,19 +136,6 @@ export default function SupportTickets() {
             <p className="text-xs text-muted-foreground mt-0.5">Kundenanfragen sowie interne Bug-/Feedback-Meldungen verwalten · {internCount} intern</p>
           </div>
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs"
-                onClick={sendCallmebotTest}
-                disabled={testingWa}
-                title="Test-WhatsApp an +49 152 39601825"
-              >
-                {testingWa ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
-                WhatsApp-Test
-              </Button>
-            )}
             <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline" className="h-8 text-xs">
