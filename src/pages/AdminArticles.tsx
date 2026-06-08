@@ -201,30 +201,51 @@ function BrowseTab() {
   const [q, setQ] = useState('');
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [total, setTotal] = useState(0);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  useEffect(() => {
+    setPage(1);
+  }, [q, pageSize]);
 
   useEffect(() => {
     let cancel = false;
     setLoading(true);
     const run = async () => {
-      let query = (supabase as any)
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let base = (supabase as any)
         .from('articles')
-        .select('art_nr,matchcode,bezeich_1,art_gr,me,art_stat,is_blocked')
+        .select('art_nr,matchcode,bezeich_1,art_gr,me,art_stat,is_blocked', { count: 'exact' })
         .order('art_nr', { ascending: true })
-        .limit(200);
+        .range(from, to);
+
       if (q.trim()) {
         const t = q.trim();
-        query = query.or(`art_nr.ilike.%${t}%,matchcode.ilike.%${t}%,bezeich_1.ilike.%${t}%`);
+        base = base.or(`art_nr.ilike.%${t}%,matchcode.ilike.%${t}%,bezeich_1.ilike.%${t}%`);
       }
-      const { data, error } = await query;
+
+      const { data, error, count } = await base;
       if (!cancel) {
         if (error) toast.error(error.message);
         setRows(data ?? []);
+        setTotal(count ?? 0);
         setLoading(false);
       }
     };
     const t = setTimeout(run, 200);
     return () => { cancel = true; clearTimeout(t); };
-  }, [q]);
+  }, [q, page, pageSize]);
+
+  const startItem = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, total);
+
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
 
   return (
     <div className="space-y-3 pt-4">
@@ -256,7 +277,7 @@ function BrowseTab() {
             {!loading && rows.length === 0 && (
               <TableRow><TableCell colSpan={6} className="text-xs text-center text-muted-foreground py-6">Keine Artikel</TableCell></TableRow>
             )}
-            {rows.map((r) => (
+            {!loading && rows.map((r) => (
               <TableRow key={r.art_nr}>
                 <TableCell className="text-xs font-mono">{r.art_nr}</TableCell>
                 <TableCell className="text-xs">{r.matchcode}</TableCell>
@@ -273,7 +294,70 @@ function BrowseTab() {
           </TableBody>
         </Table>
       </div>
-      <p className="text-[10px] text-muted-foreground">Erste 200 Treffer. Suchfeld nutzen für mehr.</p>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-muted-foreground">
+            {total > 0 ? `${startItem}–${endItem} von ${total}` : '0 Treffer'}
+          </span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="h-7 text-[10px] bg-secondary border border-border rounded px-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={200}>200</option>
+          </select>
+          <span className="text-[10px] text-muted-foreground">pro Seite</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-[10px] px-2"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={!canPrev || loading}
+          >
+            Zurück
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((p) => {
+              if (totalPages <= 7) return true;
+              if (p === 1 || p === totalPages) return true;
+              if (Math.abs(p - page) <= 1) return true;
+              return false;
+            })
+            .map((p, idx, arr) => {
+              const showEllipsis = idx > 0 && p - arr[idx - 1] > 1;
+              return (
+                <span key={p} className="flex items-center gap-1">
+                  {showEllipsis && <span className="text-[10px] text-muted-foreground px-1">…</span>}
+                  <Button
+                    variant={p === page ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 w-7 p-0 text-[10px]"
+                    onClick={() => setPage(p)}
+                    disabled={loading}
+                  >
+                    {p}
+                  </Button>
+                </span>
+              );
+            })}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-[10px] px-2"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={!canNext || loading}
+          >
+            Weiter
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
