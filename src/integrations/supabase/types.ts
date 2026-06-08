@@ -609,6 +609,7 @@ export type Database = {
           abwertung: number | null
           art_nr: string
           bewertungspreis: number | null
+          bewertungspreis_dat: string | null
           buchung: string | null
           dispo_lager: number | null
           durchschnittspreis: number | null
@@ -627,6 +628,7 @@ export type Database = {
           abwertung?: number | null
           art_nr: string
           bewertungspreis?: number | null
+          bewertungspreis_dat?: string | null
           buchung?: string | null
           dispo_lager?: number | null
           durchschnittspreis?: number | null
@@ -645,6 +647,7 @@ export type Database = {
           abwertung?: number | null
           art_nr?: string
           bewertungspreis?: number | null
+          bewertungspreis_dat?: string | null
           buchung?: string | null
           dispo_lager?: number | null
           durchschnittspreis?: number | null
@@ -749,30 +752,46 @@ export type Database = {
           art_nr: string
           art_stat: string | null
           art_stat_label: string | null
+          ausfuehrung: string | null
           bautyp: string | null
           bezeich_1: string | null
           bezeich_2: string | null
           created_at: string
+          dichtring: string | null
           dispo_kz: string | null
           dispo_kz_label: string | null
+          eisos_nr: string | null
+          erni_nr: string | null
+          galvanik: string | null
           ger_lfd_nr: string | null
+          gewinde: string | null
+          hoehe: string | null
+          ics_nr: string | null
           is_blocked: boolean | null
           kennung: string | null
           kennung_label: string | null
+          koerper: string | null
           mass_1: string | null
           mat_art: string | null
           matchcode: string | null
+          material: string | null
           mb_menge: number | null
           me: string | null
           memo_ext: string | null
           mwst_gr: string | null
           mwst_gr_label: string | null
+          nutz_gewinde: string | null
           pe: number | null
+          pinlaenge: string | null
+          pins: string | null
+          rastermass: string | null
+          stw_nr: string | null
           t_art: string | null
           updated_at: string
           updated_by: string | null
           verp_mg: number | null
           weber_art_nr: string | null
+          weber_bez: string | null
           zeichnung_nr: string | null
           zolltarif_nr: string | null
         }
@@ -784,30 +803,46 @@ export type Database = {
           art_nr: string
           art_stat?: string | null
           art_stat_label?: string | null
+          ausfuehrung?: string | null
           bautyp?: string | null
           bezeich_1?: string | null
           bezeich_2?: string | null
           created_at?: string
+          dichtring?: string | null
           dispo_kz?: string | null
           dispo_kz_label?: string | null
+          eisos_nr?: string | null
+          erni_nr?: string | null
+          galvanik?: string | null
           ger_lfd_nr?: string | null
+          gewinde?: string | null
+          hoehe?: string | null
+          ics_nr?: string | null
           is_blocked?: boolean | null
           kennung?: string | null
           kennung_label?: string | null
+          koerper?: string | null
           mass_1?: string | null
           mat_art?: string | null
           matchcode?: string | null
+          material?: string | null
           mb_menge?: number | null
           me?: string | null
           memo_ext?: string | null
           mwst_gr?: string | null
           mwst_gr_label?: string | null
+          nutz_gewinde?: string | null
           pe?: number | null
+          pinlaenge?: string | null
+          pins?: string | null
+          rastermass?: string | null
+          stw_nr?: string | null
           t_art?: string | null
           updated_at?: string
           updated_by?: string | null
           verp_mg?: number | null
           weber_art_nr?: string | null
+          weber_bez?: string | null
           zeichnung_nr?: string | null
           zolltarif_nr?: string | null
         }
@@ -819,30 +854,46 @@ export type Database = {
           art_nr?: string
           art_stat?: string | null
           art_stat_label?: string | null
+          ausfuehrung?: string | null
           bautyp?: string | null
           bezeich_1?: string | null
           bezeich_2?: string | null
           created_at?: string
+          dichtring?: string | null
           dispo_kz?: string | null
           dispo_kz_label?: string | null
+          eisos_nr?: string | null
+          erni_nr?: string | null
+          galvanik?: string | null
           ger_lfd_nr?: string | null
+          gewinde?: string | null
+          hoehe?: string | null
+          ics_nr?: string | null
           is_blocked?: boolean | null
           kennung?: string | null
           kennung_label?: string | null
+          koerper?: string | null
           mass_1?: string | null
           mat_art?: string | null
           matchcode?: string | null
+          material?: string | null
           mb_menge?: number | null
           me?: string | null
           memo_ext?: string | null
           mwst_gr?: string | null
           mwst_gr_label?: string | null
+          nutz_gewinde?: string | null
           pe?: number | null
+          pinlaenge?: string | null
+          pins?: string | null
+          rastermass?: string | null
+          stw_nr?: string | null
           t_art?: string | null
           updated_at?: string
           updated_by?: string | null
           verp_mg?: number | null
           weber_art_nr?: string | null
+          weber_bez?: string | null
           zeichnung_nr?: string | null
           zolltarif_nr?: string | null
         }

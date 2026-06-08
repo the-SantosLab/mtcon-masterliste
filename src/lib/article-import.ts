@@ -119,24 +119,53 @@ function mapArticles(rows: Row[]) {
       mass_1: str(r['Maß 1']),
       verp_mg: num(r['Verp.Mg']),
       mb_menge: num(r['MB-Menge']),
+      // Technische Bauteilspezifikationen
+      koerper: str(r['Körper']),
+      ausfuehrung: str(r['Ausführung']),
+      pins: str(r['Pins']),
+      material: str(r['Material']),
+      galvanik: str(r['Galvanik']),
+      hoehe: str(r['Höhe']),
+      gewinde: str(r['Gewinde']),
+      nutz_gewinde: str(r['nutz.Gewinde']) ?? str(r['nutz. Gewi']),
+      pinlaenge: str(r['Pinlänge']),
+      rastermass: str(r['Rastermaß']) ?? str(r['Rasterm']),
+      dichtring: str(r['Dichtring']),
+      erni_nr: str(r['ERNI Nr']) ?? str(r['ERNI']),
+      ics_nr: str(r['ICS Nr']) ?? str(r['ICS']),
+      eisos_nr: str(r['EISOS Nr']) ?? str(r['eiSos']),
+      stw_nr: str(r['STW Nummer']) ?? str(r['STW Nr']),
+      weber_bez: str(r['Bez. Fa Weber']),
     }))
     .filter((r) => r.art_nr);
 }
+
 
 function mapAttributes(rows: Row[]) {
   const out: { art_nr: string; attr_key: string; attr_label: string | null; attr_value: string | null }[] = [];
   for (const r of rows) {
     const art_nr = str(r['Art.-Nr']);
     if (!art_nr) continue;
-    for (const key of Object.keys(r)) {
+    const keys = Object.keys(r);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       const m = key.match(/^Merkmal\s+(\d+)$/i);
       if (!m) continue;
       const v = str(r[key]);
       if (!v) continue;
+      // Pair: the column directly before "[ Merkmal NNN ]" is "☰ <FriendlyName>"
+      // After cleanKey strips brackets and ☰, the previous key is the label.
+      const prevKey = i > 0 ? keys[i - 1] : null;
+      const label =
+        prevKey &&
+        !/^Merkmal\s+\d+$/i.test(prevKey) &&
+        !['Art.-Nr', 'Art-Nr', 'Matchcode', 'Bezeich 1', 'Bezeich 2'].includes(prevKey)
+          ? prevKey
+          : null;
       out.push({
         art_nr,
         attr_key: `merkmal_${m[1]}`,
-        attr_label: null,
+        attr_label: label,
         attr_value: v,
       });
     }
@@ -144,12 +173,15 @@ function mapAttributes(rows: Row[]) {
   return out;
 }
 
+
 function mapPrices(rows: Row[]) {
   return rows
     .map((r) => ({
       art_nr: str(r['Art.-Nr']),
       waehrung: str(r['Währung']) ?? 'EUR',
       bewertungspreis: num(r['Bewertungspreis']),
+      bewertungspreis_dat: dat(r['Datim SK 1']) ?? dat(r['Datum SK 1']),
+
       standardpreis: num(r['Standardpreis (SP)']),
       standardpreis_dat: dat(r['Datum SP']),
       durchschnittspreis: num(r['Durchschnittspreis (DP)']),
@@ -325,15 +357,15 @@ export async function runImport(
       break;
     }
     case 'attributes': {
-      // First make sure articles exist (light upsert)
-      const articleStubs = rows
-        .map((r) => ({ art_nr: str(r['Art.-Nr']), matchcode: str(r['Matchcode']), bezeich_1: str(r['Bezeich 1']) }))
-        .filter((r) => r.art_nr);
-      await batchedUpsert('articles', articleStubs, 'art_nr');
+      // Sachmerkmale-Datei enthält neben Merkmalen auch alle Stammfelder inkl. technischer Spezifikationen.
+      // Daher voller mapArticles-Upsert (keine reinen Stubs mehr) → 16 technische Felder werden auch hier befüllt.
+      const articleRecs = mapArticles(rows).map((r) => ({ ...r, updated_by: userId }));
+      if (articleRecs.length) await batchedUpsert('articles', articleRecs, 'art_nr');
       const attrs = mapAttributes(rows);
       result = await batchedUpsert('article_attributes', attrs, 'art_nr,attr_key');
       break;
     }
+
     case 'prices': {
       const recs = mapPrices(rows);
       result = await batchedUpsert('article_prices', recs, 'art_nr');
