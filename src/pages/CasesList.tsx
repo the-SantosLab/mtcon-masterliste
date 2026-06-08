@@ -86,16 +86,32 @@ export default function CasesList() {
     setLoading(false);
   };
 
+  const [myTaskCaseIds, setMyTaskCaseIds] = useState<Set<string>>(new Set());
+
+  const fetchMyTaskCaseIds = async () => {
+    if (!user?.id) { setMyTaskCaseIds(new Set()); return; }
+    const { data } = await supabase
+      .from('case_tasks')
+      .select('case_id')
+      .eq('assigned_to', user.id);
+    setMyTaskCaseIds(new Set((data || []).map((r: any) => r.case_id)));
+  };
+
   useEffect(() => {
     fetchCases();
+    fetchMyTaskCaseIds();
     supabase.from('users_profile').select('*').then(r => setProfiles((r.data || []) as any[]));
     supabase.from('projects').select('id, project_number, name').eq('status', 'active').order('created_at', { ascending: false })
       .then(r => setProjects(r.data || []));
     supabase.from('departments').select('id, name, code, parent_id').eq('is_active', true).order('sort_order')
       .then(r => setDepartments((r.data || []) as DeptFilterOption[]));
-    const ch = supabase.channel('list-cases').on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases()).subscribe();
+    const ch = supabase.channel('list-cases')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, () => fetchCases())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, () => fetchMyTaskCaseIds())
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     const f = searchParams.get('filter');
