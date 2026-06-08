@@ -394,6 +394,7 @@ export default function CasesList() {
           </div>
           <button
             onClick={toggleOnlyMine}
+            title="Vorgänge, in denen ich Bearbeiter oder einer Unteraufgabe zugewiesen bin"
             className={cn(
               'flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs font-medium transition-colors shrink-0',
               onlyMine
