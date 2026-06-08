@@ -584,7 +584,7 @@ export default function ProjectDetail() {
                         {sortedCases.length === 0 ? (
                           <tr><td colSpan={6} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
                         ) : sortedCases.map(c => (
-                          <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency))}>
+                          <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency, (c as any).status))}>
                             <td className={cellCls}>
                               <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
                             </td>
