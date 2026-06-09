@@ -143,11 +143,11 @@ function PaginatedBrowser({
       <div className="rounded-md border border-border bg-card">
         <table className={`w-full caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
           <thead className="[&_tr]:border-b">
-            <tr className="border-b bg-card">
+            <tr className="border-b">
               {columns.map((c) => (
                 <th
                   key={c.key}
-                  className={`sticky top-0 z-20 bg-card text-left align-middle font-medium text-muted-foreground shadow-[inset_0_-1px_0_0_hsl(var(--border))] ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}
+                  className={`sticky top-0 z-20 text-left align-middle font-medium text-muted-foreground bg-card backdrop-blur-sm shadow-[inset_0_-1px_0_0_hsl(var(--border))] ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}
                 >
                   {c.label}
                 </th>
