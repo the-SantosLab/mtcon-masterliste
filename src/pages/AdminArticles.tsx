@@ -140,12 +140,12 @@ function PaginatedBrowser({
           className="h-9 text-xs pl-8"
         />
       </div>
-      <div className="rounded-md border border-border bg-card overflow-x-auto">
+      <div className="rounded-md border border-border bg-card">
         <Table className={preferences.compactTables ? 'table-compact' : ''}>
-          <TableHeader>
-            <TableRow>
+          <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
+            <TableRow className="bg-card hover:bg-card">
               {columns.map((c) => (
-                <TableHead key={c.key} className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}>{c.label}</TableHead>
+                <TableHead key={c.key} className={`bg-card ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}>{c.label}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
