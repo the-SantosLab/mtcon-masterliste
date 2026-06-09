@@ -1,4 +1,5 @@
 import { useEffect, useState, ReactNode } from 'react';
+import { usePreferences } from '@/contexts/PreferencesContext';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,6 +93,7 @@ function PaginatedBrowser({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
+  const { preferences } = usePreferences();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => { setPage(1); }, [q, pageSize]);
@@ -139,20 +141,20 @@ function PaginatedBrowser({
         />
       </div>
       <div className="rounded-md border border-border bg-card overflow-x-auto">
-        <Table>
+        <Table className={preferences.compactTables ? 'table-compact' : ''}>
           <TableHeader>
             <TableRow>
               {columns.map((c) => (
-                <TableHead key={c.key} className={`text-[10px] ${c.className ?? ''}`}>{c.label}</TableHead>
+                <TableHead key={c.key} className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}>{c.label}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading && (
-              <TableRow><TableCell colSpan={columns.length} className="text-xs text-center text-muted-foreground py-6">Lade…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={columns.length} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground`}>Lade…</TableCell></TableRow>
             )}
             {!loading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={columns.length} className="text-xs text-center text-muted-foreground py-6">Keine Treffer</TableCell></TableRow>
+              <TableRow><TableCell colSpan={columns.length} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground`}>Keine Treffer</TableCell></TableRow>
             )}
             {!loading && rows.map((r, i) => (
               <TableRow
@@ -161,7 +163,7 @@ function PaginatedBrowser({
                 onClick={onRowClick ? () => onRowClick(r) : undefined}
               >
                 {columns.map((c) => (
-                  <TableCell key={c.key} className={`text-xs ${c.className ?? ''}`}>
+                  <TableCell key={c.key} className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} ${c.className ?? ''}`}>
                     {c.render ? c.render(r) : (r[c.key] ?? '—')}
                   </TableCell>
                 ))}
@@ -506,6 +508,7 @@ function DetailGrid({
   pkVal: string;
   onSaved: (d: any) => void;
 }) {
+  const { preferences } = usePreferences();
   const { isAdmin } = useAuth();
   const SKIP = ['id', 'created_at', 'updated_at', 'updated_by', 'is_blocked', pkCol];
   const entries = Object.entries(data).filter(([k]) => !SKIP.includes(k));
@@ -557,9 +560,9 @@ function DetailGrid({
           )}
         </div>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+      <div className={`grid grid-cols-2 md:grid-cols-3 ${preferences.compactTables ? 'gap-1' : 'gap-2'}`}>
         {entries.map(([k, v]) => (
-          <div key={k} className="rounded border border-border bg-secondary/30 p-2">
+          <div key={k} className={`rounded border border-border bg-secondary/30 ${preferences.compactTables ? 'p-1' : 'p-2'}`}>
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{k}</div>
             {editing ? (
               <Input
@@ -568,7 +571,7 @@ function DetailGrid({
                 className="h-7 text-xs font-mono mt-1"
               />
             ) : (
-              <div className="text-xs font-mono truncate" title={String(v ?? '')}>
+              <div className={`font-mono truncate ${preferences.compactTables ? 'text-[10px]' : 'text-xs'}`} title={String(v ?? '')}>
                 {v === null || v === '' ? '—' : String(v)}
               </div>
             )}
@@ -581,17 +584,18 @@ function DetailGrid({
 
 
 function SimpleTable({ rows, cols }: { rows: any[]; cols: { k: string; l: string }[] }) {
-  if (!rows.length) return <div className="text-xs text-muted-foreground">Keine Einträge</div>;
+  const { preferences } = usePreferences();
+  if (!rows.length) return <div className={`${preferences.compactTables ? 'text-[10px]' : 'text-xs'} text-muted-foreground`}>Keine Einträge</div>;
   return (
     <div className="rounded-md border border-border overflow-x-auto">
-      <Table>
+      <Table className={preferences.compactTables ? 'table-compact' : ''}>
         <TableHeader>
-          <TableRow>{cols.map((c) => <TableHead key={c.k} className="text-[10px]">{c.l}</TableHead>)}</TableRow>
+          <TableRow>{cols.map((c) => <TableHead key={c.k} className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>{c.l}</TableHead>)}</TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((r, i) => (
             <TableRow key={i}>
-              {cols.map((c) => <TableCell key={c.k} className="text-xs">{r[c.k] ?? '—'}</TableCell>)}
+              {cols.map((c) => <TableCell key={c.k} className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'}>{r[c.k] ?? '—'}</TableCell>)}
             </TableRow>
           ))}
         </TableBody>
@@ -602,6 +606,7 @@ function SimpleTable({ rows, cols }: { rows: any[]; cols: { k: string; l: string
 
 // ---------------- Import tab ----------------
 function ImportTab() {
+  const { preferences } = usePreferences();
   const { user } = useAuth();
   const [pending, setPending] = useState<Pending[]>([]);
   const [running, setRunning] = useState(false);
@@ -674,27 +679,27 @@ function ImportTab() {
               Import starten
             </Button>
           </div>
-          <Table>
+          <Table className={preferences.compactTables ? 'table-compact' : ''}>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-[10px]">Datei</TableHead>
-                <TableHead className="text-[10px]">Typ</TableHead>
-                <TableHead className="text-[10px] text-right">Zeilen</TableHead>
-                <TableHead className="text-[10px]">Vorschau</TableHead>
+                <TableHead className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>Datei</TableHead>
+                <TableHead className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>Typ</TableHead>
+                <TableHead className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} text-right`}>Zeilen</TableHead>
+                <TableHead className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>Vorschau</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pending.map((p, i) => (
                 <TableRow key={i}>
-                  <TableCell className="text-xs"><FileSpreadsheet className="h-3 w-3 inline mr-1" />{p.file.name}</TableCell>
-                  <TableCell><Badge variant="secondary" className="text-[10px]">{IMPORT_TYPE_LABEL[p.type]}</Badge></TableCell>
-                  <TableCell className="text-xs text-right">{p.rows.length}</TableCell>
-                  <TableCell className="text-[10px] text-muted-foreground max-w-md truncate">
+                  <TableCell className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'}><FileSpreadsheet className="h-3 w-3 inline mr-1" />{p.file.name}</TableCell>
+                  <TableCell className={preferences.compactTables ? 'px-2 py-1' : 'px-4 py-2'}><Badge variant="secondary" className="text-[10px]">{IMPORT_TYPE_LABEL[p.type]}</Badge></TableCell>
+                  <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} text-right`}>{p.rows.length}</TableCell>
+                  <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} text-muted-foreground max-w-md truncate`}>
                     {p.headers.slice(0, 6).join(' · ')}…
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => remove(i)} disabled={running}>Entfernen</Button>
+                    <Button variant="ghost" size="sm" className={preferences.compactTables ? 'h-6 text-[10px]' : 'h-7 text-xs'} onClick={() => remove(i)} disabled={running}>Entfernen</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -720,6 +725,7 @@ function ImportTab() {
 
 // ---------------- History tab ----------------
 function HistoryTab() {
+  const { preferences } = usePreferences();
   const [rows, setRows] = useState<any[]>([]);
   useEffect(() => {
     (async () => {
@@ -733,31 +739,31 @@ function HistoryTab() {
   }, []);
   return (
     <div className="pt-4 rounded-md border border-border bg-card">
-      <Table>
+      <Table className={preferences.compactTables ? 'table-compact' : ''}>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-[10px]">Zeitpunkt</TableHead>
-            <TableHead className="text-[10px]">Datei</TableHead>
-            <TableHead className="text-[10px]">Typ</TableHead>
-            <TableHead className="text-[10px] text-right">Zeilen</TableHead>
-            <TableHead className="text-[10px] text-right">Upsert</TableHead>
-            <TableHead className="text-[10px] text-right">Fehler</TableHead>
-            <TableHead className="text-[10px] text-right">Dauer</TableHead>
+            <TableHead className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>Zeitpunkt</TableHead>
+            <TableHead className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>Datei</TableHead>
+            <TableHead className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'}>Typ</TableHead>
+            <TableHead className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} text-right`}>Zeilen</TableHead>
+            <TableHead className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} text-right`}>Upsert</TableHead>
+            <TableHead className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} text-right`}>Fehler</TableHead>
+            <TableHead className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} text-right`}>Dauer</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length === 0 && (
-            <TableRow><TableCell colSpan={7} className="text-xs text-center text-muted-foreground py-6">Noch keine Importe</TableCell></TableRow>
+            <TableRow><TableCell colSpan={7} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground`}>Noch keine Importe</TableCell></TableRow>
           )}
           {rows.map((r) => (
             <TableRow key={r.id}>
-              <TableCell className="text-xs">{new Date(r.created_at).toLocaleString('de-DE')}</TableCell>
-              <TableCell className="text-xs font-mono truncate max-w-[260px]">{r.file_name}</TableCell>
-              <TableCell><Badge variant="secondary" className="text-[10px]">{IMPORT_TYPE_LABEL[r.import_type as ImportType] ?? r.import_type}</Badge></TableCell>
-              <TableCell className="text-xs text-right">{r.rows_processed}</TableCell>
-              <TableCell className="text-xs text-right">{r.rows_inserted}</TableCell>
-              <TableCell className="text-xs text-right">{r.rows_failed > 0 ? <span className="text-destructive">{r.rows_failed}</span> : 0}</TableCell>
-              <TableCell className="text-xs text-right text-muted-foreground">{r.duration_ms}ms</TableCell>
+              <TableCell className={preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'}>{new Date(r.created_at).toLocaleString('de-DE')}</TableCell>
+              <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} font-mono truncate max-w-[260px]`}>{r.file_name}</TableCell>
+              <TableCell className={preferences.compactTables ? 'px-2 py-1' : 'px-4 py-2'}><Badge variant="secondary" className="text-[10px]">{IMPORT_TYPE_LABEL[r.import_type as ImportType] ?? r.import_type}</Badge></TableCell>
+              <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} text-right`}>{r.rows_processed}</TableCell>
+              <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} text-right`}>{r.rows_inserted}</TableCell>
+              <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} text-right`}>{r.rows_failed > 0 ? <span className="text-destructive">{r.rows_failed}</span> : 0}</TableCell>
+              <TableCell className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} text-right text-muted-foreground`}>{r.duration_ms}ms</TableCell>
             </TableRow>
           ))}
         </TableBody>
