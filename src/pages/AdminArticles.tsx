@@ -141,37 +141,43 @@ function PaginatedBrowser({
         />
       </div>
       <div className="rounded-md border border-border bg-card">
-        <Table className={preferences.compactTables ? 'table-compact' : ''}>
-          <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
-            <TableRow className="bg-card hover:bg-card">
+        <table className={`w-full caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
+          <thead className="[&_tr]:border-b">
+            <tr className="border-b bg-card">
               {columns.map((c) => (
-                <TableHead key={c.key} className={`bg-card ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}>{c.label}</TableHead>
+                <th
+                  key={c.key}
+                  className={`sticky top-0 z-20 bg-card text-left align-middle font-medium text-muted-foreground shadow-[inset_0_-1px_0_0_hsl(var(--border))] ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}
+                >
+                  {c.label}
+                </th>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+            </tr>
+          </thead>
+          <tbody className="[&_tr:last-child]:border-0">
             {loading && (
-              <TableRow><TableCell colSpan={columns.length} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground`}>Lade…</TableCell></TableRow>
+              <tr className="border-b"><td colSpan={columns.length} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground align-middle`}>Lade…</td></tr>
             )}
             {!loading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={columns.length} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground`}>Keine Treffer</TableCell></TableRow>
+              <tr className="border-b"><td colSpan={columns.length} className={`${preferences.compactTables ? 'text-[10px] py-3' : 'text-xs py-6'} text-center text-muted-foreground align-middle`}>Keine Treffer</td></tr>
             )}
             {!loading && rows.map((r, i) => (
-              <TableRow
+              <tr
                 key={i}
-                className={onRowClick ? 'cursor-pointer hover:bg-secondary/40' : ''}
+                className={`border-b transition-colors hover:bg-muted/50 ${onRowClick ? 'cursor-pointer hover:bg-secondary/40' : ''}`}
                 onClick={onRowClick ? () => onRowClick(r) : undefined}
               >
                 {columns.map((c) => (
-                  <TableCell key={c.key} className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} ${c.className ?? ''}`}>
+                  <td key={c.key} className={`align-middle ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-xs px-4 py-2'} ${c.className ?? ''}`}>
                     {c.render ? c.render(r) : (r[c.key] ?? '—')}
-                  </TableCell>
+                  </td>
                 ))}
-              </TableRow>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground">
