@@ -140,7 +140,7 @@ function PaginatedBrowser({
           className="h-9 text-xs pl-8"
         />
       </div>
-      <div className="rounded-md border border-border bg-card">
+      <div className="rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-220px)]">
         <table className={`w-full caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
           <thead className="[&_tr]:border-b">
             <tr className="border-b">
