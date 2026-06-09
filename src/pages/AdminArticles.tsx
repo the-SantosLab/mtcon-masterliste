@@ -142,10 +142,10 @@ function PaginatedBrowser({
       </div>
       <div className="rounded-md border border-border bg-card overflow-x-auto">
         <Table className={preferences.compactTables ? 'table-compact' : ''}>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-20 bg-card [&_tr]:bg-card">
             <TableRow>
               {columns.map((c) => (
-                <TableHead key={c.key} className={`${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}>{c.label}</TableHead>
+                <TableHead key={c.key} className={`sticky top-0 bg-card ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}>{c.label}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
