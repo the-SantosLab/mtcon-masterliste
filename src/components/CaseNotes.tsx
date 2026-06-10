@@ -256,7 +256,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       await supabase.storage.from(BUCKET).remove(note.attachments.map(a => a.storage_path));
     }
     const { error } = await (supabase as any).from('case_notes').delete().eq('id', id);
-    if (error) { toast.error('Fehler beim Löschen'); return; }
+    if (error) { toastError(error, 'case_note', 'Fehler beim Löschen'); return; }
     onRefresh?.();
   };
 
