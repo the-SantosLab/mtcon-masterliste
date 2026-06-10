@@ -262,7 +262,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
 
   const togglePin = async (id: string, pinned: boolean) => {
     const { error } = await (supabase as any).from('case_notes').update({ pinned: !pinned }).eq('id', id);
-    if (error) { toast.error('Fehler beim Anpinnen'); return; }
+    if (error) { toastError(error, 'case_note', 'Fehler beim Anpinnen'); return; }
     onRefresh?.();
   };
 
