@@ -231,7 +231,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       .from('case_notes')
       .update({ body, edited_at: new Date().toISOString(), edited_by: userId })
       .eq('id', id);
-    if (error) { toast.error('Fehler beim Bearbeiten'); return; }
+    if (error) { toastError(error, 'case_note', 'Fehler beim Bearbeiten'); return; }
     await uploadAttachments(id, editPendingFiles);
     editPendingFiles.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
     setEditPendingFiles([]);
