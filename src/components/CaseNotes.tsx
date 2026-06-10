@@ -210,7 +210,19 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       .insert({ case_id: caseId, author_id: userId, body })
       .select('id')
       .single();
-    if (error || !data) { setSending(false); toast.error('Fehler beim Speichern'); return; }
+    if (error || !data) {
+      setSending(false);
+      const isPermission = error?.code === '42501' || /row-level security|permission denied/i.test(error?.message || '');
+      if (isPermission) {
+        toast.error('Keine Berechtigung für Notizen in diesem Vorgang', {
+          description: 'Du bist weder Ersteller, Bearbeiter noch Watcher dieses Vorgangs. Bitte wende Dich an den Vorgangsverantwortlichen und lasse Dich als Watcher eintragen.',
+          duration: 8000,
+        });
+      } else {
+        toast.error('Fehler beim Speichern', { description: error?.message });
+      }
+      return;
+    }
     await uploadAttachments(data.id, pendingFiles);
     pendingFiles.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
     setPendingFiles([]);
