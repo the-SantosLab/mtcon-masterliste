@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, X, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 
 interface Profile { id: string; display_name: string; short_code: string; }
@@ -40,7 +41,7 @@ export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange 
     setSaving(true);
     const { error } = await supabase.from('cases').update({ watchers: next } as any).eq('id', caseId);
     setSaving(false);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_watcher'); return; }
     onChange();
   };
 

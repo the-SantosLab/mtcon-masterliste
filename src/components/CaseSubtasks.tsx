@@ -30,6 +30,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -263,7 +264,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       due_at: editForm.due_at || null,
     };
     const { data, error } = await supabase.from('case_tasks').update(next as any).eq('id', orig.id).select('id');
-    if (error) { toast.error('Fehler: ' + error.message); setSavingEdit(false); return; }
+    if (error) { toastError(error, 'case_subtask'); setSavingEdit(false); return; }
     if (!data || data.length === 0) {
       toast.error('Keine Berechtigung, diese Unteraufgabe zu bearbeiten.');
       setSavingEdit(false);
@@ -398,7 +399,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       due_at: newDueAt || null,
       status: 'open',
     } as any).select('id').single();
-    if (error) toast.error('Fehler: ' + error.message);
+    if (error) toastError(error, 'case_subtask');
     else {
       setNewTitle('');
       setNewDeptId('');
@@ -435,7 +436,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       completed_at: null,
       completed_by: null,
     } as any).eq('id', task.id).select('id');
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_subtask'); return; }
     if (!data || data.length === 0) {
       toast.error('Du hast keine Berechtigung, diese Unteraufgabe zu ändern. Bitte wende dich an den Zuständigen oder einen Admin.');
       return;
@@ -455,7 +456,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       completed_at: new Date().toISOString(),
       completed_by: userId,
     } as any).eq('id', task.id).select('id');
-    if (error) { toast.error('Fehler: ' + error.message); setSavingCompletion(false); return; }
+    if (error) { toastError(error, 'case_subtask'); setSavingCompletion(false); return; }
     if (!updated || updated.length === 0) {
       toast.error('Du hast keine Berechtigung, diese Unteraufgabe abzuschließen. Bitte wende dich an den Zuständigen oder einen Admin.');
       setSavingCompletion(false);
@@ -626,7 +627,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const updateAssignee = async (taskId: string, assigneeId: string) => {
     const val = assigneeId === '_none' ? null : assigneeId;
     const { error } = await supabase.from('case_tasks').update({ assigned_to: val } as any).eq('id', taskId);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_subtask'); return; }
     if (val && val !== userId && sendAssignEmail) {
       supabase.functions.invoke('notify-task-assigned', { body: { caseId, taskId, assigneeId: val, actorId: userId } })
         .then(() => setTimeout(() => { setLogBump(b => b + 1); }, 1500))
@@ -638,7 +639,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const updateDueAt = async (taskId: string, due: string | null) => {
     if (dueRequired && !due) { toast.error('„Fällig bis" ist verpflichtend'); return; }
     const { error } = await supabase.from('case_tasks').update({ due_at: due } as any).eq('id', taskId);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_subtask'); return; }
     fetchTasks();
   };
 
@@ -652,7 +653,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const t = title.trim();
     if (!t) return;
     const { error } = await supabase.from('case_tasks').update({ title: t } as any).eq('id', taskId);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_subtask'); return; }
     fetchTasks();
   };
 
@@ -666,7 +667,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     setDeleting(false);
     setConfirmDeleteId(null);
     if (error) {
-      toast.error('Löschen fehlgeschlagen: ' + error.message);
+      toastError(error, 'case_subtask', 'Löschen fehlgeschlagen');
       return;
     }
     if (!count) {
@@ -682,7 +683,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       archived_at: new Date().toISOString(),
       archived_by: userId,
     } as any).eq('id', taskId);
-    if (error) { toast.error('Archivieren fehlgeschlagen: ' + error.message); return; }
+    if (error) { toastError(error, 'case_subtask', 'Archivieren fehlgeschlagen'); return; }
     toast.success('Unteraufgabe archiviert');
     fetchTasks();
   };
@@ -692,7 +693,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
       archived_at: null,
       archived_by: null,
     } as any).eq('id', taskId);
-    if (error) { toast.error('Wiederherstellen fehlgeschlagen: ' + error.message); return; }
+    if (error) { toastError(error, 'case_subtask', 'Wiederherstellen fehlgeschlagen'); return; }
     toast.success('Unteraufgabe wiederhergestellt');
     fetchTasks();
   };
@@ -893,7 +894,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             onComplete={(t) => updateTaskStatus(t, 'done')}
             onStart={async (t) => {
               const { error } = await supabase.from('case_tasks').update({ status: 'in_progress' } as any).eq('id', t.id);
-              if (error) toast.error('Fehler'); else fetchTasks();
+              if (error) toastError(error, 'case_subtask'); else fetchTasks();
             }}
             onLockedClick={(stepNum) => toast.error(`Bitte zuerst Schritt ${stepNum} abschließen`)}
           />

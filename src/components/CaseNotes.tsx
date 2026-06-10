@@ -5,6 +5,7 @@ import { Send, Pencil, Trash2, Check, X, Pin, PinOff, Paperclip, Loader2, FileTe
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { MtiqButton } from '@/components/MtiqButton';
 
@@ -212,15 +213,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       .single();
     if (error || !data) {
       setSending(false);
-      const isPermission = error?.code === '42501' || /row-level security|permission denied/i.test(error?.message || '');
-      if (isPermission) {
-        toast.error('Keine Berechtigung für Notizen in diesem Vorgang', {
-          description: 'Du bist weder Ersteller, Bearbeiter noch Watcher dieses Vorgangs. Bitte wende Dich an den Vorgangsverantwortlichen und lasse Dich als Watcher eintragen.',
-          duration: 8000,
-        });
-      } else {
-        toast.error('Fehler beim Speichern', { description: error?.message });
-      }
+      toastError(error, 'case_note');
       return;
     }
     await uploadAttachments(data.id, pendingFiles);
@@ -238,7 +231,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       .from('case_notes')
       .update({ body, edited_at: new Date().toISOString(), edited_by: userId })
       .eq('id', id);
-    if (error) { toast.error('Fehler beim Bearbeiten'); return; }
+    if (error) { toastError(error, 'case_note', 'Fehler beim Bearbeiten'); return; }
     await uploadAttachments(id, editPendingFiles);
     editPendingFiles.forEach(p => p.previewUrl && URL.revokeObjectURL(p.previewUrl));
     setEditPendingFiles([]);
@@ -251,7 +244,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
     if (!confirm('Anhang löschen?')) return;
     await supabase.storage.from(BUCKET).remove([att.storage_path]);
     const { error } = await (supabase as any).from('case_note_attachments').delete().eq('id', att.id);
-    if (error) { toast.error('Fehler beim Löschen'); return; }
+    if (error) { toastError(error, 'case_attachment', 'Fehler beim Löschen'); return; }
     fetchNotes();
   };
 
@@ -263,13 +256,13 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
       await supabase.storage.from(BUCKET).remove(note.attachments.map(a => a.storage_path));
     }
     const { error } = await (supabase as any).from('case_notes').delete().eq('id', id);
-    if (error) { toast.error('Fehler beim Löschen'); return; }
+    if (error) { toastError(error, 'case_note', 'Fehler beim Löschen'); return; }
     onRefresh?.();
   };
 
   const togglePin = async (id: string, pinned: boolean) => {
     const { error } = await (supabase as any).from('case_notes').update({ pinned: !pinned }).eq('id', id);
-    if (error) { toast.error('Fehler beim Anpinnen'); return; }
+    if (error) { toastError(error, 'case_note', 'Fehler beim Anpinnen'); return; }
     onRefresh?.();
   };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Download, Trash2, Loader2, X, FileText, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -54,7 +55,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
       toast.success('Datei(en) hochgeladen');
       fetchFiles();
     } catch (err: any) {
-      toast.error('Upload fehlgeschlagen: ' + (err.message || ''));
+      toastError(err, 'storage_upload', 'Upload fehlgeschlagen');
     } finally {
       setUploading(false);
     }
@@ -123,7 +124,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
-      toast.error('Download fehlgeschlagen');
+      toastError(null, 'case_attachment', 'Download fehlgeschlagen');
       return;
     }
     window.open(data.signedUrl, '_blank');
@@ -133,7 +134,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     const path = `${folderOf(fileName)}/${fileName}`;
     const { error } = await supabase.storage.from(bucket).remove([path]);
     if (error) {
-      toast.error('Löschen fehlgeschlagen');
+      toastError(null, 'case_attachment', 'Löschen fehlgeschlagen');
       return;
     }
     toast.success('Datei gelöscht');

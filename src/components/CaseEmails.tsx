@@ -7,6 +7,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 
@@ -95,7 +96,7 @@ export function CaseEmails({ caseId }: Props) {
         .delete()
         .eq('id', attachmentId);
       if (dbErr) {
-        toast.error('Löschen fehlgeschlagen');
+        toastError(null, 'case_email', 'Löschen fehlgeschlagen');
         setPendingDelete(prev => { const n = new Set(prev); n.delete(attachmentId); return n; });
         return;
       }
