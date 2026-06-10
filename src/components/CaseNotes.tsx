@@ -244,7 +244,7 @@ export function CaseNotes({ caseId, canEdit, userId, isAdmin, refreshKey, onRefr
     if (!confirm('Anhang löschen?')) return;
     await supabase.storage.from(BUCKET).remove([att.storage_path]);
     const { error } = await (supabase as any).from('case_note_attachments').delete().eq('id', att.id);
-    if (error) { toast.error('Fehler beim Löschen'); return; }
+    if (error) { toastError(error, 'case_attachment', 'Fehler beim Löschen'); return; }
     fetchNotes();
   };
 
