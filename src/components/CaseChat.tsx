@@ -422,7 +422,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
       setText(sentText);
       setPending(sentPending);
       setReplyTo(sentReplyTo);
-      toast.error(e.message || 'Senden fehlgeschlagen');
+      toastError(e, 'case_chat', 'Senden fehlgeschlagen');
     } finally { setSending(false); }
   };
 
