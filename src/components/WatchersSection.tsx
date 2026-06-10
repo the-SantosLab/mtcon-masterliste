@@ -41,7 +41,7 @@ export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange 
     setSaving(true);
     const { error } = await supabase.from('cases').update({ watchers: next } as any).eq('id', caseId);
     setSaving(false);
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_watcher'); return; }
     onChange();
   };
 

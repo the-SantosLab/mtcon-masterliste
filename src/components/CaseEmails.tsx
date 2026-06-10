@@ -96,7 +96,7 @@ export function CaseEmails({ caseId }: Props) {
         .delete()
         .eq('id', attachmentId);
       if (dbErr) {
-        toast.error('Löschen fehlgeschlagen');
+        toastError(null, 'case_email', 'Löschen fehlgeschlagen');
         setPendingDelete(prev => { const n = new Set(prev); n.delete(attachmentId); return n; });
         return;
       }

@@ -432,7 +432,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
     if (!body) return;
     const { error } = await (supabase as any).from('case_chat_messages')
       .update({ body, edited_at: new Date().toISOString() }).eq('id', id);
-    if (error) toast.error(error.message);
+    if (error) toastError(error, 'case_chat');
     setEditId(null); setEditText('');
   };
   const deleteMsg = async (m: ChatMessage) => {
@@ -441,13 +441,13 @@ export function CaseChat({ caseId, canWrite }: Props) {
       await supabase.storage.from(BUCKET).remove(m.attachments.map(a => a.storage_path)).catch(() => {});
     }
     const { error } = await (supabase as any).from('case_chat_messages').delete().eq('id', m.id);
-    if (error) toast.error(error.message);
+    if (error) toastError(error, 'case_chat');
   };
   const togglePin = async (m: ChatMessage) => {
     const { error } = await (supabase as any).from('case_chat_messages')
       .update({ pinned: !m.pinned, pinned_at: !m.pinned ? new Date().toISOString() : null, pinned_by: !m.pinned ? user?.id : null })
       .eq('id', m.id);
-    if (error) toast.error(error.message);
+    if (error) toastError(error, 'case_chat');
   };
   const toggleReaction = async (m: ChatMessage, emoji: string) => {
     if (!user?.id) return;
@@ -467,7 +467,7 @@ export function CaseChat({ caseId, canWrite }: Props) {
       case_id: caseId, title, description: m.body || null,
       assigned_to: user.id, created_by: user.id, status: 'open',
     });
-    if (error) toast.error(error.message);
+    if (error) toastError(error, 'case_chat');
     else toast.success('Unteraufgabe erstellt');
   };
   const toggleMute = async () => {

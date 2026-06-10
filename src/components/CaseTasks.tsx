@@ -53,7 +53,7 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
       created_by: userId,
       sort_order: tasks.length,
     }).select('id').single();
-    if (error) toast.error('Fehler: ' + error.message);
+    if (error) toastError(error, 'case_task');
     else {
       setNewTitle('');
       await fetchTasks();
@@ -73,7 +73,7 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
       completed_at: completed ? new Date().toISOString() : null,
       completed_by: completed ? userId : null,
     }).eq('id', task.id).select('id');
-    if (error) { toast.error('Fehler: ' + error.message); return; }
+    if (error) { toastError(error, 'case_task'); return; }
     if (!data || data.length === 0) {
       toast.error('Du hast keine Berechtigung, diese Aufgabe zu ändern. Bitte wende dich an den Zuständigen oder einen Admin.');
       return;
@@ -83,7 +83,7 @@ export function CaseTasks({ caseId, canEdit, userId }: CaseTasksProps) {
 
   const deleteTask = async (taskId: string) => {
     const { error } = await supabase.from('case_tasks').delete().eq('id', taskId);
-    if (error) toast.error('Fehler');
+    if (error) toastError(error, 'case_task');
     else fetchTasks();
   };
 

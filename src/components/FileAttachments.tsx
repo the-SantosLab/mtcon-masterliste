@@ -124,7 +124,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
-      toast.error('Download fehlgeschlagen');
+      toastError(null, 'case_attachment', 'Download fehlgeschlagen');
       return;
     }
     window.open(data.signedUrl, '_blank');
@@ -134,7 +134,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     const path = `${folderOf(fileName)}/${fileName}`;
     const { error } = await supabase.storage.from(bucket).remove([path]);
     if (error) {
-      toast.error('Löschen fehlgeschlagen');
+      toastError(null, 'case_attachment', 'Löschen fehlgeschlagen');
       return;
     }
     toast.success('Datei gelöscht');
