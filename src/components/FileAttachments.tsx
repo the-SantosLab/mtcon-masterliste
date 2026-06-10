@@ -55,7 +55,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
       toast.success('Datei(en) hochgeladen');
       fetchFiles();
     } catch (err: any) {
-      toast.error('Upload fehlgeschlagen: ' + (err.message || ''));
+      toastError(err, 'storage_upload', 'Upload fehlgeschlagen');
     } finally {
       setUploading(false);
     }
