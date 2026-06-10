@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { MessageContent } from '@/components/chat/MessageContent';
 import { MentionPopover, getActiveMention, type MentionUser } from '@/components/chat/MentionPopover';
 import {

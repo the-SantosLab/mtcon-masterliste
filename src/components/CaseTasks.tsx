@@ -4,6 +4,7 @@ import { CheckSquare, Square, Plus, Trash2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 
 interface CaseTask {

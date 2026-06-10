@@ -7,6 +7,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 

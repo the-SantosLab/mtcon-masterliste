@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Download, Trash2, Loader2, X, FileText, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 

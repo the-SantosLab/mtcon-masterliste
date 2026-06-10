@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 
 async function notifyUser(userId: string, type: string, title: string, body: string, href: string) {
   await supabase.from('notifications').insert({ user_id: userId, type, title, body, href });

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, X, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 
 interface Profile { id: string; display_name: string; short_code: string; }
