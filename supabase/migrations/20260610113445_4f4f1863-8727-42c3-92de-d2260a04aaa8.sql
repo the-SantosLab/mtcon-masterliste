@@ -1,0 +1,2 @@
+UPDATE public.users_profile SET avatar_url = 'https://tfzwssplxetptxnhrxse.supabase.co/storage/v1/object/public/avatars/Anja_M_big.jpg' WHERE id = '72fd5d31-f108-490f-8043-957d1d8fbd8e';
+UPDATE public.users_profile SET avatar_url = 'https://tfzwssplxetptxnhrxse.supabase.co/storage/v1/object/public/avatars/Johannes_big.jpg' WHERE id = 'bb4492e4-2f06-46f1-80b4-1d41ae322f5b';
