@@ -5,6 +5,7 @@ import { Send, Pencil, Trash2, Check, X, Pin, PinOff, Paperclip, Loader2, FileTe
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { toastError } from '@/lib/errors';
 import { cn, sanitizeFileName } from '@/lib/utils';
 import { MtiqButton } from '@/components/MtiqButton';
 
