@@ -3112,6 +3112,54 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_stock: {
+        Row: {
+          art_nr: string
+          created_at: string
+          id: string
+          min_quantity: number
+          quantity: number
+          reorder_quantity: number
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          art_nr: string
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          quantity?: number
+          reorder_quantity?: number
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          art_nr?: string
+          created_at?: string
+          id?: string
+          min_quantity?: number
+          quantity?: number
+          reorder_quantity?: number
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_stock_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+          {
+            foreignKeyName: "inventory_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       issos_documents: {
         Row: {
           ai_reasoning: string | null
@@ -5018,6 +5066,73 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          art_nr: string
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          note: string | null
+          quantity: number
+          reference_id: string | null
+          reference_type: string | null
+          target_warehouse_id: string | null
+          unit_cost: number | null
+          warehouse_id: string
+        }
+        Insert: {
+          art_nr: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          note?: string | null
+          quantity: number
+          reference_id?: string | null
+          reference_type?: string | null
+          target_warehouse_id?: string | null
+          unit_cost?: number | null
+          warehouse_id: string
+        }
+        Update: {
+          art_nr?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type?: Database["public"]["Enums"]["stock_movement_type"]
+          note?: string | null
+          quantity?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          target_warehouse_id?: string | null
+          unit_cost?: number | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+          {
+            foreignKeyName: "stock_movements_target_warehouse_id_fkey"
+            columns: ["target_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           ai_triage: Json | null
@@ -5312,6 +5427,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      warehouses: {
+        Row: {
+          address: string | null
+          code: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       wiki_articles: {
         Row: {
@@ -5648,6 +5793,7 @@ export type Database = {
       sequence_enrollment_status: "active" | "paused" | "done"
       sequence_status: "aktiv" | "pausiert"
       sequence_step_type: "email" | "wait" | "task"
+      stock_movement_type: "inbound" | "outbound" | "adjustment" | "transfer"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -5838,6 +5984,7 @@ export const Constants = {
       sequence_enrollment_status: ["active", "paused", "done"],
       sequence_status: ["aktiv", "pausiert"],
       sequence_step_type: ["email", "wait", "task"],
+      stock_movement_type: ["inbound", "outbound", "adjustment", "transfer"],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
         "open",
