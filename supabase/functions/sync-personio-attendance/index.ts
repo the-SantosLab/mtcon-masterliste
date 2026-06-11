@@ -102,13 +102,19 @@ Deno.serve(async (req) => {
 
   let body: { days_back?: number; days_forward?: number } = {};
   try { body = await req.json(); } catch { /* leerer Body ok */ }
-  const daysBack = body.days_back ?? 400;       // ein Jahr+ für Jahresaggregate
+  const daysBack = body.days_back ?? 90;        // Default: 90 Tage; für Initial-Seed höher setzen
   const daysForward = body.days_forward ?? 60;  // geplante Urlaube
 
   const start = new Date(); start.setDate(start.getDate() - daysBack);
   const end = new Date();   end.setDate(end.getDate() + daysForward);
   const startStr = start.toISOString().slice(0, 10);
   const endStr = end.toISOString().slice(0, 10);
+
+  // V1 /company/attendances unterstützt keine Mehrtages-Ranges → pro Tag iterieren
+  const dayList: string[] = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dayList.push(d.toISOString().slice(0, 10));
+  }
 
   try {
     const personioToken = await getAccessToken(baseUrl, clientId, clientSecret);
