@@ -173,11 +173,6 @@ Deno.serve(async (req) => {
   const startStr = start.toISOString().slice(0, 10);
   const endStr = end.toISOString().slice(0, 10);
 
-  // V1 /company/attendances unterstützt keine Mehrtages-Ranges → pro Tag iterieren
-  const dayList: string[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    dayList.push(d.toISOString().slice(0, 10));
-  }
 
   try {
     const personioToken = await getAccessToken(baseUrl, clientId, clientSecret);
