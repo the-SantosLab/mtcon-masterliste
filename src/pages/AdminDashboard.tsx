@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/UserAvatar';
 import { MasterControlPanel } from '@/components/MasterControlPanel';
+import { TeamAttendanceOverview } from '@/components/TeamAttendanceOverview';
 import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
@@ -231,6 +232,9 @@ export default function AdminDashboard() {
 
         {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer */}
         <MasterControlPanel />
+
+        {/* Team-Zeiten & Abwesenheiten aus Personio – live pro Mitarbeitendem */}
+        <TeamAttendanceOverview />
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
