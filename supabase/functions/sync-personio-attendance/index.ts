@@ -54,6 +54,77 @@ async function fetchAllPaged(url: string, token: string): Promise<any[]> {
   return out;
 }
 
+// --- Personio API V2 (Attendances: V1 ist abgekündigt) ---
+
+async function getV2Token(baseUrl: string, clientId: string, clientSecret: string): Promise<string> {
+  const res = await fetch(`${baseUrl}/v2/auth/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+  if (!res.ok) throw new Error(`Personio v2 auth [${res.status}]: ${await res.text()}`);
+  const data = await res.json();
+  const token = data?.access_token;
+  if (!token) throw new Error('Personio v2 auth: kein Token');
+  return token;
+}
+
+async function fetchV2Paged(url: string, token: string): Promise<any[]> {
+  // V2 nutzt Cursor-Pagination (_meta.links.next bzw. cursor-Parameter).
+  const out: any[] = [];
+  let cursor: string | null = null;
+  for (let i = 0; i < 100; i++) {
+    const sep = url.includes('?') ? '&' : '?';
+    const pageUrl = `${url}${sep}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    let res = await fetch(pageUrl, {
+      headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
+    });
+    // 429: kurz warten und bis zu 3x erneut versuchen
+    for (let retry = 0; res.status === 429 && retry < 3; retry++) {
+      const wait = Number(res.headers.get('Retry-After')) || 5;
+      await new Promise((r) => setTimeout(r, Math.min(wait, 20) * 1000));
+      res = await fetch(pageUrl, {
+        headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
+      });
+    }
+    if (!res.ok) throw new Error(`Personio v2 fetch [${res.status}]: ${await res.text()}`);
+    const json = await res.json();
+    const arr = Array.isArray(json?._data) ? json._data : [];
+    out.push(...arr);
+    const next: string | undefined = json?._meta?.links?.next?.href || json?._meta?.links?.next;
+    if (!next || arr.length === 0) break;
+    try {
+      cursor = new URL(next, baseOf(url)).searchParams.get('cursor');
+    } catch {
+      cursor = null;
+    }
+    if (!cursor) break;
+  }
+  return out;
+}
+
+function baseOf(url: string): string {
+  try { return new URL(url).origin; } catch { return 'https://api.personio.de'; }
+}
+
+function hhmm(dateTime: string | null | undefined): string | null {
+  if (!dateTime) return null;
+  const s = String(dateTime);
+  // "2026-06-11T08:30:00+02:00" → "08:30" (lokale Zeit aus dem String, kein TZ-Shift)
+  return s.length >= 16 ? s.slice(11, 16) : null;
+}
+
+function minutesBetween(startIso: string, endIso: string | null): number {
+  const s = new Date(startIso).getTime();
+  const e = endIso ? new Date(endIso).getTime() : Date.now();
+  if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return 0;
+  return Math.round((e - s) / 60000);
+}
+
 function toMinutes(hms: string | null | undefined): number {
   if (!hms) return 0;
   const [h, m] = String(hms).split(':').map((n) => parseInt(n, 10) || 0);
@@ -110,11 +181,6 @@ Deno.serve(async (req) => {
   const startStr = start.toISOString().slice(0, 10);
   const endStr = end.toISOString().slice(0, 10);
 
-  // V1 /company/attendances unterstützt keine Mehrtages-Ranges → pro Tag iterieren
-  const dayList: string[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    dayList.push(d.toISOString().slice(0, 10));
-  }
 
   try {
     const personioToken = await getAccessToken(baseUrl, clientId, clientSecret);
@@ -143,32 +209,60 @@ Deno.serve(async (req) => {
     const personioIdToUser = new Map<string, string>();
     for (const r of mapRows) personioIdToUser.set(r.personio_employee_id, r.user_id);
 
-    // 2) Anwesenheiten – V1 erfordert single-day Abfragen
+    // 2) Anwesenheiten – via API V2 (V1 /company/attendances ist abgekündigt)
     let attCount = 0;
-    const attendances: any[] = [];
-    for (const day of dayList) {
-      const dayData = await fetchAllPaged(
-        `${baseUrl}/v1/company/attendances?start_date=${day}&end_date=${day}`,
-        personioToken,
-      );
-      attendances.push(...dayData);
-    }
-    const attRows: any[] = [];
-    for (const a of attendances) {
-      const at = a?.attributes || {};
-      const pid = String(at.employee ?? '');
+    const v2Token = await getV2Token(baseUrl, clientId, clientSecret);
+    const periods = await fetchV2Paged(
+      `${baseUrl}/v2/attendance-periods?start.date_time.gte=${encodeURIComponent(`${startStr}T00:00:00`)}&start.date_time.lte=${encodeURIComponent(`${endStr}T23:59:59`)}`,
+      v2Token,
+    );
+
+    // Pro Person & Tag aggregieren (WORK-/BREAK-Perioden zusammenfassen)
+    type DayAgg = {
+      user_id: string; pid: string; date: string;
+      firstStart: string | null; lastEnd: string | null; open: boolean;
+      worked: number; brk: number; comments: string[];
+    };
+    const byDay = new Map<string, DayAgg>();
+    for (const p of periods) {
+      const pid = String(p?.person?.id ?? '');
       const userId = personioIdToUser.get(pid);
       if (!userId) continue;
+      const startIso: string | null = p?.start?.date_time ?? null;
+      if (!startIso) continue;
+      const endIso: string | null = p?.end?.date_time ?? null;
+      const date: string = p?.attribution_date || String(startIso).slice(0, 10);
+      const key = `${pid}-${date}`;
+      let agg = byDay.get(key);
+      if (!agg) {
+        agg = { user_id: userId, pid, date, firstStart: null, lastEnd: null, open: false, worked: 0, brk: 0, comments: [] };
+        byDay.set(key, agg);
+      }
+      const mins = minutesBetween(startIso, endIso);
+      if (String(p?.type).toUpperCase() === 'BREAK') {
+        agg.brk += mins;
+      } else {
+        agg.worked += mins;
+        const st = hhmm(startIso);
+        const en = hhmm(endIso);
+        if (st && (!agg.firstStart || st < agg.firstStart)) agg.firstStart = st;
+        if (en && (!agg.lastEnd || en > agg.lastEnd)) agg.lastEnd = en;
+        if (!endIso) agg.open = true;
+        if (p?.comment) agg.comments.push(String(p.comment));
+      }
+    }
+
+    const attRows: any[] = [];
+    for (const agg of byDay.values()) {
       attRows.push({
-        user_id: userId,
-        personio_attendance_id: String(a.id ?? `${pid}-${at.date}-${at.start_time}`),
-        work_date: at.date,
-        start_time: at.start_time || null,
-        end_time: at.end_time || null,
-        break_minutes: Number(at.break ?? 0),
-        worked_minutes:
-          (toMinutes(at.end_time) - toMinutes(at.start_time)) - Number(at.break ?? 0),
-        comment: at.comment || null,
+        user_id: agg.user_id,
+        personio_attendance_id: `${agg.pid}-${agg.date}`,
+        work_date: agg.date,
+        start_time: agg.firstStart,
+        end_time: agg.open ? null : agg.lastEnd,
+        break_minutes: agg.brk,
+        worked_minutes: agg.worked,
+        comment: agg.comments.length ? agg.comments.join(' | ') : null,
         source: 'personio',
       });
     }
