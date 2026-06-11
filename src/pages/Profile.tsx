@@ -40,6 +40,9 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Personio Zeit- & Abwesenheitsdaten – live hinter dem Hero */}
+        <AttendancePanel userId={profile.id} />
+
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="text-sm font-semibold text-foreground mb-4">Sicherheit</h2>
           <TwoFactorSettings />
