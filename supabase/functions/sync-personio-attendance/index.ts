@@ -143,12 +143,16 @@ Deno.serve(async (req) => {
     const personioIdToUser = new Map<string, string>();
     for (const r of mapRows) personioIdToUser.set(r.personio_employee_id, r.user_id);
 
-    // 2) Anwesenheiten
+    // 2) Anwesenheiten – V1 erfordert single-day Abfragen
     let attCount = 0;
-    const attendances = await fetchAllPaged(
-      `${baseUrl}/v1/company/attendances?start_date=${startStr}&end_date=${endStr}`,
-      personioToken,
-    );
+    const attendances: any[] = [];
+    for (const day of dayList) {
+      const dayData = await fetchAllPaged(
+        `${baseUrl}/v1/company/attendances?start_date=${day}&end_date=${day}`,
+        personioToken,
+      );
+      attendances.push(...dayData);
+    }
     const attRows: any[] = [];
     for (const a of attendances) {
       const at = a?.attributes || {};
