@@ -114,8 +114,16 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
       if (error) throw error;
       setResult(data as SyncResult);
       if ((data as SyncResult)?.ok) {
-        toast({ title: mode === 'dry' ? 'Probelauf erfolgreich' : 'Synchronisation abgeschlossen' });
-        if (mode === 'sync') { onDone?.(); loadSettings(); }
+        toast({ title: mode === 'dry' ? 'Probelauf erfolgreich' : 'Mitarbeitende synchronisiert' });
+        if (mode === 'sync') {
+          // Im Anschluss Anwesenheits- und Abwesenheitsdaten ziehen
+          try {
+            const att = await supabase.functions.invoke('sync-personio-attendance', { body: {} });
+            if (!att.error) toast({ title: 'Zeitdaten aktualisiert' });
+          } catch { /* nicht fatal */ }
+          onDone?.();
+          loadSettings();
+        }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unbekannter Fehler';

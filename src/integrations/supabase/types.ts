@@ -4151,6 +4151,201 @@ export type Database = {
         }
         Relationships: []
       }
+      personio_absences: {
+        Row: {
+          absence_type: string
+          category: string | null
+          comment: string | null
+          created_at: string
+          days_count: number
+          end_date: string
+          half_day_end: boolean
+          half_day_start: boolean
+          id: string
+          personio_absence_id: string | null
+          source: string
+          start_date: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          absence_type: string
+          category?: string | null
+          comment?: string | null
+          created_at?: string
+          days_count?: number
+          end_date: string
+          half_day_end?: boolean
+          half_day_start?: boolean
+          id?: string
+          personio_absence_id?: string | null
+          source?: string
+          start_date: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          absence_type?: string
+          category?: string | null
+          comment?: string | null
+          created_at?: string
+          days_count?: number
+          end_date?: string
+          half_day_end?: boolean
+          half_day_start?: boolean
+          id?: string
+          personio_absence_id?: string | null
+          source?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personio_absences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personio_attendances: {
+        Row: {
+          break_minutes: number
+          comment: string | null
+          created_at: string
+          end_time: string | null
+          id: string
+          personio_attendance_id: string | null
+          source: string
+          start_time: string | null
+          updated_at: string
+          user_id: string
+          work_date: string
+          worked_minutes: number
+        }
+        Insert: {
+          break_minutes?: number
+          comment?: string | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          personio_attendance_id?: string | null
+          source?: string
+          start_time?: string | null
+          updated_at?: string
+          user_id: string
+          work_date: string
+          worked_minutes?: number
+        }
+        Update: {
+          break_minutes?: number
+          comment?: string | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          personio_attendance_id?: string | null
+          source?: string
+          start_time?: string | null
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+          worked_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personio_attendances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personio_employee_map: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          personio_employee_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          personio_employee_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          personio_employee_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personio_employee_map_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personio_manual_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entry_kind: string
+          id: string
+          reason: string | null
+          ref_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entry_kind: string
+          id?: string
+          reason?: string | null
+          ref_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entry_kind?: string
+          id?: string
+          reason?: string | null
+          ref_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personio_manual_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personio_manual_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_customers: {
         Row: {
           auth_user_id: string | null
@@ -5289,6 +5484,10 @@ export type Database = {
       }
       can_read_document: {
         Args: { p_document_id: string; p_uid?: string }
+        Returns: boolean
+      }
+      can_view_attendance: {
+        Args: { p_target_user: string; p_uid?: string }
         Returns: boolean
       }
       can_write_board:

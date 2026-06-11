@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
 import { TwoFactorSettings } from '@/components/TwoFactorSettings';
+import { AttendancePanel } from '@/components/AttendancePanel';
 
 export default function Profile() {
   const { profile, role } = useAuth();
@@ -38,6 +39,9 @@ export default function Profile() {
             <span className="text-foreground text-right">{deptName || '–'}</span>
           </div>
         </div>
+
+        {/* Personio Zeit- & Abwesenheitsdaten – live hinter dem Hero */}
+        <AttendancePanel userId={profile.id} />
 
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="text-sm font-semibold text-foreground mb-4">Sicherheit</h2>
