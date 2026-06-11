@@ -102,13 +102,19 @@ Deno.serve(async (req) => {
 
   let body: { days_back?: number; days_forward?: number } = {};
   try { body = await req.json(); } catch { /* leerer Body ok */ }
-  const daysBack = body.days_back ?? 400;       // ein Jahr+ für Jahresaggregate
+  const daysBack = body.days_back ?? 90;        // Default: 90 Tage; für Initial-Seed höher setzen
   const daysForward = body.days_forward ?? 60;  // geplante Urlaube
 
   const start = new Date(); start.setDate(start.getDate() - daysBack);
   const end = new Date();   end.setDate(end.getDate() + daysForward);
   const startStr = start.toISOString().slice(0, 10);
   const endStr = end.toISOString().slice(0, 10);
+
+  // V1 /company/attendances unterstützt keine Mehrtages-Ranges → pro Tag iterieren
+  const dayList: string[] = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dayList.push(d.toISOString().slice(0, 10));
+  }
 
   try {
     const personioToken = await getAccessToken(baseUrl, clientId, clientSecret);
@@ -137,12 +143,16 @@ Deno.serve(async (req) => {
     const personioIdToUser = new Map<string, string>();
     for (const r of mapRows) personioIdToUser.set(r.personio_employee_id, r.user_id);
 
-    // 2) Anwesenheiten
+    // 2) Anwesenheiten – V1 erfordert single-day Abfragen
     let attCount = 0;
-    const attendances = await fetchAllPaged(
-      `${baseUrl}/v1/company/attendances?start_date=${startStr}&end_date=${endStr}`,
-      personioToken,
-    );
+    const attendances: any[] = [];
+    for (const day of dayList) {
+      const dayData = await fetchAllPaged(
+        `${baseUrl}/v1/company/attendances?start_date=${day}&end_date=${day}`,
+        personioToken,
+      );
+      attendances.push(...dayData);
+    }
     const attRows: any[] = [];
     for (const a of attendances) {
       const at = a?.attributes || {};
