@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
     let attCount = 0;
     const v2Token = await getV2Token(baseUrl, clientId, clientSecret);
     const periods = await fetchV2Paged(
-      `${baseUrl}/v2/attendance-periods?start.date_time.gte=${encodeURIComponent(`${startStr}T00:00:00Z`)}&start.date_time.lte=${encodeURIComponent(`${endStr}T23:59:59Z`)}`,
+      `${baseUrl}/v2/attendance-periods?start.date_time.gte=${encodeURIComponent(`${startStr}T00:00:00`)}&start.date_time.lte=${encodeURIComponent(`${endStr}T23:59:59`)}`,
       v2Token,
     );
 
