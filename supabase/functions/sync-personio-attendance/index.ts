@@ -54,6 +54,69 @@ async function fetchAllPaged(url: string, token: string): Promise<any[]> {
   return out;
 }
 
+// --- Personio API V2 (Attendances: V1 ist abgekündigt) ---
+
+async function getV2Token(baseUrl: string, clientId: string, clientSecret: string): Promise<string> {
+  const res = await fetch(`${baseUrl}/v2/auth/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+  if (!res.ok) throw new Error(`Personio v2 auth [${res.status}]: ${await res.text()}`);
+  const data = await res.json();
+  const token = data?.access_token;
+  if (!token) throw new Error('Personio v2 auth: kein Token');
+  return token;
+}
+
+async function fetchV2Paged(url: string, token: string): Promise<any[]> {
+  // V2 nutzt Cursor-Pagination (_meta.links.next bzw. cursor-Parameter).
+  const out: any[] = [];
+  let cursor: string | null = null;
+  for (let i = 0; i < 100; i++) {
+    const sep = url.includes('?') ? '&' : '?';
+    const pageUrl = `${url}${sep}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    const res = await fetch(pageUrl, {
+      headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Personio v2 fetch [${res.status}]: ${await res.text()}`);
+    const json = await res.json();
+    const arr = Array.isArray(json?._data) ? json._data : [];
+    out.push(...arr);
+    const next: string | undefined = json?._meta?.links?.next?.href || json?._meta?.links?.next;
+    if (!next || arr.length === 0) break;
+    try {
+      cursor = new URL(next, baseOf(url)).searchParams.get('cursor');
+    } catch {
+      cursor = null;
+    }
+    if (!cursor) break;
+  }
+  return out;
+}
+
+function baseOf(url: string): string {
+  try { return new URL(url).origin; } catch { return 'https://api.personio.de'; }
+}
+
+function hhmm(dateTime: string | null | undefined): string | null {
+  if (!dateTime) return null;
+  const s = String(dateTime);
+  // "2026-06-11T08:30:00+02:00" → "08:30" (lokale Zeit aus dem String, kein TZ-Shift)
+  return s.length >= 16 ? s.slice(11, 16) : null;
+}
+
+function minutesBetween(startIso: string, endIso: string | null): number {
+  const s = new Date(startIso).getTime();
+  const e = endIso ? new Date(endIso).getTime() : Date.now();
+  if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return 0;
+  return Math.round((e - s) / 60000);
+}
+
 function toMinutes(hms: string | null | undefined): number {
   if (!hms) return 0;
   const [h, m] = String(hms).split(':').map((n) => parseInt(n, 10) || 0);
