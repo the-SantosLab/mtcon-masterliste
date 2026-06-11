@@ -80,9 +80,17 @@ async function fetchV2Paged(url: string, token: string): Promise<any[]> {
   for (let i = 0; i < 100; i++) {
     const sep = url.includes('?') ? '&' : '?';
     const pageUrl = `${url}${sep}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
-    const res = await fetch(pageUrl, {
+    let res = await fetch(pageUrl, {
       headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
     });
+    // 429: kurz warten und bis zu 3x erneut versuchen
+    for (let retry = 0; res.status === 429 && retry < 3; retry++) {
+      const wait = Number(res.headers.get('Retry-After')) || 5;
+      await new Promise((r) => setTimeout(r, Math.min(wait, 20) * 1000));
+      res = await fetch(pageUrl, {
+        headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
+      });
+    }
     if (!res.ok) throw new Error(`Personio v2 fetch [${res.status}]: ${await res.text()}`);
     const json = await res.json();
     const arr = Array.isArray(json?._data) ? json._data : [];
