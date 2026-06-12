@@ -208,7 +208,7 @@ export default function AdminPurchasing() {
       </div>
 
       <SupplierDialog open={supplierDlg} onClose={() => setSupplierDlg(false)} onCreated={loadAll} />
-      <NewPODialog open={poDlg} onClose={() => { setPoDlg(false); setPoPrefill(undefined); }} suppliers={suppliers} warehouses={warehouses} onCreated={loadAll} prefill={poPrefill} />
+      <NewPODialog open={poDlg} onClose={() => { setPoDlg(false); setPoPrefill(undefined); }} suppliers={suppliers} warehouses={warehouses} onCreated={loadAll} onSuppliersChanged={loadAll} prefill={poPrefill} />
       <PODetailDialog
         po={detailPO && !grDlg ? detailPO : null}
         onClose={() => setDetailPO(null)}
