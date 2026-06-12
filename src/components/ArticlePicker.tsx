@@ -120,10 +120,10 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
           <CommandInput
             value={q}
             onValueChange={setQ}
-            placeholder="Suche Art.-Nr, Matchcode, Bezeichnung…"
+            placeholder="Suche Art.-Nr, Matchcode, Bezeichnung, ISSOS/ERNI/ICS/Weber…"
             className="text-xs"
           />
-          <CommandList>
+          <CommandList className="max-h-[340px] overflow-y-auto overscroll-contain">
             {loading && <div className="px-3 py-4 text-xs text-muted-foreground">Lade…</div>}
             {!loading && items.length === 0 && <CommandEmpty>Keine Artikel gefunden</CommandEmpty>}
             <CommandGroup>
@@ -136,23 +136,32 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
                   Auswahl entfernen
                 </CommandItem>
               )}
-              {items.map((it) => (
-                <CommandItem
-                  key={it.art_nr}
-                  value={it.art_nr}
-                  onSelect={() => { setSelected(it); onChange(it); setOpen(false); }}
-                  className="text-xs"
-                >
-                  <Check className={cn('h-3 w-3 mr-2', value === it.art_nr ? 'opacity-100' : 'opacity-0')} />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-mono truncate">{it.art_nr}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">
-                      {it.matchcode} {it.bezeich_1 ? `· ${it.bezeich_1}` : ''}
+              {items.map((it) => {
+                const alts = [
+                  it.eisos_nr && `ISSOS ${it.eisos_nr}`,
+                  it.erni_nr && `ERNI ${it.erni_nr}`,
+                  it.ics_nr && `ICS ${it.ics_nr}`,
+                  it.weber_art_nr && `Weber ${it.weber_art_nr}`,
+                ].filter(Boolean).join(' · ');
+                return (
+                  <CommandItem
+                    key={it.art_nr}
+                    value={it.art_nr}
+                    onSelect={() => { setSelected(it); onChange(it); setOpen(false); }}
+                    className="text-xs"
+                  >
+                    <Check className={cn('h-3 w-3 mr-2', value === it.art_nr ? 'opacity-100' : 'opacity-0')} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-mono truncate">{it.art_nr}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {it.matchcode} {it.bezeich_1 ? `· ${it.bezeich_1}` : ''}
+                      </div>
+                      {alts && <div className="text-[10px] text-muted-foreground/80 truncate font-mono">{alts}</div>}
                     </div>
-                  </div>
-                  {it.me && <Badge variant="secondary" className="text-[10px] ml-2">{it.me}</Badge>}
-                </CommandItem>
-              ))}
+                    {it.me && <Badge variant="secondary" className="text-[10px] ml-2">{it.me}</Badge>}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
