@@ -1798,44 +1798,125 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          bank_name: string | null
+          bic: string | null
+          billing_city: string | null
+          billing_country: string | null
+          billing_street: string | null
+          billing_zip: string | null
           country: string | null
           created_at: string
+          created_by: string | null
+          credit_limit: number | null
           customer_no: string | null
+          default_currency: string | null
+          discount_pct: number | null
+          email: string | null
+          iban: string | null
           id: string
           industry: string | null
+          is_active: boolean
+          language: string | null
+          last_changed_by: string | null
           name: string
           notes: string | null
           owner_id: string | null
+          partner_role: Database["public"]["Enums"]["partner_role"]
+          payment_terms_days: number | null
+          payment_terms_text: string | null
+          phone: string | null
+          shipping_city: string | null
+          shipping_country: string | null
+          shipping_same_as_billing: boolean
+          shipping_street: string | null
+          shipping_zip: string | null
+          supplier_code: string | null
+          tax_no: string | null
           type: Database["public"]["Enums"]["company_type"]
           updated_at: string
+          vat_id: string | null
           website: string | null
         }
         Insert: {
           address?: string | null
+          bank_name?: string | null
+          bic?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_street?: string | null
+          billing_zip?: string | null
           country?: string | null
           created_at?: string
+          created_by?: string | null
+          credit_limit?: number | null
           customer_no?: string | null
+          default_currency?: string | null
+          discount_pct?: number | null
+          email?: string | null
+          iban?: string | null
           id?: string
           industry?: string | null
+          is_active?: boolean
+          language?: string | null
+          last_changed_by?: string | null
           name: string
           notes?: string | null
           owner_id?: string | null
+          partner_role?: Database["public"]["Enums"]["partner_role"]
+          payment_terms_days?: number | null
+          payment_terms_text?: string | null
+          phone?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_same_as_billing?: boolean
+          shipping_street?: string | null
+          shipping_zip?: string | null
+          supplier_code?: string | null
+          tax_no?: string | null
           type?: Database["public"]["Enums"]["company_type"]
           updated_at?: string
+          vat_id?: string | null
           website?: string | null
         }
         Update: {
           address?: string | null
+          bank_name?: string | null
+          bic?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_street?: string | null
+          billing_zip?: string | null
           country?: string | null
           created_at?: string
+          created_by?: string | null
+          credit_limit?: number | null
           customer_no?: string | null
+          default_currency?: string | null
+          discount_pct?: number | null
+          email?: string | null
+          iban?: string | null
           id?: string
           industry?: string | null
+          is_active?: boolean
+          language?: string | null
+          last_changed_by?: string | null
           name?: string
           notes?: string | null
           owner_id?: string | null
+          partner_role?: Database["public"]["Enums"]["partner_role"]
+          payment_terms_days?: number | null
+          payment_terms_text?: string | null
+          phone?: string | null
+          shipping_city?: string | null
+          shipping_country?: string | null
+          shipping_same_as_billing?: boolean
+          shipping_street?: string | null
+          shipping_zip?: string | null
+          supplier_code?: string | null
+          tax_no?: string | null
           type?: Database["public"]["Enums"]["company_type"]
           updated_at?: string
+          vat_id?: string | null
           website?: string | null
         }
         Relationships: []
@@ -2311,6 +2392,7 @@ export type Database = {
       deliveries: {
         Row: {
           carrier: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           delivery_date: string | null
@@ -2325,6 +2407,7 @@ export type Database = {
         }
         Insert: {
           carrier?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           delivery_date?: string | null
@@ -2339,6 +2422,7 @@ export type Database = {
         }
         Update: {
           carrier?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           delivery_date?: string | null
@@ -2352,6 +2436,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "deliveries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deliveries_order_id_fkey"
             columns: ["order_id"]
@@ -3473,6 +3564,7 @@ export type Database = {
       invoices: {
         Row: {
           billing_address: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           currency: string
@@ -3497,6 +3589,7 @@ export type Database = {
         }
         Insert: {
           billing_address?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -3521,6 +3614,7 @@ export type Database = {
         }
         Update: {
           billing_address?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -3544,6 +3638,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_delivery_id_fkey"
             columns: ["delivery_id"]
@@ -4524,6 +4625,7 @@ export type Database = {
       orders: {
         Row: {
           assigned_to: string | null
+          company_id: string | null
           created_at: string
           created_by: string | null
           currency: string
@@ -4549,6 +4651,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -4574,6 +4677,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -4597,7 +4701,15 @@ export type Database = {
           total_amount?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       personio_absences: {
         Row: {
@@ -5323,6 +5435,7 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          company_id: string | null
           created_at: string
           created_by: string | null
           expected_at: string | null
@@ -5336,6 +5449,7 @@ export type Database = {
           warehouse_id: string | null
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           expected_at?: string | null
@@ -5349,6 +5463,7 @@ export type Database = {
           warehouse_id?: string | null
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           created_by?: string | null
           expected_at?: string | null
@@ -5362,6 +5477,13 @@ export type Database = {
           warehouse_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_orders_supplier_id_fkey"
             columns: ["supplier_id"]
@@ -6430,6 +6552,8 @@ export type Database = {
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       next_counter: { Args: { p_key: string }; Returns: number }
+      next_partner_customer_no: { Args: never; Returns: string }
+      next_partner_supplier_code: { Args: never; Returns: string }
       policy_category: { Args: { p_policy_id: string }; Returns: string }
       purge_old_trashed_boards: { Args: never; Returns: undefined }
       purge_old_trashed_notes: { Args: never; Returns: undefined }
@@ -6495,6 +6619,7 @@ export type Database = {
         | "angenommen"
         | "abgelehnt"
         | "abgelaufen"
+      partner_role: "lead" | "customer" | "supplier" | "both"
       po_status: "draft" | "ordered" | "partial" | "received" | "cancelled"
       product_request_status: "ausstehend" | "genehmigt" | "abgelehnt"
       protection_scope: "global" | "department" | "subsidiary"
@@ -6687,6 +6812,7 @@ export const Constants = {
         "abgelehnt",
         "abgelaufen",
       ],
+      partner_role: ["lead", "customer", "supplier", "both"],
       po_status: ["draft", "ordered", "partial", "received", "cancelled"],
       product_request_status: ["ausstehend", "genehmigt", "abgelehnt"],
       protection_scope: ["global", "department", "subsidiary"],
