@@ -57,12 +57,24 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
     const t = setTimeout(async () => {
       let query = (supabase as any)
         .from('articles')
-        .select('art_nr,matchcode,bezeich_1,me,article_prices(standardpreis)')
+        .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,article_prices(standardpreis)')
         .eq('is_blocked', false)
         .limit(30);
       if (q.trim()) {
-        const term = q.trim();
-        query = query.or(`art_nr.ilike.%${term}%,matchcode.ilike.%${term}%,bezeich_1.ilike.%${term}%`);
+        const term = q.trim().replace(/[,()]/g, ' ');
+        const esc = term.replace(/%/g, '');
+        query = query.or(
+          [
+            `art_nr.ilike.%${esc}%`,
+            `matchcode.ilike.%${esc}%`,
+            `bezeich_1.ilike.%${esc}%`,
+            `bezeich_2.ilike.%${esc}%`,
+            `eisos_nr.ilike.%${esc}%`,
+            `erni_nr.ilike.%${esc}%`,
+            `ics_nr.ilike.%${esc}%`,
+            `weber_art_nr.ilike.%${esc}%`,
+          ].join(',')
+        );
       } else {
         query = query.order('art_nr', { ascending: true });
       }
@@ -73,6 +85,10 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
         matchcode: r.matchcode,
         bezeich_1: r.bezeich_1,
         me: r.me,
+        eisos_nr: r.eisos_nr,
+        erni_nr: r.erni_nr,
+        ics_nr: r.ics_nr,
+        weber_art_nr: r.weber_art_nr,
         standardpreis: r.article_prices?.standardpreis ?? null,
       }));
       setItems(flat);
