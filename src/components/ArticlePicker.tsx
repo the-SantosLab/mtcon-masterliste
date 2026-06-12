@@ -13,6 +13,10 @@ export interface ArticleOption {
   bezeich_1: string | null;
   me: string | null;
   standardpreis?: number | null;
+  eisos_nr?: string | null;
+  erni_nr?: string | null;
+  ics_nr?: string | null;
+  weber_art_nr?: string | null;
 }
 
 interface Props {
