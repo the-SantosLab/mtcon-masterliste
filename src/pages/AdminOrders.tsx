@@ -145,6 +145,7 @@ export default function AdminOrders() {
     const { error } = await supabase
       .from("orders")
       .update({
+        company_id: selected.company_id,
         customer_name: selected.customer_name,
         customer_email: selected.customer_email,
         customer_no: selected.customer_no,
