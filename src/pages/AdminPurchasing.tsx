@@ -86,7 +86,7 @@ export default function AdminPurchasing() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-3">
-            <PurchasingOverview onOpenPO={(p) => setDetailPO(p)} />
+            <PurchasingOverview onOpenPO={(p) => setDetailPO(p)} onCreatePO={() => { setTab('orders'); setPoDlg(true); }} />
           </TabsContent>
 
 
@@ -694,7 +694,7 @@ type OverviewItem = {
   };
 };
 
-function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
+function PurchasingOverview({ onOpenPO, onCreatePO }: { onOpenPO: (po: PO) => void; onCreatePO: () => void }) {
   const [rows, setRows] = useState<OverviewItem[]>([]);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
   const [q, setQ] = useState('');
@@ -832,10 +832,25 @@ function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
               );
             })}
             {!loading && !error && filtered.length === 0 && (
-              <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground text-xs">
-                {rows.length === 0
-                  ? 'Noch keine Bestellpositionen vorhanden.'
-                  : (q ? 'Keine Treffer für die aktuelle Suche.' : 'Keine offenen Positionen.')}
+              <tr><td colSpan={11} className="px-3 py-10 text-center">
+                {rows.length === 0 ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <LayoutList className="h-8 w-8 text-muted-foreground/50" />
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium">Noch keine Bestellungen vorhanden</div>
+                      <div className="text-xs text-muted-foreground max-w-sm mx-auto">
+                        Sobald eine Bestellung angelegt wurde, erscheinen ihre Positionen hier mit Bestellt-, Geliefert- und Restmengen.
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={onCreatePO} className="h-8 text-xs">
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Neue Bestellung anlegen
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    {q ? 'Keine Treffer für die aktuelle Suche.' : 'Keine offenen Positionen – alle Bestellungen sind vollständig geliefert.'}
+                  </div>
+                )}
               </td></tr>
             )}
           </tbody>
