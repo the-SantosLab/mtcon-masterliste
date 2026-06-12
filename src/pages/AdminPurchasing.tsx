@@ -271,8 +271,9 @@ function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
 /* ===================== NEW PO DIALOG ===================== */
 type DraftLine = { art_nr: string; description: string; qty: string; price: string; me?: string | null };
 
-function NewPODialog({ open, onClose, suppliers, warehouses, onCreated }: {
+function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill }: {
   open: boolean; onClose: () => void; suppliers: Supplier[]; warehouses: Warehouse[]; onCreated: () => void;
+  prefill?: { supplierId?: string; notes?: string };
 }) {
   const [supplierId, setSupplierId] = useState<string>('');
   const [warehouseId, setWarehouseId] = useState<string>('');
@@ -284,10 +285,12 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated }: {
 
   useEffect(() => {
     if (open) {
-      setSupplierId(''); setWarehouseId(warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
-      setOrderedAt(new Date().toISOString().slice(0, 10)); setExpectedAt(''); setNotes(''); setLines([]);
+      setSupplierId(prefill?.supplierId ?? '');
+      setWarehouseId(warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
+      setOrderedAt(new Date().toISOString().slice(0, 10)); setExpectedAt('');
+      setNotes(prefill?.notes ?? ''); setLines([]);
     }
-  }, [open, warehouses]);
+  }, [open, warehouses, prefill]);
 
   const addLine = () => setLines(l => [...l, { art_nr: '', description: '', qty: '', price: '' }]);
   const updateLine = (i: number, patch: Partial<DraftLine>) =>
