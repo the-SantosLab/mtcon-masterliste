@@ -149,7 +149,7 @@ const adminItems = [
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
   { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
-  { href: '/admin/inventory', label: 'Lager', icon: Package },
+  
   { href: '/admin/templates', label: 'Vorlagen', icon: FileText },
   { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
@@ -278,6 +278,13 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           </Link>
           <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
+
+          {isAdmin && (
+            <Link to="/admin/inventory" onClick={() => setOpen(false)} className={linkClass('/admin/inventory')}>
+              <Package className="h-4 w-4" />
+              <span className="flex-1">Lager</span>
+            </Link>
+          )}
 
           {isAdmin && (
             <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
