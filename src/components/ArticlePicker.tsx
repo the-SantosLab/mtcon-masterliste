@@ -17,6 +17,7 @@ export interface ArticleOption {
   erni_nr?: string | null;
   ics_nr?: string | null;
   weber_art_nr?: string | null;
+  is_blocked?: boolean | null;
 }
 
 interface Props {
@@ -57,8 +58,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
     const t = setTimeout(async () => {
       let query = (supabase as any)
         .from('articles')
-        .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,article_prices(standardpreis)')
-        .eq('is_blocked', false)
+        .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,is_blocked,article_prices(standardpreis)')
         .limit(30);
       if (q.trim()) {
         const term = q.trim().replace(/[,()]/g, ' ');
@@ -89,6 +89,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
         erni_nr: r.erni_nr,
         ics_nr: r.ics_nr,
         weber_art_nr: r.weber_art_nr,
+        is_blocked: r.is_blocked,
         standardpreis: r.article_prices?.standardpreis ?? null,
       }));
       setItems(flat);
@@ -158,6 +159,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
                       </div>
                       {alts && <div className="text-[10px] text-muted-foreground/80 truncate font-mono">{alts}</div>}
                     </div>
+                    {it.is_blocked && <Badge variant="destructive" className="text-[10px] ml-2">Gesperrt</Badge>}
                     {it.me && <Badge variant="secondary" className="text-[10px] ml-2">{it.me}</Badge>}
                   </CommandItem>
                 );
