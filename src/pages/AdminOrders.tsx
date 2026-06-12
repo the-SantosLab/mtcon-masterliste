@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { OrderFulfillment } from "@/components/OrderFulfillment";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
