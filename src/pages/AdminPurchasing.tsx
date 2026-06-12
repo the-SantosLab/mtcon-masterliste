@@ -46,6 +46,7 @@ export default function AdminPurchasing() {
 
   const [supplierDlg, setSupplierDlg] = useState(false);
   const [poDlg, setPoDlg] = useState(false);
+  const [poPrefill, setPoPrefill] = useState<{ supplierId?: string; notes?: string } | undefined>();
   const [detailPO, setDetailPO] = useState<PO | null>(null);
   const [grDlg, setGrDlg] = useState(false);
 
@@ -86,7 +87,11 @@ export default function AdminPurchasing() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-3">
-            <PurchasingOverview onOpenPO={(p) => setDetailPO(p)} onCreatePO={() => { setTab('orders'); setPoDlg(true); }} />
+            <PurchasingOverview
+              onOpenPO={(p) => setDetailPO(p)}
+              suppliers={suppliers}
+              onCreatePO={(prefill) => { setPoPrefill(prefill); setTab('orders'); setPoDlg(true); }}
+            />
           </TabsContent>
 
 
@@ -203,7 +208,7 @@ export default function AdminPurchasing() {
       </div>
 
       <SupplierDialog open={supplierDlg} onClose={() => setSupplierDlg(false)} onCreated={loadAll} />
-      <NewPODialog open={poDlg} onClose={() => setPoDlg(false)} suppliers={suppliers} warehouses={warehouses} onCreated={loadAll} />
+      <NewPODialog open={poDlg} onClose={() => { setPoDlg(false); setPoPrefill(undefined); }} suppliers={suppliers} warehouses={warehouses} onCreated={loadAll} prefill={poPrefill} />
       <PODetailDialog
         po={detailPO && !grDlg ? detailPO : null}
         onClose={() => setDetailPO(null)}
@@ -266,8 +271,9 @@ function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
 /* ===================== NEW PO DIALOG ===================== */
 type DraftLine = { art_nr: string; description: string; qty: string; price: string; me?: string | null };
 
-function NewPODialog({ open, onClose, suppliers, warehouses, onCreated }: {
+function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill }: {
   open: boolean; onClose: () => void; suppliers: Supplier[]; warehouses: Warehouse[]; onCreated: () => void;
+  prefill?: { supplierId?: string; notes?: string };
 }) {
   const [supplierId, setSupplierId] = useState<string>('');
   const [warehouseId, setWarehouseId] = useState<string>('');
@@ -279,10 +285,12 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated }: {
 
   useEffect(() => {
     if (open) {
-      setSupplierId(''); setWarehouseId(warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
-      setOrderedAt(new Date().toISOString().slice(0, 10)); setExpectedAt(''); setNotes(''); setLines([]);
+      setSupplierId(prefill?.supplierId ?? '');
+      setWarehouseId(warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
+      setOrderedAt(new Date().toISOString().slice(0, 10)); setExpectedAt('');
+      setNotes(prefill?.notes ?? ''); setLines([]);
     }
-  }, [open, warehouses]);
+  }, [open, warehouses, prefill]);
 
   const addLine = () => setLines(l => [...l, { art_nr: '', description: '', qty: '', price: '' }]);
   const updateLine = (i: number, patch: Partial<DraftLine>) =>
@@ -694,7 +702,11 @@ type OverviewItem = {
   };
 };
 
-function PurchasingOverview({ onOpenPO, onCreatePO }: { onOpenPO: (po: PO) => void; onCreatePO: () => void }) {
+function PurchasingOverview({ onOpenPO, onCreatePO, suppliers }: {
+  onOpenPO: (po: PO) => void;
+  onCreatePO: (prefill?: { supplierId?: string; notes?: string }) => void;
+  suppliers: Supplier[];
+}) {
   const [rows, setRows] = useState<OverviewItem[]>([]);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
   const [q, setQ] = useState('');
@@ -842,7 +854,16 @@ function PurchasingOverview({ onOpenPO, onCreatePO }: { onOpenPO: (po: PO) => vo
                         Sobald eine Bestellung angelegt wurde, erscheinen ihre Positionen hier mit Bestellt-, Geliefert- und Restmengen.
                       </div>
                     </div>
-                    <Button size="sm" onClick={onCreatePO} className="h-8 text-xs">
+                    <Button size="sm" onClick={() => {
+                      const ql = q.trim().toLowerCase();
+                      const match = ql ? suppliers.find(s =>
+                        s.name.toLowerCase().includes(ql) || s.code.toLowerCase() === ql
+                      ) : undefined;
+                      onCreatePO({
+                        supplierId: match?.id,
+                        notes: q.trim() ? `Aus Übersicht-Suche: "${q.trim()}"` : undefined,
+                      });
+                    }} className="h-8 text-xs">
                       <Plus className="h-3.5 w-3.5 mr-1" /> Neue Bestellung anlegen
                     </Button>
                   </div>
