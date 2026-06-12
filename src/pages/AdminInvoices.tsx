@@ -242,6 +242,7 @@ export default function AdminInvoices() {
               </div>
             )}
             <DialogFooter>
+              {items.length > 0 && <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>}
               {sel?.status !== 'paid' && sel?.status !== 'cancelled' && <Button variant="default" onClick={markPaid}>Als bezahlt</Button>}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
               <Button onClick={save}>Speichern</Button>
