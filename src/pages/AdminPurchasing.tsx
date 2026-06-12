@@ -38,7 +38,7 @@ const STATUS_VARIANT: Record<POStatus, 'secondary' | 'default' | 'outline' | 'de
 
 export default function AdminPurchasing() {
   const { isAdmin, loading } = useAuth();
-  const [tab, setTab] = useState('orders');
+  const [tab, setTab] = useState('overview');
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
