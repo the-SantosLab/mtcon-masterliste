@@ -202,6 +202,8 @@ function AuthenticatedApp() {
         <Route path="/map" element={<ProtectedRoute><BusinessMap /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/bestellungen" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+        <Route path="/lieferscheine" element={<ProtectedRoute><AdminDeliveries /></ProtectedRoute>} />
+        <Route path="/rechnungen" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
