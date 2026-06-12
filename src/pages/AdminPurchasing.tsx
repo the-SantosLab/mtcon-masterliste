@@ -851,7 +851,16 @@ function PurchasingOverview({ onOpenPO, onCreatePO, suppliers }: {
                         Sobald eine Bestellung angelegt wurde, erscheinen ihre Positionen hier mit Bestellt-, Geliefert- und Restmengen.
                       </div>
                     </div>
-                    <Button size="sm" onClick={onCreatePO} className="h-8 text-xs">
+                    <Button size="sm" onClick={() => {
+                      const ql = q.trim().toLowerCase();
+                      const match = ql ? suppliers.find(s =>
+                        s.name.toLowerCase().includes(ql) || s.code.toLowerCase() === ql
+                      ) : undefined;
+                      onCreatePO({
+                        supplierId: match?.id,
+                        notes: q.trim() ? `Aus Übersicht-Suche: "${q.trim()}"` : undefined,
+                      });
+                    }} className="h-8 text-xs">
                       <Plus className="h-3.5 w-3.5 mr-1" /> Neue Bestellung anlegen
                     </Button>
                   </div>
