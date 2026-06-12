@@ -8,6 +8,7 @@ import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseEmails } from '@/components/CaseEmails';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
+import { CaseArticles } from '@/components/CaseArticles';
 import { CaseBlockedBanner } from '@/components/CaseBlockedBanner';
 import { WatchersSection } from '@/components/WatchersSection';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1013,6 +1014,8 @@ export default function CaseDetail() {
             </div>
 
             <DocumentSection entityType="case" entityId={c.id} title="3D-Container" />
+
+            <CaseArticles caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} />
 
             {/* Email-Adresse für diesen Vorgang */}
             <div className="rounded-md border border-border bg-card p-5 space-y-2">
