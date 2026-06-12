@@ -58,8 +58,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wÃ¤hlenâ
     const t = setTimeout(async () => {
       let query = (supabase as any)
         .from('articles')
-        .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,article_prices(standardpreis)')
-        .eq('is_blocked', false)
+        .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,is_blocked,article_prices(standardpreis)')
         .limit(30);
       if (q.trim()) {
         const term = q.trim().replace(/[,()]/g, ' ');
