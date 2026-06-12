@@ -124,11 +124,11 @@ const mslItems = [
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
-];
-
-const navItems = [
   { href: '/notes', label: 'Notizen', icon: StickyNote },
 ];
+
+const navItems: { href: string; label: string; icon: any }[] = [];
+
 
 const systemItems = [
   { href: '/support', label: 'Support', icon: Headphones },
