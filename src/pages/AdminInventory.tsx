@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
-import { Plus, Trash2, AlertTriangle, Package, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Repeat } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Package, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Repeat, Undo2, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Warehouse = { id: string; code: string; name: string; address: string | null; is_default: boolean };
@@ -36,7 +36,28 @@ type Movement = {
   note: string | null;
   created_at: string;
   created_by: string | null;
+  order_id: string | null;
+  project_id: string | null;
+  case_id: string | null;
+  transfer_id: string | null;
+  lot_no: string | null;
+  serial_no: string | null;
   warehouses?: { code: string } | null;
+};
+type Reservation = {
+  id: string;
+  art_nr: string;
+  warehouse_id: string;
+  quantity: number;
+  order_id: string | null;
+  project_id: string | null;
+  case_id: string | null;
+  note: string | null;
+  status: 'open' | 'released' | 'consumed';
+  expires_at: string | null;
+  created_at: string;
+  warehouses?: { code: string } | null;
+  articles?: { matchcode: string | null; bezeich_1: string | null } | null;
 };
 
 const MOVE_LABEL: Record<Movement['movement_type'], string> = {
@@ -73,16 +94,18 @@ export default function AdminInventory() {
       <div className="space-y-4 max-w-[1400px]">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Lager</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Bestände, Bewegungen und Lagerorte</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Bestände, Bewegungen, Reservierungen und Lagerorte</p>
         </div>
         <Tabs defaultValue="stock">
           <TabsList className="bg-secondary">
             <TabsTrigger value="stock" className="text-xs">Bestände</TabsTrigger>
             <TabsTrigger value="movements" className="text-xs">Bewegungen</TabsTrigger>
+            <TabsTrigger value="reservations" className="text-xs">Reservierungen</TabsTrigger>
             <TabsTrigger value="warehouses" className="text-xs">Lager</TabsTrigger>
           </TabsList>
           <TabsContent value="stock"><StockTab canWrite={canWrite} /></TabsContent>
-          <TabsContent value="movements"><MovementsTab canWrite={canWrite} /></TabsContent>
+          <TabsContent value="movements"><MovementsTab canWrite={canWrite} isAdmin={!!isAdmin} /></TabsContent>
+          <TabsContent value="reservations"><ReservationsTab canWrite={canWrite} /></TabsContent>
           <TabsContent value="warehouses"><WarehousesTab isAdmin={!!isAdmin} /></TabsContent>
         </Tabs>
       </div>
@@ -92,7 +115,7 @@ export default function AdminInventory() {
 
 // ─────────────────────────────────────────────────────────────
 function StockTab({ canWrite }: { canWrite: boolean }) {
-  const [rows, setRows] = useState<StockRow[]>([]);
+  const [rows, setRows] = useState<(StockRow & { reserved?: number; available?: number })[]>([]);
   const [warehouseId, setWarehouseId] = useState<string>('all');
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [search, setSearch] = useState('');
@@ -108,7 +131,23 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
     );
     if (warehouseId !== 'all') q = q.eq('warehouse_id', warehouseId);
     const { data } = await q.order('art_nr').limit(500);
-    setRows(data || []);
+
+    // Reservierungen pro Artikel/Lager aggregieren
+    const { data: res } = await (supabase as any)
+      .from('stock_reservations')
+      .select('art_nr,warehouse_id,quantity')
+      .eq('status', 'open');
+    const resMap = new Map<string, number>();
+    (res || []).forEach((r: any) => {
+      const k = `${r.art_nr}|${r.warehouse_id}`;
+      resMap.set(k, (resMap.get(k) || 0) + Number(r.quantity));
+    });
+
+    const enriched = (data || []).map((r: any) => {
+      const reserved = resMap.get(`${r.art_nr}|${r.warehouse_id}`) || 0;
+      return { ...r, reserved, available: Number(r.quantity) - reserved };
+    });
+    setRows(enriched);
     setLoading(false);
   };
 
@@ -117,6 +156,7 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
     const ch = supabase
       .channel('inventory_stock-list')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_stock' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_reservations' }, fetchData)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,7 +171,6 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
       || (r.articles?.bezeich_1 || '').toLowerCase().includes(s);
   });
 
-  const totalValue = filtered.length;
   const lowCount = rows.filter(r => Number(r.quantity) <= Number(r.min_quantity)).length;
 
   return (
@@ -172,18 +211,20 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
               <th className="px-3 py-2 text-left font-medium text-muted-foreground">Bezeichnung</th>
               <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lager</th>
               <th className="px-3 py-2 text-right font-medium text-muted-foreground">Bestand</th>
+              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Reserviert</th>
+              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Verfügbar</th>
               <th className="px-3 py-2 text-right font-medium text-muted-foreground">Min</th>
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Nachbestell</th>
               <th className="px-3 py-2 text-left font-medium text-muted-foreground">ME</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {loading && <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
+            {loading && <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">Keine Bestände — über „Bewegungen" anlegen.</td></tr>
+              <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">Keine Bestände — über „Bewegungen" anlegen.</td></tr>
             )}
             {filtered.map(r => {
               const low = Number(r.quantity) <= Number(r.min_quantity);
+              const avail = Number(r.available ?? r.quantity);
               return (
                 <tr key={r.id} className="hover:bg-muted/40">
                   <td className="px-3 py-2 font-mono">{r.art_nr}</td>
@@ -193,8 +234,9 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
                   </td>
                   <td className="px-3 py-2">{r.warehouses?.code || '–'}</td>
                   <td className={`px-3 py-2 text-right tabular-nums font-medium ${low ? 'text-amber-500' : ''}`}>{Number(r.quantity).toLocaleString('de-DE')}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.reserved ? Number(r.reserved).toLocaleString('de-DE') : '–'}</td>
+                  <td className={`px-3 py-2 text-right tabular-nums ${avail <= 0 ? 'text-destructive' : 'text-foreground'}`}>{avail.toLocaleString('de-DE')}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{Number(r.min_quantity).toLocaleString('de-DE')}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{Number(r.reorder_quantity).toLocaleString('de-DE')}</td>
                   <td className="px-3 py-2 text-muted-foreground">{r.articles?.me || ''}</td>
                 </tr>
               );
@@ -202,13 +244,13 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
           </tbody>
         </table>
       </div>
-      {canWrite && <p className="text-[10px] text-muted-foreground">Mindest- und Nachbestellmengen lassen sich pro Zeile künftig direkt editieren — aktuell über DB / Migration.</p>}
+      {canWrite && <p className="text-[10px] text-muted-foreground">Verfügbar = Bestand − offene Reservierungen.</p>}
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-function MovementsTab({ canWrite }: { canWrite: boolean }) {
+function MovementsTab({ canWrite, isAdmin }: { canWrite: boolean; isAdmin: boolean }) {
   const [rows, setRows] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -231,6 +273,26 @@ function MovementsTab({ canWrite }: { canWrite: boolean }) {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
+  const stornoTransfer = async (transferId: string) => {
+    if (!confirm('Umlagerung stornieren? Beide gepaarten Buchungen werden gelöscht und der Bestand zurückgesetzt.')) return;
+    // Bestand zurückrechnen, dann Zeilen entfernen
+    const pair = rows.filter(r => r.transfer_id === transferId);
+    if (pair.length === 0) { toast.error('Paar nicht gefunden'); return; }
+    for (const m of pair) {
+      const delta = m.movement_type === 'inbound' ? -Number(m.quantity) : Number(m.quantity);
+      await (supabase as any).rpc('exec', {}); // no-op placeholder
+      // Direkt update inventory_stock
+      const { data: cur } = await (supabase as any).from('inventory_stock').select('id,quantity').eq('art_nr', m.art_nr).eq('warehouse_id', m.warehouse_id).maybeSingle();
+      if (cur) {
+        await (supabase as any).from('inventory_stock').update({ quantity: Number(cur.quantity) + delta }).eq('id', cur.id);
+      }
+    }
+    const { error } = await (supabase as any).from('stock_movements').delete().eq('transfer_id', transferId);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Umlagerung storniert');
+    fetchData();
+  };
+
   return (
     <div className="space-y-3 mt-3">
       <div className="flex justify-between items-center">
@@ -250,17 +312,24 @@ function MovementsTab({ canWrite }: { canWrite: boolean }) {
               <th className="px-3 py-2 text-left font-medium text-muted-foreground">Art.-Nr.</th>
               <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lager</th>
               <th className="px-3 py-2 text-right font-medium text-muted-foreground">Menge</th>
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Stk-Kosten</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Verknüpfung</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Charge / Serie</th>
               <th className="px-3 py-2 text-left font-medium text-muted-foreground">Notiz</th>
+              <th className="px-3 py-2 w-8"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {loading && <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
-            {!loading && rows.length === 0 && <tr><td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">Noch keine Bewegungen.</td></tr>}
+            {loading && <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
+            {!loading && rows.length === 0 && <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">Noch keine Bewegungen.</td></tr>}
             {rows.map(r => {
               const Icon = MOVE_ICON[r.movement_type];
               const sign = r.movement_type === 'outbound' || r.movement_type === 'transfer'
                 ? '−' : r.movement_type === 'adjustment' ? '' : '+';
+              const links: string[] = [];
+              if (r.order_id) links.push('Bestellung');
+              if (r.project_id) links.push('Projekt');
+              if (r.case_id) links.push('Vorgang');
+              if (r.transfer_id) links.push('Transfer');
               return (
                 <tr key={r.id} className="hover:bg-muted/40">
                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{new Date(r.created_at).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })}</td>
@@ -272,8 +341,24 @@ function MovementsTab({ canWrite }: { canWrite: boolean }) {
                   <td className="px-3 py-2 font-mono">{r.art_nr}</td>
                   <td className="px-3 py-2">{r.warehouses?.code || '–'}</td>
                   <td className="px-3 py-2 text-right tabular-nums font-medium">{sign}{Number(r.quantity).toLocaleString('de-DE')}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.unit_cost != null ? Number(r.unit_cost).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : ''}</td>
-                  <td className="px-3 py-2 text-muted-foreground truncate max-w-[300px]">{r.note || ''}</td>
+                  <td className="px-3 py-2">
+                    {links.length === 0 ? <span className="text-muted-foreground">–</span> : (
+                      <div className="flex gap-1 flex-wrap">
+                        {links.map(l => <Badge key={l} variant="secondary" className="text-[10px] gap-1"><LinkIcon className="h-2.5 w-2.5" />{l}</Badge>)}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground text-[10px] font-mono">
+                    {r.lot_no ? `L:${r.lot_no}` : ''} {r.serial_no ? `S:${r.serial_no}` : ''}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground truncate max-w-[260px]">{r.note || ''}</td>
+                  <td className="px-3 py-2">
+                    {isAdmin && r.transfer_id && r.movement_type === 'transfer' && (
+                      <button onClick={() => stornoTransfer(r.transfer_id!)} title="Umlagerung stornieren" className="text-muted-foreground hover:text-destructive">
+                        <Undo2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -285,6 +370,28 @@ function MovementsTab({ canWrite }: { canWrite: boolean }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+function useEntityOptions() {
+  const [orders, setOrders] = useState<{ id: string; label: string }[]>([]);
+  const [projects, setProjects] = useState<{ id: string; label: string }[]>([]);
+  const [cases, setCases] = useState<{ id: string; label: string }[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [o, p, c] = await Promise.all([
+        (supabase as any).from('orders').select('id,order_no,status').order('created_at', { ascending: false }).limit(100),
+        (supabase as any).from('projects').select('id,name,status').order('created_at', { ascending: false }).limit(100),
+        (supabase as any).from('cases').select('id,case_no,project_name').order('created_at', { ascending: false }).limit(100),
+      ]);
+      setOrders((o.data || []).map((r: any) => ({ id: r.id, label: `${r.order_no || r.id.slice(0,8)}${r.status ? ' · ' + r.status : ''}` })));
+      setProjects((p.data || []).map((r: any) => ({ id: r.id, label: r.name || r.id.slice(0,8) })));
+      setCases((c.data || []).map((r: any) => ({ id: r.id, label: `${r.case_no || r.id.slice(0,8)}${r.project_name ? ' · ' + r.project_name : ''}` })));
+    })();
+  }, []);
+
+  return { orders, projects, cases };
+}
+
 function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [artNr, setArtNr] = useState<string | null>(null);
@@ -294,7 +401,13 @@ function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: 
   const [quantity, setQuantity] = useState<string>('');
   const [unitCost, setUnitCost] = useState<string>('');
   const [note, setNote] = useState('');
+  const [orderId, setOrderId] = useState<string>('');
+  const [projectId, setProjectId] = useState<string>('');
+  const [caseId, setCaseId] = useState<string>('');
+  const [lotNo, setLotNo] = useState('');
+  const [serialNo, setSerialNo] = useState('');
   const [saving, setSaving] = useState(false);
+  const { orders, projects, cases } = useEntityOptions();
 
   useEffect(() => {
     if (!open) return;
@@ -305,6 +418,11 @@ function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: 
       if (def) setWarehouseId(def.id);
     })();
   }, [open]);
+
+  const reset = () => {
+    setArtNr(null); setQuantity(''); setUnitCost(''); setNote(''); setMovementType('inbound');
+    setOrderId(''); setProjectId(''); setCaseId(''); setLotNo(''); setSerialNo('');
+  };
 
   const save = async () => {
     if (!artNr) { toast.error('Artikel wählen'); return; }
@@ -324,18 +442,23 @@ function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: 
       quantity: qty,
       unit_cost: unitCost ? parseFloat(unitCost.replace(',', '.')) : null,
       note: note.trim() || null,
+      order_id: orderId || null,
+      project_id: projectId || null,
+      case_id: caseId || null,
+      lot_no: lotNo.trim() || null,
+      serial_no: serialNo.trim() || null,
       created_by: userData.user?.id,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Bewegung gebucht');
-    setArtNr(null); setQuantity(''); setUnitCost(''); setNote(''); setMovementType('inbound');
+    reset();
     onDone(); onClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-sm">Lagerbewegung erfassen</DialogTitle>
           <DialogDescription className="text-xs">Bestand wird automatisch nachgeführt.</DialogDescription>
@@ -394,6 +517,27 @@ function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: 
               <Input value={unitCost} onChange={e => setUnitCost(e.target.value)} placeholder="0.00" className="h-8 text-xs" inputMode="decimal" />
             </div>
           </div>
+
+          <div className="rounded-md border border-border bg-secondary/30 p-2 space-y-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Verknüpfung (optional)</div>
+            <div className="grid grid-cols-3 gap-2">
+              <EntitySelect label="Bestellung" value={orderId} onChange={setOrderId} options={orders} />
+              <EntitySelect label="Projekt" value={projectId} onChange={setProjectId} options={projects} />
+              <EntitySelect label="Vorgang" value={caseId} onChange={setCaseId} options={cases} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-muted-foreground">Charge (optional)</label>
+              <Input value={lotNo} onChange={e => setLotNo(e.target.value)} placeholder="z.B. LOT-2026-001" className="h-8 text-xs" />
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground">Seriennr. (optional)</label>
+              <Input value={serialNo} onChange={e => setSerialNo(e.target.value)} placeholder="z.B. SN-12345" className="h-8 text-xs" />
+            </div>
+          </div>
+
           <div>
             <label className="text-[11px] text-muted-foreground">Notiz</label>
             <Textarea value={note} onChange={e => setNote(e.target.value)} placeholder="z.B. Lieferschein-Nr., Vorgang…" className="text-xs min-h-[60px]" />
@@ -402,6 +546,241 @@ function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">Abbrechen</Button>
           <Button size="sm" onClick={save} disabled={saving} className="h-8 text-xs">{saving ? 'Buche…' : 'Buchen'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EntitySelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { id: string; label: string }[] }) {
+  return (
+    <div>
+      <label className="text-[11px] text-muted-foreground">{label}</label>
+      <Select value={value || '__none__'} onValueChange={(v) => onChange(v === '__none__' ? '' : v)}>
+        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
+        <SelectContent className="max-h-[280px]">
+          <SelectItem value="__none__">— keine —</SelectItem>
+          {options.map(o => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+function ReservationsTab({ canWrite }: { canWrite: boolean }) {
+  const [rows, setRows] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'open' | 'all'>('open');
+
+  const fetchData = async () => {
+    setLoading(true);
+    let q = (supabase as any)
+      .from('stock_reservations')
+      .select('*, warehouses(code), articles(matchcode,bezeich_1)')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (statusFilter === 'open') q = q.eq('status', 'open');
+    const { data } = await q;
+    setRows(data || []);
+    setLoading(false);
+  };
+  useEffect(() => { fetchData(); }, [statusFilter]);
+  useEffect(() => {
+    const ch = supabase.channel('stock-res-list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_reservations' }, fetchData)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setStatus = async (id: string, status: Reservation['status']) => {
+    const { error } = await (supabase as any).from('stock_reservations').update({ status }).eq('id', id);
+    if (error) toast.error(error.message);
+    else toast.success(status === 'released' ? 'Freigegeben' : status === 'consumed' ? 'Als verbraucht markiert' : 'Aktualisiert');
+  };
+
+  return (
+    <div className="space-y-3 mt-3">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2 items-center">
+          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+            <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">Nur offen</SelectItem>
+              <SelectItem value="all">Alle</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">Reservierungen reduzieren die verfügbare Menge.</p>
+        </div>
+        {canWrite && (
+          <Button size="sm" onClick={() => setOpen(true)} className="h-8 text-xs">
+            <Plus className="h-3.5 w-3.5 mr-1" />Reservierung
+          </Button>
+        )}
+      </div>
+      <div className="rounded-md border border-border bg-card overflow-hidden">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Datum</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Art.-Nr.</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Bezeichnung</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lager</th>
+              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Menge</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Verknüpfung</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Ablauf</th>
+              <th className="px-3 py-2 w-32"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {loading && <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
+            {!loading && rows.length === 0 && <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">Keine Reservierungen.</td></tr>}
+            {rows.map(r => {
+              const links: string[] = [];
+              if (r.order_id) links.push('Bestellung');
+              if (r.project_id) links.push('Projekt');
+              if (r.case_id) links.push('Vorgang');
+              const statusColor = r.status === 'open' ? 'default' : r.status === 'consumed' ? 'secondary' : 'outline';
+              return (
+                <tr key={r.id} className="hover:bg-muted/40">
+                  <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{new Date(r.created_at).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                  <td className="px-3 py-2 font-mono">{r.art_nr}</td>
+                  <td className="px-3 py-2 text-muted-foreground truncate max-w-[220px]">{r.articles?.matchcode || ''}{r.articles?.bezeich_1 ? ' · ' + r.articles.bezeich_1 : ''}</td>
+                  <td className="px-3 py-2">{r.warehouses?.code || '–'}</td>
+                  <td className="px-3 py-2 text-right tabular-nums font-medium">{Number(r.quantity).toLocaleString('de-DE')}</td>
+                  <td className="px-3 py-2">
+                    {links.length === 0 ? <span className="text-muted-foreground">–</span> : (
+                      <div className="flex gap-1 flex-wrap">{links.map(l => <Badge key={l} variant="secondary" className="text-[10px]">{l}</Badge>)}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2"><Badge variant={statusColor as any} className="text-[10px]">{r.status}</Badge></td>
+                  <td className="px-3 py-2 text-muted-foreground text-[10px]">{r.expires_at ? new Date(r.expires_at).toLocaleDateString('de-DE') : '–'}</td>
+                  <td className="px-3 py-2">
+                    {canWrite && r.status === 'open' && (
+                      <div className="flex gap-1">
+                        <button onClick={() => setStatus(r.id, 'consumed')} className="text-[10px] text-muted-foreground hover:text-foreground underline">verbraucht</button>
+                        <button onClick={() => setStatus(r.id, 'released')} className="text-[10px] text-muted-foreground hover:text-destructive underline">freigeben</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <NewReservationDialog open={open} onClose={() => setOpen(false)} onDone={fetchData} />
+    </div>
+  );
+}
+
+function NewReservationDialog({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [artNr, setArtNr] = useState<string | null>(null);
+  const [warehouseId, setWarehouseId] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('');
+  const [note, setNote] = useState('');
+  const [expiresAt, setExpiresAt] = useState<string>('');
+  const [orderId, setOrderId] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [caseId, setCaseId] = useState('');
+  const [saving, setSaving] = useState(false);
+  const { orders, projects, cases } = useEntityOptions();
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data } = await (supabase as any).from('warehouses').select('*').order('code');
+      setWarehouses(data || []);
+      const def = (data || []).find((w: Warehouse) => w.is_default) || (data || [])[0];
+      if (def) setWarehouseId(def.id);
+    })();
+  }, [open]);
+
+  const save = async () => {
+    if (!artNr) { toast.error('Artikel wählen'); return; }
+    if (!warehouseId) { toast.error('Lager wählen'); return; }
+    const qty = parseFloat(quantity.replace(',', '.'));
+    if (!qty || isNaN(qty) || qty <= 0) { toast.error('Menge ungültig'); return; }
+
+    setSaving(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await (supabase as any).from('stock_reservations').insert({
+      art_nr: artNr,
+      warehouse_id: warehouseId,
+      quantity: qty,
+      note: note.trim() || null,
+      order_id: orderId || null,
+      project_id: projectId || null,
+      case_id: caseId || null,
+      expires_at: expiresAt || null,
+      created_by: userData.user?.id,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Reservierung angelegt');
+    setArtNr(null); setQuantity(''); setNote(''); setExpiresAt('');
+    setOrderId(''); setProjectId(''); setCaseId('');
+    onDone(); onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-sm">Reservierung anlegen</DialogTitle>
+          <DialogDescription className="text-xs">Reduziert die verfügbare Menge, ohne den Bestand zu verändern.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-[11px] text-muted-foreground">Artikel</label>
+            <ArticlePicker
+              value={artNr}
+              onChange={(a) => setArtNr(a?.art_nr || null)}
+              inStockOnly={true}
+              inStockWarehouseId={warehouseId || null}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-muted-foreground">Lager</label>
+              <Select value={warehouseId} onValueChange={setWarehouseId}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Lager wählen" /></SelectTrigger>
+                <SelectContent>
+                  {warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground">Menge</label>
+              <Input value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="0" className="h-8 text-xs" inputMode="decimal" />
+            </div>
+          </div>
+          <div className="rounded-md border border-border bg-secondary/30 p-2 space-y-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Verknüpfung (optional)</div>
+            <div className="grid grid-cols-3 gap-2">
+              <EntitySelect label="Bestellung" value={orderId} onChange={setOrderId} options={orders} />
+              <EntitySelect label="Projekt" value={projectId} onChange={setProjectId} options={projects} />
+              <EntitySelect label="Vorgang" value={caseId} onChange={setCaseId} options={cases} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-muted-foreground">Ablauf (optional)</label>
+              <Input type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} className="h-8 text-xs" />
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground">Notiz</label>
+              <Input value={note} onChange={e => setNote(e.target.value)} placeholder="optional" className="h-8 text-xs" />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">Abbrechen</Button>
+          <Button size="sm" onClick={save} disabled={saving} className="h-8 text-xs">{saving ? 'Speichere…' : 'Reservieren'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
