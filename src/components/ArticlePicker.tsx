@@ -67,7 +67,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wÃ¤hlenâ
       if (inStockWarehouseId) sq = sq.eq('warehouse_id', inStockWarehouseId);
       const { data } = await sq;
       if (cancel) return;
-      const nrs = Array.from(new Set((data ?? []).map((r: any) => r.art_nr as string)));
+      const nrs = Array.from(new Set((data ?? []).map((r: any) => r.art_nr as string))) as string[];
       setStockArtNrs(nrs);
     })();
     return () => { cancel = true; };
