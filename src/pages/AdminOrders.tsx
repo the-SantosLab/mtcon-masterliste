@@ -463,6 +463,8 @@ export default function AdminOrders() {
                 </div>
               )}
 
+              {selected.status !== 'draft' && <OrderFulfillment orderId={selected.id} />}
+
               {docs.length > 0 && (
                 <div>
                   <Label className="text-xs">Dokumente</Label>
