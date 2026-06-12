@@ -380,39 +380,41 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, onSuppli
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Positionen</div>
               <Button size="sm" variant="outline" onClick={addLine}><Plus className="h-3.5 w-3.5 mr-1" />Position</Button>
             </div>
-            {lines.map((l, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end p-2 rounded border border-border">
-                <div className="col-span-5">
-                  <label className="text-[10px] text-muted-foreground">Artikel</label>
-                  <ArticlePicker value={l.art_nr || null}
-                    onChange={a => updateLine(i, {
-                      art_nr: a?.art_nr ?? '',
-                      description: l.description || a?.bezeich_1 || a?.matchcode || '',
-                      me: a?.me ?? null,
-                    })} />
+            <div className="max-h-[45vh] overflow-y-auto space-y-2 pr-1 -mr-1">
+              {lines.map((l, i) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-end p-2 rounded border border-border">
+                  <div className="col-span-5">
+                    <label className="text-[10px] text-muted-foreground">Artikel</label>
+                    <ArticlePicker value={l.art_nr || null}
+                      onChange={a => updateLine(i, {
+                        art_nr: a?.art_nr ?? '',
+                        description: l.description || a?.bezeich_1 || a?.matchcode || '',
+                        me: a?.me ?? null,
+                      })} />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="text-[10px] text-muted-foreground">Bezeichnung</label>
+                    <Input value={l.description} onChange={e => updateLine(i, { description: e.target.value })} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-[10px] text-muted-foreground">Menge {l.me && `(${l.me})`}</label>
+                    <Input type="number" step="0.001" value={l.qty} onChange={e => updateLine(i, { qty: e.target.value })} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="text-[10px] text-muted-foreground">Preis</label>
+                    <Input type="number" step="0.0001" value={l.price} onChange={e => updateLine(i, { price: e.target.value })} />
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <Button size="icon" variant="ghost" onClick={() => removeLine(i)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
                 </div>
-                <div className="col-span-3">
-                  <label className="text-[10px] text-muted-foreground">Bezeichnung</label>
-                  <Input value={l.description} onChange={e => updateLine(i, { description: e.target.value })} />
+              ))}
+              {lines.length === 0 && (
+                <div className="text-xs text-muted-foreground text-center py-4 border border-dashed border-border rounded">
+                  Noch keine Positionen.
                 </div>
-                <div className="col-span-2">
-                  <label className="text-[10px] text-muted-foreground">Menge {l.me && `(${l.me})`}</label>
-                  <Input type="number" step="0.001" value={l.qty} onChange={e => updateLine(i, { qty: e.target.value })} />
-                </div>
-                <div className="col-span-1">
-                  <label className="text-[10px] text-muted-foreground">Preis</label>
-                  <Input type="number" step="0.0001" value={l.price} onChange={e => updateLine(i, { price: e.target.value })} />
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  <Button size="icon" variant="ghost" onClick={() => removeLine(i)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              </div>
-            ))}
-            {lines.length === 0 && (
-              <div className="text-xs text-muted-foreground text-center py-4 border border-dashed border-border rounded">
-                Noch keine Positionen.
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>
