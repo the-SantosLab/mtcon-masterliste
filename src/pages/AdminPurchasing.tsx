@@ -37,7 +37,7 @@ const STATUS_VARIANT: Record<POStatus, 'secondary' | 'default' | 'outline' | 'de
 };
 
 export default function AdminPurchasing() {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, loading, user, role } = useAuth();
   const [tab, setTab] = useState('overview');
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -65,7 +65,7 @@ export default function AdminPurchasing() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  if (loading) return <AppLayout><div className="p-6 text-muted-foreground text-sm">Lädt…</div></AppLayout>;
+  if (loading || (user && !role)) return <AppLayout><div className="p-6 text-muted-foreground text-sm">Lädt…</div></AppLayout>;
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
