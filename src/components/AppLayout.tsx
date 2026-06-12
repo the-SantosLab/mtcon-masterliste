@@ -406,8 +406,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="flex-1">Business Map</span>
             </Link>
           )}
-          <button
-            onClick={() => setBugDialogOpen(true)}
             className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
           >
             <Bug className="h-4 w-4" />
