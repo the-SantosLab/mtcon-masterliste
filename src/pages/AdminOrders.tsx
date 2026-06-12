@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrderFulfillment } from "@/components/OrderFulfillment";
+import { PartnerPicker } from "@/components/PartnerPicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -21,6 +22,7 @@ type Order = {
   status: string;
   source: string;
   order_kind: string;
+  company_id: string | null;
   customer_name: string | null;
   customer_email: string | null;
   customer_no: string | null;
@@ -143,6 +145,7 @@ export default function AdminOrders() {
     const { error } = await supabase
       .from("orders")
       .update({
+        company_id: selected.company_id,
         customer_name: selected.customer_name,
         customer_email: selected.customer_email,
         customer_no: selected.customer_no,
@@ -316,8 +319,29 @@ export default function AdminOrders() {
               )}
 
               <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label className="text-xs">Geschäftspartner</Label>
+                  <PartnerPicker
+                    value={selected.company_id}
+                    role="customer"
+                    onChange={(id, p) => {
+                      setSelected({
+                        ...selected,
+                        company_id: id,
+                        ...(p ? {
+                          customer_name: p.name,
+                          customer_email: p.email,
+                          customer_no: p.customer_no,
+                        } : {}),
+                      });
+                    }}
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Auswählen, neu anlegen oder leeren. Freitextfelder unten werden beim Auswählen vorbefüllt.
+                  </p>
+                </div>
                 <div>
-                  <Label className="text-xs">Kunde</Label>
+                  <Label className="text-xs">Kunde (Text)</Label>
                   <Input
                     value={selected.customer_name || ""}
                     onChange={(e) => setSelected({ ...selected, customer_name: e.target.value })}
