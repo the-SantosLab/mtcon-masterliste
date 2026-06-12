@@ -168,6 +168,13 @@ const crmItems = [
   { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
 ];
 
+const erpItems = [
+  { href: '/admin/inventory', label: 'Lager', icon: Package },
+  { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
+  { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
+  { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
+];
+
 export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
