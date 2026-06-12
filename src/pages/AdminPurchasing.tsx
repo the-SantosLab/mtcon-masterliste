@@ -698,16 +698,22 @@ function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
   const [rows, setRows] = useState<OverviewItem[]>([]);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
   const [q, setQ] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await (supabase as any)
-        .from('purchase_order_items')
-        .select('*, articles(matchcode,bezeich_1,me), purchase_orders!inner(id,po_no,status,ordered_at,expected_at,warehouse_id,supplier_id,notes,suppliers(name,code),warehouses(code,name))')
-        .order('position');
-      setRows((data ?? []) as OverviewItem[]);
-    })();
-  }, []);
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await (supabase as any)
+      .from('purchase_order_items')
+      .select('*, articles(matchcode,bezeich_1,me), purchase_orders!inner(id,po_no,status,ordered_at,expected_at,warehouse_id,supplier_id,notes,suppliers(name,code),warehouses(code,name))')
+      .order('position');
+    if (error) setError(error.message ?? 'Daten konnten nicht geladen werden.');
+    else setRows((data ?? []) as OverviewItem[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();
