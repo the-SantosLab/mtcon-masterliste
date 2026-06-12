@@ -103,7 +103,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
     : placeholder;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           type="button"
