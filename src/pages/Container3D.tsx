@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail } from "lucide-react";
 import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
+import { useContainerBlocks } from "@/hooks/useContainerBlocks";
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
 
 const INTAKE_EMAIL = "mtiq@inbox.kscommand.com";
@@ -70,6 +72,7 @@ const SATELLITES: Module[] = [
 export default function Container3D() {
   const navigate = useNavigate();
   const { counts, total } = useContainerUnread();
+  const { isBlocked } = useContainerBlocks();
   const [copied, setCopied] = useState(false);
 
   const copyEmail = async () => {
@@ -84,6 +87,10 @@ export default function Container3D() {
   };
 
   const go = (href: string) => {
+    if (isBlocked(href)) {
+      toast.error("Kein Zugriff auf diesen Ordner. Bitte wende dich an einen Administrator.");
+      return;
+    }
     markContainerSeen(href);
     navigate(href);
   };
