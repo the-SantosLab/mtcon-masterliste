@@ -41,7 +41,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveries from "./pages/AdminDeliveries";
 import AdminInvoices from "./pages/AdminInvoices";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
-import AdminPartners from "./pages/AdminPartners";
+
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import Documents from "./pages/Documents";
@@ -184,7 +184,7 @@ function AuthenticatedApp() {
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
-        <Route path="/admin/partners" element={<ProtectedRoute><AdminPartners /></ProtectedRoute>} />
+        <Route path="/admin/partners" element={<Navigate to="/crm/companies" replace />} />
         <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
         <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />
         <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />

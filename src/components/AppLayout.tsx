@@ -148,7 +148,7 @@ const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
-  { href: '/admin/partners', label: 'Geschäftspartner', icon: Building2 },
+  { href: '/crm/companies', label: 'Geschäftspartner', icon: Building2 },
   { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
   
   { href: '/admin/templates', label: 'Vorlagen', icon: FileText },
