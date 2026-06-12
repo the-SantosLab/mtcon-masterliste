@@ -328,6 +328,24 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           )}
 
+          {isAdmin && (
+            <>
+              <div className="border-t border-sidebar-border my-1" />
+              <button
+                onClick={() => setCrmOpen(!crmOpen)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
+              >
+                <Briefcase className="h-4 w-4" />CRM
+                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', crmOpen && 'rotate-180')} />
+              </button>
+              {crmOpen && crmItems.map(item => (
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                  <item.icon className="h-4 w-4" />{item.label}
+                </Link>
+              ))}
+            </>
+          )}
+
           {(isAdmin || isLead) && (
             <>
               <div className="border-t border-sidebar-border my-1" />
