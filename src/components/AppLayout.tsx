@@ -295,28 +295,21 @@ export function AppLayout({ children }: AppLayoutProps) {
           
 
           {isAdmin && (
-            <Link to="/admin/inventory" onClick={() => setOpen(false)} className={linkClass('/admin/inventory')}>
-              <Package className="h-4 w-4" />
-              <span className="flex-1">Lager</span>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to="/admin/purchasing" onClick={() => setOpen(false)} className={linkClass('/admin/purchasing')}>
-              <ShoppingCart className="h-4 w-4" />
-              <span className="flex-1">Einkauf</span>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to="/lieferscheine" onClick={() => setOpen(false)} className={linkClass('/lieferscheine')}>
-              <Truck className="h-4 w-4" />
-              <span className="flex-1">Lieferscheine</span>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to="/rechnungen" onClick={() => setOpen(false)} className={linkClass('/rechnungen')}>
-              <Receipt className="h-4 w-4" />
-              <span className="flex-1">Rechnungen</span>
-            </Link>
+            <>
+              <div className="border-t border-sidebar-border my-1" />
+              <button
+                onClick={() => setErpOpen(!erpOpen)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
+              >
+                <Package className="h-4 w-4" />ERP
+                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', erpOpen && 'rotate-180')} />
+              </button>
+              {erpOpen && erpItems.map(item => (
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                  <item.icon className="h-4 w-4" />{item.label}
+                </Link>
+              ))}
+            </>
           )}
 
           {isAdmin && (
