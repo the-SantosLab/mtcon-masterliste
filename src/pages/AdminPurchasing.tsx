@@ -208,7 +208,7 @@ export default function AdminPurchasing() {
       </div>
 
       <SupplierDialog open={supplierDlg} onClose={() => setSupplierDlg(false)} onCreated={loadAll} />
-      <NewPODialog open={poDlg} onClose={() => { setPoDlg(false); setPoPrefill(undefined); }} suppliers={suppliers} warehouses={warehouses} onCreated={loadAll} prefill={poPrefill} />
+      <NewPODialog open={poDlg} onClose={() => { setPoDlg(false); setPoPrefill(undefined); }} suppliers={suppliers} warehouses={warehouses} onCreated={loadAll} onSuppliersChanged={loadAll} prefill={poPrefill} />
       <PODetailDialog
         po={detailPO && !grDlg ? detailPO : null}
         onClose={() => setDetailPO(null)}
@@ -225,26 +225,29 @@ export default function AdminPurchasing() {
 }
 
 /* ===================== SUPPLIER DIALOG ===================== */
-function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (supplier?: Supplier) => void }) {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (open) { setCode(''); setName(''); setContact(''); setEmail(''); }
+  }, [open]);
+
   const save = async () => {
     if (!code.trim() || !name.trim()) { toast.error('Code und Name erforderlich'); return; }
     setSaving(true);
-    const { error } = await (supabase as any).from('suppliers').insert({
+    const { data, error } = await (supabase as any).from('suppliers').insert({
       code: code.trim(), name: name.trim(),
       contact_name: contact.trim() || null,
       email: email.trim() || null,
-    });
+    }).select('*').single();
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Lieferant angelegt');
-    setCode(''); setName(''); setContact(''); setEmail('');
-    onCreated(); onClose();
+    onCreated(data as Supplier); onClose();
   };
 
   return (
@@ -271,8 +274,9 @@ function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
 /* ===================== NEW PO DIALOG ===================== */
 type DraftLine = { art_nr: string; description: string; qty: string; price: string; me?: string | null };
 
-function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill }: {
-  open: boolean; onClose: () => void; suppliers: Supplier[]; warehouses: Warehouse[]; onCreated: () => void;
+function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, onSuppliersChanged, prefill }: {
+  open: boolean; onClose: () => void; suppliers: Supplier[]; warehouses: Warehouse[];
+  onCreated: () => void; onSuppliersChanged: () => void;
   prefill?: { supplierId?: string; notes?: string };
 }) {
   const [supplierId, setSupplierId] = useState<string>('');
@@ -282,6 +286,7 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill 
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [saving, setSaving] = useState(false);
+  const [newSupplierDlg, setNewSupplierDlg] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -333,7 +338,13 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-muted-foreground">Lieferant</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-muted-foreground">Lieferant</label>
+                <button type="button" onClick={() => setNewSupplierDlg(true)}
+                  className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Neu
+                </button>
+              </div>
               <Select value={supplierId} onValueChange={setSupplierId}>
                 <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
                 <SelectContent>
@@ -409,6 +420,11 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill 
           <Button onClick={save} disabled={saving}>Anlegen</Button>
         </DialogFooter>
       </DialogContent>
+      <SupplierDialog
+        open={newSupplierDlg}
+        onClose={() => setNewSupplierDlg(false)}
+        onCreated={(s) => { onSuppliersChanged(); if (s) setSupplierId(s.id); }}
+      />
     </Dialog>
   );
 }
