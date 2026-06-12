@@ -184,6 +184,7 @@ function AuthenticatedApp() {
         <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
+        <Route path="/admin/partners" element={<ProtectedRoute><AdminPartners /></ProtectedRoute>} />
         <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
         <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />
         <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />
