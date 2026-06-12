@@ -128,8 +128,12 @@ const mslItems = [
 
 const navItems = [
   { href: '/notes', label: 'Notizen', icon: StickyNote },
+];
+
+const systemItems = [
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
+  { href: '/container', label: '3D Container', icon: FolderArchive },
 ];
 const adminItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
