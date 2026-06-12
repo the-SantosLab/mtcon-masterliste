@@ -698,16 +698,22 @@ function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
   const [rows, setRows] = useState<OverviewItem[]>([]);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
   const [q, setQ] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await (supabase as any)
-        .from('purchase_order_items')
-        .select('*, articles(matchcode,bezeich_1,me), purchase_orders!inner(id,po_no,status,ordered_at,expected_at,warehouse_id,supplier_id,notes,suppliers(name,code),warehouses(code,name))')
-        .order('position');
-      setRows((data ?? []) as OverviewItem[]);
-    })();
-  }, []);
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await (supabase as any)
+      .from('purchase_order_items')
+      .select('*, articles(matchcode,bezeich_1,me), purchase_orders!inner(id,po_no,status,ordered_at,expected_at,warehouse_id,supplier_id,notes,suppliers(name,code),warehouses(code,name))')
+      .order('position');
+    if (error) setError(error.message ?? 'Daten konnten nicht geladen werden.');
+    else setRows((data ?? []) as OverviewItem[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();
@@ -778,7 +784,22 @@ function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(r => {
+            {loading && Array.from({ length: 5 }).map((_, i) => (
+              <tr key={`sk-${i}`} className="border-t border-border">
+                {Array.from({ length: 11 }).map((__, j) => (
+                  <td key={j} className="px-3 py-2"><div className="h-3 rounded bg-muted/40 animate-pulse" /></td>
+                ))}
+              </tr>
+            ))}
+            {!loading && error && (
+              <tr>
+                <td colSpan={11} className="px-3 py-8 text-center">
+                  <div className="text-xs text-destructive mb-2">{error}</div>
+                  <Button size="sm" variant="outline" onClick={load} className="h-7 text-xs">Erneut versuchen</Button>
+                </td>
+              </tr>
+            )}
+            {!loading && !error && filtered.map(r => {
               const open = Number(r.qty_ordered) - Number(r.qty_received);
               return (
                 <tr key={r.id} className="border-t border-border hover:bg-muted/20 cursor-pointer"
@@ -810,12 +831,17 @@ function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
                 </tr>
               );
             })}
-            {filtered.length === 0 && (
-              <tr><td colSpan={11} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Positionen.</td></tr>
+            {!loading && !error && filtered.length === 0 && (
+              <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground text-xs">
+                {rows.length === 0
+                  ? 'Noch keine Bestellpositionen vorhanden.'
+                  : (q ? 'Keine Treffer für die aktuelle Suche.' : 'Keine offenen Positionen.')}
+              </td></tr>
             )}
           </tbody>
         </table>
       </div>
     </>
+
   );
 }
