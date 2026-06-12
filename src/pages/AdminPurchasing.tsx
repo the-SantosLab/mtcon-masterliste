@@ -79,10 +79,16 @@ export default function AdminPurchasing() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
+            <TabsTrigger value="overview"><LayoutList className="h-3.5 w-3.5 mr-1.5" />Übersicht</TabsTrigger>
             <TabsTrigger value="orders"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Bestellungen</TabsTrigger>
             <TabsTrigger value="receipts"><Truck className="h-3.5 w-3.5 mr-1.5" />Wareneingang</TabsTrigger>
             <TabsTrigger value="suppliers"><Package className="h-3.5 w-3.5 mr-1.5" />Lieferanten</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" className="space-y-3">
+            <PurchasingOverview onOpenPO={(p) => setDetailPO(p)} />
+          </TabsContent>
+
 
           {/* ============ BESTELLUNGEN ============ */}
           <TabsContent value="orders" className="space-y-3">
