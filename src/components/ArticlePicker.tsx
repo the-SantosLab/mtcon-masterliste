@@ -26,11 +26,14 @@ interface Props {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Restrict list to articles that currently have stock > 0 (optionally in a given warehouse) */
+  inStockOnly?: boolean;
+  inStockWarehouseId?: string | null;
 }
 
 const PAGE_SIZE = 100;
 
-export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen…', className, disabled }: Props) {
+export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen…', className, disabled, inStockOnly, inStockWarehouseId }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [items, setItems] = useState<ArticleOption[]>([]);
@@ -38,6 +41,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [stockArtNrs, setStockArtNrs] = useState<string[] | null>(null);
 
   // Resolve selected display info
   useEffect(() => {
@@ -54,11 +58,33 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  // Preload art_nrs that have stock when filter is active
+  useEffect(() => {
+    if (!open || !inStockOnly) { setStockArtNrs(null); return; }
+    let cancel = false;
+    (async () => {
+      let sq = (supabase as any).from('inventory_stock').select('art_nr,quantity,warehouse_id').gt('quantity', 0);
+      if (inStockWarehouseId) sq = sq.eq('warehouse_id', inStockWarehouseId);
+      const { data } = await sq;
+      if (cancel) return;
+      const nrs = Array.from(new Set((data ?? []).map((r: any) => r.art_nr as string)));
+      setStockArtNrs(nrs);
+    })();
+    return () => { cancel = true; };
+  }, [open, inStockOnly, inStockWarehouseId]);
+
   const buildQuery = (offset: number, limit: number) => {
     let query = (supabase as any)
       .from('articles')
       .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,is_blocked,article_prices(standardpreis)')
       .range(offset, offset + limit - 1);
+    if (inStockOnly) {
+      if (!stockArtNrs || stockArtNrs.length === 0) {
+        query = query.eq('art_nr', '__none__');
+        return query;
+      }
+      query = query.in('art_nr', stockArtNrs);
+    }
     if (q.trim()) {
       const term = q.trim().replace(/[,()]/g, ' ');
       const esc = term.replace(/%/g, '');
@@ -95,6 +121,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
   // Search / initial load
   useEffect(() => {
     if (!open) return;
+    if (inStockOnly && stockArtNrs === null) return; // wait for stock list
     let cancel = false;
     setLoading(true);
     const t = setTimeout(async () => {
@@ -107,7 +134,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
     }, 200);
     return () => { cancel = true; clearTimeout(t); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, open]);
+  }, [q, open, stockArtNrs, inStockOnly]);
 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return;
