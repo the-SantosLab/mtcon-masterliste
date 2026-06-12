@@ -41,6 +41,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveries from "./pages/AdminDeliveries";
 import AdminInvoices from "./pages/AdminInvoices";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
+import AdminPartners from "./pages/AdminPartners";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import Documents from "./pages/Documents";
