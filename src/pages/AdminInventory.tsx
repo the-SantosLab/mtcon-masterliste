@@ -355,7 +355,12 @@ function NewMovementDialog({ open, onClose, onDone }: { open: boolean; onClose: 
           </div>
           <div>
             <label className="text-[11px] text-muted-foreground">Artikel</label>
-            <ArticlePicker value={artNr} onChange={(a) => setArtNr(a?.art_nr || null)} />
+            <ArticlePicker
+              value={artNr}
+              onChange={(a) => setArtNr(a?.art_nr || null)}
+              inStockOnly={movementType === 'outbound' || movementType === 'transfer'}
+              inStockWarehouseId={warehouseId || null}
+            />
           </div>
           <div className={movementType === 'transfer' ? 'grid grid-cols-2 gap-2' : ''}>
             <div>
