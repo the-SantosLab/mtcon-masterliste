@@ -65,7 +65,7 @@ export default function AdminPurchasing() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  if (loading) return <AppLayout><div className="p-6 text-muted-foreground text-sm">Lädt…</div></AppLayout>;
+  if (loading || (user && !role)) return <AppLayout><div className="p-6 text-muted-foreground text-sm">Lädt…</div></AppLayout>;
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
