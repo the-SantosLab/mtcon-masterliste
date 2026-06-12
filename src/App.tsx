@@ -38,6 +38,8 @@ import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminAiPrompts from "./pages/AdminAiPrompts";
 import AdminInsurance from "./pages/AdminInsurance";
 import AdminOrders from "./pages/AdminOrders";
+import AdminDeliveries from "./pages/AdminDeliveries";
+import AdminInvoices from "./pages/AdminInvoices";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import Documents from "./pages/Documents";
