@@ -240,6 +240,9 @@ export default function AdminDeliveries() {
               </div>
             )}
             <DialogFooter>
+              {items.length > 0 && (
+                <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>
+              )}
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>
               )}
