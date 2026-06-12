@@ -128,8 +128,12 @@ const mslItems = [
 
 const navItems = [
   { href: '/notes', label: 'Notizen', icon: StickyNote },
+];
+
+const systemItems = [
   { href: '/support', label: 'Support', icon: Headphones },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
+  { href: '/container', label: '3D Container', icon: FolderArchive },
 ];
 const adminItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -191,6 +195,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
   const [erpOpen, setErpOpen] = useState(
     ['/admin/inventory', '/admin/purchasing', '/lieferscheine', '/rechnungen'].some(p => location.pathname.startsWith(p))
+  );
+  const [systemOpen, setSystemOpen] = useState(
+    ['/support', '/docs', '/container'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
   );
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
@@ -304,12 +311,22 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="flex-1">{item.label}</span>
             </Link>
           ))}
-          <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
-            <FolderArchive className="h-4 w-4" />
-            <span className="flex-1">3D Container</span>
-            <ContainerUnreadBadge />
+          <div className="border-t border-sidebar-border my-1" />
+          <button
+            onClick={() => setSystemOpen(!systemOpen)}
+            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
+          >
+            <Settings className="h-4 w-4" />System
+            <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', systemOpen && 'rotate-180')} />
+          </button>
+          {systemOpen && systemItems.map(item => (
+            <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+              <item.icon className="h-4 w-4" />
+              <span className="flex-1">{item.label}</span>
+              {item.href === '/container' && <ContainerUnreadBadge />}
+            </Link>
+          ))}
 
-          </Link>
           
 
           {isAdmin && (
