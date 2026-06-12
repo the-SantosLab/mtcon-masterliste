@@ -699,7 +699,11 @@ type OverviewItem = {
   };
 };
 
-function PurchasingOverview({ onOpenPO, onCreatePO }: { onOpenPO: (po: PO) => void; onCreatePO: () => void }) {
+function PurchasingOverview({ onOpenPO, onCreatePO, suppliers }: {
+  onOpenPO: (po: PO) => void;
+  onCreatePO: (prefill?: { supplierId?: string; notes?: string }) => void;
+  suppliers: Supplier[];
+}) {
   const [rows, setRows] = useState<OverviewItem[]>([]);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
   const [q, setQ] = useState('');
