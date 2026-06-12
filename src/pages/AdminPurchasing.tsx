@@ -274,8 +274,9 @@ function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
 /* ===================== NEW PO DIALOG ===================== */
 type DraftLine = { art_nr: string; description: string; qty: string; price: string; me?: string | null };
 
-function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill }: {
-  open: boolean; onClose: () => void; suppliers: Supplier[]; warehouses: Warehouse[]; onCreated: () => void;
+function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, onSuppliersChanged, prefill }: {
+  open: boolean; onClose: () => void; suppliers: Supplier[]; warehouses: Warehouse[];
+  onCreated: () => void; onSuppliersChanged: () => void;
   prefill?: { supplierId?: string; notes?: string };
 }) {
   const [supplierId, setSupplierId] = useState<string>('');
@@ -285,6 +286,7 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, prefill 
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<DraftLine[]>([]);
   const [saving, setSaving] = useState(false);
+  const [newSupplierDlg, setNewSupplierDlg] = useState(false);
 
   useEffect(() => {
     if (open) {
