@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail } from "lucide-react";
 import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
+import { useContainerBlocks } from "@/hooks/useContainerBlocks";
+import { Lock } from "lucide-react";
 import { toast } from "sonner";
 
 const INTAKE_EMAIL = "mtiq@inbox.kscommand.com";
@@ -70,6 +72,7 @@ const SATELLITES: Module[] = [
 export default function Container3D() {
   const navigate = useNavigate();
   const { counts, total } = useContainerUnread();
+  const { isBlocked } = useContainerBlocks();
   const [copied, setCopied] = useState(false);
 
   const copyEmail = async () => {
@@ -84,6 +87,10 @@ export default function Container3D() {
   };
 
   const go = (href: string) => {
+    if (isBlocked(href)) {
+      toast.error("Kein Zugriff auf diesen Ordner. Bitte wende dich an einen Administrator.");
+      return;
+    }
     markContainerSeen(href);
     navigate(href);
   };
@@ -305,20 +312,29 @@ export default function Container3D() {
               const p = toXY(s.angle, R);
               const Icon = s.icon;
               const unread = counts[s.href] ?? 0;
+              const locked = isBlocked(s.href);
               return (
                 <button
                   key={s.href}
                   onClick={() => go(s.href)}
-                  className="group absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl transition-transform hover:scale-110 focus:outline-none"
+                  className={`group absolute -translate-x-1/2 -translate-y-1/2 rounded-2xl transition-transform focus:outline-none ${locked ? 'cursor-not-allowed' : 'hover:scale-110'}`}
                   style={{
                     left: `${(p.x * 100) / VB}%`,
                     top: `${(p.y * 100) / VB}%`,
                     width: `${(NODE_R * 2 * 100) / VB}%`,
                     height: `${(NODE_R * 2 * 100) / VB}%`,
                     animation: `fade-in 0.6s ease-out ${i * 120}ms both`,
+                    opacity: locked ? 0.45 : 1,
                   }}
-                  title={unread > 0 ? `${s.label} · ${unread} neu` : s.label}
+                  title={locked ? `${s.label} · Kein Zugriff` : (unread > 0 ? `${s.label} · ${unread} neu` : s.label)}
                 >
+                  {locked && (
+                    <span className="absolute inset-0 rounded-full bg-black/40 backdrop-blur-[1px] z-20 flex items-center justify-center">
+                      <span className="flex items-center justify-center h-8 w-8 rounded-full bg-black/70 border border-white/30">
+                        <Lock className="h-4 w-4 text-white/90" />
+                      </span>
+                    </span>
+                  )}
                   <span
                     className="absolute inset-0 rounded-full blur-xl opacity-70 group-hover:opacity-100 transition-opacity"
                     style={{

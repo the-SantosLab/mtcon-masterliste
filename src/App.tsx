@@ -40,6 +40,7 @@ import AdminInsurance from "./pages/AdminInsurance";
 import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveries from "./pages/AdminDeliveries";
 import AdminInvoices from "./pages/AdminInvoices";
+import AdminContainerAccess from "./pages/AdminContainerAccess";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import Documents from "./pages/Documents";
@@ -195,6 +196,7 @@ function AuthenticatedApp() {
         <Route path="/admin/security" element={<ProtectedRoute><AdminSecurity /></ProtectedRoute>} />
         <Route path="/admin/announcements" element={<ProtectedRoute><AdminAnnouncements /></ProtectedRoute>} />
         <Route path="/admin/ai-prompts" element={<ProtectedRoute><AdminAiPrompts /></ProtectedRoute>} />
+        <Route path="/admin/container-access" element={<ProtectedRoute><AdminContainerAccess /></ProtectedRoute>} />
         <Route path="/insurance" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
         <Route path="/insurance/:id" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
         <Route path="/issos" element={<ProtectedRoute><Issos /></ProtectedRoute>} />
