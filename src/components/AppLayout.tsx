@@ -347,12 +347,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-          {isAdmin && (
-            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
-              <Network className="h-4 w-4" />
-              <span className="flex-1">Business Map</span>
-            </Link>
-          )}
 
           {isAdmin && (
             <>
