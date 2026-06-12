@@ -186,6 +186,20 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
                 );
               })}
             </CommandGroup>
+            {!loading && hasMore && (
+              <div className="p-2 border-t border-border">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-8 text-[11px]"
+                  disabled={loadingMore}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); loadMore(); }}
+                >
+                  {loadingMore ? 'Lade…' : `Mehr laden (+${PAGE_SIZE})`}
+                </Button>
+              </div>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
