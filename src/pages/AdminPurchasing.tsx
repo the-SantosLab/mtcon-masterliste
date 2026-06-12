@@ -420,6 +420,11 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, onSuppli
           <Button onClick={save} disabled={saving}>Anlegen</Button>
         </DialogFooter>
       </DialogContent>
+      <SupplierDialog
+        open={newSupplierDlg}
+        onClose={() => setNewSupplierDlg(false)}
+        onCreated={(s) => { onSuppliersChanged(); if (s) setSupplierId(s.id); }}
+      />
     </Dialog>
   );
 }
