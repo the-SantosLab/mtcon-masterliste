@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
-import { Plus, Trash2, Package, Truck, ClipboardList } from 'lucide-react';
+import { Plus, Trash2, Package, Truck, ClipboardList, LayoutList } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Supplier = { id: string; code: string; name: string; contact_name: string | null; email: string | null; is_active: boolean };
@@ -38,7 +38,7 @@ const STATUS_VARIANT: Record<POStatus, 'secondary' | 'default' | 'outline' | 'de
 
 export default function AdminPurchasing() {
   const { isAdmin, loading } = useAuth();
-  const [tab, setTab] = useState('orders');
+  const [tab, setTab] = useState('overview');
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -79,10 +79,16 @@ export default function AdminPurchasing() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
+            <TabsTrigger value="overview"><LayoutList className="h-3.5 w-3.5 mr-1.5" />Übersicht</TabsTrigger>
             <TabsTrigger value="orders"><ClipboardList className="h-3.5 w-3.5 mr-1.5" />Bestellungen</TabsTrigger>
             <TabsTrigger value="receipts"><Truck className="h-3.5 w-3.5 mr-1.5" />Wareneingang</TabsTrigger>
             <TabsTrigger value="suppliers"><Package className="h-3.5 w-3.5 mr-1.5" />Lieferanten</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" className="space-y-3">
+            <PurchasingOverview onOpenPO={(p) => setDetailPO(p)} />
+          </TabsContent>
+
 
           {/* ============ BESTELLUNGEN ============ */}
           <TabsContent value="orders" className="space-y-3">
@@ -666,5 +672,150 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ===================== PURCHASING OVERVIEW ===================== */
+type OverviewItem = {
+  id: string;
+  po_id: string;
+  position: number;
+  art_nr: string;
+  description: string | null;
+  qty_ordered: number;
+  qty_received: number;
+  articles?: { matchcode: string | null; bezeich_1: string | null; me: string | null } | null;
+  purchase_orders: {
+    id: string; po_no: string | null; status: POStatus;
+    ordered_at: string | null; expected_at: string | null;
+    warehouse_id: string | null; supplier_id: string; notes: string | null;
+    suppliers?: { name: string; code: string } | null;
+    warehouses?: { code: string; name: string } | null;
+  };
+};
+
+function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
+  const [rows, setRows] = useState<OverviewItem[]>([]);
+  const [filter, setFilter] = useState<'open' | 'all'>('open');
+  const [q, setQ] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('purchase_order_items')
+        .select('*, articles(matchcode,bezeich_1,me), purchase_orders!inner(id,po_no,status,ordered_at,expected_at,warehouse_id,supplier_id,notes,suppliers(name,code),warehouses(code,name))')
+        .order('position');
+      setRows((data ?? []) as OverviewItem[]);
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    return rows.filter(r => {
+      const open = Number(r.qty_ordered) - Number(r.qty_received);
+      if (filter === 'open' && (open <= 0 || r.purchase_orders.status === 'cancelled')) return false;
+      if (!ql) return true;
+      return (
+        r.purchase_orders.po_no?.toLowerCase().includes(ql) ||
+        r.art_nr.toLowerCase().includes(ql) ||
+        (r.description || '').toLowerCase().includes(ql) ||
+        (r.articles?.bezeich_1 || '').toLowerCase().includes(ql) ||
+        (r.purchase_orders.suppliers?.name || '').toLowerCase().includes(ql)
+      );
+    });
+  }, [rows, filter, q]);
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dueClass = (d: string | null, open: number) => {
+    if (!d || open <= 0) return 'text-muted-foreground';
+    const dt = new Date(d);
+    if (dt < today) return 'text-destructive font-medium';
+    const days = (dt.getTime() - today.getTime()) / 86400000;
+    if (days <= 7) return 'text-amber-500 dark:text-amber-400 font-medium';
+    return 'text-foreground';
+  };
+
+  const totals = useMemo(() => filtered.reduce((acc, r) => {
+    acc.ordered += Number(r.qty_ordered);
+    acc.received += Number(r.qty_received);
+    acc.open += Math.max(0, Number(r.qty_ordered) - Number(r.qty_received));
+    return acc;
+  }, { ordered: 0, received: 0, open: 0 }), [filtered]);
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2 justify-between">
+        <div className="flex items-center gap-2">
+          <Select value={filter} onValueChange={(v: 'open' | 'all') => setFilter(v)}>
+            <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">Nur offene Positionen</SelectItem>
+              <SelectItem value="all">Alle Positionen</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input placeholder="PO, Artikel, Lieferant…" value={q} onChange={e => setQ(e.target.value)} className="h-8 text-xs w-64" />
+        </div>
+        <div className="text-xs text-muted-foreground tabular-nums">
+          Σ Bestellt {totals.ordered} · Geliefert {totals.received} · Offen <span className="text-foreground font-medium">{totals.open}</span>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/30 text-[11px] uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="text-left px-3 py-2">PO</th>
+              <th className="text-left px-3 py-2">Lieferant</th>
+              <th className="text-left px-3 py-2">Pos</th>
+              <th className="text-left px-3 py-2">Artikel</th>
+              <th className="text-left px-3 py-2">Bezeichnung</th>
+              <th className="text-right px-3 py-2">Bestellt</th>
+              <th className="text-right px-3 py-2">Geliefert</th>
+              <th className="text-right px-3 py-2">Rest</th>
+              <th className="text-left px-3 py-2">Bestellt am</th>
+              <th className="text-left px-3 py-2">Liefertermin</th>
+              <th className="text-left px-3 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(r => {
+              const open = Number(r.qty_ordered) - Number(r.qty_received);
+              return (
+                <tr key={r.id} className="border-t border-border hover:bg-muted/20 cursor-pointer"
+                    onClick={() => onOpenPO({
+                      id: r.purchase_orders.id,
+                      po_no: r.purchase_orders.po_no,
+                      supplier_id: r.purchase_orders.supplier_id,
+                      warehouse_id: r.purchase_orders.warehouse_id,
+                      status: r.purchase_orders.status,
+                      ordered_at: r.purchase_orders.ordered_at,
+                      expected_at: r.purchase_orders.expected_at,
+                      notes: r.purchase_orders.notes,
+                      suppliers: r.purchase_orders.suppliers,
+                      warehouses: r.purchase_orders.warehouses,
+                    })}>
+                  <td className="px-3 py-2 font-mono text-xs">{r.purchase_orders.po_no}</td>
+                  <td className="px-3 py-2">{r.purchase_orders.suppliers?.name}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{r.position}</td>
+                  <td className="px-3 py-2 font-mono text-xs">{r.art_nr}</td>
+                  <td className="px-3 py-2">{r.description || r.articles?.bezeich_1 || r.articles?.matchcode}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{Number(r.qty_ordered)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{Number(r.qty_received)}</td>
+                  <td className={'px-3 py-2 text-right tabular-nums ' + (open > 0 ? 'text-foreground font-medium' : 'text-muted-foreground')}>{open}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-xs">{r.purchase_orders.ordered_at ?? '–'}</td>
+                  <td className={'px-3 py-2 text-xs ' + dueClass(r.purchase_orders.expected_at, open)}>
+                    {r.purchase_orders.expected_at ?? '–'}
+                  </td>
+                  <td className="px-3 py-2"><Badge variant={STATUS_VARIANT[r.purchase_orders.status]}>{STATUS_LABEL[r.purchase_orders.status]}</Badge></td>
+                </tr>
+              );
+            })}
+            {filtered.length === 0 && (
+              <tr><td colSpan={11} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Positionen.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
