@@ -12,7 +12,7 @@ import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -166,6 +166,20 @@ const adminItems = [
   { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, masterOnly: true },
 ];
 
+const crmItems = [
+  { href: '/crm/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/crm/deals', label: 'Deals', icon: Briefcase },
+  { href: '/crm/companies', label: 'Geschäftspartner', icon: Building2 },
+  { href: '/crm/contacts', label: 'Kontakte', icon: Users },
+  { href: '/crm/offers', label: 'Angebote', icon: FileText },
+  { href: '/crm/activities', label: 'Aktivitäten', icon: Activity },
+  { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar },
+  { href: '/crm/outbound', label: 'Outbound', icon: Send },
+  { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
+  { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
+  { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
+];
+
 export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
@@ -174,6 +188,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
+  const [crmOpen, setCrmOpen] = useState(location.pathname.startsWith('/crm'));
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
   const [oldPw, setOldPw] = useState('');
@@ -311,6 +326,24 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Network className="h-4 w-4" />
               <span className="flex-1">Business Map</span>
             </Link>
+          )}
+
+          {isAdmin && (
+            <>
+              <div className="border-t border-sidebar-border my-1" />
+              <button
+                onClick={() => setCrmOpen(!crmOpen)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
+              >
+                <Briefcase className="h-4 w-4" />CRM
+                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', crmOpen && 'rotate-180')} />
+              </button>
+              {crmOpen && crmItems.map(item => (
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                  <item.icon className="h-4 w-4" />{item.label}
+                </Link>
+              ))}
+            </>
           )}
 
           {(isAdmin || isLead) && (
