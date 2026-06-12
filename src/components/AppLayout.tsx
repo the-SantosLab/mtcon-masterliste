@@ -119,16 +119,16 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const navItems = [
+const mslItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
-
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
-  
+];
+
+const navItems = [
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
-  
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [
@@ -184,6 +184,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
   const [crmOpen, setCrmOpen] = useState(location.pathname.startsWith('/crm'));
+  const [mslOpen, setMslOpen] = useState(
+    location.pathname === '/' ||
+    location.pathname.startsWith('/cases') ||
+    location.pathname.startsWith('/projects')
+  );
   const [erpOpen, setErpOpen] = useState(
     ['/admin/inventory', '/admin/purchasing', '/lieferscheine', '/rechnungen'].some(p => location.pathname.startsWith(p))
   );
@@ -278,12 +283,25 @@ export function AppLayout({ children }: AppLayoutProps) {
             <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-sidebar-border px-1 py-0.5 text-[9px] font-mono text-muted-foreground">⌘K</kbd>
           </button>
           <div className="border-t border-sidebar-border my-1" />
+          <button
+            onClick={() => setMslOpen(!mslOpen)}
+            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
+          >
+            <ClipboardList className="h-4 w-4" />MSL
+            <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', mslOpen && 'rotate-180')} />
+          </button>
+          {mslOpen && mslItems.map(item => (
+            <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+              <item.icon className="h-4 w-4" />
+              <span className="flex-1">{item.label}</span>
+              {item.href === '/cases' && <CasesUnreadBadge />}
+            </Link>
+          ))}
+          <div className="border-t border-sidebar-border my-1" />
           {navItems.map(item => (
             <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
               <item.icon className="h-4 w-4" />
               <span className="flex-1">{item.label}</span>
-              {(item as any).mtiq && <MtiqPendingBadge />}
-              {item.href === '/cases' && <CasesUnreadBadge />}
             </Link>
           ))}
           <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
