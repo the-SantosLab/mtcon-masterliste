@@ -196,6 +196,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [erpOpen, setErpOpen] = useState(
     ['/admin/inventory', '/admin/purchasing', '/lieferscheine', '/rechnungen'].some(p => location.pathname.startsWith(p))
   );
+  const [systemOpen, setSystemOpen] = useState(
+    ['/support', '/docs', '/container'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
+  );
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
   const [oldPw, setOldPw] = useState('');
