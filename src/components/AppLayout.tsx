@@ -319,13 +319,27 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Settings className="h-4 w-4" />System
             <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', systemOpen && 'rotate-180')} />
           </button>
-          {systemOpen && systemItems.map(item => (
-            <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
-              <item.icon className="h-4 w-4" />
-              <span className="flex-1">{item.label}</span>
-              {item.href === '/container' && <ContainerUnreadBadge />}
-            </Link>
-          ))}
+          {systemOpen && (
+            <>
+              {systemItems.map(item => (
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                  <item.icon className="h-4 w-4" />
+                  <span className="flex-1">{item.label}</span>
+                  {item.href === '/container' && <ContainerUnreadBadge />}
+                </Link>
+              ))}
+              <button
+                onClick={() => setBugDialogOpen(true)}
+                className="flex items-center gap-2.5 w-full px-3 py-2 pl-9 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              >
+                <Bug className="h-4 w-4" />
+                <span className="flex-1 text-left">Bug / Feedback melden</span>
+              </button>
+              <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-14 text-[12px]')}>
+                <span>Meine Meldungen</span>
+              </Link>
+            </>
+          )}
 
           
 
