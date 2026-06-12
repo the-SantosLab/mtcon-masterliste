@@ -12,7 +12,7 @@ import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -164,6 +164,20 @@ const adminItems = [
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
   { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, masterOnly: true },
+];
+
+const crmItems = [
+  { href: '/crm/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/crm/deals', label: 'Deals', icon: Briefcase },
+  { href: '/crm/companies', label: 'Geschäftspartner', icon: Building2 },
+  { href: '/crm/contacts', label: 'Kontakte', icon: Users },
+  { href: '/crm/offers', label: 'Angebote', icon: FileText },
+  { href: '/crm/activities', label: 'Aktivitäten', icon: Activity },
+  { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar },
+  { href: '/crm/outbound', label: 'Outbound', icon: Send },
+  { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
+  { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
+  { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
