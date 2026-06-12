@@ -225,26 +225,29 @@ export default function AdminPurchasing() {
 }
 
 /* ===================== SUPPLIER DIALOG ===================== */
-function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+function SupplierDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (supplier?: Supplier) => void }) {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (open) { setCode(''); setName(''); setContact(''); setEmail(''); }
+  }, [open]);
+
   const save = async () => {
     if (!code.trim() || !name.trim()) { toast.error('Code und Name erforderlich'); return; }
     setSaving(true);
-    const { error } = await (supabase as any).from('suppliers').insert({
+    const { data, error } = await (supabase as any).from('suppliers').insert({
       code: code.trim(), name: name.trim(),
       contact_name: contact.trim() || null,
       email: email.trim() || null,
-    });
+    }).select('*').single();
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Lieferant angelegt');
-    setCode(''); setName(''); setContact(''); setEmail('');
-    onCreated(); onClose();
+    onCreated(data as Supplier); onClose();
   };
 
   return (
