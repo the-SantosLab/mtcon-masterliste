@@ -1015,6 +1015,8 @@ export default function CaseDetail() {
 
             <DocumentSection entityType="case" entityId={c.id} title="3D-Container" />
 
+            <CaseArticles caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} />
+
             {/* Email-Adresse für diesen Vorgang */}
             <div className="rounded-md border border-border bg-card p-5 space-y-2">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email an diesen Vorgang</h3>
