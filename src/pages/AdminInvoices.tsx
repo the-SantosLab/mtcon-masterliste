@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Receipt, Plus, Trash2 } from "lucide-react";
+import { Receipt, Plus, Trash2, Download } from "lucide-react";
+import { generateInvoicePdf } from "@/lib/document-pdf";
 
 type Invoice = {
   id: string;
@@ -90,6 +91,30 @@ export default function AdminInvoices() {
     await (supabase.from('invoices' as any).update({ status: 'paid', paid_at: new Date().toISOString(), paid_amount: sel.total_amount ?? sel.paid_amount }).eq('id', sel.id)) as any;
     toast.success('Als bezahlt markiert');
     setSel(null); load();
+  };
+
+  const downloadPdf = () => {
+    if (!sel) return;
+    const pdf = generateInvoicePdf({
+      invoice_no: sel.invoice_no,
+      invoice_date: sel.invoice_date,
+      due_date: sel.due_date,
+      customer_name: sel.customer_name,
+      customer_no: sel.customer_no,
+      billing_address: sel.billing_address,
+      payment_terms: sel.payment_terms,
+      notes: sel.notes,
+      currency: sel.currency,
+      subtotal_amount: sel.subtotal_amount,
+      tax_amount: sel.tax_amount,
+      total_amount: sel.total_amount,
+      items: items.map(it => ({
+        position: it.position, art_nr: it.art_nr, description: it.description,
+        quantity: it.quantity, unit: it.unit, unit_price: it.unit_price,
+        tax_rate: it.tax_rate, line_total: it.line_total,
+      })),
+    });
+    pdf.save(`${sel.invoice_no}.pdf`);
   };
 
   const filtered = useMemo(() => filter==='all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
@@ -217,6 +242,7 @@ export default function AdminInvoices() {
               </div>
             )}
             <DialogFooter>
+              {items.length > 0 && <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>}
               {sel?.status !== 'paid' && sel?.status !== 'cancelled' && <Button variant="default" onClick={markPaid}>Als bezahlt</Button>}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
               <Button onClick={save}>Speichern</Button>

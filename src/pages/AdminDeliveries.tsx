@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Truck, Plus, Trash2 } from "lucide-react";
+import { Truck, Plus, Trash2, Download } from "lucide-react";
+import { generateDeliveryPdf } from "@/lib/document-pdf";
 
 type Delivery = {
   id: string;
@@ -109,6 +110,25 @@ export default function AdminDeliveries() {
   const delItem = async (id: string) => {
     await (supabase.from('delivery_items' as any).delete().eq('id', id)) as any;
     if (sel) open(sel);
+  };
+
+  const downloadPdf = () => {
+    if (!sel) return;
+    const pdf = generateDeliveryPdf({
+      delivery_no: sel.delivery_no,
+      delivery_date: sel.delivery_date,
+      carrier: sel.carrier,
+      tracking_no: sel.tracking_no,
+      ship_to: sel.ship_to,
+      notes: sel.notes,
+      order_no: sel.orders?.order_no,
+      customer_name: sel.orders?.customer_name,
+      items: items.map(it => ({
+        position: it.position, art_nr: it.art_nr, description: it.description,
+        quantity: it.quantity, unit: it.unit, lot_no: it.lot_no, serial_no: it.serial_no,
+      })),
+    });
+    pdf.save(`${sel.delivery_no}.pdf`);
   };
 
   const filtered = useMemo(() => filter === 'all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
@@ -220,6 +240,9 @@ export default function AdminDeliveries() {
               </div>
             )}
             <DialogFooter>
+              {items.length > 0 && (
+                <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>
+              )}
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>
               )}
