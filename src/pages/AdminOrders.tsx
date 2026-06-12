@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrderFulfillment } from "@/components/OrderFulfillment";
+import { PartnerPicker } from "@/components/PartnerPicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -21,6 +22,7 @@ type Order = {
   status: string;
   source: string;
   order_kind: string;
+  company_id: string | null;
   customer_name: string | null;
   customer_email: string | null;
   customer_no: string | null;
