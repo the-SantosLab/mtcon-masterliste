@@ -93,10 +93,13 @@ function PaginatedBrowser({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
+  const [sortKey, setSortKey] = useState<string>(orderBy);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
   const { preferences } = usePreferences();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  useEffect(() => { setPage(1); }, [q, pageSize]);
+  useEffect(() => { setPage(1); }, [q, pageSize, sortKey, sortAsc]);
+  useEffect(() => { setSortKey(orderBy); setSortAsc(true); }, [orderBy, table]);
 
   useEffect(() => {
     let cancel = false;
@@ -107,7 +110,7 @@ function PaginatedBrowser({
       let base: any = (supabase as any)
         .from(table)
         .select(select, { count: 'exact' })
-        .order(orderBy, { ascending: true })
+        .order(sortKey, { ascending: sortAsc, nullsFirst: false })
         .range(from, to);
       if (filter) base = filter(base);
       if (q.trim() && searchableCols.length) {
@@ -124,10 +127,15 @@ function PaginatedBrowser({
     };
     const t = setTimeout(run, 200);
     return () => { cancel = true; clearTimeout(t); };
-  }, [q, page, pageSize, table, select, orderBy]);
+  }, [q, page, pageSize, table, select, sortKey, sortAsc]);
 
   const startItem = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, total);
+
+  const toggleSort = (key: string) => {
+    if (key === sortKey) setSortAsc((a) => !a);
+    else { setSortKey(key); setSortAsc(true); }
+  };
 
   return (
     <div className="space-y-3 pt-4">
@@ -144,14 +152,23 @@ function PaginatedBrowser({
         <table className={`w-full caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
           <thead className="[&_tr]:border-b">
             <tr className="border-b">
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  className={`sticky top-0 z-20 text-left align-middle font-medium text-muted-foreground bg-card backdrop-blur-sm shadow-[inset_0_-1px_0_0_hsl(var(--border))] ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}
-                >
-                  {c.label}
-                </th>
-              ))}
+              {columns.map((c) => {
+                const active = sortKey === c.key;
+                return (
+                  <th
+                    key={c.key}
+                    onClick={() => toggleSort(c.key)}
+                    className={`sticky top-0 z-20 text-left align-middle font-medium text-muted-foreground bg-card backdrop-blur-sm shadow-[inset_0_-1px_0_0_hsl(var(--border))] cursor-pointer select-none hover:text-foreground transition-colors ${preferences.compactTables ? 'text-[10px] px-2 py-1' : 'text-[10px] px-4 py-2'} ${c.className ?? ''}`}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {c.label}
+                      <span className={`text-[8px] ${active ? 'opacity-100 text-foreground' : 'opacity-30'}`}>
+                        {active ? (sortAsc ? '▲' : '▼') : '↕'}
+                      </span>
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="[&_tr:last-child]:border-0">
