@@ -184,6 +184,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
   const [crmOpen, setCrmOpen] = useState(location.pathname.startsWith('/crm'));
+  const [mslOpen, setMslOpen] = useState(
+    location.pathname === '/' ||
+    location.pathname.startsWith('/cases') ||
+    location.pathname.startsWith('/projects')
+  );
   const [erpOpen, setErpOpen] = useState(
     ['/admin/inventory', '/admin/purchasing', '/lieferscheine', '/rechnungen'].some(p => location.pathname.startsWith(p))
   );
