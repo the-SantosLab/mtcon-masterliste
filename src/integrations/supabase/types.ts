@@ -1887,6 +1887,33 @@ export type Database = {
           },
         ]
       }
+      container_module_blocks: {
+        Row: {
+          blocked_by: string | null
+          created_at: string
+          id: string
+          module_key: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_by?: string | null
+          created_at?: string
+          id?: string
+          module_key: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_by?: string | null
+          created_at?: string
+          id?: string
+          module_key?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       counters: {
         Row: {
           id: string
