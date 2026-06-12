@@ -159,6 +159,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
                       </div>
                       {alts && <div className="text-[10px] text-muted-foreground/80 truncate font-mono">{alts}</div>}
                     </div>
+                    {it.is_blocked && <Badge variant="destructive" className="text-[10px] ml-2">Gesperrt</Badge>}
                     {it.me && <Badge variant="secondary" className="text-[10px] ml-2">{it.me}</Badge>}
                   </CommandItem>
                 );
