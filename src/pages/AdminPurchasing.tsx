@@ -46,6 +46,7 @@ export default function AdminPurchasing() {
 
   const [supplierDlg, setSupplierDlg] = useState(false);
   const [poDlg, setPoDlg] = useState(false);
+  const [poPrefill, setPoPrefill] = useState<{ supplierId?: string; notes?: string } | undefined>();
   const [detailPO, setDetailPO] = useState<PO | null>(null);
   const [grDlg, setGrDlg] = useState(false);
 
