@@ -319,8 +319,29 @@ export default function AdminOrders() {
               )}
 
               <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label className="text-xs">Geschäftspartner</Label>
+                  <PartnerPicker
+                    value={selected.company_id}
+                    role="customer"
+                    onChange={(id, p) => {
+                      setSelected({
+                        ...selected,
+                        company_id: id,
+                        ...(p ? {
+                          customer_name: p.name,
+                          customer_email: p.email,
+                          customer_no: p.customer_no,
+                        } : {}),
+                      });
+                    }}
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Auswählen, neu anlegen oder leeren. Freitextfelder unten werden beim Auswählen vorbefüllt.
+                  </p>
+                </div>
                 <div>
-                  <Label className="text-xs">Kunde</Label>
+                  <Label className="text-xs">Kunde (Text)</Label>
                   <Input
                     value={selected.customer_name || ""}
                     onChange={(e) => setSelected({ ...selected, customer_name: e.target.value })}
