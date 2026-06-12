@@ -119,16 +119,16 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const navItems = [
+const mslItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
-
   { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
-  
+];
+
+const navItems = [
   { href: '/notes', label: 'Notizen', icon: StickyNote },
   { href: '/support', label: 'Support', icon: Headphones },
-  
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [
