@@ -694,7 +694,7 @@ type OverviewItem = {
   };
 };
 
-function PurchasingOverview({ onOpenPO }: { onOpenPO: (po: PO) => void }) {
+function PurchasingOverview({ onOpenPO, onCreatePO }: { onOpenPO: (po: PO) => void; onCreatePO: () => void }) {
   const [rows, setRows] = useState<OverviewItem[]>([]);
   const [filter, setFilter] = useState<'open' | 'all'>('open');
   const [q, setQ] = useState('');
