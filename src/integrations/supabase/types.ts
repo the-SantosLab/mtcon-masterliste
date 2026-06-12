@@ -2699,6 +2699,109 @@ export type Database = {
         }
         Relationships: []
       }
+      goods_receipt_items: {
+        Row: {
+          created_at: string
+          gr_id: string
+          id: string
+          movement_id: string | null
+          po_item_id: string
+          qty_received: number
+        }
+        Insert: {
+          created_at?: string
+          gr_id: string
+          id?: string
+          movement_id?: string | null
+          po_item_id: string
+          qty_received: number
+        }
+        Update: {
+          created_at?: string
+          gr_id?: string
+          id?: string
+          movement_id?: string | null
+          po_item_id?: string
+          qty_received?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipt_items_gr_id_fkey"
+            columns: ["gr_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_po_item_id_fkey"
+            columns: ["po_item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goods_receipts: {
+        Row: {
+          created_at: string
+          delivery_note_no: string | null
+          gr_no: string | null
+          id: string
+          notes: string | null
+          po_id: string
+          received_at: string
+          received_by: string | null
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_note_no?: string | null
+          gr_no?: string | null
+          id?: string
+          notes?: string | null
+          po_id: string
+          received_at?: string
+          received_by?: string | null
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_note_no?: string | null
+          gr_no?: string | null
+          id?: string
+          notes?: string | null
+          po_id?: string
+          received_at?: string
+          received_by?: string | null
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipts_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inbox_corrections: {
         Row: {
           ai_value: Json | null
@@ -4867,6 +4970,117 @@ export type Database = {
           },
         ]
       }
+      purchase_order_items: {
+        Row: {
+          art_nr: string
+          created_at: string
+          description: string | null
+          id: string
+          po_id: string
+          position: number
+          qty_ordered: number
+          qty_received: number
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          art_nr: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          po_id: string
+          position?: number
+          qty_ordered: number
+          qty_received?: number
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          art_nr?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          po_id?: string
+          position?: number
+          qty_ordered?: number
+          qty_received?: number
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expected_at: string | null
+          id: string
+          notes: string | null
+          ordered_at: string | null
+          po_no: string | null
+          status: Database["public"]["Enums"]["po_status"]
+          supplier_id: string
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expected_at?: string | null
+          id?: string
+          notes?: string | null
+          ordered_at?: string | null
+          po_no?: string | null
+          status?: Database["public"]["Enums"]["po_status"]
+          supplier_id: string
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expected_at?: string | null
+          id?: string
+          notes?: string | null
+          ordered_at?: string | null
+          po_no?: string | null
+          status?: Database["public"]["Enums"]["po_status"]
+          supplier_id?: string
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       response_templates: {
         Row: {
           body: string
@@ -5132,6 +5346,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          code: string
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          code: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          code?: string
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       support_tickets: {
         Row: {
@@ -5786,6 +6042,7 @@ export type Database = {
         | "angenommen"
         | "abgelehnt"
         | "abgelaufen"
+      po_status: "draft" | "ordered" | "partial" | "received" | "cancelled"
       product_request_status: "ausstehend" | "genehmigt" | "abgelehnt"
       protection_scope: "global" | "department" | "subsidiary"
       protection_status: "aktiv" | "abgelaufen" | "strittig"
@@ -5977,6 +6234,7 @@ export const Constants = {
         "abgelehnt",
         "abgelaufen",
       ],
+      po_status: ["draft", "ordered", "partial", "received", "cancelled"],
       product_request_status: ["ausstehend", "genehmigt", "abgelehnt"],
       protection_scope: ["global", "department", "subsidiary"],
       protection_status: ["aktiv", "abgelaufen", "strittig"],
