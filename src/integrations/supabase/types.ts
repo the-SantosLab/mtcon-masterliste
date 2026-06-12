@@ -5283,43 +5283,61 @@ export type Database = {
       stock_movements: {
         Row: {
           art_nr: string
+          case_id: string | null
           created_at: string
           created_by: string | null
           id: string
+          lot_no: string | null
           movement_type: Database["public"]["Enums"]["stock_movement_type"]
           note: string | null
+          order_id: string | null
+          project_id: string | null
           quantity: number
           reference_id: string | null
           reference_type: string | null
+          serial_no: string | null
           target_warehouse_id: string | null
+          transfer_id: string | null
           unit_cost: number | null
           warehouse_id: string
         }
         Insert: {
           art_nr: string
+          case_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          lot_no?: string | null
           movement_type: Database["public"]["Enums"]["stock_movement_type"]
           note?: string | null
+          order_id?: string | null
+          project_id?: string | null
           quantity: number
           reference_id?: string | null
           reference_type?: string | null
+          serial_no?: string | null
           target_warehouse_id?: string | null
+          transfer_id?: string | null
           unit_cost?: number | null
           warehouse_id: string
         }
         Update: {
           art_nr?: string
+          case_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          lot_no?: string | null
           movement_type?: Database["public"]["Enums"]["stock_movement_type"]
           note?: string | null
+          order_id?: string | null
+          project_id?: string | null
           quantity?: number
           reference_id?: string | null
           reference_type?: string | null
+          serial_no?: string | null
           target_warehouse_id?: string | null
+          transfer_id?: string | null
           unit_cost?: number | null
           warehouse_id?: string
         }
@@ -5332,6 +5350,27 @@ export type Database = {
             referencedColumns: ["art_nr"]
           },
           {
+            foreignKeyName: "stock_movements_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "stock_movements_target_warehouse_id_fkey"
             columns: ["target_warehouse_id"]
             isOneToOne: false
@@ -5340,6 +5379,83 @@ export type Database = {
           },
           {
             foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_reservations: {
+        Row: {
+          art_nr: string
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          note: string | null
+          order_id: string | null
+          project_id: string | null
+          quantity: number
+          status: string
+          updated_at: string
+          warehouse_id: string
+        }
+        Insert: {
+          art_nr: string
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          project_id?: string | null
+          quantity: number
+          status?: string
+          updated_at?: string
+          warehouse_id: string
+        }
+        Update: {
+          art_nr?: string
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          project_id?: string | null
+          quantity?: number
+          status?: string
+          updated_at?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_reservations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
@@ -5851,7 +5967,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      inventory_available: {
+        Row: {
+          art_nr: string | null
+          quantity_available: number | null
+          quantity_on_hand: number | null
+          quantity_reserved: number | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          art_nr?: string | null
+          quantity_available?: never
+          quantity_on_hand?: number | null
+          quantity_reserved?: never
+          warehouse_id?: string | null
+        }
+        Update: {
+          art_nr?: string | null
+          quantity_available?: never
+          quantity_on_hand?: number | null
+          quantity_reserved?: never
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_stock_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+          {
+            foreignKeyName: "inventory_stock_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       archive_old_announcements: { Args: never; Returns: number }
