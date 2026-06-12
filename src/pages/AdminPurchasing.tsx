@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
-import { Plus, Trash2, Package, Truck, ClipboardList } from 'lucide-react';
+import { Plus, Trash2, Package, Truck, ClipboardList, LayoutList } from 'lucide-react';
 import { toast } from 'sonner';
 
 type Supplier = { id: string; code: string; name: string; contact_name: string | null; email: string | null; is_active: boolean };
