@@ -2281,6 +2281,126 @@ export type Database = {
         }
         Relationships: []
       }
+      deliveries: {
+        Row: {
+          carrier: string | null
+          created_at: string
+          created_by: string | null
+          delivery_date: string | null
+          delivery_no: string
+          id: string
+          notes: string | null
+          order_id: string | null
+          ship_to: string | null
+          status: string
+          tracking_no: string | null
+          updated_at: string
+        }
+        Insert: {
+          carrier?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_date?: string | null
+          delivery_no?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          ship_to?: string | null
+          status?: string
+          tracking_no?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_date?: string | null
+          delivery_no?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          ship_to?: string | null
+          status?: string
+          tracking_no?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_items: {
+        Row: {
+          art_nr: string | null
+          created_at: string
+          delivery_id: string
+          description: string
+          id: string
+          lot_no: string | null
+          order_item_id: string | null
+          position: number
+          quantity: number
+          serial_no: string | null
+          unit: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          art_nr?: string | null
+          created_at?: string
+          delivery_id: string
+          description: string
+          id?: string
+          lot_no?: string | null
+          order_item_id?: string | null
+          position?: number
+          quantity?: number
+          serial_no?: string | null
+          unit?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          art_nr?: string | null
+          created_at?: string
+          delivery_id?: string
+          description?: string
+          id?: string
+          lot_no?: string | null
+          order_item_id?: string | null
+          position?: number
+          quantity?: number
+          serial_no?: string | null
+          unit?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_items_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_items_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       department_members: {
         Row: {
           created_at: string
@@ -3259,6 +3379,156 @@ export type Database = {
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_items: {
+        Row: {
+          art_nr: string | null
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          line_total: number | null
+          order_item_id: string | null
+          position: number
+          quantity: number
+          tax_rate: number | null
+          unit: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          art_nr?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          line_total?: number | null
+          order_item_id?: string | null
+          position?: number
+          quantity?: number
+          tax_rate?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          art_nr?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          line_total?: number | null
+          order_item_id?: string | null
+          position?: number
+          quantity?: number
+          tax_rate?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          billing_address: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_no: string | null
+          delivery_id: string | null
+          due_date: string | null
+          id: string
+          invoice_date: string | null
+          invoice_no: string
+          notes: string | null
+          order_id: string | null
+          paid_amount: number
+          paid_at: string | null
+          payment_terms: string | null
+          status: string
+          subtotal_amount: number | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_no?: string | null
+          delivery_id?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_no?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_amount?: number
+          paid_at?: string | null
+          payment_terms?: string | null
+          status?: string
+          subtotal_amount?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_no?: string | null
+          delivery_id?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_no?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_amount?: number
+          paid_at?: string | null
+          payment_terms?: string | null
+          status?: string
+          subtotal_amount?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -6070,7 +6340,9 @@ export type Database = {
         Returns: Database["public"]["Enums"]["dept_member_role"]
       }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      generate_delivery_no: { Args: never; Returns: string }
       generate_insurance_reminders: { Args: never; Returns: number }
+      generate_invoice_no: { Args: never; Returns: string }
       generate_order_no: { Args: never; Returns: string }
       get_case_chat_unread: {
         Args: { p_case_ids: string[] }

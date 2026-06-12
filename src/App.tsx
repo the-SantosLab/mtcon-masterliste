@@ -38,6 +38,8 @@ import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminAiPrompts from "./pages/AdminAiPrompts";
 import AdminInsurance from "./pages/AdminInsurance";
 import AdminOrders from "./pages/AdminOrders";
+import AdminDeliveries from "./pages/AdminDeliveries";
+import AdminInvoices from "./pages/AdminInvoices";
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
 import Documentation from "./pages/Documentation";
 import Documents from "./pages/Documents";
@@ -200,6 +202,8 @@ function AuthenticatedApp() {
         <Route path="/map" element={<ProtectedRoute><BusinessMap /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
         <Route path="/bestellungen" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+        <Route path="/lieferscheine" element={<ProtectedRoute><AdminDeliveries /></ProtectedRoute>} />
+        <Route path="/rechnungen" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

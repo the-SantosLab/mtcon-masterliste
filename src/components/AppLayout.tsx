@@ -12,7 +12,7 @@ import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -289,6 +289,18 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Link to="/admin/purchasing" onClick={() => setOpen(false)} className={linkClass('/admin/purchasing')}>
               <ShoppingCart className="h-4 w-4" />
               <span className="flex-1">Einkauf</span>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/lieferscheine" onClick={() => setOpen(false)} className={linkClass('/lieferscheine')}>
+              <Truck className="h-4 w-4" />
+              <span className="flex-1">Lieferscheine</span>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/rechnungen" onClick={() => setOpen(false)} className={linkClass('/rechnungen')}>
+              <Receipt className="h-4 w-4" />
+              <span className="flex-1">Rechnungen</span>
             </Link>
           )}
 
