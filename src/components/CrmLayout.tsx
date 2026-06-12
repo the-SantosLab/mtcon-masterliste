@@ -17,7 +17,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 const navItems = [
   { href: '/crm/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/crm/deals', label: 'Deals', icon: Briefcase },
-  { href: '/crm/companies', label: 'Unternehmen', icon: Building2 },
+  { href: '/crm/companies', label: 'Geschäftspartner', icon: Building2 },
   { href: '/crm/contacts', label: 'Kontakte', icon: Users },
   { href: '/crm/offers', label: 'Angebote', icon: FileText },
   { href: '/crm/activities', label: 'Aktivitäten', icon: Activity },
