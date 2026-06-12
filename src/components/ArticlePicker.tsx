@@ -17,6 +17,7 @@ export interface ArticleOption {
   erni_nr?: string | null;
   ics_nr?: string | null;
   weber_art_nr?: string | null;
+  is_blocked?: boolean | null;
 }
 
 interface Props {
