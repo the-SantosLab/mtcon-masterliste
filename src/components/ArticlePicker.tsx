@@ -89,6 +89,7 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel w√§hlen‚
         erni_nr: r.erni_nr,
         ics_nr: r.ics_nr,
         weber_art_nr: r.weber_art_nr,
+        is_blocked: r.is_blocked,
         standardpreis: r.article_prices?.standardpreis ?? null,
       }));
       setItems(flat);
