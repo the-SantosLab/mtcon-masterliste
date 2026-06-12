@@ -37,18 +37,6 @@ import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { MtiqWidget } from '@/components/mtiq/MtiqWidget';
 
-function CrmModuleLink({ linkClass, onClose }: { linkClass: (h: string) => string; onClose: () => void }) {
-  const { allowed } = useCrmAccess();
-  if (!allowed) return null;
-  return (
-    <>
-      <div className="border-t border-sidebar-border my-1" />
-      <Link to="/modules" onClick={onClose} className={linkClass('/modules')}>
-        <RefreshCw className="h-4 w-4" />Module wechseln
-      </Link>
-    </>
-  );
-}
 
 function MtiqPendingBadge() {
   const [count, setCount] = useState(0);
@@ -294,7 +282,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <ContainerUnreadBadge />
 
           </Link>
-          <CrmModuleLink linkClass={linkClass} onClose={() => setOpen(false)} />
+          
 
           {isAdmin && (
             <Link to="/admin/inventory" onClick={() => setOpen(false)} className={linkClass('/admin/inventory')}>
