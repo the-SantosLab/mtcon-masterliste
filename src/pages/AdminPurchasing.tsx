@@ -338,7 +338,13 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, onSuppli
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-muted-foreground">Lieferant</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-muted-foreground">Lieferant</label>
+                <button type="button" onClick={() => setNewSupplierDlg(true)}
+                  className="text-[11px] text-primary hover:underline inline-flex items-center gap-1">
+                  <Plus className="h-3 w-3" /> Neu
+                </button>
+              </div>
               <Select value={supplierId} onValueChange={setSupplierId}>
                 <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
                 <SelectContent>
