@@ -188,6 +188,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
+  const [crmOpen, setCrmOpen] = useState(location.pathname.startsWith('/crm'));
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
   const [oldPw, setOldPw] = useState('');
