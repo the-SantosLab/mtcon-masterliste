@@ -347,12 +347,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-          {isAdmin && (
-            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
-              <Network className="h-4 w-4" />
-              <span className="flex-1">Business Map</span>
-            </Link>
-          )}
 
           {isAdmin && (
             <>
@@ -392,6 +386,12 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
           <div className="border-t border-sidebar-border my-1" />
+          {isAdmin && (
+            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
+              <Network className="h-4 w-4" />
+              <span className="flex-1">Business Map</span>
+            </Link>
+          )}
           <button
             onClick={() => setBugDialogOpen(true)}
             className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
