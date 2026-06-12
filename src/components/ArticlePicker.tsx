@@ -28,12 +28,16 @@ interface Props {
   disabled?: boolean;
 }
 
+const PAGE_SIZE = 100;
+
 export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen…', className, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [items, setItems] = useState<ArticleOption[]>([]);
   const [selected, setSelected] = useState<ArticleOption | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
 
   // Resolve selected display info
   useEffect(() => {
@@ -50,53 +54,70 @@ export function ArticlePicker({ value, onChange, placeholder = 'Artikel wählen�
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // Search
+  const buildQuery = (offset: number, limit: number) => {
+    let query = (supabase as any)
+      .from('articles')
+      .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,is_blocked,article_prices(standardpreis)')
+      .range(offset, offset + limit - 1);
+    if (q.trim()) {
+      const term = q.trim().replace(/[,()]/g, ' ');
+      const esc = term.replace(/%/g, '');
+      query = query.or(
+        [
+          `art_nr.ilike.%${esc}%`,
+          `matchcode.ilike.%${esc}%`,
+          `bezeich_1.ilike.%${esc}%`,
+          `bezeich_2.ilike.%${esc}%`,
+          `eisos_nr.ilike.%${esc}%`,
+          `erni_nr.ilike.%${esc}%`,
+          `ics_nr.ilike.%${esc}%`,
+          `weber_art_nr.ilike.%${esc}%`,
+        ].join(',')
+      );
+    }
+    query = query.order('art_nr', { ascending: true });
+    return query;
+  };
+
+  const mapRows = (data: any[]): ArticleOption[] => (data ?? []).map((r: any) => ({
+    art_nr: r.art_nr,
+    matchcode: r.matchcode,
+    bezeich_1: r.bezeich_1,
+    me: r.me,
+    eisos_nr: r.eisos_nr,
+    erni_nr: r.erni_nr,
+    ics_nr: r.ics_nr,
+    weber_art_nr: r.weber_art_nr,
+    is_blocked: r.is_blocked,
+    standardpreis: r.article_prices?.standardpreis ?? null,
+  }));
+
+  // Search / initial load
   useEffect(() => {
     if (!open) return;
     let cancel = false;
     setLoading(true);
     const t = setTimeout(async () => {
-      let query = (supabase as any)
-        .from('articles')
-        .select('art_nr,matchcode,bezeich_1,bezeich_2,me,eisos_nr,erni_nr,ics_nr,weber_art_nr,is_blocked,article_prices(standardpreis)')
-        .limit(30);
-      if (q.trim()) {
-        const term = q.trim().replace(/[,()]/g, ' ');
-        const esc = term.replace(/%/g, '');
-        query = query.or(
-          [
-            `art_nr.ilike.%${esc}%`,
-            `matchcode.ilike.%${esc}%`,
-            `bezeich_1.ilike.%${esc}%`,
-            `bezeich_2.ilike.%${esc}%`,
-            `eisos_nr.ilike.%${esc}%`,
-            `erni_nr.ilike.%${esc}%`,
-            `ics_nr.ilike.%${esc}%`,
-            `weber_art_nr.ilike.%${esc}%`,
-          ].join(',')
-        );
-      } else {
-        query = query.order('art_nr', { ascending: true });
-      }
-      const { data } = await query;
+      const { data } = await buildQuery(0, PAGE_SIZE);
       if (cancel) return;
-      const flat: ArticleOption[] = (data ?? []).map((r: any) => ({
-        art_nr: r.art_nr,
-        matchcode: r.matchcode,
-        bezeich_1: r.bezeich_1,
-        me: r.me,
-        eisos_nr: r.eisos_nr,
-        erni_nr: r.erni_nr,
-        ics_nr: r.ics_nr,
-        weber_art_nr: r.weber_art_nr,
-        is_blocked: r.is_blocked,
-        standardpreis: r.article_prices?.standardpreis ?? null,
-      }));
+      const flat = mapRows(data);
       setItems(flat);
+      setHasMore(flat.length === PAGE_SIZE);
       setLoading(false);
     }, 200);
     return () => { cancel = true; clearTimeout(t); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, open]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const { data } = await buildQuery(items.length, PAGE_SIZE);
+    const flat = mapRows(data);
+    setItems((prev) => [...prev, ...flat]);
+    setHasMore(flat.length === PAGE_SIZE);
+    setLoadingMore(false);
+  };
 
   const label = selected
     ? `${selected.art_nr} · ${selected.matchcode ?? ''} ${selected.bezeich_1 ? '— ' + selected.bezeich_1 : ''}`
