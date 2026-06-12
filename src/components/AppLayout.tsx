@@ -291,6 +291,18 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="flex-1">Einkauf</span>
             </Link>
           )}
+          {isAdmin && (
+            <Link to="/lieferscheine" onClick={() => setOpen(false)} className={linkClass('/lieferscheine')}>
+              <Truck className="h-4 w-4" />
+              <span className="flex-1">Lieferscheine</span>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/rechnungen" onClick={() => setOpen(false)} className={linkClass('/rechnungen')}>
+              <Receipt className="h-4 w-4" />
+              <span className="flex-1">Rechnungen</span>
+            </Link>
+          )}
 
           {isAdmin && (
             <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
