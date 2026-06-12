@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Receipt, Plus, Trash2 } from "lucide-react";
+import { Receipt, Plus, Trash2, Download } from "lucide-react";
+import { generateInvoicePdf } from "@/lib/document-pdf";
 
 type Invoice = {
   id: string;
