@@ -87,7 +87,11 @@ export default function AdminPurchasing() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-3">
-            <PurchasingOverview onOpenPO={(p) => setDetailPO(p)} onCreatePO={() => { setTab('orders'); setPoDlg(true); }} />
+            <PurchasingOverview
+              onOpenPO={(p) => setDetailPO(p)}
+              suppliers={suppliers}
+              onCreatePO={(prefill) => { setPoPrefill(prefill); setTab('orders'); setPoDlg(true); }}
+            />
           </TabsContent>
 
 
