@@ -93,6 +93,30 @@ export default function AdminInvoices() {
     setSel(null); load();
   };
 
+  const downloadPdf = () => {
+    if (!sel) return;
+    const pdf = generateInvoicePdf({
+      invoice_no: sel.invoice_no,
+      invoice_date: sel.invoice_date,
+      due_date: sel.due_date,
+      customer_name: sel.customer_name,
+      customer_no: sel.customer_no,
+      billing_address: sel.billing_address,
+      payment_terms: sel.payment_terms,
+      notes: sel.notes,
+      currency: sel.currency,
+      subtotal_amount: sel.subtotal_amount,
+      tax_amount: sel.tax_amount,
+      total_amount: sel.total_amount,
+      items: items.map(it => ({
+        position: it.position, art_nr: it.art_nr, description: it.description,
+        quantity: it.quantity, unit: it.unit, unit_price: it.unit_price,
+        tax_rate: it.tax_rate, line_total: it.line_total,
+      })),
+    });
+    pdf.save(`${sel.invoice_no}.pdf`);
+  };
+
   const filtered = useMemo(() => filter==='all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
   const totals = useMemo(() => {
     const open = rows.filter(r => r.status === 'sent').reduce((s,r) => s + (Number(r.total_amount)||0) - Number(r.paid_amount||0), 0);
