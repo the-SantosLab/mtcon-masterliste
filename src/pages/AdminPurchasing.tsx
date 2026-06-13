@@ -639,6 +639,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
       lot_no: (lots[x.it.id] || '').trim() || null,
       lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
       expiry_date: expiries[x.it.id] || null,
+      storage_location_id: locSel[x.it.id]?.id ?? null,
     }));
     const { error: itemErr } = await (supabase as any).from('goods_receipt_items').insert(rows);
     setSaving(false);
