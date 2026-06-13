@@ -126,11 +126,20 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
     setLoading(true);
     const { data: whs } = await (supabase as any).from('warehouses').select('*').order('code');
     setWarehouses(whs || []);
-    let q = (supabase as any).from('inventory_stock').select(
-      'id, art_nr, warehouse_id, quantity, min_quantity, reorder_quantity, articles(matchcode,bezeich_1,me), warehouses(code,name)'
-    );
-    if (warehouseId !== 'all') q = q.eq('warehouse_id', warehouseId);
-    const { data } = await q.order('art_nr').limit(500);
+    const PAGE = 1000;
+    let from = 0;
+    let data: any[] = [];
+    while (true) {
+      let q = (supabase as any).from('inventory_stock').select(
+        'id, art_nr, warehouse_id, quantity, min_quantity, reorder_quantity, articles(matchcode,bezeich_1,me), warehouses(code,name)'
+      );
+      if (warehouseId !== 'all') q = q.eq('warehouse_id', warehouseId);
+      const { data: page } = await q.order('art_nr').range(from, from + PAGE - 1);
+      if (!page || page.length === 0) break;
+      data = data.concat(page);
+      if (page.length < PAGE) break;
+      from += PAGE;
+    }
 
     // Reservierungen pro Artikel/Lager aggregieren
     const { data: res } = await (supabase as any)
