@@ -175,6 +175,7 @@ const crmItems = [
 const erpItems = [
   { href: '/admin/inventory', label: 'Lager', icon: Package },
   { href: '/admin/storage-locations', label: 'Lagerplätze', icon: MapPin },
+  { href: '/admin/disposition', label: 'Disposition', icon: Activity },
   { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
