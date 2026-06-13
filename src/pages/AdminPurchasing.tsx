@@ -610,6 +610,29 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
     setQtys(init);
   };
 
+  const loadSuggestions = async (it: POItem) => {
+    const { data, error } = await (supabase as any).rpc('suggest_storage_locations', { _art_nr: it.art_nr });
+    if (error) { toast.error('Vorschlag fehlgeschlagen: ' + error.message); return; }
+    const arr = (data ?? []) as any[];
+    setLocSugg(s => ({ ...s, [it.id]: arr }));
+    if (arr.length > 0 && !locSel[it.id]) {
+      setLocSel(s => ({ ...s, [it.id]: { id: arr[0].id, code: arr[0].code, fifo: arr[0].fifo_required } }));
+    } else if (arr.length === 0) {
+      toast.message('Kein freier oder bestehender Lagerplatz gefunden');
+    }
+  };
+
+  const searchLocations = async (itemId: string, q: string) => {
+    setLocSearch(s => ({ ...s, [itemId]: q }));
+    if (!q.trim()) { setLocResults(s => ({ ...s, [itemId]: [] })); return; }
+    const { data } = await (supabase as any).from('storage_locations')
+      .select('id, code, type, fifo_required, is_blocked')
+      .ilike('code', `%${q.trim()}%`)
+      .eq('is_blocked', false)
+      .order('code').limit(8);
+    setLocResults(s => ({ ...s, [itemId]: (data ?? []) as any[] }));
+  };
+
   const save = async () => {
     if (!po) return;
     if (!warehouseId) { toast.error('Lager wählen'); return; }
