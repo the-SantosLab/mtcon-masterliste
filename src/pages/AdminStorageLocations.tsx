@@ -207,6 +207,54 @@ export default function AdminStorageLocations() {
     load();
   };
 
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const printLabels = (rowsToPrint: StorageLocation[]) => {
+    if (rowsToPrint.length === 0) { toast.error('Keine Auswahl'); return; }
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) { toast.error('Popup wurde blockiert'); return; }
+    const labels = rowsToPrint.map(r => `
+      <div class="label">
+        <div class="hdr">
+          <span class="type">${TYPE_LABEL[r.type]}</span>
+          ${r.fifo_required ? '<span class="fifo">FIFO</span>' : ''}
+          ${r.is_blocked ? '<span class="blk">GESPERRT</span>' : ''}
+        </div>
+        <div class="code">${r.code}</div>
+        <div class="meta">
+          <div><b>Lager:</b> ${r.lager}</div>
+          <div><b>Platz:</b> ${r.lagerpl}</div>
+          <div><b>Behälter:</b> ${r.behaelter}</div>
+        </div>
+        <div class="barcode">*${r.lager}-${r.lagerpl}-${r.behaelter}*</div>
+      </div>`).join('');
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Etiketten · ${rowsToPrint.length}</title>
+      <style>
+        @page { size: A4; margin: 10mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; margin: 0; padding: 0; background: #fff; color: #000; }
+        .sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+        .label { border: 1.2px solid #000; padding: 5mm; page-break-inside: avoid; min-height: 50mm; }
+        .hdr { display: flex; gap: 6px; align-items: center; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hdr .type { background:#000; color:#fff; padding: 1px 6px; border-radius: 2px; }
+        .hdr .fifo { background:#f59e0b; color:#000; padding: 1px 6px; border-radius: 2px; font-weight: 700; }
+        .hdr .blk { background:#dc2626; color:#fff; padding: 1px 6px; border-radius: 2px; font-weight: 700; }
+        .code { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 22pt; font-weight: 700; margin: 4mm 0 2mm; letter-spacing: 1px; }
+        .meta { display: flex; gap: 10mm; font-size: 9pt; }
+        .barcode { margin-top: 5mm; font-family: 'Libre Barcode 39', 'Code39', monospace; font-size: 28pt; text-align: center; letter-spacing: 2px; border-top: 1px dashed #999; padding-top: 2mm; }
+      </style>
+      <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+      </head><body><div class="sheet">${labels}</div>
+      <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));</script>
+      </body></html>`);
+    w.document.close();
+  };
+
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
