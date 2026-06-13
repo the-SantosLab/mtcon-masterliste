@@ -20,6 +20,7 @@ import {
   type ImportType,
   type Row,
 } from '@/lib/article-import';
+import { StockLocationsTable } from '@/components/articles/StockLocationsTable';
 
 type Pending = {
   file: File;
@@ -52,6 +53,7 @@ export default function AdminArticles() {
             <TabsTrigger value="attributes" className="text-xs">Sachmerkmale</TabsTrigger>
             <TabsTrigger value="status90" className="text-xs">Status90</TabsTrigger>
             <TabsTrigger value="prices" className="text-xs">Artikelpreise</TabsTrigger>
+            <TabsTrigger value="stock" className="text-xs">Lagerorte</TabsTrigger>
             <TabsTrigger value="import" className="text-xs">Import</TabsTrigger>
             <TabsTrigger value="history" className="text-xs">Import-Log</TabsTrigger>
           </TabsList>
@@ -63,6 +65,7 @@ export default function AdminArticles() {
           <TabsContent value="attributes"><AttributesTab onOpen={setDetailArtNr} /></TabsContent>
           <TabsContent value="status90"><Status90Tab onOpen={setDetailArtNr} /></TabsContent>
           <TabsContent value="prices"><PricesTab onOpen={setDetailArtNr} /></TabsContent>
+          <TabsContent value="stock" className="pt-4"><StockLocationsTable globalSearchableArtNr showSummary={false} /></TabsContent>
           <TabsContent value="import"><ImportTab /></TabsContent>
           <TabsContent value="history"><HistoryTab /></TabsContent>
         </Tabs>
@@ -465,6 +468,7 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
           <Tabs defaultValue="stamm">
             <TabsList className="bg-secondary flex-wrap h-auto">
               <TabsTrigger value="stamm" className="text-xs">Stamm</TabsTrigger>
+              <TabsTrigger value="stock" className="text-xs">Lagerbestand</TabsTrigger>
               <TabsTrigger value="attr" className="text-xs">Sachmerkmale ({attributes.length})</TabsTrigger>
               <TabsTrigger value="pr" className="text-xs">Preise</TabsTrigger>
               <TabsTrigger value="pl" className="text-xs">Preisliste ({priceList.length})</TabsTrigger>
@@ -474,6 +478,9 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
             </TabsList>
             <TabsContent value="stamm" className="pt-3">
               <DetailGrid data={article} table="articles" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setArticle(d)} />
+            </TabsContent>
+            <TabsContent value="stock" className="pt-3">
+              <StockLocationsTable artNr={artNr!} />
             </TabsContent>
             <TabsContent value="attr" className="pt-3">
               <SimpleTable rows={attributes} cols={[
