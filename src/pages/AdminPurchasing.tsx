@@ -550,6 +550,10 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
 }) {
   const [items, setItems] = useState<POItem[]>([]);
   const [qtys, setQtys] = useState<Record<string, string>>({});
+  const [lots, setLots] = useState<Record<string, string>>({});
+  const [lotsExt, setLotsExt] = useState<Record<string, string>>({});
+  const [expiries, setExpiries] = useState<Record<string, string>>({});
+  const [lotDup, setLotDup] = useState<Record<string, { current_qty: number; total_received: number; last: string } | null>>({});
   const [warehouseId, setWarehouseId] = useState<string>('');
   const [deliveryNo, setDeliveryNo] = useState('');
   const [notes, setNotes] = useState('');
@@ -558,14 +562,13 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   useEffect(() => {
     if (!po) return;
     setWarehouseId(po.warehouse_id ?? warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
-    setDeliveryNo(''); setNotes(''); setQtys({});
+    setDeliveryNo(''); setNotes(''); setQtys({}); setLots({}); setLotsExt({}); setExpiries({}); setLotDup({});
     (async () => {
       const { data } = await (supabase as any).from('purchase_order_items')
         .select('*, articles(matchcode,bezeich_1,me)')
         .eq('po_id', po.id).order('position');
       const all = (data ?? []) as POItem[];
       setItems(all);
-      // Prefill open quantities
       const init: Record<string, string> = {};
       all.forEach(it => {
         const open = Number(it.qty_ordered) - Number(it.qty_received);
@@ -574,6 +577,25 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
       setQtys(init);
     })();
   }, [po, warehouses]);
+
+  // Debounced duplicate-check for lot numbers
+  useEffect(() => {
+    const handle = setTimeout(async () => {
+      for (const it of items) {
+        const lot = (lots[it.id] || '').trim();
+        if (!lot) { setLotDup(s => ({ ...s, [it.id]: null })); continue; }
+        const { data } = await (supabase as any).rpc('find_duplicate_lots', { _art_nr: it.art_nr, _lot_no: lot });
+        const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
+        setLotDup(s => ({ ...s, [it.id]: row ? {
+          current_qty: Number(row.current_qty),
+          total_received: Number(row.total_received),
+          last: row.last_received_at,
+        } : null }));
+      }
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [lots, items]);
+
 
   const fillRemaining = () => {
     const init: Record<string, string> = {};
