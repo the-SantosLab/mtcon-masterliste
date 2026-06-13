@@ -320,6 +320,16 @@ export default function AdminStorageLocations() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && filtered.every(r => selected.has(r.id))}
+                    onChange={e => {
+                      if (e.target.checked) setSelected(new Set([...selected, ...filtered.map(r => r.id)]));
+                      else setSelected(prev => { const n = new Set(prev); filtered.forEach(r => n.delete(r.id)); return n; });
+                    }}
+                  />
+                </TableHead>
                 <TableHead className="text-[10px] uppercase">Code</TableHead>
                 <TableHead className="text-[10px] uppercase">Typ</TableHead>
                 <TableHead className="text-[10px] uppercase">FIFO</TableHead>
@@ -331,14 +341,17 @@ export default function AdminStorageLocations() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Lade…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Lade…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Keine Lagerplätze gefunden.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Keine Lagerplätze gefunden.</TableCell></TableRow>
               ) : filtered.map(r => (
                 <TableRow key={r.id}>
+                  <TableCell>
+                    <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} />
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{r.code}</TableCell>
                   <TableCell><Badge variant={TYPE_VARIANT[r.type]}>{TYPE_LABEL[r.type]}</Badge></TableCell>
-                  <TableCell className="text-xs">{r.fifo_required ? 'Ja' : '—'}</TableCell>
+                  <TableCell className="text-xs">{r.fifo_required ? <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 text-[10px] font-semibold">FIFO</span> : '—'}</TableCell>
                   <TableCell className="text-xs tabular-nums">{r.capacity ?? '—'}</TableCell>
                   <TableCell>
                     {r.is_blocked
