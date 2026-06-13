@@ -34,6 +34,10 @@ export default function CrmDealDetail() {
   const [wonValue, setWonValue] = useState('');
   const [lostReason, setLostReason] = useState('');
   const [lostDetails, setLostDetails] = useState('');
+  const [poSuggestions, setPoSuggestions] = useState<any[] | null>(null);
+  const [poSelection, setPoSelection] = useState<Record<string, boolean>>({});
+  const [creatingPo, setCreatingPo] = useState<string | null>(null);
+  const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
 
   useEffect(() => { void load(); }, [id]);
 
