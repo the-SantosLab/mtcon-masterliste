@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS trg_process_goods_receipt_item ON public.goods_receipt_items;
