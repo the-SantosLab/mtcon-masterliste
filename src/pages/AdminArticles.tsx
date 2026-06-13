@@ -144,7 +144,7 @@ function PaginatedBrowser({
 
   return (
     <div className="space-y-3 pt-4">
-      <div className="relative max-w-md">
+      <div className="relative w-full md:max-w-md">
         <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
         <Input
           placeholder={searchPlaceholder}
@@ -153,7 +153,55 @@ function PaginatedBrowser({
           className="h-9 text-xs pl-8"
         />
       </div>
-      <div className="rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-220px)]">
+      <div className="md:hidden space-y-2">
+        {loading && (
+          <div className="rounded-md border border-border bg-card px-3 py-6 text-center text-xs text-muted-foreground">Lade…</div>
+        )}
+        {!loading && rows.length === 0 && (
+          <div className="rounded-md border border-border bg-card px-3 py-6 text-center text-xs text-muted-foreground">Keine Treffer</div>
+        )}
+        {!loading && rows.map((r, i) => {
+          const primary = columns[0];
+          const secondary = columns[1];
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`w-full rounded-md border border-border bg-card px-3 py-3 text-left shadow-sm transition-colors ${onRowClick ? 'active:bg-secondary/60' : ''}`}
+              onClick={onRowClick ? () => onRowClick(r) : undefined}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase text-muted-foreground">{primary.label}</div>
+                  <div className={`mt-0.5 break-words text-sm font-semibold text-foreground ${primary.className ?? ''}`}>
+                    {primary.render ? primary.render(r) : (r[primary.key] ?? '—')}
+                  </div>
+                </div>
+                {secondary && (
+                  <div className="min-w-[84px] max-w-[42%] text-right">
+                    <div className="text-[10px] uppercase text-muted-foreground">{secondary.label}</div>
+                    <div className={`mt-0.5 break-words text-xs text-foreground ${secondary.className ?? ''}`}>
+                      {secondary.render ? secondary.render(r) : (r[secondary.key] ?? '—')}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+                {columns.slice(2).map((c) => (
+                  <div key={c.key} className="min-w-0 border-t border-border/60 pt-2">
+                    <div className="text-[10px] leading-tight text-muted-foreground">{c.label}</div>
+                    <div className={`mt-0.5 break-words text-xs leading-snug text-foreground ${c.className ?? ''}`}>
+                      {c.render ? c.render(r) : (r[c.key] ?? '—')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-220px)]">
         <table className={`w-full min-w-[900px] caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
           <thead className="[&_tr]:border-b">
             <tr className="border-b">
@@ -200,8 +248,8 @@ function PaginatedBrowser({
         </table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] text-muted-foreground">
             {total > 0 ? `${startItem}–${endItem} von ${total}` : '0 Treffer'}
           </span>
@@ -219,7 +267,7 @@ function PaginatedBrowser({
           </select>
           <span className="text-[10px] text-muted-foreground">pro Seite</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between gap-1 sm:justify-end">
           <Button variant="outline" size="sm" className="h-7 text-[10px] px-2"
             onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1 || loading}>Zurück</Button>
           <span className="text-[10px] text-muted-foreground px-2">Seite {page} / {totalPages}</span>
