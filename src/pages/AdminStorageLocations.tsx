@@ -361,6 +361,9 @@ export default function AdminStorageLocations() {
                   <TableCell className="text-xs text-muted-foreground max-w-[260px] truncate">{r.note ?? '—'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => printLabels([r])} title="Etikett drucken">
+                        <Printer className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => toggleBlock(r)} title={r.is_blocked ? 'Freigeben' : 'Sperren'}>
                         {r.is_blocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                       </Button>
