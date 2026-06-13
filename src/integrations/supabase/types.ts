@@ -6672,6 +6672,15 @@ export type Database = {
     }
     Functions: {
       archive_old_announcements: { Args: never; Returns: number }
+      book_to_sperrlager: {
+        Args: {
+          _qty?: number
+          _reason?: string
+          _sperr_location_id?: string
+          _stock_location_id: string
+        }
+        Returns: Json
+      }
       can_access_case_chat: {
         Args: { p_case_id: string; p_uid?: string }
         Returns: boolean

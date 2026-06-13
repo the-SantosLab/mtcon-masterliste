@@ -177,6 +177,7 @@ const erpItems = [
   { href: '/admin/storage-locations', label: 'Lagerplätze', icon: MapPin },
   { href: '/admin/disposition', label: 'Disposition', icon: Activity },
   { href: '/admin/lots', label: 'Chargen', icon: Package },
+  { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock },
   { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
@@ -199,7 +200,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     location.pathname.startsWith('/notes')
   );
   const [erpOpen, setErpOpen] = useState(
-    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/admin/articles'].some(p => location.pathname.startsWith(p))
+    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/admin/articles'].some(p => location.pathname.startsWith(p))
   );
   const [systemOpen, setSystemOpen] = useState(
     ['/support', '/docs', '/container', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
