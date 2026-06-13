@@ -312,27 +312,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="flex-1">{item.label}</span>
             </Link>
           ))}
-          <div className="border-t border-sidebar-border my-1" />
-          <button
-            onClick={() => setSystemOpen(!systemOpen)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
-          >
-            <Settings className="h-4 w-4" />System
-            <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', systemOpen && 'rotate-180')} />
-          </button>
-          {systemOpen && (
-            <>
-              {systemItems.map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
-                  <item.icon className="h-4 w-4" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.href === '/container' && <ContainerUnreadBadge />}
-                </Link>
-              ))}
-            </>
-          )}
-
-          
 
           {isAdmin && (
             <>
@@ -352,7 +331,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-
           {isAdmin && (
             <>
               <div className="border-t border-sidebar-border my-1" />
@@ -368,6 +346,16 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <item.icon className="h-4 w-4" />{item.label}
                 </Link>
               ))}
+            </>
+          )}
+
+          {isAdmin && (
+            <>
+              <div className="border-t border-sidebar-border my-1" />
+              <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
+                <Network className="h-4 w-4" />
+                <span className="flex-1">Business Map</span>
+              </Link>
             </>
           )}
 
@@ -390,23 +378,36 @@ export function AppLayout({ children }: AppLayoutProps) {
                 ))}
             </>
           )}
+
           <div className="border-t border-sidebar-border my-1" />
-          {isAdmin && (
-            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
-              <Network className="h-4 w-4" />
-              <span className="flex-1">Business Map</span>
-            </Link>
-          )}
           <button
-            onClick={() => setBugDialogOpen(true)}
-            className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+            onClick={() => setSystemOpen(!systemOpen)}
+            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
           >
-            <Bug className="h-4 w-4" />
-            <span className="flex-1 text-left">Bug / Feedback melden</span>
+            <Settings className="h-4 w-4" />System
+            <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', systemOpen && 'rotate-180')} />
           </button>
-          <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-9 text-[12px]')}>
-            <span>Meine Meldungen</span>
-          </Link>
+          {systemOpen && (
+            <>
+              {systemItems.map(item => (
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                  <item.icon className="h-4 w-4" />
+                  <span className="flex-1">{item.label}</span>
+                  {item.href === '/container' && <ContainerUnreadBadge />}
+                </Link>
+              ))}
+              <button
+                onClick={() => setBugDialogOpen(true)}
+                className="flex items-center gap-2.5 w-full px-3 py-2 pl-9 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              >
+                <Bug className="h-4 w-4" />
+                <span className="flex-1 text-left">Bug / Feedback melden</span>
+              </button>
+              <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-14 text-[12px]')}>
+                <span>Meine Meldungen</span>
+              </Link>
+            </>
+          )}
         </nav>
 
         <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-between gap-2">
