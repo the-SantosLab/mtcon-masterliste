@@ -44,19 +44,21 @@ export default function AdminArticles() {
           </p>
         </div>
         <Tabs defaultValue="articles">
-          <TabsList className="bg-secondary flex-wrap h-auto">
-            <TabsTrigger value="articles" className="text-xs">Artikelstamm</TabsTrigger>
-            <TabsTrigger value="customers" className="text-xs">Kundenartikel</TabsTrigger>
-            <TabsTrigger value="suppliers" className="text-xs">Lieferantenartikel</TabsTrigger>
-            <TabsTrigger value="pricelist" className="text-xs">Artikelpreisliste</TabsTrigger>
-            <TabsTrigger value="bom" className="text-xs">Stückliste</TabsTrigger>
-            <TabsTrigger value="attributes" className="text-xs">Sachmerkmale</TabsTrigger>
-            <TabsTrigger value="status90" className="text-xs">Status90</TabsTrigger>
-            <TabsTrigger value="prices" className="text-xs">Artikelpreise</TabsTrigger>
-            <TabsTrigger value="stock" className="text-xs">Lagerorte</TabsTrigger>
-            <TabsTrigger value="import" className="text-xs">Import</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs">Import-Log</TabsTrigger>
-          </TabsList>
+          <div className="-mx-2 px-2 overflow-x-auto scrollbar-thin">
+            <TabsList className="bg-secondary inline-flex w-max h-auto">
+              <TabsTrigger value="articles" className="text-xs whitespace-nowrap shrink-0">Artikelstamm</TabsTrigger>
+              <TabsTrigger value="customers" className="text-xs whitespace-nowrap shrink-0">Kundenartikel</TabsTrigger>
+              <TabsTrigger value="suppliers" className="text-xs whitespace-nowrap shrink-0">Lieferantenartikel</TabsTrigger>
+              <TabsTrigger value="pricelist" className="text-xs whitespace-nowrap shrink-0">Artikelpreisliste</TabsTrigger>
+              <TabsTrigger value="bom" className="text-xs whitespace-nowrap shrink-0">Stückliste</TabsTrigger>
+              <TabsTrigger value="attributes" className="text-xs whitespace-nowrap shrink-0">Sachmerkmale</TabsTrigger>
+              <TabsTrigger value="status90" className="text-xs whitespace-nowrap shrink-0">Status90</TabsTrigger>
+              <TabsTrigger value="prices" className="text-xs whitespace-nowrap shrink-0">Artikelpreise</TabsTrigger>
+              <TabsTrigger value="stock" className="text-xs whitespace-nowrap shrink-0">Lagerorte</TabsTrigger>
+              <TabsTrigger value="import" className="text-xs whitespace-nowrap shrink-0">Import</TabsTrigger>
+              <TabsTrigger value="history" className="text-xs whitespace-nowrap shrink-0">Import-Log</TabsTrigger>
+            </TabsList>
+          </div>
           <TabsContent value="articles"><ArticlesTab onOpen={setDetailArtNr} /></TabsContent>
           <TabsContent value="customers"><CustomerRefsTab onOpen={setDetailArtNr} /></TabsContent>
           <TabsContent value="suppliers"><SupplierRefsTab onOpen={setDetailArtNr} /></TabsContent>
@@ -152,7 +154,7 @@ function PaginatedBrowser({
         />
       </div>
       <div className="rounded-md border border-border bg-card overflow-auto max-h-[calc(100vh-220px)]">
-        <table className={`w-full caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
+        <table className={`w-full min-w-[900px] caption-bottom text-sm ${preferences.compactTables ? 'table-compact' : ''}`}>
           <thead className="[&_tr]:border-b">
             <tr className="border-b">
               {columns.map((c) => {
