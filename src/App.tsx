@@ -22,6 +22,7 @@ import AdminArticles from "./pages/AdminArticles";
 import AdminInventory from "./pages/AdminInventory";
 import AdminStorageLocations from "./pages/AdminStorageLocations";
 import AdminPurchasing from "./pages/AdminPurchasing";
+import AdminDisposition from "./pages/AdminDisposition";
 import ProductRequests from "./pages/ProductRequests";
 import AdminDepartments from "./pages/AdminDepartments";
 
@@ -190,6 +191,7 @@ function AuthenticatedApp() {
         <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />
         <Route path="/admin/storage-locations" element={<ProtectedRoute><AdminStorageLocations /></ProtectedRoute>} />
         <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />
+        <Route path="/admin/disposition" element={<ProtectedRoute><AdminDisposition /></ProtectedRoute>} />
         <Route path="/products/requests" element={<ProtectedRoute><ProductRequests /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />
         <Route path="/admin/workflows" element={<ProtectedRoute><AdminWorkflows /></ProtectedRoute>} />
