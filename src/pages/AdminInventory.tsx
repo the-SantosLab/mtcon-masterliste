@@ -212,7 +212,8 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
         </Button>
       </div>
 
-      <div className="rounded-md border border-border bg-card overflow-hidden">
+      {/* Desktop-Tabelle */}
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border">
@@ -253,6 +254,52 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Karten */}
+      <div className="md:hidden space-y-2">
+        {loading && <div className="rounded-md border border-border bg-card px-3 py-6 text-center text-xs text-muted-foreground">Lade…</div>}
+        {!loading && filtered.length === 0 && (
+          <div className="rounded-md border border-border bg-card px-3 py-6 text-center text-xs text-muted-foreground">Keine Bestände — über „Bewegungen" anlegen.</div>
+        )}
+        {filtered.map(r => {
+          const low = Number(r.quantity) <= Number(r.min_quantity);
+          const avail = Number(r.available ?? r.quantity);
+          return (
+            <div key={r.id} className="rounded-md border border-border bg-card p-3 text-xs">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-[11px] text-muted-foreground">{r.art_nr}</div>
+                  <div className="text-foreground truncate">{r.articles?.matchcode || '–'}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{r.articles?.bezeich_1 || ''}</div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="text-[10px] text-muted-foreground">Lager</div>
+                  <div className="font-medium">{r.warehouses?.code || '–'}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">
+                <div>
+                  <div className="text-[10px] text-muted-foreground">Bestand</div>
+                  <div className={`tabular-nums font-medium ${low ? 'text-amber-500' : ''}`}>{Number(r.quantity).toLocaleString('de-DE')}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground">Reserv.</div>
+                  <div className="tabular-nums text-muted-foreground">{r.reserved ? Number(r.reserved).toLocaleString('de-DE') : '–'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground">Verfügb.</div>
+                  <div className={`tabular-nums ${avail <= 0 ? 'text-destructive' : 'text-foreground'}`}>{avail.toLocaleString('de-DE')}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-muted-foreground">Min · ME</div>
+                  <div className="tabular-nums text-muted-foreground">{Number(r.min_quantity).toLocaleString('de-DE')} {r.articles?.me || ''}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {canWrite && <p className="text-[10px] text-muted-foreground">Verfügbar = Bestand − offene Reservierungen.</p>}
     </div>
   );
