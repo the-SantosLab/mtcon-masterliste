@@ -672,6 +672,96 @@ export type Database = {
           },
         ]
       }
+      article_stock_locations: {
+        Row: {
+          aend_dat: string | null
+          aend_ind: string | null
+          art_nr: string
+          behaelter: string
+          best_inv: number | null
+          bestand: number
+          charge_ext: string | null
+          charge_nr: string
+          created_at: string
+          datum_abg: string | null
+          datum_inv: string | null
+          datum_zu: string | null
+          fuellgrad_pct: number | null
+          id: string
+          lager: string
+          lagerpl: string
+          mb_menge: number
+          me: string | null
+          note: string | null
+          res_auf_nr: string | null
+          res_auf_pos: string | null
+          res_wa_nr: string | null
+          sb_menge: number
+          source: string
+          updated_at: string
+          updated_by: string | null
+          verp_mg: number | null
+        }
+        Insert: {
+          aend_dat?: string | null
+          aend_ind?: string | null
+          art_nr: string
+          behaelter?: string
+          best_inv?: number | null
+          bestand?: number
+          charge_ext?: string | null
+          charge_nr?: string
+          created_at?: string
+          datum_abg?: string | null
+          datum_inv?: string | null
+          datum_zu?: string | null
+          fuellgrad_pct?: number | null
+          id?: string
+          lager: string
+          lagerpl?: string
+          mb_menge?: number
+          me?: string | null
+          note?: string | null
+          res_auf_nr?: string | null
+          res_auf_pos?: string | null
+          res_wa_nr?: string | null
+          sb_menge?: number
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          verp_mg?: number | null
+        }
+        Update: {
+          aend_dat?: string | null
+          aend_ind?: string | null
+          art_nr?: string
+          behaelter?: string
+          best_inv?: number | null
+          bestand?: number
+          charge_ext?: string | null
+          charge_nr?: string
+          created_at?: string
+          datum_abg?: string | null
+          datum_inv?: string | null
+          datum_zu?: string | null
+          fuellgrad_pct?: number | null
+          id?: string
+          lager?: string
+          lagerpl?: string
+          mb_menge?: number
+          me?: string | null
+          note?: string | null
+          res_auf_nr?: string | null
+          res_auf_pos?: string | null
+          res_wa_nr?: string | null
+          sb_menge?: number
+          source?: string
+          updated_at?: string
+          updated_by?: string | null
+          verp_mg?: number | null
+        }
+        Relationships: []
+      }
       article_supplier_refs: {
         Row: {
           art_lief: string | null
