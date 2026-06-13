@@ -126,7 +126,38 @@ export default function CrmDealDetail() {
     if (error) { toast.error(error.message); return; }
     toast.success('Deal als Won markiert · Vorgang in Masterliste angelegt');
     setPendingStage(null);
+    setCreatedCaseId(caseRow.id);
+    // Fetch PO suggestions
+    const { data: sugg, error: sErr } = await supabase.rpc('suggest_po_from_deal' as any, { _deal_id: deal.id });
+    if (sErr) { console.warn('suggest_po_from_deal failed', sErr); }
+    if (sugg && (sugg as any[]).length > 0) {
+      setPoSuggestions(sugg as any[]);
+      const pre: Record<string, boolean> = {};
+      (sugg as any[]).forEach((r: any) => { pre[r.art_nr] = true; });
+      setPoSelection(pre);
+    } else {
+      toast.message('Keine Bestellvorschläge: Bestand reicht aus oder Artikel nicht zugeordnet.');
+    }
     void load();
+  };
+
+  const createPoForSupplier = async (lief_nr: string, supplier_name: string, items: any[]) => {
+    setCreatingPo(lief_nr);
+    const payload = items.map(i => ({
+      art_nr: i.art_nr,
+      description: i.description,
+      qty: i.qty_to_order,
+      unit_price: i.unit_price,
+    }));
+    const { data, error } = await supabase.rpc('create_po_from_suggestions' as any, {
+      _supplier_lief_nr: lief_nr,
+      _supplier_name: supplier_name,
+      _items: payload,
+    });
+    setCreatingPo(null);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Bestellung angelegt für ${supplier_name || lief_nr}`);
+    setPoSuggestions(prev => (prev ?? []).filter(r => r.lief_nr !== lief_nr));
   };
 
   const confirmLost = async () => {
