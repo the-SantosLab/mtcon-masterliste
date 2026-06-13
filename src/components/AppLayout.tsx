@@ -305,7 +305,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               {item.href === '/cases' && <CasesUnreadBadge />}
             </Link>
           ))}
-          <div className="border-t border-sidebar-border my-1" />
           {navItems.map(item => (
             <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
               <item.icon className="h-4 w-4" />
