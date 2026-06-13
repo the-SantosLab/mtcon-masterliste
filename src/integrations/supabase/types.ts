@@ -6627,6 +6627,14 @@ export type Database = {
       case_dept_owner: { Args: { p_case_id: string }; Returns: string }
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
+      create_po_from_suggestions: {
+        Args: {
+          _items: Json
+          _supplier_lief_nr: string
+          _supplier_name: string
+        }
+        Returns: string
+      }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_member_role: {
         Args: { p_dept_id: string; p_uid: string }
@@ -6643,6 +6651,34 @@ export type Database = {
           case_id: string
           last_message_at: string
           unread_count: number
+        }[]
+      }
+      get_disposition_overview: {
+        Args: never
+        Returns: {
+          art_nr: string
+          best_lief_nr: string
+          best_price: number
+          best_supplier_name: string
+          bezeich_1: string
+          me: string
+          net_available: number
+          on_hand: number
+          open_demand: number
+          open_supply: number
+          primary_lief_nr: string
+          primary_lieferzeit: number
+          primary_price: number
+          primary_supplier_name: string
+          reorder_point: number
+          reserved: number
+          savings: number
+          second_lief_nr: string
+          second_lieferzeit: number
+          second_price: number
+          second_supplier_name: string
+          shortage: number
+          suggested_qty: number
         }[]
       }
       has_crm_access: { Args: { uid?: string }; Returns: boolean }
