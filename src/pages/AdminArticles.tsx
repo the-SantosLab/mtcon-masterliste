@@ -20,6 +20,7 @@ import {
   type ImportType,
   type Row,
 } from '@/lib/article-import';
+import { StockLocationsTable } from '@/components/articles/StockLocationsTable';
 
 type Pending = {
   file: File;
