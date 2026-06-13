@@ -470,6 +470,35 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
+                  {/* Mein / Alle Umschalter im Chart-Header oben rechts */}
+                  <div
+                    className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-0.5 shrink-0"
+                    role="group"
+                    aria-label="Anzeige umschalten"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setScope('mine')}
+                      className={cn(
+                        'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-medium transition-colors',
+                        scope === 'mine' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                      )}
+                      aria-pressed={scope === 'mine'}
+                    >
+                      <UserCheck className="h-3 w-3" /> Mein
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScope('all')}
+                      className={cn(
+                        'inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-medium transition-colors',
+                        scope === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                      )}
+                      aria-pressed={scope === 'all'}
+                    >
+                      <Users className="h-3 w-3" /> Alle
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="h-[180px]">
