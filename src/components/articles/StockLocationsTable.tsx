@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -280,7 +280,7 @@ function SummaryTile({ label, value, unit, tone }: { label: string; value: strin
   );
 }
 
-function MobileField({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
+function MobileField({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="min-w-0 border-t border-border/60 pt-2">
       <div className="text-[10px] leading-tight text-muted-foreground">{label}</div>
