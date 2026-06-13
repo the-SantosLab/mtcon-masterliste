@@ -20,6 +20,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminMasterData from "./pages/AdminMasterData";
 import AdminArticles from "./pages/AdminArticles";
 import AdminInventory from "./pages/AdminInventory";
+import AdminStorageLocations from "./pages/AdminStorageLocations";
 import AdminPurchasing from "./pages/AdminPurchasing";
 import ProductRequests from "./pages/ProductRequests";
 import AdminDepartments from "./pages/AdminDepartments";
@@ -187,6 +188,7 @@ function AuthenticatedApp() {
         <Route path="/admin/partners" element={<Navigate to="/crm/companies" replace />} />
         <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
         <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />
+        <Route path="/admin/storage-locations" element={<ProtectedRoute><AdminStorageLocations /></ProtectedRoute>} />
         <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />
         <Route path="/products/requests" element={<ProtectedRoute><ProductRequests /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />

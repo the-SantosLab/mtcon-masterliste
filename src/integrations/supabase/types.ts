@@ -5975,6 +5975,57 @@ export type Database = {
           },
         ]
       }
+      storage_locations: {
+        Row: {
+          behaelter: string
+          capacity: number | null
+          code: string | null
+          created_at: string
+          created_by: string | null
+          fifo_required: boolean
+          id: string
+          is_blocked: boolean
+          lager: string
+          lagerpl: string
+          note: string | null
+          type: Database["public"]["Enums"]["storage_location_type"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          behaelter?: string
+          capacity?: number | null
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          fifo_required?: boolean
+          id?: string
+          is_blocked?: boolean
+          lager: string
+          lagerpl?: string
+          note?: string | null
+          type?: Database["public"]["Enums"]["storage_location_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          behaelter?: string
+          capacity?: number | null
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          fifo_required?: boolean
+          id?: string
+          is_blocked?: boolean
+          lager?: string
+          lagerpl?: string
+          note?: string | null
+          type?: Database["public"]["Enums"]["storage_location_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -6722,6 +6773,13 @@ export type Database = {
       sequence_status: "aktiv" | "pausiert"
       sequence_step_type: "email" | "wait" | "task"
       stock_movement_type: "inbound" | "outbound" | "adjustment" | "transfer"
+      storage_location_type:
+        | "regal"
+        | "kanban"
+        | "sperrlager"
+        | "archiv"
+        | "versand"
+        | "sonstiges"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -6915,6 +6973,14 @@ export const Constants = {
       sequence_status: ["aktiv", "pausiert"],
       sequence_step_type: ["email", "wait", "task"],
       stock_movement_type: ["inbound", "outbound", "adjustment", "transfer"],
+      storage_location_type: [
+        "regal",
+        "kanban",
+        "sperrlager",
+        "archiv",
+        "versand",
+        "sonstiges",
+      ],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
         "open",
