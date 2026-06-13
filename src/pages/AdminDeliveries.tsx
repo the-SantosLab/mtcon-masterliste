@@ -78,8 +78,66 @@ export default function AdminDeliveries() {
 
   const open = async (d: Delivery) => {
     setSel(d);
-    const { data } = await (supabase.from('delivery_items' as any).select('*').eq('delivery_id', d.id).order('position')) as any;
-    setItems((data as DeliveryItem[]) || []);
+    const [iRes, invRes] = await Promise.all([
+      (supabase.from('delivery_items' as any).select('*').eq('delivery_id', d.id).order('position')) as any,
+      (supabase.from('invoices' as any).select('id').eq('delivery_id', d.id).maybeSingle()) as any,
+    ]);
+    setItems((iRes.data as DeliveryItem[]) || []);
+    setExistingInvoiceId(invRes.data?.id ?? null);
+  };
+
+  const createInvoiceFromDelivery = async () => {
+    if (!sel) return;
+    if (existingInvoiceId) { toast.error('Rechnung existiert bereits'); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Order-Header + Preise
+    const [{ data: ord }, { data: di }] = await Promise.all([
+      sel.order_id ? supabase.from('orders').select('*').eq('id', sel.order_id).maybeSingle() : Promise.resolve({ data: null }) as any,
+      (supabase.from('delivery_items' as any).select('*').eq('delivery_id', sel.id).order('position')) as any,
+    ]);
+    const orderItemIds = (di || []).map((x: any) => x.order_item_id).filter(Boolean);
+    const { data: oi } = orderItemIds.length
+      ? await supabase.from('order_items').select('*').in('id', orderItemIds)
+      : { data: [] as any[] };
+    const priceMap = new Map((oi || []).map((x: any) => [x.id, x]));
+
+    const itemsToCopy = (di || []).map((it: any, idx: number) => {
+      const ref: any = priceMap.get(it.order_item_id);
+      const qty = Number(it.quantity);
+      const up = ref?.unit_price != null ? Number(ref.unit_price) : 0;
+      const tr = ref?.tax_rate != null ? Number(ref.tax_rate) : 19;
+      return {
+        position: it.position || idx + 1, art_nr: it.art_nr, description: it.description,
+        quantity: qty, unit: it.unit, unit_price: up, tax_rate: tr, line_total: qty * up,
+      };
+    });
+    const subtotal = itemsToCopy.reduce((s, it) => s + it.line_total, 0);
+    const tax = itemsToCopy.reduce((s, it) => s + it.line_total * (it.tax_rate / 100), 0);
+    const today = new Date(); const due = new Date(); due.setDate(due.getDate() + 14);
+
+    const { data: inv, error } = await (supabase.from('invoices' as any).insert({
+      order_id: sel.order_id, delivery_id: sel.id, status: 'draft',
+      invoice_date: today.toISOString().slice(0, 10), due_date: due.toISOString().slice(0, 10),
+      customer_name: (ord as any)?.customer_name ?? sel.orders?.customer_name ?? null,
+      customer_email: (ord as any)?.customer_email ?? null,
+      customer_no: (ord as any)?.customer_no ?? null,
+      currency: (ord as any)?.currency ?? 'EUR',
+      subtotal_amount: subtotal, tax_amount: tax, total_amount: subtotal + tax,
+      payment_terms: (ord as any)?.payment_terms ?? null,
+      notes: `Aus Lieferschein ${sel.delivery_no}`,
+      created_by: user?.id ?? null,
+    }).select().single()) as any;
+    if (error || !inv) return toast.error(error?.message || 'Fehler beim Anlegen');
+
+    if (itemsToCopy.length) {
+      await (supabase.from('invoice_items' as any).insert(
+        itemsToCopy.map(it => ({ ...it, invoice_id: inv.id }))
+      )) as any;
+    }
+    setExistingInvoiceId(inv.id);
+    toast.success(`Rechnung ${inv.invoice_no} erstellt`);
+    navigate('/admin/invoices');
   };
 
   const save = async () => {
