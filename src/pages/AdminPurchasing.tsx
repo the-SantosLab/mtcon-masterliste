@@ -783,6 +783,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                             ))}
                           </div>
                         )}
+                      </td>
                       <td className="px-2 py-1">
                         <Input
                           value={lots[it.id] ?? ''}
