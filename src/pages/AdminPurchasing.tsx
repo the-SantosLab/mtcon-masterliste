@@ -744,6 +744,46 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                           className="h-7 text-right" />
                       </td>
                       <td className="px-2 py-1">
+                        <div className="flex gap-1">
+                          <Input
+                            value={locSearch[it.id] ?? locSel[it.id]?.code ?? ''}
+                            onChange={e => searchLocations(it.id, e.target.value)}
+                            placeholder="Code suchen"
+                            className="h-7 text-xs font-mono"
+                          />
+                          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[10px]" onClick={() => loadSuggestions(it)} title="Vorschlag laden">VS</Button>
+                        </div>
+                        {locSel[it.id] && (
+                          <div className="mt-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            ✓ {locSel[it.id]!.code}
+                            {locSel[it.id]!.fifo && <span className="px-1 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 text-[9px]">FIFO</span>}
+                            <button type="button" onClick={() => { setLocSel(s => ({ ...s, [it.id]: null })); setLocSearch(s => ({ ...s, [it.id]: '' })); }} className="ml-1 underline">×</button>
+                          </div>
+                        )}
+                        {(locSugg[it.id] && locSugg[it.id].length > 0) && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {locSugg[it.id].slice(0, 4).map((s: any) => (
+                              <button key={s.id} type="button"
+                                onClick={() => { setLocSel(x => ({ ...x, [it.id]: { id: s.id, code: s.code, fifo: s.fifo_required } })); setLocSugg(x => ({ ...x, [it.id]: [] })); setLocSearch(x => ({ ...x, [it.id]: '' })); }}
+                                className="px-1.5 py-0.5 rounded border border-border bg-card/60 hover:bg-card text-[10px] font-mono"
+                                title={s.reason}>
+                                {s.code}{s.fifo_required ? ' ⏱' : ''}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {(locResults[it.id] && locResults[it.id].length > 0 && (locSearch[it.id] ?? '').length > 0) && (
+                          <div className="mt-1 rounded border border-border bg-popover max-h-32 overflow-y-auto">
+                            {locResults[it.id].map((r: any) => (
+                              <button key={r.id} type="button"
+                                onClick={() => { setLocSel(x => ({ ...x, [it.id]: { id: r.id, code: r.code, fifo: r.fifo_required } })); setLocResults(x => ({ ...x, [it.id]: [] })); setLocSearch(x => ({ ...x, [it.id]: '' })); }}
+                                className="w-full text-left px-2 py-1 text-[11px] font-mono hover:bg-muted">
+                                {r.code} <span className="text-muted-foreground">· {r.type}{r.fifo_required ? ' · FIFO' : ''}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      <td className="px-2 py-1">
                         <Input
                           value={lots[it.id] ?? ''}
                           onChange={e => setLots(s => ({ ...s, [it.id]: e.target.value }))}
