@@ -193,7 +193,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mslOpen, setMslOpen] = useState(
     location.pathname === '/' ||
     location.pathname.startsWith('/cases') ||
-    location.pathname.startsWith('/projects')
+    location.pathname.startsWith('/projects') ||
+    location.pathname.startsWith('/notes')
   );
   const [erpOpen, setErpOpen] = useState(
     ['/admin/inventory', '/admin/storage-locations', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/admin/articles'].some(p => location.pathname.startsWith(p))
