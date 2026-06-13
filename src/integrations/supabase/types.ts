@@ -5628,9 +5628,15 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          case_id: string | null
           company_id: string | null
+          confirmation_received_at: string | null
+          confirmed_delivery_date: string | null
           created_at: string
           created_by: string | null
+          customer_notified_at: string | null
+          delay_flagged_at: string | null
+          delay_notified_at: string | null
           expected_at: string | null
           id: string
           notes: string | null
@@ -5642,9 +5648,15 @@ export type Database = {
           warehouse_id: string | null
         }
         Insert: {
+          case_id?: string | null
           company_id?: string | null
+          confirmation_received_at?: string | null
+          confirmed_delivery_date?: string | null
           created_at?: string
           created_by?: string | null
+          customer_notified_at?: string | null
+          delay_flagged_at?: string | null
+          delay_notified_at?: string | null
           expected_at?: string | null
           id?: string
           notes?: string | null
@@ -5656,9 +5668,15 @@ export type Database = {
           warehouse_id?: string | null
         }
         Update: {
+          case_id?: string | null
           company_id?: string | null
+          confirmation_received_at?: string | null
+          confirmed_delivery_date?: string | null
           created_at?: string
           created_by?: string | null
+          customer_notified_at?: string | null
+          delay_flagged_at?: string | null
+          delay_notified_at?: string | null
           expected_at?: string | null
           id?: string
           notes?: string | null
@@ -5670,6 +5688,13 @@ export type Database = {
           warehouse_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_orders_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_orders_company_id_fkey"
             columns: ["company_id"]
@@ -6736,6 +6761,7 @@ export type Database = {
       case_dept_owner: { Args: { p_case_id: string }; Returns: string }
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
+      check_po_delays: { Args: never; Returns: Json }
       create_po_from_suggestions: {
         Args: {
           _items: Json
@@ -6860,6 +6886,10 @@ export type Database = {
       next_counter: { Args: { p_key: string }; Returns: number }
       next_partner_customer_no: { Args: never; Returns: string }
       next_partner_supplier_code: { Args: never; Returns: string }
+      po_effective_due: {
+        Args: { _po: Database["public"]["Tables"]["purchase_orders"]["Row"] }
+        Returns: string
+      }
       policy_category: { Args: { p_policy_id: string }; Returns: string }
       purge_old_trashed_boards: { Args: never; Returns: undefined }
       purge_old_trashed_notes: { Args: never; Returns: undefined }
