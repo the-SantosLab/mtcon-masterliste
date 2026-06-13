@@ -117,21 +117,34 @@ export default function AdminPurchasing() {
                     <th className="text-left px-3 py-2">Lager</th>
                     <th className="text-left px-3 py-2">Status</th>
                     <th className="text-left px-3 py-2">Bestellt am</th>
+                    <th className="text-left px-3 py-2">AB / Wunsch</th>
                     <th className="text-left px-3 py-2">Erwartet</th>
+                    <th className="text-left px-3 py-2">Vorgang</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pos.map(p => (
+                  {pos.map(p => {
+                    const due = p.confirmed_delivery_date ?? p.expected_at;
+                    const delayed = !!p.delay_flagged_at || (due && due < new Date().toISOString().slice(0,10) && (p.status === 'ordered' || p.status === 'partial'));
+                    return (
                     <tr key={p.id} className="border-t border-border hover:bg-muted/20 cursor-pointer"
                         onClick={() => setDetailPO(p)}>
                       <td className="px-3 py-2 font-mono text-xs">{p.po_no}</td>
                       <td className="px-3 py-2">{p.suppliers?.name}</td>
                       <td className="px-3 py-2 text-muted-foreground">{p.warehouses?.code ?? '–'}</td>
-                      <td className="px-3 py-2"><Badge variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Badge></td>
+                      <td className="px-3 py-2">
+                        <Badge variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Badge>
+                        {delayed && <Badge variant="destructive" className="ml-1.5 text-[10px]">Verzug</Badge>}
+                        {!p.confirmation_received_at && (p.status === 'ordered' || p.status === 'partial') && (
+                          <Badge variant="outline" className="ml-1.5 text-[10px]">AB fehlt</Badge>
+                        )}
+                      </td>
                       <td className="px-3 py-2 text-muted-foreground">{p.ordered_at ?? '–'}</td>
+                      <td className="px-3 py-2 text-muted-foreground">{p.confirmed_delivery_date ?? '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground">{p.expected_at ?? '–'}</td>
+                      <td className="px-3 py-2 text-xs text-muted-foreground">{p.cases?.case_number ?? p.cases?.case_no ?? '–'}</td>
                     </tr>
-                  ))}
+                  );})}
                   {pos.length === 0 && (
                     <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
                   )}
