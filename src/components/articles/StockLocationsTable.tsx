@@ -158,7 +158,50 @@ export function StockLocationsTable({ artNr, showSummary = true, globalSearchabl
         </div>
       </div>
 
-      <div className="rounded-md border border-border bg-card overflow-auto max-h-[60vh]">
+      <div className="md:hidden space-y-2">
+        {loading && (
+          <div className="rounded-md border border-border bg-card px-3 py-6 text-center text-xs text-muted-foreground">Lade…</div>
+        )}
+        {!loading && filtered.length === 0 && (
+          <div className="rounded-md border border-border bg-card px-3 py-6 text-center text-xs text-muted-foreground">Keine Einträge</div>
+        )}
+        {!loading && filtered.map((r) => (
+          <div key={r.id} className="rounded-md border border-border bg-card px-3 py-3 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase text-muted-foreground">{globalSearchableArtNr ? 'Art.-Nr' : 'Lager'}</div>
+                <div className="mt-0.5 break-words font-mono text-sm font-semibold text-foreground">{globalSearchableArtNr ? r.art_nr : r.lager}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase text-muted-foreground">Bestand</div>
+                <div className={`mt-0.5 text-sm font-semibold tabular-nums ${Number(r.bestand) > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {num(r.bestand)} <span className="text-[10px] font-normal text-muted-foreground">{r.me ?? ''}</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+              {globalSearchableArtNr && <MobileField label="Lager" value={r.lager} mono />}
+              <MobileField label="Lagerplatz" value={r.lagerpl || '—'} />
+              <MobileField label="Behälter" value={r.behaelter || '—'} />
+              <MobileField label="SB" value={num(r.sb_menge)} />
+              <MobileField label="MB" value={num(r.mb_menge)} />
+              <MobileField label="Charge-Nr" value={r.charge_nr || '—'} mono />
+              <MobileField label="Charge-Ext" value={r.charge_ext || '—'} mono />
+              <MobileField label="Datum-Zu" value={r.datum_zu || '—'} />
+              <MobileField label="Best-Inv" value={num(r.best_inv)} />
+              <MobileField label="Füllgrad" value={r.fuellgrad_pct != null ? num(r.fuellgrad_pct, 1) + '%' : '—'} />
+            </div>
+            {(isAdmin && artNr) && (
+              <div className="mt-3 flex justify-end gap-2 border-t border-border/60 pt-2">
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setEdit(r)}><Pencil className="h-3 w-3 mr-1" />Bearbeiten</Button>
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive hover:text-destructive" onClick={() => remove(r)}><Trash2 className="h-3 w-3 mr-1" />Löschen</Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-auto max-h-[60vh]">
         <table className={`w-full caption-bottom text-sm ${compact ? 'table-compact' : ''}`}>
           <thead>
             <tr className="border-b">
@@ -233,6 +276,15 @@ function SummaryTile({ label, value, unit, tone }: { label: string; value: strin
       <div className={`text-lg font-semibold tabular-nums leading-tight ${toneCls}`}>
         {value} {unit && <span className="text-[10px] font-normal text-muted-foreground">{unit}</span>}
       </div>
+    </div>
+  );
+}
+
+function MobileField({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
+  return (
+    <div className="min-w-0 border-t border-border/60 pt-2">
+      <div className="text-[10px] leading-tight text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 break-words text-xs leading-snug text-foreground ${mono ? 'font-mono' : ''}`}>{value}</div>
     </div>
   );
 }
