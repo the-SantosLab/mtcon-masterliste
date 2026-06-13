@@ -235,6 +235,36 @@ export default function Dashboard() {
       return row;
     };
 
+    const monthLabelsShort = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+
+    // Wenn ein Zeitraum-Schnellfilter aktiv ist, übernimmt er die Bucket-Aufteilung
+    if (dateRangeFilter === 'lastMonth' || dateRangeFilter === 'last2Months') {
+      const offset = dateRangeFilter === 'lastMonth' ? 1 : 2;
+      const ref = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const y = ref.getFullYear();
+      const m = ref.getMonth();
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      return Array.from({ length: daysInMonth }, (_, i) => buildBucket(c => {
+        if (!c.created_at) return false;
+        const d = new Date(c.created_at);
+        return d.getFullYear() === y && d.getMonth() === m && d.getDate() === i + 1;
+      }, String(i + 1)));
+    }
+
+    if (dateRangeFilter === 'last3Months' || dateRangeFilter === 'last6Months') {
+      const count = dateRangeFilter === 'last3Months' ? 3 : 6;
+      return Array.from({ length: count }, (_, i) => {
+        const ref = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
+        const y = ref.getFullYear();
+        const m = ref.getMonth();
+        return buildBucket(c => {
+          if (!c.created_at) return false;
+          const d = new Date(c.created_at);
+          return d.getFullYear() === y && d.getMonth() === m;
+        }, monthLabelsShort[m]);
+      });
+    }
+
     if (chartRange === 'week') {
       const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr'];
       const startOfWeek = new Date(now);
@@ -262,13 +292,12 @@ export default function Dashboard() {
 
     // year view
     const year = now.getFullYear();
-    const monthLabels = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-    return monthLabels.map((label, i) => buildBucket(c => {
+    return monthLabelsShort.map((label, i) => buildBucket(c => {
       if (!c.created_at) return false;
       const d = new Date(c.created_at);
       return d.getFullYear() === year && d.getMonth() === i;
     }, label));
-  }, [filteredActive, now, chartRange, visibleStatuses, today, weekEnd]);
+  }, [filteredActive, now, chartRange, dateRangeFilter, visibleStatuses, today, weekEnd]);
 
   const [barDrill, setBarDrill] = useState<{ label: string; items: CaseRow[] } | null>(null);
 
