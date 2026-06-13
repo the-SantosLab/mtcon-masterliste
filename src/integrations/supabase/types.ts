@@ -3030,24 +3030,36 @@ export type Database = {
       goods_receipt_items: {
         Row: {
           created_at: string
+          expiry_date: string | null
           gr_id: string
           id: string
+          lot_id: string | null
+          lot_no: string | null
+          lot_no_ext: string | null
           movement_id: string | null
           po_item_id: string
           qty_received: number
         }
         Insert: {
           created_at?: string
+          expiry_date?: string | null
           gr_id: string
           id?: string
+          lot_id?: string | null
+          lot_no?: string | null
+          lot_no_ext?: string | null
           movement_id?: string | null
           po_item_id: string
           qty_received: number
         }
         Update: {
           created_at?: string
+          expiry_date?: string | null
           gr_id?: string
           id?: string
+          lot_id?: string | null
+          lot_no?: string | null
+          lot_no_ext?: string | null
           movement_id?: string | null
           po_item_id?: string
           qty_received?: number
@@ -3058,6 +3070,13 @@ export type Database = {
             columns: ["gr_id"]
             isOneToOne: false
             referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_lot_id_fkey"
+            columns: ["lot_id"]
+            isOneToOne: false
+            referencedRelation: "lots"
             referencedColumns: ["id"]
           },
           {
@@ -3903,6 +3922,77 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      lots: {
+        Row: {
+          art_nr: string
+          created_at: string
+          current_qty: number
+          expiry_date: string | null
+          first_received_at: string
+          id: string
+          last_gr_id: string | null
+          last_received_at: string
+          lot_no: string
+          lot_no_ext: string | null
+          note: string | null
+          receipt_count: number
+          status: string
+          supplier_lief_nr: string | null
+          supplier_name: string | null
+          total_received: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          art_nr: string
+          created_at?: string
+          current_qty?: number
+          expiry_date?: string | null
+          first_received_at?: string
+          id?: string
+          last_gr_id?: string | null
+          last_received_at?: string
+          lot_no: string
+          lot_no_ext?: string | null
+          note?: string | null
+          receipt_count?: number
+          status?: string
+          supplier_lief_nr?: string | null
+          supplier_name?: string | null
+          total_received?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          art_nr?: string
+          created_at?: string
+          current_qty?: number
+          expiry_date?: string | null
+          first_received_at?: string
+          id?: string
+          last_gr_id?: string | null
+          last_received_at?: string
+          lot_no?: string
+          lot_no_ext?: string | null
+          note?: string | null
+          receipt_count?: number
+          status?: string
+          supplier_lief_nr?: string | null
+          supplier_name?: string | null
+          total_received?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lots_last_gr_id_fkey"
+            columns: ["last_gr_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       map_custom_edges: {
         Row: {
@@ -6641,6 +6731,23 @@ export type Database = {
         Returns: Database["public"]["Enums"]["dept_member_role"]
       }
       dept_owner: { Args: { p_dept_id: string }; Returns: string }
+      find_duplicate_lots: {
+        Args: { _art_nr: string; _lot_no: string }
+        Returns: {
+          art_nr: string
+          current_qty: number
+          expiry_date: string
+          first_received_at: string
+          id: string
+          last_received_at: string
+          lot_no: string
+          lot_no_ext: string
+          status: string
+          supplier_lief_nr: string
+          supplier_name: string
+          total_received: number
+        }[]
+      }
       generate_delivery_no: { Args: never; Returns: string }
       generate_insurance_reminders: { Args: never; Returns: number }
       generate_invoice_no: { Args: never; Returns: string }
