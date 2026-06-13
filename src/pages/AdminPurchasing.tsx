@@ -566,7 +566,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   useEffect(() => {
     if (!po) return;
     setWarehouseId(po.warehouse_id ?? warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
-    setDeliveryNo(''); setNotes(''); setQtys({}); setLots({}); setLotsExt({}); setExpiries({}); setLotDup({});
+    setDeliveryNo(''); setNotes(''); setQtys({}); setLots({}); setLotsExt({}); setExpiries({}); setLotDup({}); setLocSel({}); setLocSugg({}); setLocSearch({}); setLocResults({});
     (async () => {
       const { data } = await (supabase as any).from('purchase_order_items')
         .select('*, articles(matchcode,bezeich_1,me)')
