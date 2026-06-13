@@ -20,8 +20,14 @@ type POStatus = 'draft' | 'ordered' | 'partial' | 'received' | 'cancelled';
 type PO = {
   id: string; po_no: string | null; supplier_id: string; warehouse_id: string | null;
   status: POStatus; ordered_at: string | null; expected_at: string | null; notes: string | null;
+  confirmation_received_at?: string | null;
+  confirmed_delivery_date?: string | null;
+  case_id?: string | null;
+  delay_flagged_at?: string | null;
+  customer_notified_at?: string | null;
   suppliers?: { name: string; code: string } | null;
   warehouses?: { code: string; name: string } | null;
+  cases?: { id: string; case_number: string | null; case_no: string; project_name: string } | null;
 };
 type POItem = {
   id: string; po_id: string; position: number; art_nr: string; description: string | null;
@@ -55,7 +61,7 @@ export default function AdminPurchasing() {
       (supabase as any).from('suppliers').select('*').order('name'),
       (supabase as any).from('warehouses').select('id,code,name,is_default').order('code'),
       (supabase as any).from('purchase_orders')
-        .select('*, suppliers(name,code), warehouses(code,name)')
+        .select('*, suppliers(name,code), warehouses(code,name), cases(id, case_number, case_no, project_name)')
         .order('created_at', { ascending: false }),
     ]);
     setSuppliers(s.data ?? []);
