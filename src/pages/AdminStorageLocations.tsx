@@ -268,9 +268,19 @@ export default function AdminStorageLocations() {
               Stammdaten für alle physischen Lagerplätze – Basis für Einlagerung, Etiketten und Sperrlogik.
             </p>
           </div>
-          <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Neuer Lagerplatz
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selected.size === 0}
+              onClick={() => printLabels(rows.filter(r => selected.has(r.id)))}
+            >
+              <Printer className="h-4 w-4 mr-1" /> Etiketten ({selected.size})
+            </Button>
+            <Button onClick={openCreate} size="sm">
+              <Plus className="h-4 w-4 mr-1" /> Neuer Lagerplatz
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
