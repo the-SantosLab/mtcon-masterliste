@@ -454,9 +454,18 @@ function NewPODialog({ open, onClose, suppliers, warehouses, onCreated, onSuppli
 function PODetailDialog({ po, onClose, onChanged }: { po: PO | null; onClose: () => void; onChanged: () => void }) {
   const [items, setItems] = useState<POItem[]>([]);
   const [receipts, setReceipts] = useState<any[]>([]);
+  const [confReceived, setConfReceived] = useState<string>('');
+  const [confDue, setConfDue] = useState<string>('');
+  const [caseQuery, setCaseQuery] = useState<string>('');
+  const [caseHits, setCaseHits] = useState<any[]>([]);
+  const [savingMeta, setSavingMeta] = useState(false);
 
   useEffect(() => {
     if (!po) return;
+    setConfReceived(po.confirmation_received_at ?? '');
+    setConfDue(po.confirmed_delivery_date ?? '');
+    setCaseQuery('');
+    setCaseHits([]);
     (async () => {
       const [i, r] = await Promise.all([
         (supabase as any).from('purchase_order_items')
@@ -479,17 +488,137 @@ function PODetailDialog({ po, onClose, onChanged }: { po: PO | null; onClose: ()
     toast.success('Storniert'); onChanged(); onClose();
   };
 
+  const saveAB = async () => {
+    if (!po) return;
+    setSavingMeta(true);
+    const { error } = await (supabase as any).from('purchase_orders').update({
+      confirmation_received_at: confReceived || null,
+      confirmed_delivery_date: confDue || null,
+      // Verzugs-Flag zurücksetzen, wenn AB neu erfasst und Termin in Zukunft
+      delay_flagged_at: (confDue && confDue >= new Date().toISOString().slice(0,10)) ? null : (po.delay_flagged_at ?? null),
+    }).eq('id', po.id);
+    setSavingMeta(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('AB gespeichert'); onChanged();
+  };
+
+  const searchCases = async (q: string) => {
+    setCaseQuery(q);
+    if (q.length < 2) { setCaseHits([]); return; }
+    const { data } = await (supabase as any).from('cases')
+      .select('id, case_number, case_no, project_name')
+      .or(`case_number.ilike.%${q}%,case_no.ilike.%${q}%,project_name.ilike.%${q}%`)
+      .eq('deleted', false).limit(8);
+    setCaseHits(data ?? []);
+  };
+
+  const linkCase = async (caseId: string | null) => {
+    if (!po) return;
+    const { error } = await (supabase as any).from('purchase_orders').update({ case_id: caseId }).eq('id', po.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(caseId ? 'Vorgang verknüpft' : 'Verknüpfung entfernt');
+    setCaseHits([]); setCaseQuery('');
+    onChanged();
+  };
+
+  const notifyCustomer = async () => {
+    if (!po?.case_id) { toast.error('Kein Vorgang verknüpft'); return; }
+    const due = po.confirmed_delivery_date ?? po.expected_at;
+    const { data: c } = await (supabase as any).from('cases').select('assignee_id, watchers, case_number, project_name').eq('id', po.case_id).maybeSingle();
+    if (!c) { toast.error('Vorgang nicht gefunden'); return; }
+    const userIds: string[] = [];
+    if (c.assignee_id) userIds.push(c.assignee_id);
+    for (const w of (c.watchers ?? [])) if (w && !userIds.includes(w)) userIds.push(w);
+    if (userIds.length === 0) { toast.error('Keine Empfänger'); return; }
+    const rows = userIds.map(uid => ({
+      user_id: uid, type: 'po_customer_notify',
+      title: `Lieferverzug-Info an Kunde: ${c.case_number ?? po.po_no}`,
+      body: `Vorgang „${c.project_name}" – Bestellung ${po.po_no} bei ${po.suppliers?.name} (zugesagt ${due ?? '–'}). Bitte Kunde informieren.`,
+      href: `/cases/${po.case_id}`,
+    }));
+    await (supabase as any).from('notifications').insert(rows);
+    await (supabase as any).from('purchase_orders').update({ customer_notified_at: new Date().toISOString() }).eq('id', po.id);
+    toast.success(`${rows.length} benachrichtigt`); onChanged();
+  };
+
   if (!po) return null;
+  const due = po.confirmed_delivery_date ?? po.expected_at;
+  const isDelayed = !!po.delay_flagged_at || (due && due < new Date().toISOString().slice(0,10) && (po.status === 'ordered' || po.status === 'partial'));
   return (
     <Dialog open={!!po} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+          <DialogTitle className="flex items-center gap-3 flex-wrap">
             <span className="font-mono text-sm">{po.po_no}</span>
             <Badge variant={STATUS_VARIANT[po.status]}>{STATUS_LABEL[po.status]}</Badge>
+            {isDelayed && <Badge variant="destructive">Verzug</Badge>}
+            {!po.confirmation_received_at && (po.status === 'ordered' || po.status === 'partial') && <Badge variant="outline">AB fehlt</Badge>}
           </DialogTitle>
           <DialogDescription>{po.suppliers?.name} · Lager {po.warehouses?.code ?? '–'}</DialogDescription>
         </DialogHeader>
+        <div className="space-y-4">
+          {/* AB-Block */}
+          <div className="rounded border border-border p-3 space-y-2 bg-muted/10">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Auftragsbestätigung</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-muted-foreground">AB-Eingang</label>
+                <Input type="date" value={confReceived} onChange={e => setConfReceived(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground">Zugesagter Liefertermin</label>
+                <Input type="date" value={confDue} onChange={e => setConfDue(e.target.value)} className="h-8 text-xs" />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={saveAB} disabled={savingMeta} className="h-7 text-xs">Speichern</Button>
+            </div>
+          </div>
+
+          {/* Vorgangs-Verknüpfung */}
+          <div className="rounded border border-border p-3 space-y-2 bg-muted/10">
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Verknüpfter Vorgang</div>
+            {po.cases ? (
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm">
+                  <span className="font-mono text-xs">{po.cases.case_number ?? po.cases.case_no}</span>
+                  <span className="text-muted-foreground"> · {po.cases.project_name}</span>
+                </div>
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => linkCase(null)}>Entfernen</Button>
+                  <Button size="sm" variant="default" className="h-7 text-xs" onClick={notifyCustomer} disabled={!isDelayed}>
+                    Kunde benachrichtigen
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Input
+                  placeholder="Vorgang suchen (Nr. oder Projektname)..."
+                  value={caseQuery}
+                  onChange={e => searchCases(e.target.value)}
+                  className="h-8 text-xs"
+                />
+                {caseHits.length > 0 && (
+                  <div className="border border-border rounded max-h-40 overflow-y-auto">
+                    {caseHits.map(c => (
+                      <button key={c.id} onClick={() => linkCase(c.id)}
+                        className="w-full text-left px-2 py-1.5 hover:bg-muted/30 text-xs border-b border-border/40 last:border-b-0">
+                        <span className="font-mono">{c.case_number ?? c.case_no}</span>
+                        <span className="text-muted-foreground"> · {c.project_name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {po.customer_notified_at && (
+              <div className="text-[10px] text-muted-foreground">
+                Kunde benachrichtigt am {new Date(po.customer_notified_at).toLocaleString('de-DE')}
+              </div>
+            )}
+          </div>
+
         <div className="space-y-4">
           <div>
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Positionen</div>
