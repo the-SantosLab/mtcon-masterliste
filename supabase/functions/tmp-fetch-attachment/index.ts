@@ -44,6 +44,13 @@ Deno.serve(async (req) => {
       source: "ISSOS",
     });
   }
+  // Dedupe within batch by natural key (keep last)
+  const map = new Map<string, any>();
+  for (const r of records) {
+    const k = [r.art_nr, r.lager, r.lagerpl, r.behaelter, r.charge_nr].join("|");
+    map.set(k, r);
+  }
+  const deduped = Array.from(map.values());
   let inserted = 0;
   const B = 500;
   for (let i = 0; i < records.length; i += B) {
