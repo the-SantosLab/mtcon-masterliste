@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Truck, Plus, Trash2, Download } from "lucide-react";
+import { Truck, Plus, Trash2, Download, Receipt } from "lucide-react";
 import { generateDeliveryPdf } from "@/lib/document-pdf";
+import { useNavigate } from "react-router-dom";
 
 type Delivery = {
   id: string;
