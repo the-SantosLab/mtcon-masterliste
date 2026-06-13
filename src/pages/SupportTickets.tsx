@@ -238,8 +238,57 @@ export default function SupportTickets() {
         </div>
 
 
-        {/* Table */}
-        <div className="rounded-md border border-border bg-card overflow-x-auto">
+        {/* Mobile card list */}
+        <div className="sm:hidden space-y-2">
+          {loading ? (
+            <div className="rounded-md border border-border bg-card py-8 text-center text-muted-foreground text-sm">Laden…</div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-md border border-border bg-card py-8 text-center text-muted-foreground text-sm">Keine Tickets gefunden</div>
+          ) : filtered.map(t => (
+            <Link
+              key={t.id}
+              to={`/support/${t.id}`}
+              className={cn(
+                "block rounded-md border border-border bg-card p-3 active:bg-muted/40 transition-colors",
+                PRIORITY_BORDER[t.priority] || ''
+              )}
+            >
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <span className="font-mono text-[11px] text-primary truncate">{t.ticket_number}</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums whitespace-nowrap">
+                  {formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: de })}
+                </span>
+              </div>
+              <div className="text-sm text-foreground font-medium line-clamp-2 mb-1.5">{t.title}</div>
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {t.source === 'intern' ? (
+                  <>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary/40 text-primary">Intern</Badge>
+                    {t.kind && <Badge variant="outline" className="text-[9px] px-1 py-0">{KIND_LABELS[t.kind] ?? t.kind}</Badge>}
+                  </>
+                ) : (
+                  <Badge variant="outline" className="text-[9px] px-1 py-0">Extern</Badge>
+                )}
+                <Badge className={`${PRIORITY_COLORS[t.priority]} text-[10px] px-1.5 py-0`}>{PRIORITY_LABELS[t.priority]}</Badge>
+                <Badge className={`${STATUS_COLORS[t.status]} text-white text-[10px] px-1.5 py-0`}>{STATUS_LABELS[t.status]}</Badge>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="truncate">
+                  {t.source === 'intern'
+                    ? (reporterById(t.reporter_user_id)?.short_code ?? '—')
+                    : (t.customer?.display_name || '–')}
+                  {t.source !== 'intern' && t.customer?.company_name && (
+                    <span className="text-muted-foreground/60"> · {t.customer.company_name}</span>
+                  )}
+                </span>
+                <span className="ml-2 shrink-0">{t.assignee ? t.assignee.short_code : '—'}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Table (>= sm) */}
+        <div className="hidden sm:block rounded-md border border-border bg-card overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
