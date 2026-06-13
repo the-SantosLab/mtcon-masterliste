@@ -628,7 +628,14 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
     }).select('id, gr_no').single();
     if (grErr || !gr) { setSaving(false); toast.error(grErr?.message || 'Fehler'); return; }
 
-    const rows = toBook.map(x => ({ gr_id: gr.id, po_item_id: x.it.id, qty_received: x.qty }));
+    const rows = toBook.map(x => ({
+      gr_id: gr.id,
+      po_item_id: x.it.id,
+      qty_received: x.qty,
+      lot_no: (lots[x.it.id] || '').trim() || null,
+      lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
+      expiry_date: expiries[x.it.id] || null,
+    }));
     const { error: itemErr } = await (supabase as any).from('goods_receipt_items').insert(rows);
     setSaving(false);
     if (itemErr) {
