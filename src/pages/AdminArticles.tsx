@@ -468,6 +468,7 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
           <Tabs defaultValue="stamm">
             <TabsList className="bg-secondary flex-wrap h-auto">
               <TabsTrigger value="stamm" className="text-xs">Stamm</TabsTrigger>
+              <TabsTrigger value="stock" className="text-xs">Lagerbestand</TabsTrigger>
               <TabsTrigger value="attr" className="text-xs">Sachmerkmale ({attributes.length})</TabsTrigger>
               <TabsTrigger value="pr" className="text-xs">Preise</TabsTrigger>
               <TabsTrigger value="pl" className="text-xs">Preisliste ({priceList.length})</TabsTrigger>
@@ -477,6 +478,9 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
             </TabsList>
             <TabsContent value="stamm" className="pt-3">
               <DetailGrid data={article} table="articles" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setArticle(d)} />
+            </TabsContent>
+            <TabsContent value="stock" className="pt-3">
+              <StockLocationsTable artNr={artNr!} />
             </TabsContent>
             <TabsContent value="attr" className="pt-3">
               <SimpleTable rows={attributes} cols={[
