@@ -53,6 +53,7 @@ export default function AdminArticles() {
             <TabsTrigger value="attributes" className="text-xs">Sachmerkmale</TabsTrigger>
             <TabsTrigger value="status90" className="text-xs">Status90</TabsTrigger>
             <TabsTrigger value="prices" className="text-xs">Artikelpreise</TabsTrigger>
+            <TabsTrigger value="stock" className="text-xs">Lagerorte</TabsTrigger>
             <TabsTrigger value="import" className="text-xs">Import</TabsTrigger>
             <TabsTrigger value="history" className="text-xs">Import-Log</TabsTrigger>
           </TabsList>
@@ -64,6 +65,7 @@ export default function AdminArticles() {
           <TabsContent value="attributes"><AttributesTab onOpen={setDetailArtNr} /></TabsContent>
           <TabsContent value="status90"><Status90Tab onOpen={setDetailArtNr} /></TabsContent>
           <TabsContent value="prices"><PricesTab onOpen={setDetailArtNr} /></TabsContent>
+          <TabsContent value="stock" className="pt-4"><StockLocationsTable globalSearchableArtNr showSummary={false} /></TabsContent>
           <TabsContent value="import"><ImportTab /></TabsContent>
           <TabsContent value="history"><HistoryTab /></TabsContent>
         </Tabs>
