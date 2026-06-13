@@ -307,6 +307,11 @@ export default function AdminDeliveries() {
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>
               )}
+              {sel?.status === 'shipped' && (
+                existingInvoiceId
+                  ? <Button variant="outline" onClick={() => navigate('/admin/invoices')}><Receipt className="h-4 w-4 mr-1" /> Rechnung öffnen</Button>
+                  : <Button variant="default" onClick={createInvoiceFromDelivery}><Receipt className="h-4 w-4 mr-1" /> Rechnung 1:1 erstellen</Button>
+              )}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
               <Button onClick={save}>Speichern</Button>
             </DialogFooter>
