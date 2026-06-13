@@ -58,6 +58,7 @@ export default function AdminStorageLocations() {
   const [lagerFilter, setLagerFilter] = useState<string>('all');
   const [editing, setEditing] = useState<StorageLocation | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const blankForm = {
     lager: '',
