@@ -6858,6 +6858,20 @@ export type Database = {
         Returns: undefined
       }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
+      suggest_po_from_deal: {
+        Args: { _deal_id: string }
+        Returns: {
+          art_nr: string
+          description: string
+          lief_nr: string
+          lieferzeit: number
+          on_hand: number
+          qty_needed: number
+          qty_to_order: number
+          supplier_name: string
+          unit_price: number
+        }[]
+      }
       user_department: { Args: { uid?: string }; Returns: string }
       user_id_by_email: { Args: { p_email: string }; Returns: string }
     }
