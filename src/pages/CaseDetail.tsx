@@ -643,9 +643,9 @@ export default function CaseDetail() {
         )}
 
         {isTerminalStatus(c.status) && (
-          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-4">
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 dark:bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-4">
             <div className="space-y-0.5">
-              <p className="text-xs font-medium text-amber-200">
+              <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
                 Vorgang eingefroren · {STATUS_LABELS[c.status]}
               </p>
               <p className="text-[11px] text-muted-foreground">
