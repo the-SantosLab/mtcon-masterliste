@@ -328,12 +328,46 @@ export default function Dashboard() {
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/85 to-transparent" />
 
             {/* Greeting (top) */}
-            <div className="absolute top-0 left-0 right-0 p-6 lg:p-8 z-10">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/70">{dateString}</p>
-              <h1 className="mt-2 text-2xl lg:text-3xl font-semibold text-foreground drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
-                {greeting}{firstName ? `, ${firstName}` : ''}
-              </h1>
-              <p className="mt-1 text-sm tabular-nums text-foreground/70">{timeString} Uhr</p>
+            <div className="absolute top-0 left-0 right-0 p-6 lg:p-8 z-10 flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/70">{dateString}</p>
+                <h1 className="mt-2 text-2xl lg:text-3xl font-semibold text-foreground drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
+                  {greeting}{firstName ? `, ${firstName}` : ''}
+                </h1>
+                <p className="mt-1 text-sm tabular-nums text-foreground/70">{timeString} Uhr</p>
+              </div>
+
+              {/* Mein / Alle Umschalter — steuert die KPI-Anzeige */}
+              <div
+                className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/60 backdrop-blur-xl p-1 shrink-0"
+                role="group"
+                aria-label="Anzeige umschalten"
+              >
+                <button
+                  type="button"
+                  onClick={() => setScope('mine')}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] font-medium transition-colors',
+                    scope === 'mine' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                  aria-pressed={scope === 'mine'}
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  Mein
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScope('all')}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] font-medium transition-colors',
+                    scope === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+                  )}
+                  aria-pressed={scope === 'all'}
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Alle
+                </button>
+              </div>
             </div>
 
             {/* KPI cards (bottom overlay) */}
