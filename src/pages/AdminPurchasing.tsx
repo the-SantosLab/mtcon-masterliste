@@ -554,6 +554,10 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   const [lotsExt, setLotsExt] = useState<Record<string, string>>({});
   const [expiries, setExpiries] = useState<Record<string, string>>({});
   const [lotDup, setLotDup] = useState<Record<string, { current_qty: number; total_received: number; last: string } | null>>({});
+  const [locSel, setLocSel] = useState<Record<string, { id: string; code: string; fifo: boolean } | null>>({});
+  const [locSugg, setLocSugg] = useState<Record<string, any[]>>({});
+  const [locSearch, setLocSearch] = useState<Record<string, string>>({});
+  const [locResults, setLocResults] = useState<Record<string, any[]>>({});
   const [warehouseId, setWarehouseId] = useState<string>('');
   const [deliveryNo, setDeliveryNo] = useState('');
   const [notes, setNotes] = useState('');
