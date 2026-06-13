@@ -3087,7 +3087,7 @@ export type Database = {
           received_at: string
           received_by: string | null
           updated_at: string
-          warehouse_id: string
+          warehouse_id: string | null
         }
         Insert: {
           created_at?: string
@@ -3099,7 +3099,7 @@ export type Database = {
           received_at?: string
           received_by?: string | null
           updated_at?: string
-          warehouse_id: string
+          warehouse_id?: string | null
         }
         Update: {
           created_at?: string
@@ -3111,7 +3111,7 @@ export type Database = {
           received_at?: string
           received_by?: string | null
           updated_at?: string
-          warehouse_id?: string
+          warehouse_id?: string | null
         }
         Relationships: [
           {
