@@ -53,8 +53,8 @@ Deno.serve(async (req) => {
   const deduped = Array.from(map.values());
   let inserted = 0;
   const B = 500;
-  for (let i = 0; i < records.length; i += B) {
-    const chunk = records.slice(i, i + B);
+  for (let i = 0; i < deduped.length; i += B) {
+    const chunk = deduped.slice(i, i + B);
     const { error } = await admin
       .from("article_stock_locations")
       .upsert(chunk, { onConflict: "art_nr,lager,lagerpl,behaelter,charge_nr" });
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     }
     inserted += chunk.length;
   }
-  return new Response(JSON.stringify({ ok: true, total: records.length, inserted }), {
+  return new Response(JSON.stringify({ ok: true, total: records.length, deduped: deduped.length, inserted }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
