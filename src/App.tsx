@@ -193,6 +193,7 @@ function AuthenticatedApp() {
         <Route path="/admin/storage-locations" element={<ProtectedRoute><AdminStorageLocations /></ProtectedRoute>} />
         <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />
         <Route path="/admin/disposition" element={<ProtectedRoute><AdminDisposition /></ProtectedRoute>} />
+        <Route path="/admin/lots" element={<ProtectedRoute><AdminLots /></ProtectedRoute>} />
         <Route path="/products/requests" element={<ProtectedRoute><ProductRequests /></ProtectedRoute>} />
         <Route path="/admin/departments" element={<ProtectedRoute><AdminDepartments /></ProtectedRoute>} />
         <Route path="/admin/workflows" element={<ProtectedRoute><AdminWorkflows /></ProtectedRoute>} />
