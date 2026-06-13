@@ -60,6 +60,8 @@ export default function AdminDeliveries() {
   const [sel, setSel] = useState<Delivery | null>(null);
   const [items, setItems] = useState<DeliveryItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
