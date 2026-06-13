@@ -329,16 +329,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                   {item.href === '/container' && <ContainerUnreadBadge />}
                 </Link>
               ))}
-              <button
-                onClick={() => setBugDialogOpen(true)}
-                className="flex items-center gap-2.5 w-full px-3 py-2 pl-9 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
-              >
-                <Bug className="h-4 w-4" />
-                <span className="flex-1 text-left">Bug / Feedback melden</span>
-              </button>
-              <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-14 text-[12px]')}>
-                <span>Meine Meldungen</span>
-              </Link>
             </>
           )}
 
