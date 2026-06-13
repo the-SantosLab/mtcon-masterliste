@@ -360,7 +360,95 @@ export default function CrmDealDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!poSuggestions && poSuggestions.length > 0} onOpenChange={o => !o && setPoSuggestions(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Bestellvorschläge aus Deal</DialogTitle>
+          </DialogHeader>
+          <p className="text-[11px] text-muted-foreground">
+            Basierend auf den Positionen des Deals und dem aktuellen Bestand. Auswahl je Lieferant separat bestellbar.
+          </p>
+          <div className="space-y-4 max-h-[55vh] overflow-y-auto mt-2">
+            {Object.entries(
+              (poSuggestions ?? []).reduce<Record<string, any[]>>((acc, r) => {
+                const key = r.lief_nr || '__none__';
+                (acc[key] ||= []).push(r);
+                return acc;
+              }, {})
+            ).map(([lief_nr, items]) => {
+              const supplierName = items[0].supplier_name ?? lief_nr;
+              const selectedItems = items.filter(i => poSelection[i.art_nr]);
+              const total = selectedItems.reduce((s, i) => s + Number(i.qty_to_order) * Number(i.unit_price ?? 0), 0);
+              const hasSupplier = lief_nr !== '__none__';
+              return (
+                <div key={lief_nr} className="rounded border border-border bg-card/40 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-foreground">
+                      {hasSupplier ? `${supplierName} · ${lief_nr}` : 'Ohne Stammlieferant'}
+                    </p>
+                    <span className="text-[11px] text-muted-foreground tabular-nums">{formatEUR(total)}</span>
+                  </div>
+                  <table className="w-full text-[11px]">
+                    <thead>
+                      <tr className="text-muted-foreground text-left">
+                        <th className="w-6"></th>
+                        <th>Art-Nr</th>
+                        <th>Bezeichnung</th>
+                        <th className="text-right">Bedarf</th>
+                        <th className="text-right">Bestand</th>
+                        <th className="text-right">Bestellen</th>
+                        <th className="text-right">Preis</th>
+                        <th className="text-right">LZ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map(i => (
+                        <tr key={i.art_nr} className="border-t border-border/40">
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={!!poSelection[i.art_nr]}
+                              onChange={e => setPoSelection(prev => ({ ...prev, [i.art_nr]: e.target.checked }))}
+                            />
+                          </td>
+                          <td className="font-mono text-foreground">{i.art_nr}</td>
+                          <td className="text-foreground/90 truncate max-w-[200px]">{i.description}</td>
+                          <td className="text-right tabular-nums">{Number(i.qty_needed).toLocaleString('de-DE')}</td>
+                          <td className="text-right tabular-nums">{Number(i.on_hand).toLocaleString('de-DE')}</td>
+                          <td className="text-right tabular-nums font-semibold text-amber-300">{Number(i.qty_to_order).toLocaleString('de-DE')}</td>
+                          <td className="text-right tabular-nums">{i.unit_price ? formatEUR(Number(i.unit_price)) : '–'}</td>
+                          <td className="text-right tabular-nums">{i.lieferzeit ?? '–'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex justify-end mt-2">
+                    <Button
+                      size="sm"
+                      className="h-7 text-[11px]"
+                      disabled={!hasSupplier || selectedItems.length === 0 || creatingPo === lief_nr}
+                      onClick={() => createPoForSupplier(lief_nr, supplierName, selectedItems)}
+                    >
+                      {creatingPo === lief_nr ? <Loader2 className="h-3 w-3 animate-spin" /> : `Bestellung anlegen (${selectedItems.length})`}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            {createdCaseId && (
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate(`/cases/${createdCaseId}`)}>
+                Vorgang öffnen
+              </Button>
+            )}
+            <Button size="sm" className="h-8 text-xs" onClick={() => setPoSuggestions(null)}>Schließen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CrmLayout>
+
   );
 }
 
