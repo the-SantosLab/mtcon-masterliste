@@ -3039,6 +3039,7 @@ export type Database = {
           movement_id: string | null
           po_item_id: string
           qty_received: number
+          storage_location_id: string | null
         }
         Insert: {
           created_at?: string
@@ -3051,6 +3052,7 @@ export type Database = {
           movement_id?: string | null
           po_item_id: string
           qty_received: number
+          storage_location_id?: string | null
         }
         Update: {
           created_at?: string
@@ -3063,6 +3065,7 @@ export type Database = {
           movement_id?: string | null
           po_item_id?: string
           qty_received?: number
+          storage_location_id?: string | null
         }
         Relationships: [
           {
@@ -3091,6 +3094,13 @@ export type Database = {
             columns: ["po_item_id"]
             isOneToOne: false
             referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipt_items_storage_location_id_fkey"
+            columns: ["storage_location_id"]
+            isOneToOne: false
+            referencedRelation: "storage_locations"
             referencedColumns: ["id"]
           },
         ]
@@ -6870,6 +6880,22 @@ export type Database = {
           qty_to_order: number
           supplier_name: string
           unit_price: number
+        }[]
+      }
+      suggest_storage_locations: {
+        Args: { _art_nr: string }
+        Returns: {
+          behaelter: string
+          capacity: number
+          code: string
+          current_bestand: number
+          fifo_required: boolean
+          id: string
+          lager: string
+          lagerpl: string
+          reason: string
+          score: number
+          type: Database["public"]["Enums"]["storage_location_type"]
         }[]
       }
       user_department: { Args: { uid?: string }; Returns: string }

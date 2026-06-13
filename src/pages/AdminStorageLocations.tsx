@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MapPin, Plus, Search, Lock, Unlock, Pencil, Trash2 } from 'lucide-react';
+import { MapPin, Plus, Search, Lock, Unlock, Pencil, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 type LocationType = 'regal' | 'kanban' | 'sperrlager' | 'archiv' | 'versand' | 'sonstiges';
@@ -58,6 +58,7 @@ export default function AdminStorageLocations() {
   const [lagerFilter, setLagerFilter] = useState<string>('all');
   const [editing, setEditing] = useState<StorageLocation | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const blankForm = {
     lager: '',
@@ -206,6 +207,54 @@ export default function AdminStorageLocations() {
     load();
   };
 
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const printLabels = (rowsToPrint: StorageLocation[]) => {
+    if (rowsToPrint.length === 0) { toast.error('Keine Auswahl'); return; }
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) { toast.error('Popup wurde blockiert'); return; }
+    const labels = rowsToPrint.map(r => `
+      <div class="label">
+        <div class="hdr">
+          <span class="type">${TYPE_LABEL[r.type]}</span>
+          ${r.fifo_required ? '<span class="fifo">FIFO</span>' : ''}
+          ${r.is_blocked ? '<span class="blk">GESPERRT</span>' : ''}
+        </div>
+        <div class="code">${r.code}</div>
+        <div class="meta">
+          <div><b>Lager:</b> ${r.lager}</div>
+          <div><b>Platz:</b> ${r.lagerpl}</div>
+          <div><b>Behälter:</b> ${r.behaelter}</div>
+        </div>
+        <div class="barcode">*${r.lager}-${r.lagerpl}-${r.behaelter}*</div>
+      </div>`).join('');
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Etiketten · ${rowsToPrint.length}</title>
+      <style>
+        @page { size: A4; margin: 10mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; margin: 0; padding: 0; background: #fff; color: #000; }
+        .sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+        .label { border: 1.2px solid #000; padding: 5mm; page-break-inside: avoid; min-height: 50mm; }
+        .hdr { display: flex; gap: 6px; align-items: center; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; }
+        .hdr .type { background:#000; color:#fff; padding: 1px 6px; border-radius: 2px; }
+        .hdr .fifo { background:#f59e0b; color:#000; padding: 1px 6px; border-radius: 2px; font-weight: 700; }
+        .hdr .blk { background:#dc2626; color:#fff; padding: 1px 6px; border-radius: 2px; font-weight: 700; }
+        .code { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 22pt; font-weight: 700; margin: 4mm 0 2mm; letter-spacing: 1px; }
+        .meta { display: flex; gap: 10mm; font-size: 9pt; }
+        .barcode { margin-top: 5mm; font-family: 'Libre Barcode 39', 'Code39', monospace; font-size: 28pt; text-align: center; letter-spacing: 2px; border-top: 1px dashed #999; padding-top: 2mm; }
+      </style>
+      <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+      </head><body><div class="sheet">${labels}</div>
+      <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));</script>
+      </body></html>`);
+    w.document.close();
+  };
+
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
@@ -219,9 +268,19 @@ export default function AdminStorageLocations() {
               Stammdaten für alle physischen Lagerplätze – Basis für Einlagerung, Etiketten und Sperrlogik.
             </p>
           </div>
-          <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Neuer Lagerplatz
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selected.size === 0}
+              onClick={() => printLabels(rows.filter(r => selected.has(r.id)))}
+            >
+              <Printer className="h-4 w-4 mr-1" /> Etiketten ({selected.size})
+            </Button>
+            <Button onClick={openCreate} size="sm">
+              <Plus className="h-4 w-4 mr-1" /> Neuer Lagerplatz
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
@@ -261,6 +320,16 @@ export default function AdminStorageLocations() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && filtered.every(r => selected.has(r.id))}
+                    onChange={e => {
+                      if (e.target.checked) setSelected(new Set([...selected, ...filtered.map(r => r.id)]));
+                      else setSelected(prev => { const n = new Set(prev); filtered.forEach(r => n.delete(r.id)); return n; });
+                    }}
+                  />
+                </TableHead>
                 <TableHead className="text-[10px] uppercase">Code</TableHead>
                 <TableHead className="text-[10px] uppercase">Typ</TableHead>
                 <TableHead className="text-[10px] uppercase">FIFO</TableHead>
@@ -272,14 +341,17 @@ export default function AdminStorageLocations() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Lade…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Lade…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Keine Lagerplätze gefunden.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Keine Lagerplätze gefunden.</TableCell></TableRow>
               ) : filtered.map(r => (
                 <TableRow key={r.id}>
+                  <TableCell>
+                    <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} />
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{r.code}</TableCell>
                   <TableCell><Badge variant={TYPE_VARIANT[r.type]}>{TYPE_LABEL[r.type]}</Badge></TableCell>
-                  <TableCell className="text-xs">{r.fifo_required ? 'Ja' : '—'}</TableCell>
+                  <TableCell className="text-xs">{r.fifo_required ? <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 text-[10px] font-semibold">FIFO</span> : '—'}</TableCell>
                   <TableCell className="text-xs tabular-nums">{r.capacity ?? '—'}</TableCell>
                   <TableCell>
                     {r.is_blocked
@@ -289,6 +361,9 @@ export default function AdminStorageLocations() {
                   <TableCell className="text-xs text-muted-foreground max-w-[260px] truncate">{r.note ?? '—'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => printLabels([r])} title="Etikett drucken">
+                        <Printer className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => toggleBlock(r)} title={r.is_blocked ? 'Freigeben' : 'Sperren'}>
                         {r.is_blocked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                       </Button>

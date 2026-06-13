@@ -554,6 +554,10 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   const [lotsExt, setLotsExt] = useState<Record<string, string>>({});
   const [expiries, setExpiries] = useState<Record<string, string>>({});
   const [lotDup, setLotDup] = useState<Record<string, { current_qty: number; total_received: number; last: string } | null>>({});
+  const [locSel, setLocSel] = useState<Record<string, { id: string; code: string; fifo: boolean } | null>>({});
+  const [locSugg, setLocSugg] = useState<Record<string, any[]>>({});
+  const [locSearch, setLocSearch] = useState<Record<string, string>>({});
+  const [locResults, setLocResults] = useState<Record<string, any[]>>({});
   const [warehouseId, setWarehouseId] = useState<string>('');
   const [deliveryNo, setDeliveryNo] = useState('');
   const [notes, setNotes] = useState('');
@@ -562,7 +566,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   useEffect(() => {
     if (!po) return;
     setWarehouseId(po.warehouse_id ?? warehouses.find(w => w.is_default)?.id ?? warehouses[0]?.id ?? '');
-    setDeliveryNo(''); setNotes(''); setQtys({}); setLots({}); setLotsExt({}); setExpiries({}); setLotDup({});
+    setDeliveryNo(''); setNotes(''); setQtys({}); setLots({}); setLotsExt({}); setExpiries({}); setLotDup({}); setLocSel({}); setLocSugg({}); setLocSearch({}); setLocResults({});
     (async () => {
       const { data } = await (supabase as any).from('purchase_order_items')
         .select('*, articles(matchcode,bezeich_1,me)')
@@ -606,6 +610,29 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
     setQtys(init);
   };
 
+  const loadSuggestions = async (it: POItem) => {
+    const { data, error } = await (supabase as any).rpc('suggest_storage_locations', { _art_nr: it.art_nr });
+    if (error) { toast.error('Vorschlag fehlgeschlagen: ' + error.message); return; }
+    const arr = (data ?? []) as any[];
+    setLocSugg(s => ({ ...s, [it.id]: arr }));
+    if (arr.length > 0 && !locSel[it.id]) {
+      setLocSel(s => ({ ...s, [it.id]: { id: arr[0].id, code: arr[0].code, fifo: arr[0].fifo_required } }));
+    } else if (arr.length === 0) {
+      toast.message('Kein freier oder bestehender Lagerplatz gefunden');
+    }
+  };
+
+  const searchLocations = async (itemId: string, q: string) => {
+    setLocSearch(s => ({ ...s, [itemId]: q }));
+    if (!q.trim()) { setLocResults(s => ({ ...s, [itemId]: [] })); return; }
+    const { data } = await (supabase as any).from('storage_locations')
+      .select('id, code, type, fifo_required, is_blocked')
+      .ilike('code', `%${q.trim()}%`)
+      .eq('is_blocked', false)
+      .order('code').limit(8);
+    setLocResults(s => ({ ...s, [itemId]: (data ?? []) as any[] }));
+  };
+
   const save = async () => {
     if (!po) return;
     if (!warehouseId) { toast.error('Lager wählen'); return; }
@@ -635,6 +662,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
       lot_no: (lots[x.it.id] || '').trim() || null,
       lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
       expiry_date: expiries[x.it.id] || null,
+      storage_location_id: locSel[x.it.id]?.id ?? null,
     }));
     const { error: itemErr } = await (supabase as any).from('goods_receipt_items').insert(rows);
     setSaving(false);
@@ -692,6 +720,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                   <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Offen</th>
                   <th className="text-right px-2 py-1.5 w-24">Buchen</th>
+                  <th className="text-left px-2 py-1.5 w-44">Lagerplatz</th>
                   <th className="text-left px-2 py-1.5 w-40">Charge</th>
                   <th className="text-left px-2 py-1.5 w-32">Ext. Charge</th>
                   <th className="text-left px-2 py-1.5 w-36">MHD</th>
@@ -713,6 +742,47 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                           value={qtys[it.id] ?? ''}
                           onChange={e => setQtys(q => ({ ...q, [it.id]: e.target.value }))}
                           className="h-7 text-right" />
+                      </td>
+                      <td className="px-2 py-1">
+                        <div className="flex gap-1">
+                          <Input
+                            value={locSearch[it.id] ?? locSel[it.id]?.code ?? ''}
+                            onChange={e => searchLocations(it.id, e.target.value)}
+                            placeholder="Code suchen"
+                            className="h-7 text-xs font-mono"
+                          />
+                          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-[10px]" onClick={() => loadSuggestions(it)} title="Vorschlag laden">VS</Button>
+                        </div>
+                        {locSel[it.id] && (
+                          <div className="mt-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            ✓ {locSel[it.id]!.code}
+                            {locSel[it.id]!.fifo && <span className="px-1 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 text-[9px]">FIFO</span>}
+                            <button type="button" onClick={() => { setLocSel(s => ({ ...s, [it.id]: null })); setLocSearch(s => ({ ...s, [it.id]: '' })); }} className="ml-1 underline">×</button>
+                          </div>
+                        )}
+                        {(locSugg[it.id] && locSugg[it.id].length > 0) && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {locSugg[it.id].slice(0, 4).map((s: any) => (
+                              <button key={s.id} type="button"
+                                onClick={() => { setLocSel(x => ({ ...x, [it.id]: { id: s.id, code: s.code, fifo: s.fifo_required } })); setLocSugg(x => ({ ...x, [it.id]: [] })); setLocSearch(x => ({ ...x, [it.id]: '' })); }}
+                                className="px-1.5 py-0.5 rounded border border-border bg-card/60 hover:bg-card text-[10px] font-mono"
+                                title={s.reason}>
+                                {s.code}{s.fifo_required ? ' ⏱' : ''}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {(locResults[it.id] && locResults[it.id].length > 0 && (locSearch[it.id] ?? '').length > 0) && (
+                          <div className="mt-1 rounded border border-border bg-popover max-h-32 overflow-y-auto">
+                            {locResults[it.id].map((r: any) => (
+                              <button key={r.id} type="button"
+                                onClick={() => { setLocSel(x => ({ ...x, [it.id]: { id: r.id, code: r.code, fifo: r.fifo_required } })); setLocResults(x => ({ ...x, [it.id]: [] })); setLocSearch(x => ({ ...x, [it.id]: '' })); }}
+                                className="w-full text-left px-2 py-1 text-[11px] font-mono hover:bg-muted">
+                                {r.code} <span className="text-muted-foreground">· {r.type}{r.fifo_required ? ' · FIFO' : ''}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="px-2 py-1">
                         <Input
