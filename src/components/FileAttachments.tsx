@@ -99,11 +99,16 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleOpen = async (fileName: string) => {
+    // iOS Safari: open the tab synchronously inside the click handler,
+    // then set its location once the signed URL is ready. Otherwise the
+    // popup blocker eats the window.open() and nothing happens.
+    const win = window.open('', '_blank');
     const url = await getSignedUrl(fileName);
-    if (!url) return;
+    if (!url) { win?.close(); return; }
     const isPdf = fileName.toLowerCase().endsWith('.pdf');
     if (!isPdf) {
-      window.open(url, '_blank');
+      if (win) win.location.href = url;
+      else window.location.href = url;
       return;
     }
     try {
@@ -112,22 +117,28 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
       const buf = await res.arrayBuffer();
       const blob = new Blob([buf], { type: 'application/pdf' });
       const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank');
+      if (win) win.location.href = blobUrl;
+      else window.location.href = blobUrl;
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (err: any) {
       toast.error('PDF konnte nicht geladen werden');
-      window.open(url, '_blank');
+      if (win) win.location.href = url;
+      else window.location.href = url;
     }
   };
 
   const handleDownload = async (fileName: string) => {
+    // Same iOS workaround: pre-open the tab synchronously.
+    const win = window.open('', '_blank');
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
+      win?.close();
       toastError(null, 'case_attachment', 'Download fehlgeschlagen');
       return;
     }
-    window.open(data.signedUrl, '_blank');
+    if (win) win.location.href = data.signedUrl;
+    else window.location.href = data.signedUrl;
   };
 
   const handleDelete = async (fileName: string) => {
