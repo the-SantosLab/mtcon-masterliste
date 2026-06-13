@@ -203,6 +203,7 @@ export default function Dashboard() {
   // Falls kein Filter aktiv -> alle aktiven Vorgänge
   const filteredActive = useMemo(() => {
     let pool = active;
+    if (scope === 'mine') pool = pool.filter(c => c.assignee_id === user?.id);
     if (activeFilters.length > 0) {
       pool = pool.filter(c => activeFilters.some(k => matchesFilter(c, k, today, weekEnd)));
     }
@@ -217,7 +218,7 @@ export default function Dashboard() {
       }
     }
     return pool;
-  }, [active, activeFilters, today, weekEnd, dateRangeFilter]);
+  }, [active, activeFilters, today, weekEnd, dateRangeFilter, scope, user]);
 
   // Säulendaten: pro Bucket je Status ein Wert (Stacked Bar)
   const weekChart = useMemo(() => {
