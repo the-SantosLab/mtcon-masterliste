@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MapPin, Plus, Search, Lock, Unlock, Pencil, Trash2 } from 'lucide-react';
+import { MapPin, Plus, Search, Lock, Unlock, Pencil, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 type LocationType = 'regal' | 'kanban' | 'sperrlager' | 'archiv' | 'versand' | 'sonstiges';
