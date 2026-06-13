@@ -22,6 +22,7 @@ import AdminArticles from "./pages/AdminArticles";
 import AdminInventory from "./pages/AdminInventory";
 import AdminStorageLocations from "./pages/AdminStorageLocations";
 import AdminPurchasing from "./pages/AdminPurchasing";
+import AdminDisposition from "./pages/AdminDisposition";
 import ProductRequests from "./pages/ProductRequests";
 import AdminDepartments from "./pages/AdminDepartments";
 
