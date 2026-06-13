@@ -692,20 +692,29 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                   <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Best.</th>
                   <th className="text-right px-2 py-1.5">Geliefert</th>
+          <div className="rounded border border-border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
+                <tr>
+                  <th className="text-left px-2 py-1.5">Pos</th>
+                  <th className="text-left px-2 py-1.5">Artikel</th>
+                  <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Offen</th>
-                  <th className="text-right px-2 py-1.5 w-32">Jetzt buchen</th>
+                  <th className="text-right px-2 py-1.5 w-24">Buchen</th>
+                  <th className="text-left px-2 py-1.5 w-40">Charge</th>
+                  <th className="text-left px-2 py-1.5 w-32">Ext. Charge</th>
+                  <th className="text-left px-2 py-1.5 w-36">MHD</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map(it => {
                   const open = Number(it.qty_ordered) - Number(it.qty_received);
+                  const dup = lotDup[it.id];
                   return (
-                    <tr key={it.id} className="border-t border-border">
+                    <tr key={it.id} className="border-t border-border align-top">
                       <td className="px-2 py-1.5 text-muted-foreground">{it.position}</td>
                       <td className="px-2 py-1.5 font-mono text-xs">{it.art_nr}</td>
                       <td className="px-2 py-1.5">{it.description || it.articles?.bezeich_1 || it.articles?.matchcode}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums">{Number(it.qty_ordered)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{Number(it.qty_received)}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums font-medium">{open}</td>
                       <td className="px-2 py-1">
                         <Input type="number" step="0.001" min="0" max={open}
@@ -713,6 +722,35 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                           value={qtys[it.id] ?? ''}
                           onChange={e => setQtys(q => ({ ...q, [it.id]: e.target.value }))}
                           className="h-7 text-right" />
+                      </td>
+                      <td className="px-2 py-1">
+                        <Input
+                          value={lots[it.id] ?? ''}
+                          onChange={e => setLots(s => ({ ...s, [it.id]: e.target.value }))}
+                          className="h-7 text-xs font-mono"
+                          placeholder="Chargen-Nr"
+                        />
+                        {dup && (
+                          <div className="mt-0.5 text-[10px] text-amber-600 dark:text-amber-400">
+                            Bestehend: {dup.current_qty.toLocaleString('de-DE')} (Σ {dup.total_received.toLocaleString('de-DE')}) → wird ergänzt
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-2 py-1">
+                        <Input
+                          value={lotsExt[it.id] ?? ''}
+                          onChange={e => setLotsExt(s => ({ ...s, [it.id]: e.target.value }))}
+                          className="h-7 text-xs font-mono"
+                          placeholder="optional"
+                        />
+                      </td>
+                      <td className="px-2 py-1">
+                        <Input
+                          type="date"
+                          value={expiries[it.id] ?? ''}
+                          onChange={e => setExpiries(s => ({ ...s, [it.id]: e.target.value }))}
+                          className="h-7 text-xs"
+                        />
                       </td>
                     </tr>
                   );
