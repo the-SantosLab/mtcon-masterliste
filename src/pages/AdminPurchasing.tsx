@@ -146,7 +146,7 @@ export default function AdminPurchasing() {
                     </tr>
                   );})}
                   {pos.length === 0 && (
-                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
+                    <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
                   )}
                 </tbody>
               </table>
