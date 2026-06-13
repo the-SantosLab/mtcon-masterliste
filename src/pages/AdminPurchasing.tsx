@@ -690,15 +690,6 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                   <th className="text-left px-2 py-1.5">Pos</th>
                   <th className="text-left px-2 py-1.5">Artikel</th>
                   <th className="text-left px-2 py-1.5">Bezeichnung</th>
-                  <th className="text-right px-2 py-1.5">Best.</th>
-                  <th className="text-right px-2 py-1.5">Geliefert</th>
-          <div className="rounded border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
-                <tr>
-                  <th className="text-left px-2 py-1.5">Pos</th>
-                  <th className="text-left px-2 py-1.5">Artikel</th>
-                  <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Offen</th>
                   <th className="text-right px-2 py-1.5 w-24">Buchen</th>
                   <th className="text-left px-2 py-1.5 w-40">Charge</th>
