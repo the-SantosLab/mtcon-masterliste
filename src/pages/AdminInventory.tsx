@@ -810,7 +810,7 @@ function WarehousesTab({ isAdmin }: { isAdmin: boolean }) {
     toast.success('Lager angelegt');
   };
   const remove = async (id: string) => {
-    if (!confirm('Lager wirklich löschen? Bestände und Bewegungen bleiben unberührt, falls verknüpft schlägt der Vorgang fehl.')) return;
+    if (!confirm('Lager wirklich löschen?\n\nAlle Lagerbewegungen und Bestände dieses Lagers werden mitgelöscht. Wareneingänge, Bestellungen und Lieferpositionen bleiben erhalten, das Lager-Feld wird dort geleert.')) return;
     const { error } = await (supabase as any).from('warehouses').delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
     fetchData();
