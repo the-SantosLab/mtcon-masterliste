@@ -720,6 +720,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                   <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Offen</th>
                   <th className="text-right px-2 py-1.5 w-24">Buchen</th>
+                  <th className="text-left px-2 py-1.5 w-44">Lagerplatz</th>
                   <th className="text-left px-2 py-1.5 w-40">Charge</th>
                   <th className="text-left px-2 py-1.5 w-32">Ext. Charge</th>
                   <th className="text-left px-2 py-1.5 w-36">MHD</th>
