@@ -4666,6 +4666,7 @@ export type Database = {
           notes: string | null
           order_id: string
           position: number
+          qty_delivered: number
           quantity: number
           sku: string | null
           tax_rate: number | null
@@ -4681,6 +4682,7 @@ export type Database = {
           notes?: string | null
           order_id: string
           position?: number
+          qty_delivered?: number
           quantity?: number
           sku?: string | null
           tax_rate?: number | null
@@ -4696,6 +4698,7 @@ export type Database = {
           notes?: string | null
           order_id?: string
           position?: number
+          qty_delivered?: number
           quantity?: number
           sku?: string | null
           tax_rate?: number | null
