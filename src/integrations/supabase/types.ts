@@ -5889,6 +5889,13 @@ export type Database = {
             foreignKeyName: "purchase_orders_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
+            referencedRelation: "supplier_rating_summary"
+            referencedColumns: ["supplier_id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
@@ -6504,6 +6511,77 @@ export type Database = {
             foreignKeyName: "supplier_invoices_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
+            referencedRelation: "supplier_rating_summary"
+            referencedColumns: ["supplier_id"]
+          },
+          {
+            foreignKeyName: "supplier_invoices_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_ratings: {
+        Row: {
+          case_id: string | null
+          comment: string | null
+          communication: number
+          created_at: string
+          delivery: number
+          id: string
+          price: number
+          quality: number
+          rated_by: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          comment?: string | null
+          communication: number
+          created_at?: string
+          delivery: number
+          id?: string
+          price: number
+          quality: number
+          rated_by: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          comment?: string | null
+          communication?: number
+          created_at?: string
+          delivery?: number
+          id?: string
+          price?: number
+          quality?: number
+          rated_by?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_ratings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_ratings_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_rating_summary"
+            referencedColumns: ["supplier_id"]
+          },
+          {
+            foreignKeyName: "supplier_ratings_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
@@ -7051,6 +7129,19 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      supplier_rating_summary: {
+        Row: {
+          avg_communication: number | null
+          avg_delivery: number | null
+          avg_overall: number | null
+          avg_price: number | null
+          avg_quality: number | null
+          rating_count: number | null
+          supplier_id: string | null
+          supplier_name: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
