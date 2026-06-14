@@ -144,7 +144,7 @@ export default function AdminCapacityPlan() {
               {profiles.length === 0 ? <tr><td colSpan={weeks.length+1} className="p-6 text-center text-muted-foreground">Keine Mitarbeiter in dieser Abteilung</td></tr>
               : profiles.map(p => (
                 <tr key={p.id} className="border-t border-border/40">
-                  <td className="p-3 sticky left-0 bg-background">{p.full_name || '—'}</td>
+                  <td className="p-3 sticky left-0 bg-background">{p.display_name || '—'}</td>
                   {weeks.map(w => {
                     const ws = fmtIso(w);
                     const cap = capMap.get(`${p.id}|${ws}`);
@@ -190,7 +190,7 @@ export default function AdminCapacityPlan() {
                 <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                   <span>{c.estimated_hours != null ? `${c.estimated_hours} h` : 'keine h'}</span>
                   <span>{c.planned_week || 'keine KW'}</span>
-                  <span>{c.assigned_to ? profiles.find(p => p.id === c.assigned_to)?.full_name || '—' : 'nicht zugewiesen'}</span>
+                  <span>{c.assigned_to ? profiles.find(p => p.id === c.assigned_to)?.display_name || '—' : 'nicht zugewiesen'}</span>
                   <Pencil className="h-3 w-3" />
                 </div>
               </button>
@@ -203,7 +203,7 @@ export default function AdminCapacityPlan() {
             <DialogHeader><DialogTitle>Kapazität bearbeiten</DialogTitle></DialogHeader>
             {editCap && (
               <div className="space-y-3">
-                <div className="text-xs text-muted-foreground">{profiles.find(p => p.id === editCap.user_id)?.full_name} · {editCap.week_start}</div>
+                <div className="text-xs text-muted-foreground">{profiles.find(p => p.id === editCap.user_id)?.display_name} · {editCap.week_start}</div>
                 <div><Label className="text-xs">Stunden / Woche</Label>
                   <Input type="number" step="0.5" value={editCap.capacity_hours} onChange={e => setEditCap({ ...editCap, capacity_hours: Number(e.target.value) })} />
                 </div>
@@ -225,7 +225,7 @@ export default function AdminCapacityPlan() {
                 <div><Label className="text-xs">Bearbeiter</Label>
                   <Select value={editCase.assigned_to || ''} onValueChange={v => setEditCase({ ...editCase, assigned_to: v || null })}>
                     <SelectTrigger><SelectValue placeholder="Wählen…" /></SelectTrigger>
-                    <SelectContent>{profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name || '—'}</SelectItem>)}</SelectContent>
+                    <SelectContent>{profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.display_name || '—'}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div><Label className="text-xs">Geschätzte Stunden</Label>
