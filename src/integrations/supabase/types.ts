@@ -3077,6 +3077,110 @@ export type Database = {
         }
         Relationships: []
       }
+      drawing_versions: {
+        Row: {
+          change_note: string | null
+          drawing_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          status: string
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          drawing_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          drawing_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawing_versions_drawing_id_fkey"
+            columns: ["drawing_id"]
+            isOneToOne: false
+            referencedRelation: "drawings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawings: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          current_version: number
+          current_version_id: string | null
+          drawing_no: string
+          id: string
+          project_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          current_version_id?: string | null
+          drawing_no: string
+          id?: string
+          project_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          current_version_id?: string | null
+          drawing_no?: string
+          id?: string
+          project_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drawings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_items: {
         Row: {
           created_at: string
