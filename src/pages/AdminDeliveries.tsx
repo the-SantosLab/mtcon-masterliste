@@ -24,6 +24,8 @@ type Delivery = {
   ship_to: string | null;
   carrier: string | null;
   tracking_no: string | null;
+  tracking_url: string | null;
+  tracking_pushed_at: string | null;
   notes: string | null;
   created_at: string;
   orders?: { order_no: string; customer_name: string | null } | null;
