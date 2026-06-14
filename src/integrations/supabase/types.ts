@@ -2493,6 +2493,8 @@ export type Database = {
           ship_to: string | null
           status: string
           tracking_no: string | null
+          tracking_pushed_at: string | null
+          tracking_url: string | null
           updated_at: string
         }
         Insert: {
@@ -2508,6 +2510,8 @@ export type Database = {
           ship_to?: string | null
           status?: string
           tracking_no?: string | null
+          tracking_pushed_at?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -2523,6 +2527,8 @@ export type Database = {
           ship_to?: string | null
           status?: string
           tracking_no?: string | null
+          tracking_pushed_at?: string | null
+          tracking_url?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -6705,6 +6711,10 @@ export type Database = {
           _stock_location_id: string
         }
         Returns: Json
+      }
+      build_tracking_url: {
+        Args: { _carrier: string; _tracking_no: string }
+        Returns: string
       }
       can_access_case_chat: {
         Args: { p_case_id: string; p_uid?: string }

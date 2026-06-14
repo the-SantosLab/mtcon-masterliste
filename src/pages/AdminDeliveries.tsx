@@ -24,6 +24,8 @@ type Delivery = {
   ship_to: string | null;
   carrier: string | null;
   tracking_no: string | null;
+  tracking_url: string | null;
+  tracking_pushed_at: string | null;
   notes: string | null;
   created_at: string;
   orders?: { order_no: string; customer_name: string | null } | null;
@@ -144,11 +146,24 @@ export default function AdminDeliveries() {
     if (!sel) return;
     const { error } = await (supabase.from('deliveries' as any).update({
       status: sel.status, delivery_date: sel.delivery_date, ship_to: sel.ship_to,
-      carrier: sel.carrier, tracking_no: sel.tracking_no, notes: sel.notes,
+      carrier: sel.carrier, tracking_no: sel.tracking_no, tracking_url: sel.tracking_url, notes: sel.notes,
     }).eq('id', sel.id)) as any;
     if (error) return toast.error(error.message);
     toast.success('Gespeichert');
     setSel(null); load();
+  };
+
+  const pushTracking = async () => {
+    if (!sel) return;
+    if (!sel.tracking_no) return toast.error('Tracking-Nr. fehlt');
+    // Reset tracking_pushed_at and re-update tracking_no to trigger push
+    await (supabase.from('deliveries' as any).update({ tracking_pushed_at: null }).eq('id', sel.id)) as any;
+    const { error } = await (supabase.from('deliveries' as any).update({
+      tracking_no: sel.tracking_no, tracking_url: sel.tracking_url, carrier: sel.carrier, status: 'shipped',
+    }).eq('id', sel.id)) as any;
+    if (error) return toast.error(error.message);
+    toast.success('Tracking an Vertrieb gepusht');
+    open(sel);
   };
 
   const ship = async () => {
@@ -266,8 +281,14 @@ export default function AdminDeliveries() {
                       <SelectContent>{Object.entries(STATUS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
+                  <div className="col-span-2"><Label className="text-xs">Tracking-URL (optional, sonst auto aus Spediteur)</Label><Input value={sel.tracking_url || ''} placeholder="https://…" onChange={e => setSel({ ...sel, tracking_url: e.target.value })} /></div>
                   <div className="col-span-2"><Label className="text-xs">Lieferadresse</Label><Textarea rows={2} value={sel.ship_to || ''} onChange={e => setSel({ ...sel, ship_to: e.target.value })} /></div>
                   <div className="col-span-2"><Label className="text-xs">Notizen</Label><Textarea rows={2} value={sel.notes || ''} onChange={e => setSel({ ...sel, notes: e.target.value })} /></div>
+                  {sel.tracking_pushed_at && (
+                    <div className="col-span-2 text-[11px] text-emerald-400">
+                      Tracking an Vertrieb gepusht am {format(new Date(sel.tracking_pushed_at), 'dd.MM.yyyy HH:mm')}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -306,6 +327,12 @@ export default function AdminDeliveries() {
               )}
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>
+              )}
+              {sel?.status === 'shipped' && sel.tracking_no && (
+                <Button variant="outline" onClick={pushTracking}>
+                  <Truck className="h-4 w-4 mr-1" />
+                  {sel.tracking_pushed_at ? 'Tracking erneut pushen' : 'Tracking pushen'}
+                </Button>
               )}
               {sel?.status === 'shipped' && (
                 existingInvoiceId
