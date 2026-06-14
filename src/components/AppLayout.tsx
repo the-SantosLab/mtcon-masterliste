@@ -12,7 +12,7 @@ import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -186,6 +186,7 @@ const erpItems = [
   { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange },
   { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText },
   { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star },
+  { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp },
   { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
 ];
 
@@ -205,7 +206,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     location.pathname.startsWith('/notes')
   );
   const [erpOpen, setErpOpen] = useState(
-    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/admin/articles'].some(p => location.pathname.startsWith(p))
+    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/admin/articles'].some(p => location.pathname.startsWith(p))
   );
   const [systemOpen, setSystemOpen] = useState(
     ['/support', '/docs', '/container', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
