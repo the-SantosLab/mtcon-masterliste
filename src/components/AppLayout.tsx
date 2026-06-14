@@ -12,7 +12,7 @@ import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp, FolderTree,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -154,6 +154,7 @@ const adminItems = [
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
   { href: '/admin/container-access', label: 'Container-Zugriff', icon: Lock },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
+  { href: '/admin/folder-templates', label: 'Ordner-Vorlagen', icon: FolderTree },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
   { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, masterOnly: true },
 ];
