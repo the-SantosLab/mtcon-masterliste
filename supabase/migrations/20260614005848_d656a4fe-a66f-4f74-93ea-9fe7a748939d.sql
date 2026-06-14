@@ -1,0 +1,1 @@
+ALTER VIEW public.supplier_rating_summary SET (security_invoker = true);
