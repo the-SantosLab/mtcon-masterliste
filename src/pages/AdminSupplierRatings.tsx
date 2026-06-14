@@ -124,7 +124,7 @@ export default function AdminSupplierRatings() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="overflow-x-auto -mx-2 px-2"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Lieferant</TableHead>
@@ -156,7 +156,7 @@ export default function AdminSupplierRatings() {
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Keine Daten</TableCell></TableRow>
                 )}
               </TableBody>
-            </Table>
+            </Table></div>
           </CardContent>
         </Card>
 

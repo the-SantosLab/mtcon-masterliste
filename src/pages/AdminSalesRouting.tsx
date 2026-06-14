@@ -105,7 +105,7 @@ export default function AdminSalesRouting() {
           <CardHeader className="pb-3"><CardTitle className="text-sm">Regeln (Priorität aufsteigend)</CardTitle></CardHeader>
           <CardContent>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-              <Table>
+              <div className="overflow-x-auto -mx-2 px-2"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Aktiv</TableHead>
@@ -137,7 +137,7 @@ export default function AdminSalesRouting() {
                   ))}
                   {rules.length === 0 && <TableRow><TableCell colSpan={9} className="text-xs text-muted-foreground text-center py-6">Noch keine Regeln</TableCell></TableRow>}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>

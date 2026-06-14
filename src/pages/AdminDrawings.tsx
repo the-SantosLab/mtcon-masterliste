@@ -122,7 +122,7 @@ export default function AdminDrawings() {
           </Select>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
               <tr>
@@ -171,7 +171,7 @@ export default function AdminDrawings() {
                   </div>
                   <Button size="sm" onClick={() => setUploadOpen(true)}><Upload className="h-4 w-4 mr-1" /> Neue Version hochladen</Button>
                 </div>
-                <Card className="overflow-hidden">
+                <Card className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
                       <tr>
