@@ -51,6 +51,7 @@ import AdminDrawings from "./pages/AdminDrawings";
 import AdminFolderTemplates from "./pages/AdminFolderTemplates";
 import AdminSupplierRatings from "./pages/AdminSupplierRatings";
 import AdminPriceManagement from "./pages/AdminPriceManagement";
+import AdminAiArticleFromPdf from "./pages/AdminAiArticleFromPdf";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
 
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
@@ -230,6 +231,7 @@ function AuthenticatedApp() {
         <Route path="/admin/folder-templates" element={<ProtectedRoute><AdminFolderTemplates /></ProtectedRoute>} />
         <Route path="/lieferantenbewertung" element={<ProtectedRoute><AdminSupplierRatings /></ProtectedRoute>} />
         <Route path="/preismanagement" element={<ProtectedRoute><AdminPriceManagement /></ProtectedRoute>} />
+        <Route path="/ki-artikel" element={<ProtectedRoute><AdminAiArticleFromPdf /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
