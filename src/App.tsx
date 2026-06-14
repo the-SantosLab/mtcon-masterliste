@@ -48,6 +48,7 @@ import AdminSupplierInvoices from "./pages/AdminSupplierInvoices";
 import AdminPurchasingReport from "./pages/AdminPurchasingReport";
 import AdminCapacityPlan from "./pages/AdminCapacityPlan";
 import AdminDrawings from "./pages/AdminDrawings";
+import AdminFolderTemplates from "./pages/AdminFolderTemplates";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
 
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
@@ -224,6 +225,7 @@ function AuthenticatedApp() {
         <Route path="/reporting/einkauf" element={<ProtectedRoute><AdminPurchasingReport /></ProtectedRoute>} />
         <Route path="/kapazitaet" element={<ProtectedRoute><AdminCapacityPlan /></ProtectedRoute>} />
         <Route path="/zeichnungen" element={<ProtectedRoute><AdminDrawings /></ProtectedRoute>} />
+        <Route path="/admin/folder-templates" element={<ProtectedRoute><AdminFolderTemplates /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
