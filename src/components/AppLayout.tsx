@@ -169,7 +169,8 @@ const crmItems = [
   { href: '/crm/outbound', label: 'Outbound', icon: Send },
   { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
   { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
-  { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
+ { href: '/crm/settings/routing', label: 'Auto-Routing', icon: Workflow },
+ { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
 ];
 
 const erpItems = [
