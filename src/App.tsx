@@ -50,6 +50,7 @@ import AdminCapacityPlan from "./pages/AdminCapacityPlan";
 import AdminDrawings from "./pages/AdminDrawings";
 import AdminFolderTemplates from "./pages/AdminFolderTemplates";
 import AdminSupplierRatings from "./pages/AdminSupplierRatings";
+import AdminPriceManagement from "./pages/AdminPriceManagement";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
 
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
