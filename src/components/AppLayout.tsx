@@ -187,6 +187,7 @@ const erpItems = [
   { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText },
   { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star },
   { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp },
+  { href: '/ki-artikel', label: 'KI-Artikelanlage', icon: Sparkles },
   { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
 ];
 
