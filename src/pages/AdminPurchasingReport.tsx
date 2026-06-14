@@ -187,7 +187,7 @@ export default function AdminPurchasingReport() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </Card>
         </div>
