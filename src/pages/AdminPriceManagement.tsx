@@ -337,7 +337,7 @@ export default function AdminPriceManagement() {
             </div>
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="overflow-x-auto -mx-2 px-2"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Art-Nr</TableHead>
@@ -373,7 +373,7 @@ export default function AdminPriceManagement() {
                       <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">Keine Artikel.</TableCell></TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </Table></div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -420,7 +420,7 @@ export default function AdminPriceManagement() {
                 {bulkPreview.length > 0 && (
                   <Card>
                     <CardContent className="p-0 max-h-96 overflow-auto">
-                      <Table>
+                      <div className="overflow-x-auto -mx-2 px-2"><Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>Art-Nr</TableHead>
@@ -439,7 +439,7 @@ export default function AdminPriceManagement() {
                             </TableRow>
                           ))}
                         </TableBody>
-                      </Table>
+                      </Table></div>
                     </CardContent>
                   </Card>
                 )}
@@ -484,7 +484,7 @@ export default function AdminPriceManagement() {
             </Card>
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="overflow-x-auto -mx-2 px-2"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Art-Nr</TableHead>
@@ -515,7 +515,7 @@ export default function AdminPriceManagement() {
                       <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">Keine geplanten Änderungen.</TableCell></TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </Table></div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -533,7 +533,7 @@ export default function AdminPriceManagement() {
             </div>
             <Card>
               <CardContent className="p-0">
-                <Table>
+                <div className="overflow-x-auto -mx-2 px-2"><Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Datum</TableHead>
@@ -564,7 +564,7 @@ export default function AdminPriceManagement() {
                       <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">Art-Nr eingeben und laden.</TableCell></TableRow>
                     )}
                   </TableBody>
-                </Table>
+                </Table></div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -105,7 +105,7 @@ export default function AdminSalesRouting() {
           <CardHeader className="pb-3"><CardTitle className="text-sm">Regeln (Priorität aufsteigend)</CardTitle></CardHeader>
           <CardContent>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-              <Table>
+              <div className="overflow-x-auto -mx-2 px-2"><Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Aktiv</TableHead>
@@ -137,7 +137,7 @@ export default function AdminSalesRouting() {
                   ))}
                   {rules.length === 0 && <TableRow><TableCell colSpan={9} className="text-xs text-muted-foreground text-center py-6">Noch keine Regeln</TableCell></TableRow>}
                 </TableBody>
-              </Table>
+              </Table></div>
             )}
           </CardContent>
         </Card>
@@ -146,15 +146,15 @@ export default function AdminSalesRouting() {
           <DialogContent className="max-w-xl">
             <DialogHeader><DialogTitle className="text-sm">{edit.id ? 'Regel bearbeiten' : 'Neue Regel'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1"><Label className="text-xs">Name *</Label><Input className="h-8 text-xs" value={edit.name ?? ''} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></div>
                 <div className="space-y-1"><Label className="text-xs">Priorität</Label><Input type="number" className="h-8 text-xs" value={edit.priority ?? 100} onChange={(e) => setEdit({ ...edit, priority: Number(e.target.value) })} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1"><Label className="text-xs">Land</Label><Input className="h-8 text-xs" placeholder="z.B. DE" value={edit.match_country ?? ''} onChange={(e) => setEdit({ ...edit, match_country: e.target.value })} /></div>
                 <div className="space-y-1"><Label className="text-xs">Branche</Label><Input className="h-8 text-xs" value={edit.match_industry ?? ''} onChange={(e) => setEdit({ ...edit, match_industry: e.target.value })} /></div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1"><Label className="text-xs">Quelle</Label><Input className="h-8 text-xs" placeholder="manuell / website / messe …" value={edit.match_source ?? ''} onChange={(e) => setEdit({ ...edit, match_source: e.target.value })} /></div>
                 <div className="space-y-1"><Label className="text-xs">Stichwort (in Name/Notiz/E-Mail)</Label><Input className="h-8 text-xs" value={edit.match_keyword ?? ''} onChange={(e) => setEdit({ ...edit, match_keyword: e.target.value })} /></div>
               </div>

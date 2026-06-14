@@ -168,7 +168,7 @@ export default function AdminPurchasingReport() {
           <Card className="p-4">
             <div className="text-sm font-medium mb-3">Top 10 Lieferanten nach Volumen</div>
             {topSuppliers.length === 0 ? <div className="text-xs text-muted-foreground">Keine Daten</div> : (
-              <table className="w-full text-xs">
+              <div className="overflow-x-auto -mx-2 px-2"><table className="w-full text-xs min-w-[480px]">
                 <thead className="text-[10px] uppercase text-muted-foreground">
                   <tr><th className="text-left p-1">Lieferant</th><th className="text-right p-1">Volumen</th><th className="text-right p-1">POs</th><th className="text-right p-1">Verzug</th><th className="text-right p-1">Rg-Diff</th></tr>
                 </thead>
@@ -187,7 +187,7 @@ export default function AdminPurchasingReport() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </Card>
         </div>
