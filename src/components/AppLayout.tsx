@@ -181,6 +181,7 @@ const erpItems = [
   { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
+  { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
   { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
 ];
 
