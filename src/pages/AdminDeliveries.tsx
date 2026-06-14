@@ -146,11 +146,24 @@ export default function AdminDeliveries() {
     if (!sel) return;
     const { error } = await (supabase.from('deliveries' as any).update({
       status: sel.status, delivery_date: sel.delivery_date, ship_to: sel.ship_to,
-      carrier: sel.carrier, tracking_no: sel.tracking_no, notes: sel.notes,
+      carrier: sel.carrier, tracking_no: sel.tracking_no, tracking_url: sel.tracking_url, notes: sel.notes,
     }).eq('id', sel.id)) as any;
     if (error) return toast.error(error.message);
     toast.success('Gespeichert');
     setSel(null); load();
+  };
+
+  const pushTracking = async () => {
+    if (!sel) return;
+    if (!sel.tracking_no) return toast.error('Tracking-Nr. fehlt');
+    // Reset tracking_pushed_at and re-update tracking_no to trigger push
+    await (supabase.from('deliveries' as any).update({ tracking_pushed_at: null }).eq('id', sel.id)) as any;
+    const { error } = await (supabase.from('deliveries' as any).update({
+      tracking_no: sel.tracking_no, tracking_url: sel.tracking_url, carrier: sel.carrier, status: 'shipped',
+    }).eq('id', sel.id)) as any;
+    if (error) return toast.error(error.message);
+    toast.success('Tracking an Vertrieb gepusht');
+    open(sel);
   };
 
   const ship = async () => {
