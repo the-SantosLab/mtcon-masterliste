@@ -2772,6 +2772,35 @@ export type Database = {
           },
         ]
       }
+      dept_folder_templates: {
+        Row: {
+          bucket: string
+          department_id: string
+          folders: string[]
+          updated_at: string
+        }
+        Insert: {
+          bucket?: string
+          department_id: string
+          folders?: string[]
+          updated_at?: string
+        }
+        Update: {
+          bucket?: string
+          department_id?: string
+          folders?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dept_folder_templates_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: true
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_category_permissions: {
         Row: {
           category_id: string
