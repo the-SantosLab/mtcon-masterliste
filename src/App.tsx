@@ -52,6 +52,7 @@ import AdminFolderTemplates from "./pages/AdminFolderTemplates";
 import AdminSupplierRatings from "./pages/AdminSupplierRatings";
 import AdminPriceManagement from "./pages/AdminPriceManagement";
 import AdminAiArticleFromPdf from "./pages/AdminAiArticleFromPdf";
+import AdminSalesRouting from "./pages/AdminSalesRouting";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
 
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
@@ -232,6 +233,7 @@ function AuthenticatedApp() {
         <Route path="/lieferantenbewertung" element={<ProtectedRoute><AdminSupplierRatings /></ProtectedRoute>} />
         <Route path="/preismanagement" element={<ProtectedRoute><AdminPriceManagement /></ProtectedRoute>} />
         <Route path="/ki-artikel" element={<ProtectedRoute><AdminAiArticleFromPdf /></ProtectedRoute>} />
+        <Route path="/crm/settings/routing" element={<CrmProtectedRoute><AdminSalesRouting /></CrmProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

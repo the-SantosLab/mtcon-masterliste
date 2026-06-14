@@ -4040,6 +4040,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          assigned_to: string | null
           company_name: string
           contact_name: string | null
           converted_company_id: string | null
@@ -4052,12 +4053,14 @@ export type Database = {
           notes: string | null
           phone: string | null
           rejection_reason: string | null
+          routed_by_rule_id: string | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
           website: string | null
         }
         Insert: {
+          assigned_to?: string | null
           company_name: string
           contact_name?: string | null
           converted_company_id?: string | null
@@ -4070,12 +4073,14 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           rejection_reason?: string | null
+          routed_by_rule_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           website?: string | null
         }
         Update: {
+          assigned_to?: string | null
           company_name?: string
           contact_name?: string | null
           converted_company_id?: string | null
@@ -4088,6 +4093,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           rejection_reason?: string | null
+          routed_by_rule_id?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -5981,6 +5987,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sales_routing_rules: {
+        Row: {
+          assigned_to: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          match_country: string | null
+          match_industry: string | null
+          match_keyword: string | null
+          match_source: string | null
+          name: string
+          priority: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          match_country?: string | null
+          match_industry?: string | null
+          match_keyword?: string | null
+          match_source?: string | null
+          name: string
+          priority?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          match_country?: string | null
+          match_industry?: string | null
+          match_keyword?: string | null
+          match_source?: string | null
+          name?: string
+          priority?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       scheduled_price_changes: {
         Row: {
