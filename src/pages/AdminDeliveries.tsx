@@ -328,6 +328,12 @@ export default function AdminDeliveries() {
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>
               )}
+              {sel?.status === 'shipped' && sel.tracking_no && (
+                <Button variant="outline" onClick={pushTracking}>
+                  <Truck className="h-4 w-4 mr-1" />
+                  {sel.tracking_pushed_at ? 'Tracking erneut pushen' : 'Tracking pushen'}
+                </Button>
+              )}
               {sel?.status === 'shipped' && (
                 existingInvoiceId
                   ? <Button variant="outline" onClick={() => navigate('/admin/invoices')}><Receipt className="h-4 w-4 mr-1" /> Rechnung öffnen</Button>
