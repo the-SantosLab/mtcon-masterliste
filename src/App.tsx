@@ -45,6 +45,7 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveries from "./pages/AdminDeliveries";
 import AdminInvoices from "./pages/AdminInvoices";
 import AdminSupplierInvoices from "./pages/AdminSupplierInvoices";
+import AdminPurchasingReport from "./pages/AdminPurchasingReport";
 import AdminContainerAccess from "./pages/AdminContainerAccess";
 
 import { SessionTimeoutGuard } from "@/components/SessionTimeoutGuard";
@@ -218,6 +219,7 @@ function AuthenticatedApp() {
         <Route path="/lieferscheine" element={<ProtectedRoute><AdminDeliveries /></ProtectedRoute>} />
         <Route path="/rechnungen" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
         <Route path="/eingangsrechnungen" element={<ProtectedRoute><AdminSupplierInvoices /></ProtectedRoute>} />
+        <Route path="/reporting/einkauf" element={<ProtectedRoute><AdminPurchasingReport /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
