@@ -6157,6 +6157,181 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_invoice_items: {
+        Row: {
+          art_nr: string | null
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          line_total: number | null
+          match_status: string | null
+          po_item_id: string | null
+          position: number
+          quantity: number
+          tax_rate: number | null
+          unit: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          art_nr?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          line_total?: number | null
+          match_status?: string | null
+          po_item_id?: string | null
+          position?: number
+          quantity?: number
+          tax_rate?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          art_nr?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          line_total?: number | null
+          match_status?: string | null
+          po_item_id?: string | null
+          position?: number
+          quantity?: number
+          tax_rate?: number | null
+          unit?: string | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_invoice_items_po_item_id_fkey"
+            columns: ["po_item_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_invoices: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          attachment_path: string | null
+          booked_at: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          gr_id: string | null
+          id: string
+          invoice_date: string | null
+          invoice_no: string
+          match_diff: number | null
+          match_status: string | null
+          notes: string | null
+          po_id: string | null
+          received_at: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          status: Database["public"]["Enums"]["supplier_invoice_status"]
+          subtotal_amount: number | null
+          supplier_id: string | null
+          supplier_invoice_no: string | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attachment_path?: string | null
+          booked_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          gr_id?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_no: string
+          match_diff?: number | null
+          match_status?: string | null
+          notes?: string | null
+          po_id?: string | null
+          received_at?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["supplier_invoice_status"]
+          subtotal_amount?: number | null
+          supplier_id?: string | null
+          supplier_invoice_no?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attachment_path?: string | null
+          booked_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          gr_id?: string | null
+          id?: string
+          invoice_date?: string | null
+          invoice_no?: string
+          match_diff?: number | null
+          match_status?: string | null
+          notes?: string | null
+          po_id?: string | null
+          received_at?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: Database["public"]["Enums"]["supplier_invoice_status"]
+          subtotal_amount?: number | null
+          supplier_id?: string | null
+          supplier_invoice_no?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_invoices_gr_id_fkey"
+            columns: ["gr_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_invoices_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_invoices_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           address: string | null
@@ -6702,6 +6877,10 @@ export type Database = {
       }
     }
     Functions: {
+      approve_supplier_invoice: {
+        Args: { _approve: boolean; _invoice_id: string; _reason?: string }
+        Returns: undefined
+      }
       archive_old_announcements: { Args: never; Returns: number }
       book_to_sperrlager: {
         Args: {
@@ -6893,6 +7072,7 @@ export type Database = {
         Returns: boolean
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
+      match_supplier_invoice: { Args: { _invoice_id: string }; Returns: Json }
       next_counter: { Args: { p_key: string }; Returns: number }
       next_partner_customer_no: { Args: never; Returns: string }
       next_partner_supplier_code: { Args: never; Returns: string }
@@ -7012,6 +7192,12 @@ export type Database = {
         | "archiv"
         | "versand"
         | "sonstiges"
+      supplier_invoice_status:
+        | "open"
+        | "matched"
+        | "approved"
+        | "rejected"
+        | "booked"
       support_ticket_priority: "low" | "medium" | "high" | "critical"
       support_ticket_status:
         | "open"
@@ -7212,6 +7398,13 @@ export const Constants = {
         "archiv",
         "versand",
         "sonstiges",
+      ],
+      supplier_invoice_status: [
+        "open",
+        "matched",
+        "approved",
+        "rejected",
+        "booked",
       ],
       support_ticket_priority: ["low", "medium", "high", "critical"],
       support_ticket_status: [
