@@ -229,6 +229,7 @@ function AuthenticatedApp() {
         <Route path="/zeichnungen" element={<ProtectedRoute><AdminDrawings /></ProtectedRoute>} />
         <Route path="/admin/folder-templates" element={<ProtectedRoute><AdminFolderTemplates /></ProtectedRoute>} />
         <Route path="/lieferantenbewertung" element={<ProtectedRoute><AdminSupplierRatings /></ProtectedRoute>} />
+        <Route path="/preismanagement" element={<ProtectedRoute><AdminPriceManagement /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
