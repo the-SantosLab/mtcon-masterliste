@@ -281,8 +281,14 @@ export default function AdminDeliveries() {
                       <SelectContent>{Object.entries(STATUS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
+                  <div className="col-span-2"><Label className="text-xs">Tracking-URL (optional, sonst auto aus Spediteur)</Label><Input value={sel.tracking_url || ''} placeholder="https://…" onChange={e => setSel({ ...sel, tracking_url: e.target.value })} /></div>
                   <div className="col-span-2"><Label className="text-xs">Lieferadresse</Label><Textarea rows={2} value={sel.ship_to || ''} onChange={e => setSel({ ...sel, ship_to: e.target.value })} /></div>
                   <div className="col-span-2"><Label className="text-xs">Notizen</Label><Textarea rows={2} value={sel.notes || ''} onChange={e => setSel({ ...sel, notes: e.target.value })} /></div>
+                  {sel.tracking_pushed_at && (
+                    <div className="col-span-2 text-[11px] text-emerald-400">
+                      Tracking an Vertrieb gepusht am {format(new Date(sel.tracking_pushed_at), 'dd.MM.yyyy HH:mm')}
+                    </div>
+                  )}
                 </div>
 
                 <div>
