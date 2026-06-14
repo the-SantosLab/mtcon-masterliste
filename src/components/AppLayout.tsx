@@ -184,6 +184,7 @@ const erpItems = [
   { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
   { href: '/reporting/einkauf', label: 'Reporting Einkauf', icon: Receipt },
   { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange },
+  { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText },
   { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
 ];
 
