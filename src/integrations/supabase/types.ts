@@ -5329,6 +5329,42 @@ export type Database = {
           },
         ]
       }
+      price_change_log: {
+        Row: {
+          art_nr: string
+          change_reason: string | null
+          changed_by: string | null
+          created_at: string
+          effective_date: string | null
+          field_name: string
+          id: string
+          new_value: number | null
+          old_value: number | null
+        }
+        Insert: {
+          art_nr: string
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          effective_date?: string | null
+          field_name: string
+          id?: string
+          new_value?: number | null
+          old_value?: number | null
+        }
+        Update: {
+          art_nr?: string
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          effective_date?: string | null
+          field_name?: string
+          id?: string
+          new_value?: number | null
+          old_value?: number | null
+        }
+        Relationships: []
+      }
       price_list_items: {
         Row: {
           created_at: string
@@ -5945,6 +5981,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduled_price_changes: {
+        Row: {
+          applied: boolean
+          applied_at: string | null
+          art_nr: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          field_name: string
+          id: string
+          new_value: number
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          applied?: boolean
+          applied_at?: string | null
+          art_nr: string
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          field_name: string
+          id?: string
+          new_value: number
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applied?: boolean
+          applied_at?: string | null
+          art_nr?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          field_name?: string
+          id?: string
+          new_value?: number
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       sequence_enrollments: {
         Row: {
