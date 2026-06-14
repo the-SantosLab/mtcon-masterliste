@@ -154,6 +154,7 @@ const adminItems = [
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
   { href: '/admin/container-access', label: 'Container-Zugriff', icon: Lock },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
+  { href: '/admin/folder-templates', label: 'Ordner-Vorlagen', icon: FolderTree },
   { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
   { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, masterOnly: true },
 ];
