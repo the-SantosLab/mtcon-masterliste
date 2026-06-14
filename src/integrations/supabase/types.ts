@@ -1031,6 +1031,47 @@ export type Database = {
         }
         Relationships: []
       }
+      capacity_entries: {
+        Row: {
+          capacity_hours: number
+          created_at: string
+          department_id: string | null
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          capacity_hours?: number
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          capacity_hours?: number
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capacity_entries_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_activity: {
         Row: {
           action: string
@@ -1706,6 +1747,7 @@ export type Database = {
           last_changed_by: string | null
           lock_mode: string
           note: string | null
+          planned_week: string | null
           priority_order: number
           product_code: string | null
           project_article_no: string | null
@@ -1755,6 +1797,7 @@ export type Database = {
           last_changed_by?: string | null
           lock_mode?: string
           note?: string | null
+          planned_week?: string | null
           priority_order?: number
           product_code?: string | null
           project_article_no?: string | null
@@ -1804,6 +1847,7 @@ export type Database = {
           last_changed_by?: string | null
           lock_mode?: string
           note?: string | null
+          planned_week?: string | null
           priority_order?: number
           product_code?: string | null
           project_article_no?: string | null
