@@ -12,7 +12,7 @@ import { CalendarRange, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Dept = { id: string; name: string };
-type Profile = { id: string; full_name: string | null; department_id: string | null };
+type Profile = { id: string; display_name: string | null; department_id: string | null };
 type CaseRow = { id: string; case_no: string | null; title: string | null; assigned_to: string | null; department_id: string | null; estimated_hours: number | null; planned_week: string | null; status: string };
 type Cap = { id: string; user_id: string; week_start: string; capacity_hours: number };
 
@@ -58,8 +58,8 @@ export default function AdminCapacityPlan() {
     if (!deptId) return;
     (async () => {
       const [{ data: p }, { data: c }, { data: cap }] = await Promise.all([
-        supabase.from('users_profile').select('id, full_name, department_id').eq('department_id', deptId).order('full_name'),
-        (supabase.from('cases').select('id, case_no, title, assigned_to, department_id, estimated_hours, planned_week, status').eq('department_id', deptId).neq('status','completed').limit(500)) as any,
+        (supabase.from('users_profile').select('id, display_name, department_id').eq('department_id', deptId).order('display_name')) as any,
+        (supabase.from('cases').select('id, case_no, title, assigned_to, department_id, estimated_hours, planned_week, status').eq('department_id', deptId).neq('status','abgeschlossen').limit(500)) as any,
         (supabase.from('capacity_entries' as any).select('*').gte('week_start', fmtIso(weekStart)).lte('week_start', fmtIso(addDays(weekStart, 6*7)))) as any,
       ]);
       setProfiles(p || []); setCases(c || []); setCaps(cap || []);
