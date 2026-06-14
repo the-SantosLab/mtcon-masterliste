@@ -80,7 +80,7 @@ export default function AdminAiArticleFromPdf() {
       const payload: Record<string, string> = {};
       for (const f of FIELDS) if (data[f.key]?.trim()) payload[f.key] = data[f.key].trim();
       if (memo.trim()) payload.memo_ext = memo.trim();
-      const { error } = await supabase.from('articles').upsert(payload, { onConflict: 'art_nr' });
+      const { error } = await supabase.from('articles').upsert([payload as any], { onConflict: 'art_nr' });
       if (error) throw error;
       toast.success(`Artikel ${payload.art_nr} angelegt`);
       setData({}); setMemo(''); setNotes(''); setConfidence(null); setFile(null);
