@@ -219,8 +219,9 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
               {canDelete && (
                 <button
                   onClick={() => handleDelete(f.name)}
-                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0 opacity-0 group-hover:opacity-100"
-                  title="Löschen"
+                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                  title="Anhang löschen"
+                  aria-label="Anhang löschen"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
