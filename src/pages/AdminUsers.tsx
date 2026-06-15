@@ -178,6 +178,34 @@ export default function AdminUsers() {
     }
   };
 
+  const [resetMfaUser, setResetMfaUser] = useState<ProfileWithRole | null>(null);
+  const [resetMfaLoading, setResetMfaLoading] = useState(false);
+
+  const handleResetMfa = async () => {
+    if (!resetMfaUser) return;
+    setResetMfaLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-mfa`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ user_id: resetMfaUser.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Fehler');
+      toast.success(`2FA für "${resetMfaUser.display_name}" wurde zurückgesetzt (${json.removed ?? 0} Faktor(en) entfernt). Beim nächsten Login kann ein neuer Authenticator eingerichtet werden.`);
+      setResetMfaUser(null);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setResetMfaLoading(false);
+    }
+  };
+
   const generateResetPw = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
     let pw = '';
