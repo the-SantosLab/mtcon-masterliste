@@ -704,6 +704,25 @@ export default function AdminUsers() {
           </DialogContent>
         </Dialog>
 
+        {/* 2FA reset confirmation */}
+        <Dialog open={!!resetMfaUser} onOpenChange={o => { if (!o) setResetMfaUser(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">2FA zurücksetzen — {resetMfaUser?.display_name}</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Alle hinterlegten Authenticator-Faktoren dieses Mitarbeiters werden entfernt. Beim nächsten Login wird die 2FA-Einrichtung neu durchlaufen.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1 h-8 text-xs" onClick={() => setResetMfaUser(null)} disabled={resetMfaLoading}>Abbrechen</Button>
+              <Button variant="destructive" className="flex-1 h-8 text-xs gap-1.5" onClick={handleResetMfa} disabled={resetMfaLoading}>
+                {resetMfaLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Wird zurückgesetzt…</> : <><ShieldOff className="h-3.5 w-3.5" />2FA zurücksetzen</>}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+
         {/* Avatar picker */}
         <Dialog open={avatarPickerOpen} onOpenChange={setAvatarPickerOpen}>
           <DialogContent className="max-w-2xl">
