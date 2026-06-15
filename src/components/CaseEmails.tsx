@@ -192,6 +192,37 @@ export function CaseEmails({ caseId }: Props) {
 
                 <EmailBody html={e.body_html} plain={e.body_plain} />
 
+                {canDelete && (
+                  <div className="flex justify-end">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive transition-colors px-2 py-1 rounded border border-border hover:border-destructive/40"
+                          title="E-Mail löschen"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          E-Mail löschen
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>E-Mail löschen?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Die E-Mail „{e.subject || '(kein Betreff)'}" wird einschließlich aller Anhänge unwiderruflich aus diesem Vorgang entfernt.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteEmail(e)}>
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
+
 
                 {e.attachments.length > 0 && (
                   <div className="space-y-1">
