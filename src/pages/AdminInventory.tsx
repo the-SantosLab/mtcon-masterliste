@@ -121,6 +121,7 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
   const [search, setSearch] = useState('');
   const [onlyLow, setOnlyLow] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [colFilters, setColFilters] = useState<{ art: string; bez: string; lager: string; me: string }>({ art: '', bez: '', lager: '', me: '' });
 
   const fetchData = async () => {
     setLoading(true);
@@ -173,14 +174,27 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
 
   const filtered = rows.filter(r => {
     if (onlyLow && Number(r.quantity) > Number(r.min_quantity)) return false;
-    if (!search) return true;
     const s = search.toLowerCase();
-    return r.art_nr.toLowerCase().includes(s)
-      || (r.articles?.matchcode || '').toLowerCase().includes(s)
-      || (r.articles?.bezeich_1 || '').toLowerCase().includes(s);
+    if (s) {
+      const inGlobal = r.art_nr.toLowerCase().includes(s)
+        || (r.articles?.matchcode || '').toLowerCase().includes(s)
+        || (r.articles?.bezeich_1 || '').toLowerCase().includes(s);
+      if (!inGlobal) return false;
+    }
+    if (colFilters.art && !r.art_nr.toLowerCase().includes(colFilters.art.toLowerCase())) return false;
+    if (colFilters.bez) {
+      const bz = colFilters.bez.toLowerCase();
+      const match = (r.articles?.matchcode || '').toLowerCase().includes(bz)
+        || (r.articles?.bezeich_1 || '').toLowerCase().includes(bz);
+      if (!match) return false;
+    }
+    if (colFilters.lager && !(r.warehouses?.code || '').toLowerCase().includes(colFilters.lager.toLowerCase())) return false;
+    if (colFilters.me && !(r.articles?.me || '').toLowerCase().includes(colFilters.me.toLowerCase())) return false;
+    return true;
   });
 
   const lowCount = rows.filter(r => Number(r.quantity) <= Number(r.min_quantity)).length;
+  const hasColFilter = !!(colFilters.art || colFilters.bez || colFilters.lager || colFilters.me);
 
   return (
     <div className="space-y-3 mt-3">
@@ -210,50 +224,76 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
         >
           <AlertTriangle className="h-3.5 w-3.5 mr-1" />Nur unter Min
         </Button>
+        {hasColFilter && (
+          <Button size="sm" variant="ghost" onClick={() => setColFilters({ art: '', bez: '', lager: '', me: '' })} className="h-8 text-xs">
+            Spaltenfilter zurücksetzen
+          </Button>
+        )}
       </div>
 
-      {/* Desktop-Tabelle */}
+      {/* Desktop-Tabelle mit fixiertem Header und Spaltenfiltern */}
       <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Art.-Nr.</th>
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Bezeichnung</th>
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Lager</th>
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Bestand</th>
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Reserviert</th>
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Verfügbar</th>
-              <th className="px-3 py-2 text-right font-medium text-muted-foreground">Min</th>
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">ME</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {loading && <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
-            {!loading && filtered.length === 0 && (
-              <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">Keine Bestände — über „Bewegungen" anlegen.</td></tr>
-            )}
-            {filtered.map(r => {
-              const low = Number(r.quantity) <= Number(r.min_quantity);
-              const avail = Number(r.available ?? r.quantity);
-              return (
-                <tr key={r.id} className="hover:bg-muted/40">
-                  <td className="px-3 py-2 font-mono">{r.art_nr}</td>
-                  <td className="px-3 py-2 text-foreground truncate max-w-[280px]">
-                    <div>{r.articles?.matchcode || '–'}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">{r.articles?.bezeich_1 || ''}</div>
-                  </td>
-                  <td className="px-3 py-2">{r.warehouses?.code || '–'}</td>
-                  <td className={`px-3 py-2 text-right tabular-nums font-medium ${low ? 'text-amber-500' : ''}`}>{Number(r.quantity).toLocaleString('de-DE')}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.reserved ? Number(r.reserved).toLocaleString('de-DE') : '–'}</td>
-                  <td className={`px-3 py-2 text-right tabular-nums ${avail <= 0 ? 'text-destructive' : 'text-foreground'}`}>{avail.toLocaleString('de-DE')}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{Number(r.min_quantity).toLocaleString('de-DE')}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{r.articles?.me || ''}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="max-h-[calc(100vh-340px)] overflow-auto">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 z-10 bg-card">
+              <tr className="border-b border-border">
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground bg-card">Art.-Nr.</th>
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground bg-card">Bezeichnung</th>
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground bg-card">Lager</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground bg-card">Bestand</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground bg-card">Reserviert</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground bg-card">Verfügbar</th>
+                <th className="px-3 py-2 text-right font-medium text-muted-foreground bg-card">Min</th>
+                <th className="px-3 py-2 text-left font-medium text-muted-foreground bg-card">ME</th>
+              </tr>
+              <tr className="border-b border-border">
+                <th className="px-2 py-1 bg-card">
+                  <Input value={colFilters.art} onChange={e => setColFilters(f => ({ ...f, art: e.target.value }))} placeholder="Filter…" className="h-6 text-[11px]" />
+                </th>
+                <th className="px-2 py-1 bg-card">
+                  <Input value={colFilters.bez} onChange={e => setColFilters(f => ({ ...f, bez: e.target.value }))} placeholder="Filter…" className="h-6 text-[11px]" />
+                </th>
+                <th className="px-2 py-1 bg-card">
+                  <Input value={colFilters.lager} onChange={e => setColFilters(f => ({ ...f, lager: e.target.value }))} placeholder="Filter…" className="h-6 text-[11px]" />
+                </th>
+                <th className="px-2 py-1 bg-card" />
+                <th className="px-2 py-1 bg-card" />
+                <th className="px-2 py-1 bg-card" />
+                <th className="px-2 py-1 bg-card" />
+                <th className="px-2 py-1 bg-card">
+                  <Input value={colFilters.me} onChange={e => setColFilters(f => ({ ...f, me: e.target.value }))} placeholder="Filter…" className="h-6 text-[11px]" />
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {loading && <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">Lade…</td></tr>}
+              {!loading && filtered.length === 0 && (
+                <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">Keine Bestände — über „Bewegungen" anlegen.</td></tr>
+              )}
+              {filtered.map(r => {
+                const low = Number(r.quantity) <= Number(r.min_quantity);
+                const avail = Number(r.available ?? r.quantity);
+                return (
+                  <tr key={r.id} className="hover:bg-muted/40">
+                    <td className="px-3 py-2 font-mono">{r.art_nr}</td>
+                    <td className="px-3 py-2 text-foreground truncate max-w-[280px]">
+                      <div>{r.articles?.matchcode || '–'}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{r.articles?.bezeich_1 || ''}</div>
+                    </td>
+                    <td className="px-3 py-2">{r.warehouses?.code || '–'}</td>
+                    <td className={`px-3 py-2 text-right tabular-nums font-medium ${low ? 'text-amber-500' : ''}`}>{Number(r.quantity).toLocaleString('de-DE')}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.reserved ? Number(r.reserved).toLocaleString('de-DE') : '–'}</td>
+                    <td className={`px-3 py-2 text-right tabular-nums ${avail <= 0 ? 'text-destructive' : 'text-foreground'}`}>{avail.toLocaleString('de-DE')}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{Number(r.min_quantity).toLocaleString('de-DE')}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{r.articles?.me || ''}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
 
       {/* Mobile Karten */}
       <div className="md:hidden space-y-2">
