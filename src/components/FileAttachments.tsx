@@ -142,6 +142,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleDelete = async (fileName: string) => {
+    if (!window.confirm(`Anhang „${displayName(fileName)}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
     const path = `${folderOf(fileName)}/${fileName}`;
     const { error } = await supabase.storage.from(bucket).remove([path]);
     if (error) {
