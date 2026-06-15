@@ -142,6 +142,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleDelete = async (fileName: string) => {
+    if (!window.confirm(`Anhang „${displayName(fileName)}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
     const path = `${folderOf(fileName)}/${fileName}`;
     const { error } = await supabase.storage.from(bucket).remove([path]);
     if (error) {
@@ -218,8 +219,9 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
               {canDelete && (
                 <button
                   onClick={() => handleDelete(f.name)}
-                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0 opacity-0 group-hover:opacity-100"
-                  title="Löschen"
+                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                  title="Anhang löschen"
+                  aria-label="Anhang löschen"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
