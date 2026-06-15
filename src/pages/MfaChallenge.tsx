@@ -67,16 +67,6 @@ export default function MfaChallenge() {
     })();
   }, [session, navigate]);
 
-  if (signedOut) return <Navigate to="/auth" replace />;
-  if (loading || needsMfa === null) {
-    return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
-  }
-  if (!session) return <Navigate to="/auth" replace />;
-  if (!needsMfa) {
-    clearStoredAuthRedirect();
-    return <Navigate to={redirectTarget} replace />;
-  }
-
   const submit = useCallback(async (codeToSubmit: string) => {
     if (!factorId || codeToSubmit.length !== 6 || submitting) return;
     setSubmitting(true);
@@ -92,15 +82,25 @@ export default function MfaChallenge() {
     navigate(redirectTarget, { replace: true });
   }, [factorId, submitting, navigate, redirectTarget]);
 
-  const onFormSubmit = (e: React.FormEvent) => {
+  const onFormSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     void submit(code);
-  };
+  }, [submit, code]);
 
-  const cancel = async () => {
+  const cancel = useCallback(async () => {
     await signOut();
     setSignedOut(true);
-  };
+  }, [signOut]);
+
+  if (signedOut) return <Navigate to="/auth" replace />;
+  if (loading || needsMfa === null) {
+    return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground text-sm">Laden</p></div>;
+  }
+  if (!session) return <Navigate to="/auth" replace />;
+  if (!needsMfa) {
+    clearStoredAuthRedirect();
+    return <Navigate to={redirectTarget} replace />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background glass-bg p-4">
