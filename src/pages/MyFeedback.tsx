@@ -13,7 +13,7 @@ import { de } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
-  open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartet auf Rückmeldung',
+  open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartend',
   resolved: 'Gelöst', closed: 'Geschlossen',
 };
 const STATUS_COLORS: Record<string, string> = {
