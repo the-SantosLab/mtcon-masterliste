@@ -13,7 +13,7 @@ import { de } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 const STATUS_LABELS: Record<string, string> = {
-  open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartet auf Rückmeldung',
+  open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartend',
   resolved: 'Gelöst', closed: 'Geschlossen',
 };
 const STATUS_COLORS: Record<string, string> = {
@@ -26,6 +26,12 @@ const KIND_LABELS: Record<string, string> = {
 };
 const PRIORITY_LABELS: Record<string, string> = {
   low: 'Niedrig', medium: 'Mittel', high: 'Hoch', critical: 'Kritisch',
+};
+const PRIORITY_COLORS: Record<string, string> = {
+  critical: 'bg-[hsl(var(--priority-critical))] text-white',
+  high: 'bg-[hsl(var(--priority-high))] text-white',
+  medium: 'bg-[hsl(var(--priority-medium))] text-white',
+  low: 'bg-[hsl(var(--priority-low))] text-white',
 };
 
 interface Ticket {
@@ -126,7 +132,7 @@ export default function MyFeedback() {
                     <Link to={`/support/${t.id}`} className="hover:text-primary">{t.title}</Link>
                     {t.case_id && <span className="ml-2 text-[10px] text-muted-foreground">(Vorgangsbezug)</span>}
                   </td>
-                  <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0">{PRIORITY_LABELS[t.priority]}</Badge></td>
+                  <td className="px-3 py-2"><Badge className={cn(PRIORITY_COLORS[t.priority], 'text-[10px] px-1.5 py-0')}>{PRIORITY_LABELS[t.priority]}</Badge></td>
                   <td className="px-3 py-2"><Badge className={cn(STATUS_COLORS[t.status], 'text-white text-[10px] px-1.5 py-0')}>{STATUS_LABELS[t.status]}</Badge></td>
                   <td className="px-3 py-2 text-muted-foreground tabular-nums">
                     {formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: de })}
