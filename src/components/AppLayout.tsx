@@ -364,6 +364,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           {isAdmin && (
             <>
               <div className="border-t border-sidebar-border my-1" />
+              <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
+                <FolderArchive className="h-4 w-4" />
+                <span className="flex-1">3D Container</span>
+                <ContainerUnreadBadge />
+              </Link>
               <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
                 <Network className="h-4 w-4" />
                 <span className="flex-1">Business Map</span>
