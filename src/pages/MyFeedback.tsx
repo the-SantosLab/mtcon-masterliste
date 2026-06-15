@@ -27,6 +27,12 @@ const KIND_LABELS: Record<string, string> = {
 const PRIORITY_LABELS: Record<string, string> = {
   low: 'Niedrig', medium: 'Mittel', high: 'Hoch', critical: 'Kritisch',
 };
+const PRIORITY_COLORS: Record<string, string> = {
+  critical: 'bg-[hsl(var(--priority-critical))] text-white',
+  high: 'bg-[hsl(var(--priority-high))] text-white',
+  medium: 'bg-[hsl(var(--priority-medium))] text-white',
+  low: 'bg-[hsl(var(--priority-low))] text-white',
+};
 
 interface Ticket {
   id: string;
