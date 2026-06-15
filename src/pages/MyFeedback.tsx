@@ -132,7 +132,7 @@ export default function MyFeedback() {
                     <Link to={`/support/${t.id}`} className="hover:text-primary">{t.title}</Link>
                     {t.case_id && <span className="ml-2 text-[10px] text-muted-foreground">(Vorgangsbezug)</span>}
                   </td>
-                  <td className="px-3 py-2"><Badge variant="outline" className="text-[10px] px-1.5 py-0">{PRIORITY_LABELS[t.priority]}</Badge></td>
+                  <td className="px-3 py-2"><Badge className={cn(PRIORITY_COLORS[t.priority], 'text-[10px] px-1.5 py-0')}>{PRIORITY_LABELS[t.priority]}</Badge></td>
                   <td className="px-3 py-2"><Badge className={cn(STATUS_COLORS[t.status], 'text-white text-[10px] px-1.5 py-0')}>{STATUS_LABELS[t.status]}</Badge></td>
                   <td className="px-3 py-2 text-muted-foreground tabular-nums">
                     {formatDistanceToNow(new Date(t.created_at), { addSuffix: true, locale: de })}
