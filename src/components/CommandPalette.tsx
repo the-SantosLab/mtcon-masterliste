@@ -255,9 +255,15 @@ export function CommandPalette({ open, onClose }: Props) {
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Schließen (ESC)"
+            title="Schließen"
+            className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
             ESC
-          </kbd>
+          </button>
         </div>
 
         {/* Content */}
