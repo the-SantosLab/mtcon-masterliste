@@ -132,7 +132,6 @@ const navItems: { href: string; label: string; icon: any }[] = [];
 
 const systemItems = [
   { href: '/support', label: 'Support', icon: Headphones },
-  { href: '/container', label: '3D Container', icon: FolderArchive },
   { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [
@@ -362,14 +361,18 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
+          <div className="border-t border-sidebar-border my-1" />
+          <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
+            <FolderArchive className="h-4 w-4" />
+            <span className="flex-1">3D Container</span>
+            <ContainerUnreadBadge />
+          </Link>
+
           {isAdmin && (
-            <>
-              <div className="border-t border-sidebar-border my-1" />
-              <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
-                <Network className="h-4 w-4" />
-                <span className="flex-1">Business Map</span>
-              </Link>
-            </>
+            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
+              <Network className="h-4 w-4" />
+              <span className="flex-1">Business Map</span>
+            </Link>
           )}
 
           {(isAdmin || isLead) && (
