@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ShieldCheck } from 'lucide-react';
@@ -77,16 +77,24 @@ export default function MfaChallenge() {
     return <Navigate to={redirectTarget} replace />;
   }
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!factorId || code.length !== 6) return;
+  const submit = useCallback(async (codeToSubmit: string) => {
+    if (!factorId || codeToSubmit.length !== 6 || submitting) return;
     setSubmitting(true);
-    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code: codeToSubmit });
     setSubmitting(false);
-    if (error) { toast.error(error.message || 'Code ungültig'); return; }
+    if (error) {
+      toast.error(error.message || 'Code ungültig');
+      setCode('');
+      return;
+    }
     toast.success('Erfolgreich angemeldet');
     clearStoredAuthRedirect();
     navigate(redirectTarget, { replace: true });
+  }, [factorId, submitting, navigate, redirectTarget]);
+
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submit(code);
   };
 
   const cancel = async () => {
@@ -109,19 +117,35 @@ export default function MfaChallenge() {
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
             <h2 className="text-sm font-semibold text-foreground">Code aus Authenticator-App eingeben</h2>
           </div>
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-1.5">
+          <form onSubmit={onFormSubmit} className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="mfa-code" className="text-xs font-medium text-muted-foreground">6-stelliger Code</Label>
-              <Input
-                id="mfa-code"
-                value={code}
-                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                autoFocus
-                className="h-9 text-base font-mono tracking-widest text-center"
-              />
+              <div className="flex justify-center">
+                <InputOTP
+                  id="mfa-code"
+                  maxLength={6}
+                  value={code}
+                  onChange={(v) => {
+                    const digits = v.replace(/\D/g, '').slice(0, 6);
+                    setCode(digits);
+                    if (digits.length === 6) void submit(digits);
+                  }}
+                  autoFocus
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="one-time-code"
+                  disabled={submitting}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
             </div>
             <Button type="submit" className="w-full h-9 text-xs" disabled={submitting || code.length !== 6}>
               {submitting ? 'Prüfe…' : 'Bestätigen'}
