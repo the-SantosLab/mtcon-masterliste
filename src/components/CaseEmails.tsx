@@ -84,6 +84,23 @@ export function CaseEmails({ caseId }: Props) {
     a.href = data.signedUrl; a.download = name; a.click();
   };
 
+  const deleteEmail = async (email: EmailRow) => {
+    const paths = email.attachments.map(a => a.storage_path).filter(Boolean);
+    const { error } = await (supabase as any)
+      .from('case_emails')
+      .delete()
+      .eq('id', email.id);
+    if (error) {
+      toastError(error, 'case_email', 'E-Mail konnte nicht gelöscht werden');
+      return;
+    }
+    if (paths.length > 0) {
+      await supabase.storage.from('case-attachments').remove(paths).catch(() => {});
+    }
+    toast.success('E-Mail gelöscht');
+    fetchEmails();
+  };
+
   const deleteAttachment = (attachmentId: string, storagePath: string, fileName: string) => {
     // Optimistisch ausblenden
     setPendingDelete(prev => { const n = new Set(prev); n.add(attachmentId); return n; });
@@ -174,6 +191,37 @@ export function CaseEmails({ caseId }: Props) {
                 </div>
 
                 <EmailBody html={e.body_html} plain={e.body_plain} />
+
+                {canDelete && (
+                  <div className="flex justify-end">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive transition-colors px-2 py-1 rounded border border-border hover:border-destructive/40"
+                          title="E-Mail löschen"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          E-Mail löschen
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>E-Mail löschen?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Die E-Mail „{e.subject || '(kein Betreff)'}" wird einschließlich aller Anhänge unwiderruflich aus diesem Vorgang entfernt.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteEmail(e)}>
+                            Löschen
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
 
 
                 {e.attachments.length > 0 && (
