@@ -88,6 +88,8 @@ export default function AdminUsers() {
   const [resetPw, setResetPw] = useState('');
   const [resetPwShow, setResetPwShow] = useState(false);
   const [resetPwLoading, setResetPwLoading] = useState(false);
+  const [resetMfaUser, setResetMfaUser] = useState<ProfileWithRole | null>(null);
+  const [resetMfaLoading, setResetMfaLoading] = useState(false);
 
   const fetchUsers = async () => {
     const [profilesRes, rolesRes, deptsRes] = await Promise.all([
@@ -178,8 +180,6 @@ export default function AdminUsers() {
     }
   };
 
-  const [resetMfaUser, setResetMfaUser] = useState<ProfileWithRole | null>(null);
-  const [resetMfaLoading, setResetMfaLoading] = useState(false);
 
   const handleResetMfa = async () => {
     if (!resetMfaUser) return;
