@@ -84,6 +84,23 @@ export function CaseEmails({ caseId }: Props) {
     a.href = data.signedUrl; a.download = name; a.click();
   };
 
+  const deleteEmail = async (email: EmailRow) => {
+    const paths = email.attachments.map(a => a.storage_path).filter(Boolean);
+    const { error } = await (supabase as any)
+      .from('case_emails')
+      .delete()
+      .eq('id', email.id);
+    if (error) {
+      toastError(error, 'case_email', 'E-Mail konnte nicht gelöscht werden');
+      return;
+    }
+    if (paths.length > 0) {
+      await supabase.storage.from('case-attachments').remove(paths).catch(() => {});
+    }
+    toast.success('E-Mail gelöscht');
+    fetchEmails();
+  };
+
   const deleteAttachment = (attachmentId: string, storagePath: string, fileName: string) => {
     // Optimistisch ausblenden
     setPendingDelete(prev => { const n = new Set(prev); n.add(attachmentId); return n; });
