@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound, ImageIcon } from 'lucide-react';
+import { Pencil, UserPlus, Loader2, Search, RefreshCw, Eye, EyeOff, Trash2, KeyRound, ImageIcon, ShieldOff } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserCsvImport } from '@/components/UserCsvImport';
 import { PersonioSync } from '@/components/PersonioSync';
@@ -175,6 +175,34 @@ export default function AdminUsers() {
       toast.error(err.message);
     } finally {
       setResetPwLoading(false);
+    }
+  };
+
+  const [resetMfaUser, setResetMfaUser] = useState<ProfileWithRole | null>(null);
+  const [resetMfaLoading, setResetMfaLoading] = useState(false);
+
+  const handleResetMfa = async () => {
+    if (!resetMfaUser) return;
+    setResetMfaLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-mfa`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ user_id: resetMfaUser.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Fehler');
+      toast.success(`2FA für "${resetMfaUser.display_name}" wurde zurückgesetzt (${json.removed ?? 0} Faktor(en) entfernt). Beim nächsten Login kann ein neuer Authenticator eingerichtet werden.`);
+      setResetMfaUser(null);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setResetMfaLoading(false);
     }
   };
 
@@ -511,6 +539,15 @@ export default function AdminUsers() {
                   <KeyRound className="h-3 w-3" />
                   Passwort
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setResetMfaUser(editing)}
+                  className="h-8 text-xs gap-1.5"
+                  title="2FA-Authenticator zurücksetzen"
+                >
+                  <ShieldOff className="h-3 w-3" />
+                  2FA
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -666,6 +703,25 @@ export default function AdminUsers() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* 2FA reset confirmation */}
+        <Dialog open={!!resetMfaUser} onOpenChange={o => { if (!o) setResetMfaUser(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">2FA zurücksetzen — {resetMfaUser?.display_name}</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Alle hinterlegten Authenticator-Faktoren dieses Mitarbeiters werden entfernt. Beim nächsten Login wird die 2FA-Einrichtung neu durchlaufen.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1 h-8 text-xs" onClick={() => setResetMfaUser(null)} disabled={resetMfaLoading}>Abbrechen</Button>
+              <Button variant="destructive" className="flex-1 h-8 text-xs gap-1.5" onClick={handleResetMfa} disabled={resetMfaLoading}>
+                {resetMfaLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Wird zurückgesetzt…</> : <><ShieldOff className="h-3.5 w-3.5" />2FA zurücksetzen</>}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
 
         {/* Avatar picker */}
         <Dialog open={avatarPickerOpen} onOpenChange={setAvatarPickerOpen}>
