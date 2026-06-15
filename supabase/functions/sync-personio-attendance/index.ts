@@ -266,9 +266,13 @@ Deno.serve(async (req) => {
         source: 'personio',
       });
     }
+    // Dedupe attendances (defensiv – sollte unique sein, aber sicher ist sicher)
+    const attDedup = Array.from(
+      new Map(attRows.map((r) => [r.personio_attendance_id, r])).values(),
+    );
     // Batch upsert
-    for (let i = 0; i < attRows.length; i += 500) {
-      const chunk = attRows.slice(i, i + 500);
+    for (let i = 0; i < attDedup.length; i += 500) {
+      const chunk = attDedup.slice(i, i + 500);
       const { error } = await admin
         .from('personio_attendances')
         .upsert(chunk, { onConflict: 'personio_attendance_id' });
@@ -308,8 +312,14 @@ Deno.serve(async (req) => {
         source: 'personio',
       });
     }
-    for (let i = 0; i < absRows.length; i += 500) {
-      const chunk = absRows.slice(i, i + 500);
+    // Dedupe: Personio liefert in paginierten Antworten gelegentlich denselben
+    // time-off-Eintrag mehrfach. Postgres bricht sonst mit
+    // "ON CONFLICT DO UPDATE command cannot affect row a second time" ab.
+    const absDedup = Array.from(
+      new Map(absRows.map((r) => [r.personio_absence_id, r])).values(),
+    );
+    for (let i = 0; i < absDedup.length; i += 500) {
+      const chunk = absDedup.slice(i, i + 500);
       const { error } = await admin
         .from('personio_absences')
         .upsert(chunk, { onConflict: 'personio_absence_id' });
