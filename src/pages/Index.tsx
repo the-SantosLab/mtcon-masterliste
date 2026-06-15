@@ -640,11 +640,16 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Mitteilungen vom Admin-Team */}
-        <AnnouncementsWidget />
-
-        {/* Neue Chat-Nachrichten in relevanten Vorgängen */}
-        <ChatUnreadWidget caseIds={cases.map(c => c.id)} />
+        {/* Mitteilungen vom Admin-Team + Kalender */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
+            <AnnouncementsWidget />
+            <ChatUnreadWidget caseIds={cases.map(c => c.id)} />
+          </div>
+          <div className="lg:col-span-1">
+            <CalendarWidget />
+          </div>
+        </div>
 
 
 
