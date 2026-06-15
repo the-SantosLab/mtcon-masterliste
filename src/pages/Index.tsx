@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { AnnouncementsWidget } from '@/components/announcements/AnnouncementsWidget';
 import { ChatUnreadWidget } from '@/components/ChatUnreadWidget';
+import { CalendarWidget } from '@/components/CalendarWidget';
 import { UnreadBadge } from '@/components/UnreadBadge';
 import { useChatUnread } from '@/hooks/useChatUnread';
 
