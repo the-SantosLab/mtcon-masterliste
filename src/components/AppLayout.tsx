@@ -132,8 +132,8 @@ const navItems: { href: string; label: string; icon: any }[] = [];
 
 const systemItems = [
   { href: '/support', label: 'Support', icon: Headphones },
-  { href: '/docs', label: 'Dokumentation', icon: BookOpen },
   { href: '/container', label: '3D Container', icon: FolderArchive },
+  { href: '/docs', label: 'Dokumentation', icon: BookOpen },
 ];
 const adminItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
