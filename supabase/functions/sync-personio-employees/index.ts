@@ -153,13 +153,33 @@ Deno.serve(async (req) => {
     });
     const importJson = await importRes.json().catch(() => ({}));
 
+    // Geschützte E-Mails, die NIE durch den Personio-Sync deaktiviert werden
+    // (Dev-/Service-Accounts ohne Personio-Eintrag).
+    const EXEMPT_EMAILS = new Set<string>([
+      'js@santoslab.de',
+      'nathalie.kress@mtcon.eu',
+    ]);
+
     let deactivated = 0;
     if (deactivateMissing) {
       const personioEmails = new Set(mapped.filter(m => m.active).map(m => m.email));
       const { data: authList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
       const all = authList?.users || [];
+
+      // Admin-User aus user_roles ziehen — diese werden ebenfalls nie deaktiviert.
+      const { data: adminRoles } = await admin
+        .from('user_roles').select('user_id').eq('role', 'admin');
+      const adminIds = new Set((adminRoles ?? []).map((r: { user_id: string }) => r.user_id));
+
       const toDeactivate = all
-        .filter(u => u.email && !personioEmails.has(u.email.toLowerCase()))
+        .filter(u => {
+          if (!u.email) return false;
+          const email = u.email.toLowerCase();
+          if (personioEmails.has(email)) return false;
+          if (EXEMPT_EMAILS.has(email)) return false;
+          if (adminIds.has(u.id)) return false;
+          return true;
+        })
         .map(u => u.id);
       if (toDeactivate.length > 0) {
         const { error: deErr } = await admin
