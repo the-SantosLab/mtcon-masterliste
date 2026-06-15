@@ -539,6 +539,15 @@ export default function AdminUsers() {
                   <KeyRound className="h-3 w-3" />
                   Passwort
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setResetMfaUser(editing)}
+                  className="h-8 text-xs gap-1.5"
+                  title="2FA-Authenticator zurücksetzen"
+                >
+                  <ShieldOff className="h-3 w-3" />
+                  2FA
+                </Button>
               </div>
             </div>
           </DialogContent>
