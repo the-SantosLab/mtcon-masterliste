@@ -178,8 +178,6 @@ export default function AdminUsers() {
     }
   };
 
-  const [resetMfaUser, setResetMfaUser] = useState<ProfileWithRole | null>(null);
-  const [resetMfaLoading, setResetMfaLoading] = useState(false);
 
   const handleResetMfa = async () => {
     if (!resetMfaUser) return;
