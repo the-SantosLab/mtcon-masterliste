@@ -79,6 +79,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [writableDeptIds, setWritableDeptIds] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
 
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerOpen, setCustomerOpen] = useState(false);
