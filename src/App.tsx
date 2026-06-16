@@ -100,6 +100,7 @@ import CrmSequenceDetail from "./pages/crm/CrmSequenceDetail";
 import CrmEnrollments from "./pages/crm/CrmEnrollments";
 import CrmLeads from "./pages/crm/CrmLeads";
 import CrmCalendar from "./pages/crm/CrmCalendar";
+import CrmAnalytics from "./pages/crm/CrmAnalytics";
 import CrmRoles from "./pages/crm/CrmRoles";
 import CrmAccess from "./pages/crm/CrmAccess";
 import CrmNoAccess from "./pages/crm/CrmNoAccess";
@@ -259,6 +260,8 @@ function AuthenticatedApp() {
         <Route path="/crm/outbound/enrollments" element={<CrmProtectedRoute><CrmEnrollments /></CrmProtectedRoute>} />
         <Route path="/crm/outbound/leads" element={<CrmProtectedRoute><CrmLeads /></CrmProtectedRoute>} />
         <Route path="/crm/activities/calendar" element={<CrmProtectedRoute><CrmCalendar /></CrmProtectedRoute>} />
+        <Route path="/crm/analytics" element={<CrmProtectedRoute><CrmAnalytics /></CrmProtectedRoute>} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PreferencesProvider>

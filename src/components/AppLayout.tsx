@@ -166,6 +166,7 @@ const crmItems = [
   { href: '/crm/offers', label: 'Angebote', icon: FileText },
   { href: '/crm/activities', label: 'Aktivitäten', icon: Activity },
   { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar },
+  { href: '/crm/analytics', label: 'Auswertungen', icon: TrendingUp },
   { href: '/crm/outbound', label: 'Outbound', icon: Send },
   { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
   { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
