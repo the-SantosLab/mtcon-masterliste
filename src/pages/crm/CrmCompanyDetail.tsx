@@ -103,7 +103,9 @@ export default function CrmCompanyDetail() {
           <TabsTrigger value="documents">Belege <span className="ml-1.5 text-[10px] opacity-70">{orders.length + deliveries.length + invoices.length}</span></TabsTrigger>
           <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
           <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
+          <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
           <TabsTrigger value="protection">Projektschutz</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
