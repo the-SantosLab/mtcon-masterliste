@@ -59,6 +59,9 @@ export default function AdminInvoices() {
   const [sel, setSel] = useState<Invoice | null>(null);
   const [items, setItems] = useState<InvItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [colFilters, setColFilters] = useState({
+    invoice_no: 'all', status: 'all', customer: 'all', invoice_date: 'all', due_date: 'all',
+  });
 
   const load = async () => {
     setLoading(true);
