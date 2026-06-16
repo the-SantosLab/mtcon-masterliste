@@ -88,21 +88,58 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
     setExtras((ext as any) || []);
   };
 
+  type SortKey = "rech_nr" | "belegart" | "rech_dat" | "kunde" | "matchcode" | "netto_fw" | "brutto_fw" | "waehrung";
+  const [sortKey, setSortKey] = useState<SortKey>("rech_dat");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(k); setSortDir(k === "rech_dat" || k === "netto_fw" || k === "brutto_fw" || k === "rech_nr" ? "desc" : "asc"); }
+  };
+  const SortIcon = ({ k }: { k: SortKey }) => sortKey !== k
+    ? <ArrowUpDown className="h-3 w-3 opacity-40 inline ml-1" />
+    : sortDir === "asc" ? <ArrowUp className="h-3 w-3 inline ml-1" /> : <ArrowDown className="h-3 w-3 inline ml-1" />;
+
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
-    if (!s) return rows;
-    return rows.filter((r) =>
+    const base = !s ? rows : rows.filter((r) =>
       String(r.rech_nr).includes(s) ||
       (r.matchcode || "").toLowerCase().includes(s) ||
       (r.r_kd_nr || "").includes(s) ||
       (r.companies?.name || "").toLowerCase().includes(s)
     );
-  }, [rows, search]);
+    const getVal = (r: IssosInvoice): any => {
+      switch (sortKey) {
+        case "rech_nr": return r.rech_nr ?? 0;
+        case "belegart": return (r.belegart_text || r.belegart || "").toLowerCase();
+        case "rech_dat": return r.rech_dat || "";
+        case "kunde": return (r.companies?.name || r.r_kd_nr || "").toLowerCase();
+        case "matchcode": return (r.matchcode || "").toLowerCase();
+        case "netto_fw": return Number(r.netto_fw) || 0;
+        case "brutto_fw": return Number(r.brutto_fw) || 0;
+        case "waehrung": return (r.waehrung || "").toLowerCase();
+      }
+    };
+    const sorted = [...base].sort((a, b) => {
+      const va = getVal(a), vb = getVal(b);
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [rows, search, sortKey, sortDir]);
 
   const totals = useMemo(() => {
     const sum = filtered.reduce((s, r) => s + (Number(r.netto_fw) || 0), 0);
     return { count: filtered.length, sum };
   }, [filtered]);
+
+  const sortableTh = (k: SortKey, label: string, align: "left" | "right" = "left") =>
+    <th
+      className={`${align === "right" ? "text-right" : "text-left"} p-2 font-medium bg-background cursor-pointer select-none hover:text-foreground`}
+      onClick={() => toggleSort(k)}
+    >
+      {label}<SortIcon k={k} />
+    </th>;
 
   return (
     <div className="space-y-3">
@@ -132,16 +169,17 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
           <thead className="bg-background text-[11px] uppercase text-muted-foreground sticky top-0 z-10">
             <tr>
               <th className="w-8 p-2 bg-background"></th>
-              <th className="text-left p-2 font-medium bg-background">Rech-Nr</th>
-              <th className="text-left p-2 font-medium bg-background">Belegart</th>
-              <th className="text-left p-2 font-medium bg-background">Datum</th>
-              {!companyId && <th className="text-left p-2 font-medium bg-background">Kunde</th>}
-              <th className="text-left p-2 font-medium bg-background">Matchcode</th>
-              <th className="text-right p-2 font-medium bg-background">Netto</th>
-              <th className="text-right p-2 font-medium bg-background">Brutto</th>
-              <th className="text-left p-2 font-medium bg-background">Whg</th>
+              {sortableTh("rech_nr", "Rech-Nr")}
+              {sortableTh("belegart", "Belegart")}
+              {sortableTh("rech_dat", "Datum")}
+              {!companyId && sortableTh("kunde", "Kunde")}
+              {sortableTh("matchcode", "Matchcode")}
+              {sortableTh("netto_fw", "Netto", "right")}
+              {sortableTh("brutto_fw", "Brutto", "right")}
+              {sortableTh("waehrung", "Whg")}
             </tr>
           </thead>
+
           <tbody>
             {loading ? (
               <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
