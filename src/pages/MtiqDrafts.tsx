@@ -112,6 +112,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [areas, setAreas] = useState<AreaOpt[]>([]);
   const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
+  const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
   // 'all' | 'mine' | a specific user id
   const [ownerFilter, setOwnerFilter] = useState<string>('mine');
 
