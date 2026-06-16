@@ -196,7 +196,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
   const { isLead } = useLedDepartments();
-  const { preferences, setTheme, setCompactTables } = usePreferences();
+  const { preferences, setTheme, setCompactTables, setSidebarCompact } = usePreferences();
+  const sidebarCompact = preferences.sidebarCompact;
+  const sbText = sidebarCompact ? 'text-sm' : 'text-[15px]';
+  const sbPy = sidebarCompact ? 'py-2' : 'py-2.5';
+  const sbWidth = sidebarCompact ? 'w-56' : 'w-64';
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
@@ -262,7 +266,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const linkClass = (href: string) => cn(
-    'relative flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-all duration-150 ease-out',
+    'relative flex items-center gap-2.5 px-3 rounded transition-all duration-150 ease-out',
+    sbText, sbPy,
     active(href)
       ? 'bg-primary/15 text-foreground font-semibold border-l-[3px] border-primary pl-[calc(0.75rem-3px)]'
       : 'text-sidebar-foreground font-normal hover:text-foreground hover:bg-sidebar-accent/60',
@@ -276,10 +281,16 @@ export function AppLayout({ children }: AppLayoutProps) {
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
-      <aside className={cn(
-        'fixed lg:static inset-y-0 left-0 z-50 w-56 flex flex-col glass-sidebar transition-transform duration-200',
-        open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-      )}>
+      <aside
+        data-sidebar-density={sidebarCompact ? 'compact' : 'comfortable'}
+        className={cn(
+          'fixed lg:static inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200',
+          sbWidth,
+          open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+        )}
+      >
+
+
         <div className="flex items-center gap-2 px-3 h-14 border-b border-sidebar-border shrink-0">
           <div className="h-10 w-10 flex items-center justify-center shrink-0">
             <img src={mtconLogo} alt="MTCON Logo" className="h-10 w-10 object-contain" />
@@ -452,6 +463,18 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               {isCompact ? <AlignJustify className="h-[18px] w-[18px]" /> : <AlignLeft className="h-[18px] w-[18px]" />}
             </button>
+            <button
+              type="button"
+              onClick={() => setSidebarCompact(!sidebarCompact)}
+              title={sidebarCompact ? 'Sidebar groß' : 'Sidebar kompakt'}
+              className={cn(
+                'h-[18px] w-[18px] flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                !sidebarCompact && 'text-foreground'
+              )}
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </button>
+
           </div>
         </div>
 
@@ -487,6 +510,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {isCompact ? <AlignJustify className="h-3.5 w-3.5" /> : <AlignLeft className="h-3.5 w-3.5" />}
                 {isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSidebarCompact(!sidebarCompact)}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                <Menu className="h-3.5 w-3.5" />
+                {sidebarCompact ? 'Sidebar groß' : 'Sidebar kompakt'}
+              </DropdownMenuItem>
+
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild className="gap-2 text-xs cursor-pointer">
                 <Link to="/profile"><Users className="h-3.5 w-3.5" />Mein Profil</Link>

@@ -5,21 +5,24 @@ import { useAuth } from '@/contexts/AuthContext';
 interface Preferences {
   theme: 'dark' | 'light';
   compactTables: boolean;
+  sidebarCompact: boolean;
 }
 
 interface PreferencesContextType {
   preferences: Preferences;
   setTheme: (theme: 'dark' | 'light') => void;
   setCompactTables: (compact: boolean) => void;
+  setSidebarCompact: (compact: boolean) => void;
   loading: boolean;
 }
 
-const DEFAULT: Preferences = { theme: 'dark', compactTables: true };
+const DEFAULT: Preferences = { theme: 'dark', compactTables: true, sidebarCompact: true };
 
 const PreferencesContext = createContext<PreferencesContextType>({
   preferences: DEFAULT,
   setTheme: () => {},
   setCompactTables: () => {},
+  setSidebarCompact: () => {},
   loading: true,
 });
 
@@ -50,6 +53,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         const prefs: Preferences = {
           theme: (data?.theme as 'dark' | 'light') ?? DEFAULT.theme,
           compactTables: data?.compact_tables ?? DEFAULT.compactTables,
+          sidebarCompact: (data as any)?.sidebar_compact ?? DEFAULT.sidebarCompact,
         };
         setPreferences(prefs);
         applyTheme(prefs.theme);
@@ -61,7 +65,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     if (!user) return;
     await supabase
       .from('user_preferences')
-      .upsert({ user_id: user.id, theme: next.theme, compact_tables: next.compactTables });
+      .upsert({
+        user_id: user.id,
+        theme: next.theme,
+        compact_tables: next.compactTables,
+        sidebar_compact: next.sidebarCompact,
+      } as any);
   }, [user]);
 
   const setTheme = (theme: 'dark' | 'light') => {
@@ -77,8 +86,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     persistPrefs(next);
   };
 
+  const setSidebarCompact = (sidebarCompact: boolean) => {
+    const next = { ...preferences, sidebarCompact };
+    setPreferences(next);
+    persistPrefs(next);
+  };
+
   return (
-    <PreferencesContext.Provider value={{ preferences, setTheme, setCompactTables, loading }}>
+    <PreferencesContext.Provider value={{ preferences, setTheme, setCompactTables, setSidebarCompact, loading }}>
       {children}
     </PreferencesContext.Provider>
   );

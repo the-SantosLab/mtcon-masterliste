@@ -6913,6 +6913,7 @@ export type Database = {
           compact_tables: boolean
           dashboard_chart_range: string
           dashboard_status_filters: string[]
+          sidebar_compact: boolean
           theme: string
           updated_at: string
           user_id: string
@@ -6921,6 +6922,7 @@ export type Database = {
           compact_tables?: boolean
           dashboard_chart_range?: string
           dashboard_status_filters?: string[]
+          sidebar_compact?: boolean
           theme?: string
           updated_at?: string
           user_id: string
@@ -6929,6 +6931,7 @@ export type Database = {
           compact_tables?: boolean
           dashboard_chart_range?: string
           dashboard_status_filters?: string[]
+          sidebar_compact?: boolean
           theme?: string
           updated_at?: string
           user_id?: string
