@@ -98,17 +98,29 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     return data.signedUrl;
   };
 
+  // Opens a URL in a new tab WITHOUT ever navigating the current tab.
+  // Previously we fell back to `window.location.href = url` when window.open
+  // returned null, which on mobile (especially PWA / in-app browsers) caused
+  // the app to be unloaded — pressing "Back" then re-mounted the SPA and the
+  // session appeared lost ("re-login required"). Using a synthetic anchor
+  // click keeps the SPA mounted in all cases.
+  const openInNewTab = (url: string, download?: string) => {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    if (download) a.download = download;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const handleOpen = async (fileName: string) => {
-    // iOS Safari: open the tab synchronously inside the click handler,
-    // then set its location once the signed URL is ready. Otherwise the
-    // popup blocker eats the window.open() and nothing happens.
-    const win = window.open('', '_blank');
     const url = await getSignedUrl(fileName);
-    if (!url) { win?.close(); return; }
+    if (!url) return;
     const isPdf = fileName.toLowerCase().endsWith('.pdf');
     if (!isPdf) {
-      if (win) win.location.href = url;
-      else window.location.href = url;
+      openInNewTab(url);
       return;
     }
     try {
@@ -117,28 +129,22 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
       const buf = await res.arrayBuffer();
       const blob = new Blob([buf], { type: 'application/pdf' });
       const blobUrl = URL.createObjectURL(blob);
-      if (win) win.location.href = blobUrl;
-      else window.location.href = blobUrl;
+      openInNewTab(blobUrl);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (err: any) {
       toast.error('PDF konnte nicht geladen werden');
-      if (win) win.location.href = url;
-      else window.location.href = url;
+      openInNewTab(url);
     }
   };
 
   const handleDownload = async (fileName: string) => {
-    // Same iOS workaround: pre-open the tab synchronously.
-    const win = window.open('', '_blank');
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
-      win?.close();
       toastError(null, 'case_attachment', 'Download fehlgeschlagen');
       return;
     }
-    if (win) win.location.href = data.signedUrl;
-    else window.location.href = data.signedUrl;
+    openInNewTab(data.signedUrl, displayName(fileName));
   };
 
   const handleDelete = async (fileName: string) => {
