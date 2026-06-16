@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProjectProtectionTab } from '@/components/crm/ProjectProtectionTab';
 import { LookalikeDialog } from '@/components/crm/LookalikeDialog';
+import { IssosInvoicesTab } from '@/components/IssosInvoicesTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { toast } from 'sonner';
 
