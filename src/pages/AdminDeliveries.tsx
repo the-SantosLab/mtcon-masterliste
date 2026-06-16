@@ -14,6 +14,8 @@ import { format } from "date-fns";
 import { Truck, Plus, Trash2, Download, Receipt } from "lucide-react";
 import { generateDeliveryPdf } from "@/lib/document-pdf";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { IssosDeliveriesTab } from "@/components/IssosDeliveriesTab";
 
 type Delivery = {
   id: string;
