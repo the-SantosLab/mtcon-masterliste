@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +79,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [writableDeptIds, setWritableDeptIds] = useState<Set<string> | null>(null);
   const [saving, setSaving] = useState(false);
+  const submittingRef = useRef(false);
 
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerOpen, setCustomerOpen] = useState(false);
@@ -433,12 +434,31 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   };
 
   const submit = async () => {
+    if (submittingRef.current) return;
     if (!form.project_name) { toast.error('Projektname ist Pflicht'); setStep(1); return; }
     if (!form.department_id) { toast.error('Abteilung ist Pflicht'); setStep(1); return; }
+    submittingRef.current = true;
     setSaving(true);
-    const finalDeptId = form.team_id || form.department_id;
-    const tplForCase = pendingTemplateId ? templates.find(t => t.id === pendingTemplateId) : null;
-    const { data: newCase, error } = await supabase.from('cases').insert({
+    try {
+      // Duplikat-Check: gleicher Projektname vom gleichen Ersteller in den letzten 2 Minuten
+      const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const { data: dup } = await supabase
+        .from('cases')
+        .select('id, case_number')
+        .eq('project_name', form.project_name)
+        .eq('created_by', userId)
+        .eq('deleted', false)
+        .gte('created_at', twoMinAgo)
+        .limit(1);
+      if (dup && dup.length > 0) {
+        toast.error(`Vorgang wurde bereits angelegt (${(dup[0] as any).case_number}) — Doppelanlage verhindert.`);
+        submittingRef.current = false;
+        setSaving(false);
+        return;
+      }
+      const finalDeptId = form.team_id || form.department_id;
+      const tplForCase = pendingTemplateId ? templates.find(t => t.id === pendingTemplateId) : null;
+      const { data: newCase, error } = await supabase.from('cases').insert({
       project_name: form.project_name,
       project_id: form.project_id || null,
       department_id: finalDeptId,
@@ -461,8 +481,7 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
       last_changed_by: userId,
       last_changed_at: new Date().toISOString(),
     } as any).select('id').single();
-    setSaving(false);
-    if (error || !newCase) { toast.error('Fehler: ' + error?.message); return; }
+    if (error || !newCase) { toast.error('Fehler: ' + error?.message); submittingRef.current = false; setSaving(false); return; }
     await supabase.from('case_activity').insert({ case_id: newCase.id, action: 'CREATE', actor_id: userId });
     if (form.description && form.description.trim()) {
       await (supabase as any).from('case_notes').insert({
@@ -495,10 +514,14 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
         await (supabase as any).from('case_templates').update({ last_used_at: new Date().toISOString() }).eq('id', pendingTemplateId);
       }
     }
-    try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
-    try { localStorage.removeItem(draftKey); } catch {}
-    toast.success('Vorgang erstellt');
-    onCreated();
+      try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
+      try { localStorage.removeItem(draftKey); } catch {}
+      toast.success('Vorgang erstellt');
+      onCreated();
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
+    }
   };
 
   const selectedCustomer = customers.find(c => c.customer_no === form.customer_no);
