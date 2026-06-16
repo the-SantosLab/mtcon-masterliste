@@ -282,9 +282,11 @@ export function AppLayout({ children }: AppLayoutProps) {
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside className={cn(
-        'fixed lg:static inset-y-0 left-0 z-50 w-56 flex flex-col glass-sidebar transition-transform duration-200',
+        'fixed lg:static inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200',
+        sbWidth,
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       )}>
+
         <div className="flex items-center gap-2 px-3 h-14 border-b border-sidebar-border shrink-0">
           <div className="h-10 w-10 flex items-center justify-center shrink-0">
             <img src={mtconLogo} alt="MTCON Logo" className="h-10 w-10 object-contain" />
