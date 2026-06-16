@@ -103,12 +103,12 @@ function statusClasses(s: string): string {
 //  - its home department is the dept itself, a child team, or the parent department, OR
 //  - the user is listed in department_members for any of those department ids
 //    (admin-managed cross-department membership, e.g. Mario/Nathalie in Personal/Marketing).
-function filterProfilesForDept(
+function filterProfilesForDept<P extends { id: string; department_id: string | null }>(
   deptId: string | null | undefined,
-  profiles: { id: string; department_id: string | null }[],
+  profiles: P[],
   departments: { id: string; parent_id: string | null }[],
   deptMembers: { department_id: string; user_id: string }[],
-) {
+): P[] {
   if (!deptId) return profiles;
   const deptIds = new Set<string>();
   deptIds.add(deptId);
