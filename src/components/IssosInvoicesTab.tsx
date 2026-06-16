@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Upload, FileSpreadsheet, Search, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, Search, ChevronRight, ChevronDown, Loader2, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type IssosInvoice = {
