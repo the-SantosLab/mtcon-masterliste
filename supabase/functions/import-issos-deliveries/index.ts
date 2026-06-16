@@ -49,12 +49,18 @@ Deno.serve(async (req) => {
     const kind = detectKind(headers);
     const get = (r: any, col: string) => { for (const k of Object.keys(r)) if (stripCol(k) === col) return r[k]; return null; };
 
-    const { data: comps } = await supabase.from("companies").select("id, customer_no, name").not("customer_no", "is", null);
     const byNo = new Map<string, string>();
     const byName = new Map<string, string>();
-    for (const c of comps ?? []) {
-      if (c.customer_no) byNo.set(String(c.customer_no).trim(), c.id);
-      if (c.name) byName.set(c.name.toLowerCase().trim(), c.id);
+    let cFrom = 0;
+    while (true) {
+      const { data: cPage } = await supabase.from("companies").select("id, customer_no, name").not("customer_no", "is", null).range(cFrom, cFrom + 999);
+      if (!cPage || cPage.length === 0) break;
+      for (const c of cPage) {
+        if (c.customer_no) byNo.set(String(c.customer_no).trim(), c.id);
+        if (c.name) byName.set(c.name.toLowerCase().trim(), c.id);
+      }
+      if (cPage.length < 1000) break;
+      cFrom += 1000;
     }
     const matchCompany = (kdnr: any, matchcode: any): string | null => {
       const k = str(kdnr);
