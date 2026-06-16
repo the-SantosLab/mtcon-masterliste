@@ -1028,7 +1028,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                               <SelectItem value="_none">Niemand</SelectItem>
                               {(() => {
                                 const dept = t.department ? departments.find(d => d.name === t.department) : null;
-                                const list = dept ? profiles.filter(p => p.department_id === dept.id) : profiles;
+                                const list = dept ? filterProfilesForDept(dept.id, profiles, departments, deptMembers) : profiles;
                                 return list.map(p => (
                                   <SelectItem key={p.id} value={p.id}>{p.display_name} ({p.short_code})</SelectItem>
                                 ));
