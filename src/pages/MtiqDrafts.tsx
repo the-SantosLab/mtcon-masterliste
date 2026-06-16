@@ -98,6 +98,29 @@ function statusClasses(s: string): string {
   }
 }
 
+// Returns profiles that should appear as assignee candidates for a given department.
+// Mirrors the same rule used in CreateCaseForm/CaseDetail: a profile counts when
+//  - its home department is the dept itself, a child team, or the parent department, OR
+//  - the user is listed in department_members for any of those department ids
+//    (admin-managed cross-department membership, e.g. Mario/Nathalie in Personal/Marketing).
+function filterProfilesForDept<P extends { id: string; department_id: string | null }>(
+  deptId: string | null | undefined,
+  profiles: P[],
+  departments: { id: string; parent_id: string | null }[],
+  deptMembers: { department_id: string; user_id: string }[],
+): P[] {
+  if (!deptId) return profiles;
+  const deptIds = new Set<string>();
+  deptIds.add(deptId);
+  departments.filter(d => d.parent_id === deptId).forEach(d => deptIds.add(d.id));
+  const self = departments.find(d => d.id === deptId);
+  if (self?.parent_id) deptIds.add(self.parent_id);
+  const extraUserIds = new Set(
+    deptMembers.filter(m => deptIds.has(m.department_id)).map(m => m.user_id),
+  );
+  return profiles.filter(p => (p.department_id && deptIds.has(p.department_id)) || extraUserIds.has(p.id));
+}
+
 export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
@@ -112,6 +135,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
   const [products, setProducts] = useState<ProductOpt[]>([]);
   const [areas, setAreas] = useState<AreaOpt[]>([]);
   const [ownerProfiles, setOwnerProfiles] = useState<Record<string, string>>({});
+  const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
   // 'all' | 'mine' | a specific user id
   const [ownerFilter, setOwnerFilter] = useState<string>('mine');
 
@@ -177,8 +201,11 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
     sb.from('departments').select('id, name, parent_id').eq('is_active', true).order('name').then(({ data }: any) => {
       setDepartments(data || []);
     });
-    sb.from('users_profile').select('id, display_name, short_code, department_id').order('display_name').then(({ data }: any) => {
+    sb.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name').then(({ data }: any) => {
       setProfiles(data || []);
+    });
+    sb.from('department_members').select('department_id, user_id').then(({ data }: any) => {
+      setDeptMembers(data || []);
     });
     sb.from('projects').select('id, project_number, name').order('project_number', { ascending: false }).limit(500).then(({ data }: any) => {
       setProjects(data || []);
@@ -689,7 +716,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                     ? departments.find(d => d.id === edit.draft_team_id)
                     : selectedTopDept;
                   const assigneeOptions = teamForFilter
-                    ? profiles.filter(p => p.department_id === teamForFilter.id || !p.department_id)
+                    ? filterProfilesForDept(teamForFilter.id, profiles, departments, deptMembers)
                     : profiles;
                   return (
                     <div className="space-y-4">
@@ -1001,7 +1028,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                               <SelectItem value="_none">Niemand</SelectItem>
                               {(() => {
                                 const dept = t.department ? departments.find(d => d.name === t.department) : null;
-                                const list = dept ? profiles.filter(p => p.department_id === dept.id) : profiles;
+                                const list = dept ? filterProfilesForDept(dept.id, profiles, departments, deptMembers) : profiles;
                                 return list.map(p => (
                                   <SelectItem key={p.id} value={p.id}>{p.display_name} ({p.short_code})</SelectItem>
                                 ));
