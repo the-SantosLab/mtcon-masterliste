@@ -204,19 +204,30 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
         <KpiTile label="Lagerorte" value={warehouses.length} icon={Package} />
       </div>
 
-      <div className="flex gap-2 items-center flex-wrap">
-        <Select value={warehouseId} onValueChange={setWarehouseId}>
-          <SelectTrigger className="h-8 text-xs w-40"><SelectValue placeholder="Lager" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Lager</SelectItem>
-            {warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      <div className="flex gap-2 items-end flex-wrap">
+        <div className="min-w-[260px] flex-1 max-w-md">
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Artikel</label>
+          <ArticlePicker
+            value={colFilters.art || null}
+            onChange={(a) => setColFilters(f => ({ ...f, art: a?.art_nr || '' }))}
+            placeholder="Alle Artikel"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Lager</label>
+          <Select value={warehouseId} onValueChange={setWarehouseId}>
+            <SelectTrigger className="h-8 text-xs w-40"><SelectValue placeholder="Lager" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Lager</SelectItem>
+              {warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <Input
-          placeholder="Suche Art.-Nr, Matchcode, Bezeichnung…"
+          placeholder="Suche Matchcode / Bezeichnung…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="h-8 text-xs flex-1 max-w-md"
+          className="h-8 text-xs flex-1 max-w-xs"
         />
         <Button
           size="sm" variant={onlyLow ? 'default' : 'outline'}
