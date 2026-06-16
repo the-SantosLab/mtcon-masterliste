@@ -127,18 +127,19 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
       </div>
 
       <Card className="overflow-hidden">
+       <div className="max-h-[calc(100vh-280px)] overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
+          <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground sticky top-0 z-10">
             <tr>
-              <th className="w-8 p-2"></th>
-              <th className="text-left p-2 font-medium">Rech-Nr</th>
-              <th className="text-left p-2 font-medium">Belegart</th>
-              <th className="text-left p-2 font-medium">Datum</th>
-              {!companyId && <th className="text-left p-2 font-medium">Kunde</th>}
-              <th className="text-left p-2 font-medium">Matchcode</th>
-              <th className="text-right p-2 font-medium">Netto</th>
-              <th className="text-right p-2 font-medium">Brutto</th>
-              <th className="text-left p-2 font-medium">Whg</th>
+              <th className="w-8 p-2 bg-muted/30"></th>
+              <th className="text-left p-2 font-medium bg-muted/30">Rech-Nr</th>
+              <th className="text-left p-2 font-medium bg-muted/30">Belegart</th>
+              <th className="text-left p-2 font-medium bg-muted/30">Datum</th>
+              {!companyId && <th className="text-left p-2 font-medium bg-muted/30">Kunde</th>}
+              <th className="text-left p-2 font-medium bg-muted/30">Matchcode</th>
+              <th className="text-right p-2 font-medium bg-muted/30">Netto</th>
+              <th className="text-right p-2 font-medium bg-muted/30">Brutto</th>
+              <th className="text-left p-2 font-medium bg-muted/30">Whg</th>
             </tr>
           </thead>
           <tbody>
@@ -247,6 +248,7 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
             )}
           </tbody>
         </table>
+       </div>
       </Card>
 
       <IssosImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={load} token={session?.access_token} />
