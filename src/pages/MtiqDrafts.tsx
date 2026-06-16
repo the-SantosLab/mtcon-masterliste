@@ -178,8 +178,11 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
     sb.from('departments').select('id, name, parent_id').eq('is_active', true).order('name').then(({ data }: any) => {
       setDepartments(data || []);
     });
-    sb.from('users_profile').select('id, display_name, short_code, department_id').order('display_name').then(({ data }: any) => {
+    sb.from('users_profile').select('id, display_name, short_code, department_id').eq('active', true).order('display_name').then(({ data }: any) => {
       setProfiles(data || []);
+    });
+    sb.from('department_members').select('department_id, user_id').then(({ data }: any) => {
+      setDeptMembers(data || []);
     });
     sb.from('projects').select('id, project_number, name').order('project_number', { ascending: false }).limit(500).then(({ data }: any) => {
       setProjects(data || []);
