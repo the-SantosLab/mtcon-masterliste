@@ -170,6 +170,39 @@ Deno.serve(async (req) => {
         if (error) { errors += batch.length; errLog.push({ error: error.message }); }
         else inserted += count ?? batch.length;
       }
+    } else if (kind === "offers") {
+      const mapped = rows.map((r) => {
+        const company_id = matchCompany(get(r, "Kd-Nr"), get(r, "Matchcode"));
+        if (!company_id) unmatched++;
+        return {
+          ang_nr: int(get(r, "Ang-Nr")),
+          kd_nr: str(get(r, "Kd-Nr")),
+          matchcode: str(get(r, "Matchcode")),
+          int_nr: str(get(r, "Int-Nr")),
+          ang_stat: str(get(r, "Ang-stat")),
+          ang_stat_text: str(get(r, "Angebotsstatus")),
+          betreff1: str(get(r, "Betreff 1")),
+          betreff2: str(get(r, "Betreff 2")),
+          vorl_datum: excelDate(get(r, "Vorl-Datum")),
+          fristdat: excelDate(get(r, "Fristdat")),
+          pers_nr: str(get(r, "Pers-Nr")),
+          vertr_nr: str(get(r, "Vertr-Nr")),
+          rabatt: num(get(r, "Rab.")),
+          druck_kz: str(get(r, "Druck-Kz")),
+          druck_kz_text: str(get(r, "Druck-Kz")),
+          druck_dat: excelTs(get(r, "Druckdat.")),
+          projekt_nr: str(get(r, "Projekt-Nr")),
+          mandant: str(get(r, "Mandant")),
+          company_id,
+          updated_at: new Date().toISOString(),
+        };
+      }).filter((r) => r.ang_nr !== null);
+
+      for (const batch of chunk(mapped, 500)) {
+        const { error, count } = await supabase.from("issos_offers").upsert(batch, { onConflict: "ang_nr", count: "exact" });
+        if (error) { errors += batch.length; errLog.push({ error: error.message }); }
+        else inserted += count ?? batch.length;
+      }
     } else {
       return new Response(JSON.stringify({ error: "Dateityp nicht erkannt", headers }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
     }
