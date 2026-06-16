@@ -292,6 +292,11 @@ export default function CrmCompanyDetail() {
           <IssosDeliveriesTab companyId={company.id} companyName={company.name} />
         </TabsContent>
 
+        <TabsContent value="issos-ang" className="mt-4">
+          <IssosOffersTab companyId={company.id} companyName={company.name} />
+        </TabsContent>
+
+
         <TabsContent value="protection" className="mt-4 max-w-3xl">
           <ProjectProtectionTab companyId={company.id} />
         </TabsContent>
