@@ -141,6 +141,11 @@ export default function AdminInvoices() {
       due_date: uniq(rows.map(r => r.due_date)).reverse(),
     };
   }, [rows]);
+  const totals = useMemo(() => {
+    const open = rows.filter(r => r.status === 'sent').reduce((s,r) => s + (Number(r.total_amount)||0) - Number(r.paid_amount||0), 0);
+    const paid = rows.filter(r => r.status === 'paid').reduce((s,r) => s + (Number(r.total_amount)||0), 0);
+    return { open, paid };
+  }, [rows]);
 
   return (
     <AppLayout>
