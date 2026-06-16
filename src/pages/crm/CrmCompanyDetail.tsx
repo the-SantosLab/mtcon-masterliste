@@ -15,6 +15,7 @@ import { ProjectProtectionTab } from '@/components/crm/ProjectProtectionTab';
 import { LookalikeDialog } from '@/components/crm/LookalikeDialog';
 import { IssosInvoicesTab } from '@/components/IssosInvoicesTab';
 import { IssosDeliveriesTab } from '@/components/IssosDeliveriesTab';
+import { IssosOffersTab } from '@/components/IssosOffersTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { toast } from 'sonner';
 
