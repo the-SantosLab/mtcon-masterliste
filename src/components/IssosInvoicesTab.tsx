@@ -248,6 +248,7 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
             )}
           </tbody>
         </table>
+       </div>
       </Card>
 
       <IssosImportDialog open={importOpen} onClose={() => setImportOpen(false)} onDone={load} token={session?.access_token} />
