@@ -80,8 +80,32 @@ export function CaseEmails({ caseId }: Props) {
   const download = async (path: string, name: string) => {
     const { data, error } = await supabase.storage.from('case-attachments').createSignedUrl(path, 300);
     if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
-    const a = document.createElement('a');
-    a.href = data.signedUrl; a.download = name; a.click();
+    // Open in a new tab via an anchor click. Avoid `window.open()` /
+    // `window.location.href` fallbacks — on mobile (PWA, in-app browsers)
+    // they unload the SPA, which is what BUG-2026-0079 was about.
+    try {
+      const res = await fetch(data.signedUrl);
+      if (!res.ok) throw new Error('Fetch fehlgeschlagen');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = name;
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch {
+      const a = document.createElement('a');
+      a.href = data.signedUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const deleteEmail = async (email: EmailRow) => {
