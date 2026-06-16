@@ -510,6 +510,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {isCompact ? <AlignJustify className="h-3.5 w-3.5" /> : <AlignLeft className="h-3.5 w-3.5" />}
                 {isCompact ? 'Tabellen normal' : 'Tabellen kompakt'}
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setSidebarCompact(!sidebarCompact)}
+                className="gap-2 text-xs cursor-pointer"
+              >
+                <Menu className="h-3.5 w-3.5" />
+                {sidebarCompact ? 'Sidebar groß' : 'Sidebar kompakt'}
+              </DropdownMenuItem>
+
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild className="gap-2 text-xs cursor-pointer">
                 <Link to="/profile"><Users className="h-3.5 w-3.5" />Mein Profil</Link>
