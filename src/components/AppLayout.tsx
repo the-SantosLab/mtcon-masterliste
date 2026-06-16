@@ -472,7 +472,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 !sidebarCompact && 'text-foreground'
               )}
             >
-              <Menu className="h-[18px] w-[18px]" />
+              <span className="font-semibold leading-none tracking-tight"><span className="text-[9px]">a</span><span className="text-[13px]">A</span></span>
             </button>
 
           </div>
