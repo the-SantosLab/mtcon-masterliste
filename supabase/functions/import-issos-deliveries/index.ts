@@ -15,10 +15,11 @@ const bool = (v: any) => { if (v === null || v === undefined || v === "") return
 const excelDate = (v: any): string | null => { if (v === null || v === undefined || v === "") return null; if (v instanceof Date) return v.toISOString().slice(0, 10); if (typeof v === "number") { const epoch = Date.UTC(1899, 11, 30); return new Date(epoch + v * 86400 * 1000).toISOString().slice(0, 10); } const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10); };
 const excelTs = (v: any): string | null => { if (v === null || v === undefined || v === "") return null; if (v instanceof Date) return v.toISOString(); if (typeof v === "number") { const epoch = Date.UTC(1899, 11, 30); return new Date(epoch + v * 86400 * 1000).toISOString(); } const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };
 
-function detectKind(headers: string[]): "deliveries" | "offer_positions" | "unknown" {
+function detectKind(headers: string[]): "deliveries" | "offer_positions" | "offers" | "unknown" {
   const h = new Set(headers.map(stripCol));
   if (h.has("LS-Nr") && h.has("LS-Datum")) return "deliveries";
   if (h.has("Ang-Nr") && h.has("Ang-pos")) return "offer_positions";
+  if (h.has("Ang-Nr") && (h.has("Betreff 1") || h.has("Ang-stat"))) return "offers";
   return "unknown";
 }
 
