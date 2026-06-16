@@ -129,17 +129,17 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
       <Card className="overflow-hidden">
        <div className="max-h-[calc(100vh-280px)] overflow-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground sticky top-0 z-10">
+          <thead className="bg-background text-[11px] uppercase text-muted-foreground sticky top-0 z-10">
             <tr>
-              <th className="w-8 p-2 bg-muted/30"></th>
-              <th className="text-left p-2 font-medium bg-muted/30">Rech-Nr</th>
-              <th className="text-left p-2 font-medium bg-muted/30">Belegart</th>
-              <th className="text-left p-2 font-medium bg-muted/30">Datum</th>
-              {!companyId && <th className="text-left p-2 font-medium bg-muted/30">Kunde</th>}
-              <th className="text-left p-2 font-medium bg-muted/30">Matchcode</th>
-              <th className="text-right p-2 font-medium bg-muted/30">Netto</th>
-              <th className="text-right p-2 font-medium bg-muted/30">Brutto</th>
-              <th className="text-left p-2 font-medium bg-muted/30">Whg</th>
+              <th className="w-8 p-2 bg-background"></th>
+              <th className="text-left p-2 font-medium bg-background">Rech-Nr</th>
+              <th className="text-left p-2 font-medium bg-background">Belegart</th>
+              <th className="text-left p-2 font-medium bg-background">Datum</th>
+              {!companyId && <th className="text-left p-2 font-medium bg-background">Kunde</th>}
+              <th className="text-left p-2 font-medium bg-background">Matchcode</th>
+              <th className="text-right p-2 font-medium bg-background">Netto</th>
+              <th className="text-right p-2 font-medium bg-background">Brutto</th>
+              <th className="text-left p-2 font-medium bg-background">Whg</th>
             </tr>
           </thead>
           <tbody>
@@ -182,7 +182,7 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
                           <div className="text-[11px] uppercase text-muted-foreground mb-1">Positionen ({positions.length})</div>
                           <div className="overflow-x-auto rounded border border-border/40">
                             <table className="w-full text-xs">
-                              <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
+                              <thead className="bg-background text-[10px] uppercase text-muted-foreground">
                                 <tr>
                                   <th className="text-left p-1.5">Pos</th>
                                   <th className="text-left p-1.5">Art-Nr</th>
@@ -216,7 +216,7 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
                             <div className="text-[11px] uppercase text-muted-foreground mb-1">Zusatzkosten ({extras.length})</div>
                             <div className="overflow-x-auto rounded border border-border/40">
                               <table className="w-full text-xs">
-                                <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
+                                <thead className="bg-background text-[10px] uppercase text-muted-foreground">
                                   <tr>
                                     <th className="text-left p-1.5">Pos</th>
                                     <th className="text-left p-1.5">Bezeichnung</th>
