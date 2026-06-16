@@ -514,7 +514,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 onClick={() => setSidebarCompact(!sidebarCompact)}
                 className="gap-2 text-xs cursor-pointer"
               >
-                <Menu className="h-3.5 w-3.5" />
+                <span className="inline-flex items-baseline w-3.5 justify-center font-semibold"><span className="text-[9px]">a</span><span className="text-[12px]">A</span></span>
                 {sidebarCompact ? 'Sidebar groß' : 'Sidebar kompakt'}
               </DropdownMenuItem>
 
