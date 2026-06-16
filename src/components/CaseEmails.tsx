@@ -79,7 +79,7 @@ export function CaseEmails({ caseId }: Props) {
 
   const openAttachment = async (path: string) => {
     const { data, error } = await supabase.storage.from('case-attachments').createSignedUrl(path, 300);
-    if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
+    if (error || !data) { toast.error('Öffnen fehlgeschlagen'); return; }
     // Open in a new tab via an anchor click. Do not set `download`, otherwise
     // browsers save the file immediately instead of showing renderable files.
     try {
