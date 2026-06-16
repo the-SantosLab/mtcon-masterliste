@@ -472,7 +472,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 !sidebarCompact && 'text-foreground'
               )}
             >
-              <Menu className="h-[18px] w-[18px]" />
+              <span className="font-semibold leading-none tracking-tight"><span className="text-[9px]">a</span><span className="text-[13px]">A</span></span>
             </button>
 
           </div>
@@ -514,7 +514,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 onClick={() => setSidebarCompact(!sidebarCompact)}
                 className="gap-2 text-xs cursor-pointer"
               >
-                <Menu className="h-3.5 w-3.5" />
+                <span className="inline-flex items-baseline w-3.5 justify-center font-semibold"><span className="text-[9px]">a</span><span className="text-[12px]">A</span></span>
                 {sidebarCompact ? 'Sidebar groß' : 'Sidebar kompakt'}
               </DropdownMenuItem>
 
