@@ -59,6 +59,9 @@ export default function AdminInvoices() {
   const [sel, setSel] = useState<Invoice | null>(null);
   const [items, setItems] = useState<InvItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [colFilters, setColFilters] = useState({
+    invoice_no: 'all', status: 'all', customer: 'all', invoice_date: 'all', due_date: 'all',
+  });
 
   const load = async () => {
     setLoading(true);
@@ -119,7 +122,25 @@ export default function AdminInvoices() {
     pdf.save(`${sel.invoice_no}.pdf`);
   };
 
-  const filtered = useMemo(() => filter==='all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
+  const filtered = useMemo(() => {
+    let out = filter === 'all' ? rows : rows.filter(r => r.status === filter);
+    if (colFilters.invoice_no !== 'all') out = out.filter(r => r.invoice_no === colFilters.invoice_no);
+    if (colFilters.status !== 'all') out = out.filter(r => r.status === colFilters.status);
+    if (colFilters.customer !== 'all') out = out.filter(r => (r.customer_name || '—') === colFilters.customer);
+    if (colFilters.invoice_date !== 'all') out = out.filter(r => (r.invoice_date || '—') === colFilters.invoice_date);
+    if (colFilters.due_date !== 'all') out = out.filter(r => (r.due_date || '—') === colFilters.due_date);
+    return out;
+  }, [rows, filter, colFilters]);
+  const opts = useMemo(() => {
+    const uniq = (arr: (string | null | undefined)[]) => Array.from(new Set(arr.map(v => v ?? '—'))).filter(Boolean).sort();
+    return {
+      invoice_no: uniq(rows.map(r => r.invoice_no)),
+      status: uniq(rows.map(r => r.status)),
+      customer: uniq(rows.map(r => r.customer_name)),
+      invoice_date: uniq(rows.map(r => r.invoice_date)).reverse(),
+      due_date: uniq(rows.map(r => r.due_date)).reverse(),
+    };
+  }, [rows]);
   const totals = useMemo(() => {
     const open = rows.filter(r => r.status === 'sent').reduce((s,r) => s + (Number(r.total_amount)||0) - Number(r.paid_amount||0), 0);
     const paid = rows.filter(r => r.status === 'paid').reduce((s,r) => s + (Number(r.total_amount)||0), 0);
@@ -160,34 +181,57 @@ export default function AdminInvoices() {
             </div>
 
             <Card className="overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
-                  <tr>
-                    <th className="text-left p-3 font-medium">Nr.</th>
-                    <th className="text-left p-3 font-medium">Status</th>
-                    <th className="text-left p-3 font-medium">Kunde</th>
-                    <th className="text-left p-3 font-medium">Datum</th>
-                    <th className="text-left p-3 font-medium">Fällig</th>
-                    <th className="text-right p-3 font-medium">Summe</th>
-                    <th className="text-right p-3 font-medium">Bezahlt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
-                  : filtered.length===0 ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Keine Rechnungen</td></tr>
-                  : filtered.map(r => (
-                    <tr key={r.id} onClick={() => open(r)} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer">
-                      <td className="p-3 font-mono text-xs">{r.invoice_no}</td>
-                      <td className="p-3"><Badge variant="outline" className={STATUS_COLOR[r.status]}>{STATUS[r.status]}</Badge></td>
-                      <td className="p-3">{r.customer_name || '—'}</td>
-                      <td className="p-3">{r.invoice_date || '—'}</td>
-                      <td className="p-3">{r.due_date || '—'}</td>
-                      <td className="p-3 text-right tabular-nums">{r.total_amount != null ? `${Number(r.total_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${r.currency}` : '—'}</td>
-                      <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.paid_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })}</td>
+              <div className="max-h-[calc(100vh-340px)] overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/60 backdrop-blur text-[11px] uppercase text-muted-foreground sticky top-0 z-10">
+                    <tr>
+                      <th className="text-left p-3 font-medium">Nr.</th>
+                      <th className="text-left p-3 font-medium">Status</th>
+                      <th className="text-left p-3 font-medium">Kunde</th>
+                      <th className="text-left p-3 font-medium">Datum</th>
+                      <th className="text-left p-3 font-medium">Fällig</th>
+                      <th className="text-right p-3 font-medium">Summe</th>
+                      <th className="text-right p-3 font-medium">Bezahlt</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                    <tr className="border-t border-border/40">
+                      {([
+                        ['invoice_no', opts.invoice_no, 'Nr.'],
+                        ['status', opts.status, 'Status', (v: string) => STATUS[v] || v],
+                        ['customer', opts.customer, 'Kunde'],
+                        ['invoice_date', opts.invoice_date, 'Datum'],
+                        ['due_date', opts.due_date, 'Fällig'],
+                      ] as const).map(([key, vals, label, fmt]: any) => (
+                        <th key={key} className="p-1.5 font-normal normal-case">
+                          <Select value={(colFilters as any)[key]} onValueChange={(v) => setColFilters(f => ({ ...f, [key]: v }))}>
+                            <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={`Alle ${label}`} /></SelectTrigger>
+                            <SelectContent className="max-h-72">
+                              <SelectItem value="all">Alle {label}</SelectItem>
+                              {vals.map((v: string) => <SelectItem key={v} value={v}>{fmt ? fmt(v) : v}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </th>
+                      ))}
+                      <th />
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
+                    : filtered.length===0 ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Keine Rechnungen</td></tr>
+                    : filtered.map(r => (
+                      <tr key={r.id} onClick={() => open(r)} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer">
+                        <td className="p-3 font-mono text-xs">{r.invoice_no}</td>
+                        <td className="p-3"><Badge variant="outline" className={STATUS_COLOR[r.status]}>{STATUS[r.status]}</Badge></td>
+                        <td className="p-3">{r.customer_name || '—'}</td>
+                        <td className="p-3">{r.invoice_date || '—'}</td>
+                        <td className="p-3">{r.due_date || '—'}</td>
+                        <td className="p-3 text-right tabular-nums">{r.total_amount != null ? `${Number(r.total_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${r.currency}` : '—'}</td>
+                        <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.paid_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Card>
           </TabsContent>
 
