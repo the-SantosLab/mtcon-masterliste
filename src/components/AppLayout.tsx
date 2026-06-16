@@ -324,7 +324,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', mslOpen && 'rotate-180')} />
           </button>
           {mslOpen && mslItems.map(item => (
-            <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+            <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
               <item.icon className="h-4 w-4" />
               <span className="flex-1">{item.label}</span>
               {item.href === '/cases' && <CasesUnreadBadge />}
@@ -348,7 +348,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', erpOpen && 'rotate-180')} />
               </button>
               {erpOpen && erpItems.map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
                   <item.icon className="h-4 w-4" />{item.label}
                 </Link>
               ))}
@@ -366,7 +366,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', crmOpen && 'rotate-180')} />
               </button>
               {crmOpen && crmItems.map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
                   <item.icon className="h-4 w-4" />{item.label}
                 </Link>
               ))}
@@ -400,7 +400,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {adminOpen && adminItems
                 .filter(i => isAdmin ? (!(i as any).masterOnly || isMaster) : i.href === '/admin/departments')
                 .map(item => (
-                  <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                  <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
                     <item.icon className="h-4 w-4" />{item.label}
                   </Link>
                 ))}
@@ -418,7 +418,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {systemOpen && (
             <>
               {systemItems.map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9')}>
+                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1">{item.label}</span>
                   {item.href === '/container' && <ContainerUnreadBadge />}
