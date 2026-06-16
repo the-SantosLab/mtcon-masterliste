@@ -77,12 +77,11 @@ export function CaseEmails({ caseId }: Props) {
     return () => { supabase.removeChannel(ch); };
   }, [caseId]);
 
-  const download = async (path: string, name: string) => {
+  const openAttachment = async (path: string) => {
     const { data, error } = await supabase.storage.from('case-attachments').createSignedUrl(path, 300);
     if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
-    // Open in a new tab via an anchor click. Avoid `window.open()` /
-    // `window.location.href` fallbacks — on mobile (PWA, in-app browsers)
-    // they unload the SPA, which is what BUG-2026-0079 was about.
+    // Open in a new tab via an anchor click. Do not set `download`, otherwise
+    // browsers save the file immediately instead of showing renderable files.
     try {
       const res = await fetch(data.signedUrl);
       if (!res.ok) throw new Error('Fetch fehlgeschlagen');
@@ -90,7 +89,7 @@ export function CaseEmails({ caseId }: Props) {
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = name;
+      a.target = '_blank';
       a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();
@@ -101,7 +100,6 @@ export function CaseEmails({ caseId }: Props) {
       a.href = data.signedUrl;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
-      a.download = name;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -259,7 +257,7 @@ export function CaseEmails({ caseId }: Props) {
                           className="inline-flex items-center gap-0.5 text-[11px] rounded bg-background border border-border text-foreground overflow-hidden"
                         >
                           <button
-                            onClick={() => download(a.storage_path, a.file_name)}
+                            onClick={() => openAttachment(a.storage_path)}
                             className="inline-flex items-center gap-1.5 px-2 py-1 hover:bg-muted transition-colors"
                           >
                             <Paperclip className="h-3 w-3 text-muted-foreground" />
