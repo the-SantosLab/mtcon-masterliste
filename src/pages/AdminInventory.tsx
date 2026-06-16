@@ -350,24 +350,37 @@ function MovementsTab({ canWrite, isAdmin }: { canWrite: boolean; isAdmin: boole
   const [rows, setRows] = useState<Movement[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [filterArtNr, setFilterArtNr] = useState<string | null>(null);
+  const [filterWarehouseId, setFilterWarehouseId] = useState<string>('all');
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
 
   const fetchData = async () => {
     setLoading(true);
-    const { data } = await (supabase as any)
+    let q = (supabase as any)
       .from('stock_movements')
       .select('*, warehouses!stock_movements_warehouse_id_fkey(code)')
       .order('created_at', { ascending: false })
-      .limit(200);
+      .limit(500);
+    if (filterArtNr) q = q.eq('art_nr', filterArtNr);
+    if (filterWarehouseId !== 'all') q = q.eq('warehouse_id', filterWarehouseId);
+    const { data } = await q;
     setRows(data || []);
     setLoading(false);
   };
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [filterArtNr, filterWarehouseId]);
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any).from('warehouses').select('*').order('code');
+      setWarehouses(data || []);
+    })();
+  }, []);
   useEffect(() => {
     const ch = supabase.channel('stock-mov-list')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_movements' }, fetchData)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterArtNr, filterWarehouseId]);
 
   const stornoTransfer = async (transferId: string) => {
     if (!confirm('Umlagerung stornieren? Beide gepaarten Buchungen werden gelöscht und der Bestand zurückgesetzt.')) return;
@@ -391,14 +404,34 @@ function MovementsTab({ canWrite, isAdmin }: { canWrite: boolean; isAdmin: boole
 
   return (
     <div className="space-y-3 mt-3">
-      <div className="flex justify-between items-center">
-        <p className="text-xs text-muted-foreground">Letzte 200 Bewegungen</p>
+      <div className="flex justify-between items-end gap-2 flex-wrap">
+        <div className="flex gap-2 items-end flex-wrap flex-1">
+          <div className="min-w-[260px] flex-1 max-w-md">
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Artikel</label>
+            <ArticlePicker value={filterArtNr} onChange={(a) => setFilterArtNr(a?.art_nr || null)} placeholder="Alle Artikel" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Lager</label>
+            <Select value={filterWarehouseId} onValueChange={setFilterWarehouseId}>
+              <SelectTrigger className="h-8 text-xs w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle Lager</SelectItem>
+                {warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {(filterArtNr || filterWarehouseId !== 'all') && (
+            <Button size="sm" variant="ghost" onClick={() => { setFilterArtNr(null); setFilterWarehouseId('all'); }} className="h-8 text-xs">Filter zurücksetzen</Button>
+          )}
+          <p className="text-xs text-muted-foreground ml-auto self-center">{rows.length} {rows.length === 1 ? 'Bewegung' : 'Bewegungen'}</p>
+        </div>
         {canWrite && (
           <Button size="sm" onClick={() => setOpen(true)} className="h-8 text-xs">
             <Plus className="h-3.5 w-3.5 mr-1" />Bewegung erfassen
           </Button>
         )}
       </div>
+
       <div className="rounded-md border border-border bg-card overflow-hidden">
         <table className="w-full text-xs">
           <thead>
