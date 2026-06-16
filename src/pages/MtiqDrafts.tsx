@@ -693,7 +693,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
                     ? departments.find(d => d.id === edit.draft_team_id)
                     : selectedTopDept;
                   const assigneeOptions = teamForFilter
-                    ? profiles.filter(p => p.department_id === teamForFilter.id || !p.department_id)
+                    ? filterProfilesForDept(teamForFilter.id, profiles, departments, deptMembers)
                     : profiles;
                   return (
                     <div className="space-y-4">
