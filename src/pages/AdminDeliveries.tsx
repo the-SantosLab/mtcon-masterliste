@@ -217,10 +217,20 @@ export default function AdminDeliveries() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold flex items-center gap-2"><Truck className="h-5 w-5" /> Lieferscheine</h1>
-            <p className="text-sm text-muted-foreground mt-1">Versand auf Basis von Bestellungen.</p>
+            <p className="text-sm text-muted-foreground mt-1">Versand auf Basis von Bestellungen und importierte ISSOS-Lieferscheine.</p>
           </div>
+        </div>
+
+        <Tabs defaultValue="intern" className="w-full">
+          <TabsList>
+            <TabsTrigger value="intern">Intern</TabsTrigger>
+            <TabsTrigger value="issos">ISSOS</TabsTrigger>
+          </TabsList>
+          <TabsContent value="intern" className="space-y-4 mt-4">
+        <div className="flex items-center justify-end">
           <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neuer Lieferschein</Button>
         </div>
+
 
         <div className="flex gap-2">
           {['all','draft','shipped','cancelled'].map(s => (
