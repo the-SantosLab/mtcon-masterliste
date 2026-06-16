@@ -122,11 +122,24 @@ export default function AdminInvoices() {
     pdf.save(`${sel.invoice_no}.pdf`);
   };
 
-  const filtered = useMemo(() => filter==='all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
-  const totals = useMemo(() => {
-    const open = rows.filter(r => r.status === 'sent').reduce((s,r) => s + (Number(r.total_amount)||0) - Number(r.paid_amount||0), 0);
-    const paid = rows.filter(r => r.status === 'paid').reduce((s,r) => s + (Number(r.total_amount)||0), 0);
-    return { open, paid };
+  const filtered = useMemo(() => {
+    let out = filter === 'all' ? rows : rows.filter(r => r.status === filter);
+    if (colFilters.invoice_no !== 'all') out = out.filter(r => r.invoice_no === colFilters.invoice_no);
+    if (colFilters.status !== 'all') out = out.filter(r => r.status === colFilters.status);
+    if (colFilters.customer !== 'all') out = out.filter(r => (r.customer_name || '—') === colFilters.customer);
+    if (colFilters.invoice_date !== 'all') out = out.filter(r => (r.invoice_date || '—') === colFilters.invoice_date);
+    if (colFilters.due_date !== 'all') out = out.filter(r => (r.due_date || '—') === colFilters.due_date);
+    return out;
+  }, [rows, filter, colFilters]);
+  const opts = useMemo(() => {
+    const uniq = (arr: (string | null | undefined)[]) => Array.from(new Set(arr.map(v => v ?? '—'))).filter(Boolean).sort();
+    return {
+      invoice_no: uniq(rows.map(r => r.invoice_no)),
+      status: uniq(rows.map(r => r.status)),
+      customer: uniq(rows.map(r => r.customer_name)),
+      invoice_date: uniq(rows.map(r => r.invoice_date)).reverse(),
+      due_date: uniq(rows.map(r => r.due_date)).reverse(),
+    };
   }, [rows]);
 
   return (
