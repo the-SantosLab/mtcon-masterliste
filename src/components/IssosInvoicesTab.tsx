@@ -55,14 +55,24 @@ export function IssosInvoicesTab({ companyId, companyName }: { companyId?: strin
 
   const load = async () => {
     setLoading(true);
-    let q: any = supabase
-      .from("issos_invoices" as any)
-      .select("id, rech_nr, belegart, belegart_text, r_kd_nr, matchcode, rech_dat, netto_fw, brutto_fw, waehrung, storno_kz, company_id, companies(name)")
-      .order("rech_dat", { ascending: false })
-      .limit(500);
-    if (companyId) q = q.eq("company_id", companyId);
-    const { data } = await q;
-    setRows((data as any) || []);
+    const pageSize = 1000;
+    let all: any[] = [];
+    let from = 0;
+    while (true) {
+      let q: any = supabase
+        .from("issos_invoices" as any)
+        .select("id, rech_nr, belegart, belegart_text, r_kd_nr, matchcode, rech_dat, netto_fw, brutto_fw, waehrung, storno_kz, company_id, companies(name)")
+        .order("rech_dat", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (companyId) q = q.eq("company_id", companyId);
+      const { data, error } = await q;
+      if (error || !data || data.length === 0) break;
+      all = all.concat(data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+      if (from > 50000) break;
+    }
+    setRows(all);
     setLoading(false);
   };
   useEffect(() => { load(); }, [companyId]);
