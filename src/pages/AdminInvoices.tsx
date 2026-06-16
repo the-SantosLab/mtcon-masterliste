@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Receipt, Plus, Trash2, Download } from "lucide-react";
 import { generateInvoicePdf } from "@/lib/document-pdf";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { IssosInvoicesTab } from "@/components/IssosInvoicesTab";
 
 type Invoice = {
   id: string;
