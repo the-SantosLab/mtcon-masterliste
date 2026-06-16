@@ -132,54 +132,69 @@ export default function AdminInvoices() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold flex items-center gap-2"><Receipt className="h-5 w-5" /> Rechnungen</h1>
-            <p className="text-sm text-muted-foreground mt-1">Ausgangsrechnungen — aus Bestellung oder Lieferschein.</p>
+            <p className="text-sm text-muted-foreground mt-1">Ausgangsrechnungen — aus Bestellung oder Lieferschein, sowie ISSOS-Historie.</p>
           </div>
-          <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neue Rechnung</Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 max-w-md">
-          <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Offene Posten</div><div className="text-lg tabular-nums">{totals.open.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</div></Card>
-          <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Bezahlt (gesamt)</div><div className="text-lg tabular-nums">{totals.paid.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</div></Card>
-        </div>
+        <Tabs defaultValue="outgoing" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="outgoing">Ausgangsrechnungen</TabsTrigger>
+            <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
+          </TabsList>
 
-        <div className="flex gap-2">
-          {['all','draft','sent','paid','cancelled'].map(s => (
-            <Button key={s} size="sm" variant={filter===s?'default':'outline'} onClick={() => setFilter(s)} className="text-xs">
-              {s==='all'?'Alle':STATUS[s]}
-            </Button>
-          ))}
-        </div>
+          <TabsContent value="outgoing" className="space-y-4">
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neue Rechnung</Button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 max-w-md">
+              <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Offene Posten</div><div className="text-lg tabular-nums">{totals.open.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</div></Card>
+              <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Bezahlt (gesamt)</div><div className="text-lg tabular-nums">{totals.paid.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</div></Card>
+            </div>
 
-        <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
-              <tr>
-                <th className="text-left p-3 font-medium">Nr.</th>
-                <th className="text-left p-3 font-medium">Status</th>
-                <th className="text-left p-3 font-medium">Kunde</th>
-                <th className="text-left p-3 font-medium">Datum</th>
-                <th className="text-left p-3 font-medium">Fällig</th>
-                <th className="text-right p-3 font-medium">Summe</th>
-                <th className="text-right p-3 font-medium">Bezahlt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
-              : filtered.length===0 ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Keine Rechnungen</td></tr>
-              : filtered.map(r => (
-                <tr key={r.id} onClick={() => open(r)} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer">
-                  <td className="p-3 font-mono text-xs">{r.invoice_no}</td>
-                  <td className="p-3"><Badge variant="outline" className={STATUS_COLOR[r.status]}>{STATUS[r.status]}</Badge></td>
-                  <td className="p-3">{r.customer_name || '—'}</td>
-                  <td className="p-3">{r.invoice_date || '—'}</td>
-                  <td className="p-3">{r.due_date || '—'}</td>
-                  <td className="p-3 text-right tabular-nums">{r.total_amount != null ? `${Number(r.total_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${r.currency}` : '—'}</td>
-                  <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.paid_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })}</td>
-                </tr>
+            <div className="flex gap-2">
+              {['all','draft','sent','paid','cancelled'].map(s => (
+                <Button key={s} size="sm" variant={filter===s?'default':'outline'} onClick={() => setFilter(s)} className="text-xs">
+                  {s==='all'?'Alle':STATUS[s]}
+                </Button>
               ))}
-            </tbody>
-          </table>
-        </Card>
+            </div>
+
+            <Card className="overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
+                  <tr>
+                    <th className="text-left p-3 font-medium">Nr.</th>
+                    <th className="text-left p-3 font-medium">Status</th>
+                    <th className="text-left p-3 font-medium">Kunde</th>
+                    <th className="text-left p-3 font-medium">Datum</th>
+                    <th className="text-left p-3 font-medium">Fällig</th>
+                    <th className="text-right p-3 font-medium">Summe</th>
+                    <th className="text-right p-3 font-medium">Bezahlt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
+                  : filtered.length===0 ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Keine Rechnungen</td></tr>
+                  : filtered.map(r => (
+                    <tr key={r.id} onClick={() => open(r)} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer">
+                      <td className="p-3 font-mono text-xs">{r.invoice_no}</td>
+                      <td className="p-3"><Badge variant="outline" className={STATUS_COLOR[r.status]}>{STATUS[r.status]}</Badge></td>
+                      <td className="p-3">{r.customer_name || '—'}</td>
+                      <td className="p-3">{r.invoice_date || '—'}</td>
+                      <td className="p-3">{r.due_date || '—'}</td>
+                      <td className="p-3 text-right tabular-nums">{r.total_amount != null ? `${Number(r.total_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${r.currency}` : '—'}</td>
+                      <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.paid_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="issos">
+            <IssosInvoicesTab />
+          </TabsContent>
+        </Tabs>
 
         <CreateInvoiceDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load} />
 
