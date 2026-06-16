@@ -463,6 +463,18 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               {isCompact ? <AlignJustify className="h-[18px] w-[18px]" /> : <AlignLeft className="h-[18px] w-[18px]" />}
             </button>
+            <button
+              type="button"
+              onClick={() => setSidebarCompact(!sidebarCompact)}
+              title={sidebarCompact ? 'Sidebar groß' : 'Sidebar kompakt'}
+              className={cn(
+                'h-[18px] w-[18px] flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors',
+                !sidebarCompact && 'text-foreground'
+              )}
+            >
+              <Menu className="h-[18px] w-[18px]" />
+            </button>
+
           </div>
         </div>
 
