@@ -98,6 +98,29 @@ function statusClasses(s: string): string {
   }
 }
 
+// Returns profiles that should appear as assignee candidates for a given department.
+// Mirrors the same rule used in CreateCaseForm/CaseDetail: a profile counts when
+//  - its home department is the dept itself, a child team, or the parent department, OR
+//  - the user is listed in department_members for any of those department ids
+//    (admin-managed cross-department membership, e.g. Mario/Nathalie in Personal/Marketing).
+function filterProfilesForDept(
+  deptId: string | null | undefined,
+  profiles: { id: string; department_id: string | null }[],
+  departments: { id: string; parent_id: string | null }[],
+  deptMembers: { department_id: string; user_id: string }[],
+) {
+  if (!deptId) return profiles;
+  const deptIds = new Set<string>();
+  deptIds.add(deptId);
+  departments.filter(d => d.parent_id === deptId).forEach(d => deptIds.add(d.id));
+  const self = departments.find(d => d.id === deptId);
+  if (self?.parent_id) deptIds.add(self.parent_id);
+  const extraUserIds = new Set(
+    deptMembers.filter(m => deptIds.has(m.department_id)).map(m => m.user_id),
+  );
+  return profiles.filter(p => (p.department_id && deptIds.has(p.department_id)) || extraUserIds.has(p.id));
+}
+
 export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
