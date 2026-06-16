@@ -196,7 +196,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
   const { isLead } = useLedDepartments();
-  const { preferences, setTheme, setCompactTables } = usePreferences();
+  const { preferences, setTheme, setCompactTables, setSidebarCompact } = usePreferences();
+  const sidebarCompact = preferences.sidebarCompact;
+  const sbText = sidebarCompact ? 'text-sm' : 'text-[15px]';
+  const sbPy = sidebarCompact ? 'py-2' : 'py-2.5';
+  const sbWidth = sidebarCompact ? 'w-56' : 'w-64';
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
