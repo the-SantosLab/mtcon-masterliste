@@ -4708,6 +4708,89 @@ export type Database = {
           },
         ]
       }
+      issos_offers: {
+        Row: {
+          ang_nr: number
+          ang_stat: string | null
+          ang_stat_text: string | null
+          betreff1: string | null
+          betreff2: string | null
+          company_id: string | null
+          created_at: string
+          druck_dat: string | null
+          druck_kz: string | null
+          druck_kz_text: string | null
+          fristdat: string | null
+          id: string
+          int_nr: string | null
+          kd_nr: string | null
+          mandant: string | null
+          matchcode: string | null
+          pers_nr: string | null
+          projekt_nr: string | null
+          rabatt: number | null
+          updated_at: string
+          vertr_nr: string | null
+          vorl_datum: string | null
+        }
+        Insert: {
+          ang_nr: number
+          ang_stat?: string | null
+          ang_stat_text?: string | null
+          betreff1?: string | null
+          betreff2?: string | null
+          company_id?: string | null
+          created_at?: string
+          druck_dat?: string | null
+          druck_kz?: string | null
+          druck_kz_text?: string | null
+          fristdat?: string | null
+          id?: string
+          int_nr?: string | null
+          kd_nr?: string | null
+          mandant?: string | null
+          matchcode?: string | null
+          pers_nr?: string | null
+          projekt_nr?: string | null
+          rabatt?: number | null
+          updated_at?: string
+          vertr_nr?: string | null
+          vorl_datum?: string | null
+        }
+        Update: {
+          ang_nr?: number
+          ang_stat?: string | null
+          ang_stat_text?: string | null
+          betreff1?: string | null
+          betreff2?: string | null
+          company_id?: string | null
+          created_at?: string
+          druck_dat?: string | null
+          druck_kz?: string | null
+          druck_kz_text?: string | null
+          fristdat?: string | null
+          id?: string
+          int_nr?: string | null
+          kd_nr?: string | null
+          mandant?: string | null
+          matchcode?: string | null
+          pers_nr?: string | null
+          projekt_nr?: string | null
+          rabatt?: number | null
+          updated_at?: string
+          vertr_nr?: string | null
+          vorl_datum?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issos_offers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null

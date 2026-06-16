@@ -15,10 +15,11 @@ const bool = (v: any) => { if (v === null || v === undefined || v === "") return
 const excelDate = (v: any): string | null => { if (v === null || v === undefined || v === "") return null; if (v instanceof Date) return v.toISOString().slice(0, 10); if (typeof v === "number") { const epoch = Date.UTC(1899, 11, 30); return new Date(epoch + v * 86400 * 1000).toISOString().slice(0, 10); } const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10); };
 const excelTs = (v: any): string | null => { if (v === null || v === undefined || v === "") return null; if (v instanceof Date) return v.toISOString(); if (typeof v === "number") { const epoch = Date.UTC(1899, 11, 30); return new Date(epoch + v * 86400 * 1000).toISOString(); } const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };
 
-function detectKind(headers: string[]): "deliveries" | "offer_positions" | "unknown" {
+function detectKind(headers: string[]): "deliveries" | "offer_positions" | "offers" | "unknown" {
   const h = new Set(headers.map(stripCol));
   if (h.has("LS-Nr") && h.has("LS-Datum")) return "deliveries";
   if (h.has("Ang-Nr") && h.has("Ang-pos")) return "offer_positions";
+  if (h.has("Ang-Nr") && (h.has("Betreff 1") || h.has("Ang-stat"))) return "offers";
   return "unknown";
 }
 
@@ -166,6 +167,39 @@ Deno.serve(async (req) => {
       }
       for (const batch of chunk(mapped, 500)) {
         const { error, count } = await supabase.from("issos_offer_positions").insert(batch, { count: "exact" });
+        if (error) { errors += batch.length; errLog.push({ error: error.message }); }
+        else inserted += count ?? batch.length;
+      }
+    } else if (kind === "offers") {
+      const mapped = rows.map((r) => {
+        const company_id = matchCompany(get(r, "Kd-Nr"), get(r, "Matchcode"));
+        if (!company_id) unmatched++;
+        return {
+          ang_nr: int(get(r, "Ang-Nr")),
+          kd_nr: str(get(r, "Kd-Nr")),
+          matchcode: str(get(r, "Matchcode")),
+          int_nr: str(get(r, "Int-Nr")),
+          ang_stat: str(get(r, "Ang-stat")),
+          ang_stat_text: str(get(r, "Angebotsstatus")),
+          betreff1: str(get(r, "Betreff 1")),
+          betreff2: str(get(r, "Betreff 2")),
+          vorl_datum: excelDate(get(r, "Vorl-Datum")),
+          fristdat: excelDate(get(r, "Fristdat")),
+          pers_nr: str(get(r, "Pers-Nr")),
+          vertr_nr: str(get(r, "Vertr-Nr")),
+          rabatt: num(get(r, "Rab.")),
+          druck_kz: str(get(r, "Druck-Kz")),
+          druck_kz_text: str(get(r, "Druck-Kz")),
+          druck_dat: excelTs(get(r, "Druckdat.")),
+          projekt_nr: str(get(r, "Projekt-Nr")),
+          mandant: str(get(r, "Mandant")),
+          company_id,
+          updated_at: new Date().toISOString(),
+        };
+      }).filter((r) => r.ang_nr !== null);
+
+      for (const batch of chunk(mapped, 500)) {
+        const { error, count } = await supabase.from("issos_offers").upsert(batch, { onConflict: "ang_nr", count: "exact" });
         if (error) { errors += batch.length; errLog.push({ error: error.message }); }
         else inserted += count ?? batch.length;
       }
