@@ -514,10 +514,14 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
         await (supabase as any).from('case_templates').update({ last_used_at: new Date().toISOString() }).eq('id', pendingTemplateId);
       }
     }
-    try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
-    try { localStorage.removeItem(draftKey); } catch {}
-    toast.success('Vorgang erstellt');
-    onCreated();
+      try { await supabase.functions.invoke('notify-vorgang-created', { body: { caseId: newCase.id, actorId: userId } }); } catch {}
+      try { localStorage.removeItem(draftKey); } catch {}
+      toast.success('Vorgang erstellt');
+      onCreated();
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
+    }
   };
 
   const selectedCustomer = customers.find(c => c.customer_no === form.customer_no);
