@@ -356,8 +356,14 @@ export default function AdminDeliveries() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+          </TabsContent>
+          <TabsContent value="issos" className="mt-4">
+            <IssosDeliveriesTab />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
+
   );
 }
 
