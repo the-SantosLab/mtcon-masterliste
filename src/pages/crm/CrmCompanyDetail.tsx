@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProjectProtectionTab } from '@/components/crm/ProjectProtectionTab';
 import { LookalikeDialog } from '@/components/crm/LookalikeDialog';
 import { IssosInvoicesTab } from '@/components/IssosInvoicesTab';
+import { IssosDeliveriesTab } from '@/components/IssosDeliveriesTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { toast } from 'sonner';
 
@@ -100,6 +101,7 @@ export default function CrmCompanyDetail() {
           <TabsTrigger value="master">Stammdaten</TabsTrigger>
           <TabsTrigger value="documents">Belege <span className="ml-1.5 text-[10px] opacity-70">{orders.length + deliveries.length + invoices.length}</span></TabsTrigger>
           <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
+          <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
           <TabsTrigger value="protection">Projektschutz</TabsTrigger>
         </TabsList>
 
@@ -281,6 +283,10 @@ export default function CrmCompanyDetail() {
 
         <TabsContent value="issos" className="mt-4">
           <IssosInvoicesTab companyId={company.id} companyName={company.name} />
+        </TabsContent>
+
+        <TabsContent value="issos-ls" className="mt-4">
+          <IssosDeliveriesTab companyId={company.id} companyName={company.name} />
         </TabsContent>
 
         <TabsContent value="protection" className="mt-4 max-w-3xl">
