@@ -4038,6 +4038,444 @@ export type Database = {
         }
         Relationships: []
       }
+      issos_import_runs: {
+        Row: {
+          created_at: string
+          error_log: Json | null
+          file_kind: string
+          file_name: string
+          id: string
+          ran_by: string | null
+          rows_error: number
+          rows_inserted: number
+          rows_total: number
+          rows_unmatched: number
+          rows_updated: number
+        }
+        Insert: {
+          created_at?: string
+          error_log?: Json | null
+          file_kind: string
+          file_name: string
+          id?: string
+          ran_by?: string | null
+          rows_error?: number
+          rows_inserted?: number
+          rows_total?: number
+          rows_unmatched?: number
+          rows_updated?: number
+        }
+        Update: {
+          created_at?: string
+          error_log?: Json | null
+          file_kind?: string
+          file_name?: string
+          id?: string
+          ran_by?: string | null
+          rows_error?: number
+          rows_inserted?: number
+          rows_total?: number
+          rows_unmatched?: number
+          rows_updated?: number
+        }
+        Relationships: []
+      }
+      issos_invoice_extras: {
+        Row: {
+          bew_zusatzkosten: number | null
+          bezeich: string | null
+          bruttow_fw: number | null
+          bruttow_gw: number | null
+          created_at: string
+          erloeskto: string | null
+          id: string
+          invoice_id: string | null
+          kosten: number | null
+          kosten2: number | null
+          kostenherk: string | null
+          kst: string | null
+          kst_text: string | null
+          ktr: string | null
+          ktr_text: string | null
+          land: string | null
+          ls_datum: string | null
+          ls_nr: number | null
+          marge: number | null
+          marge_e: number | null
+          marge_v: number | null
+          matchcode: string | null
+          menge: number | null
+          mwst_gr: string | null
+          mwst_gr_text: string | null
+          mwst_kto: string | null
+          mwst_satz: number | null
+          mwst1_fw: number | null
+          mwst1_gw: number | null
+          mwst2_fw: number | null
+          mwst2_gw: number | null
+          nettow_fw: number | null
+          nettow_gw: number | null
+          nummer: number | null
+          r_kd_nr: string | null
+          rech_folge: number | null
+          rech_nr: number
+          text_note: string | null
+          waehrung: string | null
+          zusatzpos: string | null
+        }
+        Insert: {
+          bew_zusatzkosten?: number | null
+          bezeich?: string | null
+          bruttow_fw?: number | null
+          bruttow_gw?: number | null
+          created_at?: string
+          erloeskto?: string | null
+          id?: string
+          invoice_id?: string | null
+          kosten?: number | null
+          kosten2?: number | null
+          kostenherk?: string | null
+          kst?: string | null
+          kst_text?: string | null
+          ktr?: string | null
+          ktr_text?: string | null
+          land?: string | null
+          ls_datum?: string | null
+          ls_nr?: number | null
+          marge?: number | null
+          marge_e?: number | null
+          marge_v?: number | null
+          matchcode?: string | null
+          menge?: number | null
+          mwst_gr?: string | null
+          mwst_gr_text?: string | null
+          mwst_kto?: string | null
+          mwst_satz?: number | null
+          mwst1_fw?: number | null
+          mwst1_gw?: number | null
+          mwst2_fw?: number | null
+          mwst2_gw?: number | null
+          nettow_fw?: number | null
+          nettow_gw?: number | null
+          nummer?: number | null
+          r_kd_nr?: string | null
+          rech_folge?: number | null
+          rech_nr: number
+          text_note?: string | null
+          waehrung?: string | null
+          zusatzpos?: string | null
+        }
+        Update: {
+          bew_zusatzkosten?: number | null
+          bezeich?: string | null
+          bruttow_fw?: number | null
+          bruttow_gw?: number | null
+          created_at?: string
+          erloeskto?: string | null
+          id?: string
+          invoice_id?: string | null
+          kosten?: number | null
+          kosten2?: number | null
+          kostenherk?: string | null
+          kst?: string | null
+          kst_text?: string | null
+          ktr?: string | null
+          ktr_text?: string | null
+          land?: string | null
+          ls_datum?: string | null
+          ls_nr?: number | null
+          marge?: number | null
+          marge_e?: number | null
+          marge_v?: number | null
+          matchcode?: string | null
+          menge?: number | null
+          mwst_gr?: string | null
+          mwst_gr_text?: string | null
+          mwst_kto?: string | null
+          mwst_satz?: number | null
+          mwst1_fw?: number | null
+          mwst1_gw?: number | null
+          mwst2_fw?: number | null
+          mwst2_gw?: number | null
+          nettow_fw?: number | null
+          nettow_gw?: number | null
+          nummer?: number | null
+          r_kd_nr?: string | null
+          rech_folge?: number | null
+          rech_nr?: number
+          text_note?: string | null
+          waehrung?: string | null
+          zusatzpos?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issos_invoice_extras_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "issos_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      issos_invoice_positions: {
+        Row: {
+          art_kunde: string | null
+          art_nr: string | null
+          auf_nr: number | null
+          aufpos: number | null
+          bes_dat1: string | null
+          bewertungspreis: number | null
+          bezeich1: string | null
+          created_at: string
+          erloeskto: string | null
+          folge: number | null
+          id: string
+          invoice_id: string | null
+          kosten: number | null
+          kosten2: number | null
+          kostenherk: string | null
+          kz_preis: string | null
+          land: string | null
+          ls_nr: number | null
+          marge: number | null
+          marge_e: number | null
+          marge_v: number | null
+          matchcode: string | null
+          menge: number | null
+          mwst_satz: number | null
+          mwst1_fw: number | null
+          netto_fw: number | null
+          nummer: number | null
+          preis_fw: number | null
+          preis1_fw: number | null
+          r_kd_nr: string | null
+          rabatt_pos: number | null
+          rech_folge: number | null
+          rech_nr: number
+          vertr_nr: string | null
+          waehrung: string | null
+          wert1_fw: number | null
+          wert2_fw: number | null
+          zu_bezeich: string | null
+          zu_pos: string | null
+        }
+        Insert: {
+          art_kunde?: string | null
+          art_nr?: string | null
+          auf_nr?: number | null
+          aufpos?: number | null
+          bes_dat1?: string | null
+          bewertungspreis?: number | null
+          bezeich1?: string | null
+          created_at?: string
+          erloeskto?: string | null
+          folge?: number | null
+          id?: string
+          invoice_id?: string | null
+          kosten?: number | null
+          kosten2?: number | null
+          kostenherk?: string | null
+          kz_preis?: string | null
+          land?: string | null
+          ls_nr?: number | null
+          marge?: number | null
+          marge_e?: number | null
+          marge_v?: number | null
+          matchcode?: string | null
+          menge?: number | null
+          mwst_satz?: number | null
+          mwst1_fw?: number | null
+          netto_fw?: number | null
+          nummer?: number | null
+          preis_fw?: number | null
+          preis1_fw?: number | null
+          r_kd_nr?: string | null
+          rabatt_pos?: number | null
+          rech_folge?: number | null
+          rech_nr: number
+          vertr_nr?: string | null
+          waehrung?: string | null
+          wert1_fw?: number | null
+          wert2_fw?: number | null
+          zu_bezeich?: string | null
+          zu_pos?: string | null
+        }
+        Update: {
+          art_kunde?: string | null
+          art_nr?: string | null
+          auf_nr?: number | null
+          aufpos?: number | null
+          bes_dat1?: string | null
+          bewertungspreis?: number | null
+          bezeich1?: string | null
+          created_at?: string
+          erloeskto?: string | null
+          folge?: number | null
+          id?: string
+          invoice_id?: string | null
+          kosten?: number | null
+          kosten2?: number | null
+          kostenherk?: string | null
+          kz_preis?: string | null
+          land?: string | null
+          ls_nr?: number | null
+          marge?: number | null
+          marge_e?: number | null
+          marge_v?: number | null
+          matchcode?: string | null
+          menge?: number | null
+          mwst_satz?: number | null
+          mwst1_fw?: number | null
+          netto_fw?: number | null
+          nummer?: number | null
+          preis_fw?: number | null
+          preis1_fw?: number | null
+          r_kd_nr?: string | null
+          rabatt_pos?: number | null
+          rech_folge?: number | null
+          rech_nr?: number
+          vertr_nr?: string | null
+          waehrung?: string | null
+          wert1_fw?: number | null
+          wert2_fw?: number | null
+          zu_bezeich?: string | null
+          zu_pos?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issos_invoice_positions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "issos_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      issos_invoices: {
+        Row: {
+          ausloeser: string | null
+          belegart: string | null
+          belegart_text: string | null
+          brutto_fw: number | null
+          company_id: string | null
+          created_at: string
+          datum_net: string | null
+          druck_dat: string | null
+          druck_kz: number | null
+          druck_text: string | null
+          fibu_dat: string | null
+          iae_kz: string | null
+          iae_text: string | null
+          id: string
+          kz_erl: boolean | null
+          kz_sammel: number | null
+          matchcode: string | null
+          mis_datum: string | null
+          mwst1_fw: number | null
+          mwst2_fw: number | null
+          netto_fw: number | null
+          nummer: number | null
+          pers_nr: number | null
+          r_kd_nr: string | null
+          rech_dat: string | null
+          rech_nr: number
+          sammel_text: string | null
+          skonto1: number | null
+          skonto2: number | null
+          storno_kz: boolean | null
+          updated_at: string
+          ust_id: string | null
+          waehrung: string | null
+          zb: number | null
+          ziel1: string | null
+          ziel2: string | null
+        }
+        Insert: {
+          ausloeser?: string | null
+          belegart?: string | null
+          belegart_text?: string | null
+          brutto_fw?: number | null
+          company_id?: string | null
+          created_at?: string
+          datum_net?: string | null
+          druck_dat?: string | null
+          druck_kz?: number | null
+          druck_text?: string | null
+          fibu_dat?: string | null
+          iae_kz?: string | null
+          iae_text?: string | null
+          id?: string
+          kz_erl?: boolean | null
+          kz_sammel?: number | null
+          matchcode?: string | null
+          mis_datum?: string | null
+          mwst1_fw?: number | null
+          mwst2_fw?: number | null
+          netto_fw?: number | null
+          nummer?: number | null
+          pers_nr?: number | null
+          r_kd_nr?: string | null
+          rech_dat?: string | null
+          rech_nr: number
+          sammel_text?: string | null
+          skonto1?: number | null
+          skonto2?: number | null
+          storno_kz?: boolean | null
+          updated_at?: string
+          ust_id?: string | null
+          waehrung?: string | null
+          zb?: number | null
+          ziel1?: string | null
+          ziel2?: string | null
+        }
+        Update: {
+          ausloeser?: string | null
+          belegart?: string | null
+          belegart_text?: string | null
+          brutto_fw?: number | null
+          company_id?: string | null
+          created_at?: string
+          datum_net?: string | null
+          druck_dat?: string | null
+          druck_kz?: number | null
+          druck_text?: string | null
+          fibu_dat?: string | null
+          iae_kz?: string | null
+          iae_text?: string | null
+          id?: string
+          kz_erl?: boolean | null
+          kz_sammel?: number | null
+          matchcode?: string | null
+          mis_datum?: string | null
+          mwst1_fw?: number | null
+          mwst2_fw?: number | null
+          netto_fw?: number | null
+          nummer?: number | null
+          pers_nr?: number | null
+          r_kd_nr?: string | null
+          rech_dat?: string | null
+          rech_nr?: number
+          sammel_text?: string | null
+          skonto1?: number | null
+          skonto2?: number | null
+          storno_kz?: boolean | null
+          updated_at?: string
+          ust_id?: string | null
+          waehrung?: string | null
+          zb?: number | null
+          ziel1?: string | null
+          ziel2?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issos_invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
