@@ -45,16 +45,18 @@ export function MtiqPanel({ open, onClose }: Props) {
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu']]
-    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu']];
+    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan']]
+    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
     : mode === 'new'
       ? '· neuer Entwurf'
-      : mode === 'drafts'
-        ? '· offene Entwürfe'
-        : '· alle Vorgänge';
+      : mode === 'scan'
+        ? '· Dokument-Scan'
+        : mode === 'drafts'
+          ? '· offene Entwürfe'
+          : '· alle Vorgänge';
 
 
   return (
