@@ -5264,6 +5264,7 @@ export type Database = {
           attachment_match_proposals: Json
           created_at: string
           created_by: string | null
+          doc_classification: string | null
           draft_assignee_id: string | null
           draft_client_name: string | null
           draft_customer_no: string | null
@@ -5285,6 +5286,7 @@ export type Database = {
           draft_team_id: string | null
           draft_template_id: string | null
           draft_title: string | null
+          extracted_fields: Json | null
           id: string
           mtiq_generated_note: string | null
           mtiq_reasoning: string | null
@@ -5294,10 +5296,12 @@ export type Database = {
           route: string
           route_confirmed_at: string | null
           route_confirmed_by: string | null
+          routing_suggestion: string | null
           source_email_body: string | null
           source_email_from: string | null
           source_email_message_id: string | null
           source_email_subject: string | null
+          source_kind: string | null
           status: string
           vorgang_id: string | null
         }
@@ -5307,6 +5311,7 @@ export type Database = {
           attachment_match_proposals?: Json
           created_at?: string
           created_by?: string | null
+          doc_classification?: string | null
           draft_assignee_id?: string | null
           draft_client_name?: string | null
           draft_customer_no?: string | null
@@ -5328,6 +5333,7 @@ export type Database = {
           draft_team_id?: string | null
           draft_template_id?: string | null
           draft_title?: string | null
+          extracted_fields?: Json | null
           id?: string
           mtiq_generated_note?: string | null
           mtiq_reasoning?: string | null
@@ -5337,10 +5343,12 @@ export type Database = {
           route?: string
           route_confirmed_at?: string | null
           route_confirmed_by?: string | null
+          routing_suggestion?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
           source_email_message_id?: string | null
           source_email_subject?: string | null
+          source_kind?: string | null
           status?: string
           vorgang_id?: string | null
         }
@@ -5350,6 +5358,7 @@ export type Database = {
           attachment_match_proposals?: Json
           created_at?: string
           created_by?: string | null
+          doc_classification?: string | null
           draft_assignee_id?: string | null
           draft_client_name?: string | null
           draft_customer_no?: string | null
@@ -5371,6 +5380,7 @@ export type Database = {
           draft_team_id?: string | null
           draft_template_id?: string | null
           draft_title?: string | null
+          extracted_fields?: Json | null
           id?: string
           mtiq_generated_note?: string | null
           mtiq_reasoning?: string | null
@@ -5380,10 +5390,12 @@ export type Database = {
           route?: string
           route_confirmed_at?: string | null
           route_confirmed_by?: string | null
+          routing_suggestion?: string | null
           source_email_body?: string | null
           source_email_from?: string | null
           source_email_message_id?: string | null
           source_email_subject?: string | null
+          source_kind?: string | null
           status?: string
           vorgang_id?: string | null
         }
