@@ -119,9 +119,13 @@ function PaginatedBrowser({
         .range(from, to);
       if (filter) base = filter(base);
       if (q.trim() && searchableCols.length) {
-        const t = q.trim();
-        base = base.or(searchableCols.map((c) => `${c}.ilike.%${t}%`).join(','));
+        // PostgREST .or() uses comma as separator and parens as grouping —
+        // wrap the value in double quotes and escape embedded quotes/backslashes
+        // so terms like "BU- EPD 5,5 X8,1 -MSBL" don't break the filter.
+        const safe = q.trim().replace(/[\\"]/g, '\\$&');
+        base = base.or(searchableCols.map((c) => `${c}.ilike."%${safe}%"`).join(','));
       }
+
       const { data, error, count } = await base;
       if (!cancel) {
         if (error) toast.error(error.message);
