@@ -16,6 +16,7 @@ import { LookalikeDialog } from '@/components/crm/LookalikeDialog';
 import { IssosInvoicesTab } from '@/components/IssosInvoicesTab';
 import { IssosDeliveriesTab } from '@/components/IssosDeliveriesTab';
 import { IssosOffersTab } from '@/components/IssosOffersTab';
+import { IssosOrdersTab } from '@/components/IssosOrdersTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { toast } from 'sonner';
 
@@ -104,6 +105,7 @@ export default function CrmCompanyDetail() {
           <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
           <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
           <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
+          <TabsTrigger value="issos-auf">ISSOS-Terminaufträge</TabsTrigger>
           <TabsTrigger value="protection">Projektschutz</TabsTrigger>
 
         </TabsList>
@@ -295,6 +297,11 @@ export default function CrmCompanyDetail() {
         <TabsContent value="issos-ang" className="mt-4">
           <IssosOffersTab companyId={company.id} companyName={company.name} />
         </TabsContent>
+
+        <TabsContent value="issos-auf" className="mt-4">
+          <IssosOrdersTab companyId={company.id} companyName={company.name} />
+        </TabsContent>
+
 
 
         <TabsContent value="protection" className="mt-4 max-w-3xl">
