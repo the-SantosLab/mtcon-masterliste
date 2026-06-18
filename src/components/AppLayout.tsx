@@ -430,13 +430,13 @@ export function AppLayout({ children }: AppLayoutProps) {
           </button>
           {systemOpen && (
             <>
-              {systemItems.map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
-                  <item.icon className="h-4 w-4" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.href === '/container' && <ContainerUnreadBadge />}
-                </Link>
-              ))}
+              <SortableNavList
+                storageKey="mtcon.sidebar.order.system"
+                items={systemItems.map(i => ({ ...i, trailing: i.href === '/container' ? <ContainerUnreadBadge /> : null }))}
+                linkClass={linkClass}
+                onItemClick={() => setOpen(false)}
+                itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
+              />
               <button
                 onClick={() => setBugDialogOpen(true)}
                 className="flex items-center gap-2.5 w-full px-3 py-2 pl-9 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
