@@ -115,12 +115,18 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
     document.body.removeChild(a);
   };
 
+  // Mobile Safari blocks window.open / a.click(target=_blank) when it happens
+  // AFTER an `await` (out of the user-gesture stack). Workaround: open the
+  // tab synchronously inside the click handler, then update its location once
+  // the signed URL arrives.
   const handleOpen = async (fileName: string) => {
+    const preOpened = window.open('about:blank', '_blank', 'noopener,noreferrer');
     const url = await getSignedUrl(fileName);
-    if (!url) return;
+    if (!url) { try { preOpened?.close(); } catch { /* noop */ } return; }
     const isPdf = fileName.toLowerCase().endsWith('.pdf');
     if (!isPdf) {
-      openInNewTab(url);
+      if (preOpened && !preOpened.closed) preOpened.location.href = url;
+      else openInNewTab(url);
       return;
     }
     try {
@@ -129,22 +135,27 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
       const buf = await res.arrayBuffer();
       const blob = new Blob([buf], { type: 'application/pdf' });
       const blobUrl = URL.createObjectURL(blob);
-      openInNewTab(blobUrl);
+      if (preOpened && !preOpened.closed) preOpened.location.href = blobUrl;
+      else openInNewTab(blobUrl);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (err: any) {
       toast.error('PDF konnte nicht geladen werden');
-      openInNewTab(url);
+      if (preOpened && !preOpened.closed) preOpened.location.href = url;
+      else openInNewTab(url);
     }
   };
 
   const handleDownload = async (fileName: string) => {
+    const preOpened = window.open('about:blank', '_blank', 'noopener,noreferrer');
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
+      try { preOpened?.close(); } catch { /* noop */ }
       toastError(null, 'case_attachment', 'Download fehlgeschlagen');
       return;
     }
-    openInNewTab(data.signedUrl, displayName(fileName));
+    if (preOpened && !preOpened.closed) preOpened.location.href = data.signedUrl;
+    else openInNewTab(data.signedUrl, displayName(fileName));
   };
 
   const handleDelete = async (fileName: string) => {
