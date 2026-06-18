@@ -308,10 +308,11 @@ function CompanyCombobox({ companies, value, onChange }: { companies: Company[];
             <CommandList>
               <CommandEmpty>Kein Treffer.</CommandEmpty>
               <CommandGroup>
-                <CommandItem onSelect={() => { onChange(null); setOpen(false); }}>
+                <CommandItem value="__all__ alle kunden" onSelect={() => { onChange(null); setOpen(false); }}>
                   <Check className={cn('h-4 w-4 mr-2', !value ? 'opacity-100' : 'opacity-0')} />
                   Alle Kunden
                 </CommandItem>
+
                 {companies.map(c => (
                   <CommandItem key={c.id} value={c.name} onSelect={() => { onChange(c.id); setOpen(false); }}>
                     <Check className={cn('h-4 w-4 mr-2', value === c.id ? 'opacity-100' : 'opacity-0')} />
