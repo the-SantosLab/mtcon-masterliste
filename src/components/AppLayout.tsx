@@ -124,7 +124,7 @@ const mslItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
-  { href: '/projects', label: 'Vorgänge +/Projekte', icon: FolderKanban },
+  { href: '/projects', label: 'Projekte / Vorgänge +', icon: FolderKanban },
   { href: '/notes', label: 'Notizen', icon: StickyNote },
 ];
 
