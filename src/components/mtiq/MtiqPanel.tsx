@@ -122,6 +122,7 @@ export function MtiqPanel({ open, onClose }: Props) {
 
       <div className="flex-1 min-h-0 flex flex-col">
         {mode === 'new' && <MtiqNewDraft onClose={onClose} />}
+        {mode === 'scan' && <MtiqScanUpload onClose={onClose} />}
         {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
