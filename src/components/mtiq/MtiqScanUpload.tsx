@@ -134,7 +134,7 @@ export function MtiqScanUpload({ onClose }: Props) {
             onChange={(e) => setHint(e.target.value)}
             disabled={loading}
             rows={4}
-            placeholder="z. B. „Lieferschein zur Bestellung B-2026-0123" oder „Versicherungsschein KFZ"."
+            placeholder={'z. B. „Lieferschein zur Bestellung B-2026-0123“ oder „Versicherungsschein KFZ“.'}
             className="mt-1 w-full px-2.5 py-2 text-[12px] outline-none resize-none"
             style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 10, color: '#e0e0e0' }}
           />
