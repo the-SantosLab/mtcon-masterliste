@@ -17,6 +17,9 @@ type Draft = {
   source_email_subject: string | null;
   possible_duplicate_of: string | null;
   status: string;
+  doc_classification: string | null;
+  routing_suggestion: string | null;
+  source_kind: string | null;
 };
 
 const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
