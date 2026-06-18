@@ -42,7 +42,7 @@ export function MtiqDraftsTab({ onClose }: { onClose: () => void }) {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mtiq_drafts')
       .select('id, created_at, draft_title, draft_description, draft_priority, draft_department, source_email_from, source_email_subject, possible_duplicate_of, status, doc_classification, routing_suggestion, source_kind')
       .eq('status', 'pending')
