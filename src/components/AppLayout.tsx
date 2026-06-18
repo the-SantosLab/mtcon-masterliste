@@ -350,11 +350,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Package className="h-4 w-4" />ERP
                 <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', erpOpen && 'rotate-180')} />
               </button>
-              {erpOpen && erpItems.map(item => (
-                <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5')}>
-                  <item.icon className="h-4 w-4" />{item.label}
-                </Link>
-              ))}
+              {erpOpen && (
+                <SortableNavList
+                  storageKey="mtcon.sidebar.order.erp"
+                  items={erpItems}
+                  linkClass={linkClass}
+                  onItemClick={() => setOpen(false)}
+                  itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
+                />
+              )}
             </>
           )}
 
