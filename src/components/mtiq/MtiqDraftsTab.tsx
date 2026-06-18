@@ -34,6 +34,25 @@ function priorityColor(p: string | null): string {
   }
 }
 
+function classBg(c: string): string {
+  switch (c) {
+    case 'Versicherung': return '#7c3aed';
+    case 'Lieferschein': return '#0ea5e9';
+    case 'Anfrage': return '#10b981';
+    case 'Bestellung': return '#f59e0b';
+    default: return '#374151';
+  }
+}
+
+function routeLabel(r: string): string {
+  switch (r) {
+    case 'dokument_ablegen': return 'Dokument ablegen';
+    case 'vorgang_anlegen': return 'Vorgang anlegen';
+    case 'beides': return 'Vorgang + Ablage';
+    default: return 'Routing unklar';
+  }
+}
+
 export function MtiqDraftsTab({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<Draft[]>([]);
