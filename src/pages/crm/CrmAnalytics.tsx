@@ -297,7 +297,13 @@ function CompanyCombobox({ companies, value, onChange }: { companies: Company[];
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[420px] p-0" align="start">
-          <Command>
+          <Command filter={(value, search) => {
+            const v = value.toLowerCase();
+            const s = search.trim().toLowerCase();
+            if (!s) return 1;
+            return v.includes(s) ? 1 : 0;
+          }}>
+
             <CommandInput placeholder="Kunde suchen…" />
             <CommandList>
               <CommandEmpty>Kein Treffer.</CommandEmpty>
