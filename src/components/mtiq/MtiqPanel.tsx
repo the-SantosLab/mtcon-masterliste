@@ -13,7 +13,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new';
+type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
