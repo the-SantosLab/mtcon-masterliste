@@ -120,7 +120,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   // tab synchronously inside the click handler, then update its location once
   // the signed URL arrives.
   const handleOpen = async (fileName: string) => {
-    const preOpened = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    const preOpened = window.open('about:blank', '_blank');
     const url = await getSignedUrl(fileName);
     if (!url) { try { preOpened?.close(); } catch { /* noop */ } return; }
     const isPdf = fileName.toLowerCase().endsWith('.pdf');
@@ -146,7 +146,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleDownload = async (fileName: string) => {
-    const preOpened = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    const preOpened = window.open('about:blank', '_blank');
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
