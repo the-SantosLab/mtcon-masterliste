@@ -14,10 +14,14 @@ const str = (v: any) => { if (v === null || v === undefined) return null; const 
 const bool = (v: any) => { if (v === null || v === undefined || v === "") return null; if (typeof v === "boolean") return v; const s = String(v).toLowerCase().trim(); return s === "true" || s === "1" || s === "ja" || s === "yes"; };
 const excelDate = (v: any): string | null => {
   if (v === null || v === undefined || v === "") return null;
-  if (v instanceof Date) return v.toISOString().slice(0, 10);
-  if (typeof v === "number") { const epoch = Date.UTC(1899, 11, 30); return new Date(epoch + v * 86400 * 1000).toISOString().slice(0, 10); }
-  const d = new Date(String(v));
-  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  let d: Date | null = null;
+  if (v instanceof Date) d = v;
+  else if (typeof v === "number") { const epoch = Date.UTC(1899, 11, 30); d = new Date(epoch + v * 86400 * 1000); }
+  else { const x = new Date(String(v)); d = Number.isNaN(x.getTime()) ? null : x; }
+  if (!d) return null;
+  const y = d.getUTCFullYear();
+  if (y < 1900 || y > 2999) return null;
+  return d.toISOString().slice(0, 10);
 };
 
 function detectKind(headers: string[]): "orders" | "positions" | "unknown" {
