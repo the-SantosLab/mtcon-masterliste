@@ -17,6 +17,9 @@ type Draft = {
   source_email_subject: string | null;
   possible_duplicate_of: string | null;
   status: string;
+  doc_classification: string | null;
+  routing_suggestion: string | null;
+  source_kind: string | null;
 };
 
 const PRIORITIES = ['Niedrig', 'Mittel', 'Hoch', 'Kritisch'] as const;
@@ -31,6 +34,25 @@ function priorityColor(p: string | null): string {
   }
 }
 
+function classBg(c: string): string {
+  switch (c) {
+    case 'Versicherung': return '#7c3aed';
+    case 'Lieferschein': return '#0ea5e9';
+    case 'Anfrage': return '#10b981';
+    case 'Bestellung': return '#f59e0b';
+    default: return '#374151';
+  }
+}
+
+function routeLabel(r: string): string {
+  switch (r) {
+    case 'dokument_ablegen': return 'Dokument ablegen';
+    case 'vorgang_anlegen': return 'Vorgang anlegen';
+    case 'beides': return 'Vorgang + Ablage';
+    default: return 'Routing unklar';
+  }
+}
+
 export function MtiqDraftsTab({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -39,9 +61,9 @@ export function MtiqDraftsTab({ onClose }: { onClose: () => void }) {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('mtiq_drafts')
-      .select('id, created_at, draft_title, draft_description, draft_priority, draft_department, source_email_from, source_email_subject, possible_duplicate_of, status')
+      .select('id, created_at, draft_title, draft_description, draft_priority, draft_department, source_email_from, source_email_subject, possible_duplicate_of, status, doc_classification, routing_suggestion, source_kind')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(30);
@@ -190,6 +212,26 @@ function DraftRow({
               <AlertTriangle className="h-3 w-3 shrink-0" style={{ color: '#f59e0b' }} />
             )}
           </div>
+          {(draft.doc_classification || draft.routing_suggestion) && (
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              {draft.doc_classification && (
+                <span
+                  className="text-[9px] px-1.5 py-0.5 rounded"
+                  style={{ background: classBg(draft.doc_classification), color: '#fff' }}
+                >
+                  {draft.doc_classification}
+                </span>
+              )}
+              {draft.routing_suggestion && (
+                <span
+                  className="text-[9px] px-1.5 py-0.5 rounded"
+                  style={{ background: '#1a1a1a', color: '#9ca3af', border: '1px solid #2a2a2a' }}
+                >
+                  {routeLabel(draft.routing_suggestion)}
+                </span>
+              )}
+            </div>
+          )}
           <div className="text-[10px] truncate mt-0.5" style={{ color: '#666' }}>
             {draft.source_email_from
               ? `${draft.source_email_from} · ${formatDistanceToNow(new Date(draft.created_at), { locale: de, addSuffix: true })}`
