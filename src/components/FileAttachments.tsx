@@ -146,7 +146,7 @@ export function FileAttachments({ bucket, folder, fallbackFolders = [], canUploa
   };
 
   const handleDownload = async (fileName: string) => {
-    const preOpened = window.open('about:blank', '_blank', 'noopener,noreferrer');
+    const preOpened = window.open('about:blank', '_blank');
     const path = `${folderOf(fileName)}/${fileName}`;
     const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 300, { download: true });
     if (error || !data?.signedUrl) {
