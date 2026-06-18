@@ -4791,6 +4791,148 @@ export type Database = {
           },
         ]
       }
+      issos_order_positions: {
+        Row: {
+          art_kunde: string | null
+          art_nr: string | null
+          auf_menge: number | null
+          auf_nr: number
+          aufpos: number | null
+          besnr_kd: string | null
+          company_id: string | null
+          created_at: string
+          erl_dat: string | null
+          gel_menge: number | null
+          id: string
+          kd_nr: string | null
+          kz_erl_p: boolean | null
+          mat_art: string | null
+          mat_art_text: string | null
+          preis_fw: number | null
+          termin: string | null
+        }
+        Insert: {
+          art_kunde?: string | null
+          art_nr?: string | null
+          auf_menge?: number | null
+          auf_nr: number
+          aufpos?: number | null
+          besnr_kd?: string | null
+          company_id?: string | null
+          created_at?: string
+          erl_dat?: string | null
+          gel_menge?: number | null
+          id?: string
+          kd_nr?: string | null
+          kz_erl_p?: boolean | null
+          mat_art?: string | null
+          mat_art_text?: string | null
+          preis_fw?: number | null
+          termin?: string | null
+        }
+        Update: {
+          art_kunde?: string | null
+          art_nr?: string | null
+          auf_menge?: number | null
+          auf_nr?: number
+          aufpos?: number | null
+          besnr_kd?: string | null
+          company_id?: string | null
+          created_at?: string
+          erl_dat?: string | null
+          gel_menge?: number | null
+          id?: string
+          kd_nr?: string | null
+          kz_erl_p?: boolean | null
+          mat_art?: string | null
+          mat_art_text?: string | null
+          preis_fw?: number | null
+          termin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issos_order_positions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      issos_orders: {
+        Row: {
+          ang_nr: string | null
+          auf_nr: number
+          bes_dat_1: string | null
+          bes_dat_2: string | null
+          company_id: string | null
+          created_at: string
+          druck_kz: string | null
+          druck_text: string | null
+          id: string
+          kd_nr: string | null
+          kz_preis: boolean | null
+          lb: string | null
+          lief_kunde: string | null
+          matchcode: string | null
+          pers_nr: string | null
+          rabatt: number | null
+          updated_at: string
+          vertr_nr: string | null
+          zb: string | null
+        }
+        Insert: {
+          ang_nr?: string | null
+          auf_nr: number
+          bes_dat_1?: string | null
+          bes_dat_2?: string | null
+          company_id?: string | null
+          created_at?: string
+          druck_kz?: string | null
+          druck_text?: string | null
+          id?: string
+          kd_nr?: string | null
+          kz_preis?: boolean | null
+          lb?: string | null
+          lief_kunde?: string | null
+          matchcode?: string | null
+          pers_nr?: string | null
+          rabatt?: number | null
+          updated_at?: string
+          vertr_nr?: string | null
+          zb?: string | null
+        }
+        Update: {
+          ang_nr?: string | null
+          auf_nr?: number
+          bes_dat_1?: string | null
+          bes_dat_2?: string | null
+          company_id?: string | null
+          created_at?: string
+          druck_kz?: string | null
+          druck_text?: string | null
+          id?: string
+          kd_nr?: string | null
+          kz_preis?: boolean | null
+          lb?: string | null
+          lief_kunde?: string | null
+          matchcode?: string | null
+          pers_nr?: string | null
+          rabatt?: number | null
+          updated_at?: string
+          vertr_nr?: string | null
+          zb?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issos_orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
