@@ -15,6 +15,8 @@ import { OrderFulfillment } from "@/components/OrderFulfillment";
 import { PartnerPicker } from "@/components/PartnerPicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { IssosOrdersTab } from "@/components/IssosOrdersTab";
 
 type Order = {
   id: string;
@@ -207,85 +209,100 @@ export default function AdminOrders() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          {["all", "draft", "active", "in_progress", "completed", "cancelled"].map((s) => (
-            <Button
-              key={s}
-              variant={filter === s ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(s)}
-              className="text-xs"
-            >
-              {s === "all" ? "Alle" : STATUS_LABELS[s]}
-              {s === "draft" && draftCount > 0 && (
-                <Badge className="ml-2 bg-violet-500/30 text-violet-100">{draftCount}</Badge>
-              )}
-            </Button>
-          ))}
-        </div>
       </div>
 
-      <Card className="overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
-            <tr>
-              <th className="text-left p-3 font-medium">Nr.</th>
-              <th className="text-left p-3 font-medium">Status</th>
-              <th className="text-left p-3 font-medium">Kunde</th>
-              <th className="text-left p-3 font-medium">Best.-Nr. Kunde</th>
-              <th className="text-left p-3 font-medium">Liefertermin</th>
-              <th className="text-right p-3 font-medium">Summe</th>
-              <th className="text-left p-3 font-medium">Quelle</th>
-              <th className="text-left p-3 font-medium">Erstellt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={8} className="p-6 text-center text-muted-foreground">
-                  Lade…
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="p-6 text-center text-muted-foreground">
-                  Keine Bestellungen
-                </td>
-              </tr>
-            ) : (
-              filtered.map((o) => (
-                <tr
-                  key={o.id}
-                  className="border-t border-border/40 hover:bg-muted/20 cursor-pointer"
-                  onClick={() => openOrder(o)}
-                >
-                  <td className="p-3 font-mono text-xs">{o.order_no}</td>
-                  <td className="p-3">
-                    <Badge className={STATUS_COLORS[o.status] || ""} variant="outline">
-                      {o.status === "draft" && <Sparkles className="h-3 w-3 mr-1" />}
-                      {STATUS_LABELS[o.status] || o.status}
-                    </Badge>
-                  </td>
-                  <td className="p-3">{o.customer_name || "—"}</td>
-                  <td className="p-3 font-mono text-xs">{o.external_order_no || "—"}</td>
-                  <td className="p-3">{o.delivery_date || "—"}</td>
-                  <td className="p-3 text-right tabular-nums">
-                    {o.total_amount != null
-                      ? `${o.total_amount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${o.currency}`
-                      : "—"}
-                  </td>
-                  <td className="p-3 text-xs text-muted-foreground">
-                    {o.source === "email_intake" ? "E-Mail" : "Manuell"}
-                  </td>
-                  <td className="p-3 text-xs text-muted-foreground">
-                    {format(new Date(o.created_at), "dd.MM.yyyy HH:mm")}
-                  </td>
+      <Tabs defaultValue="internal" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="internal">Interne Bestellungen</TabsTrigger>
+          <TabsTrigger value="issos">ISSOS-Terminaufträge</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="internal" className="space-y-4">
+          <div className="flex gap-2 flex-wrap">
+            {["all", "draft", "active", "in_progress", "completed", "cancelled"].map((s) => (
+              <Button
+                key={s}
+                variant={filter === s ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(s)}
+                className="text-xs"
+              >
+                {s === "all" ? "Alle" : STATUS_LABELS[s]}
+                {s === "draft" && draftCount > 0 && (
+                  <Badge className="ml-2 bg-violet-500/30 text-violet-100">{draftCount}</Badge>
+                )}
+              </Button>
+            ))}
+          </div>
+
+          <Card className="overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
+                <tr>
+                  <th className="text-left p-3 font-medium">Nr.</th>
+                  <th className="text-left p-3 font-medium">Status</th>
+                  <th className="text-left p-3 font-medium">Kunde</th>
+                  <th className="text-left p-3 font-medium">Best.-Nr. Kunde</th>
+                  <th className="text-left p-3 font-medium">Liefertermin</th>
+                  <th className="text-right p-3 font-medium">Summe</th>
+                  <th className="text-left p-3 font-medium">Quelle</th>
+                  <th className="text-left p-3 font-medium">Erstellt</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                      Lade…
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                      Keine Bestellungen
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((o) => (
+                    <tr
+                      key={o.id}
+                      className="border-t border-border/40 hover:bg-muted/20 cursor-pointer"
+                      onClick={() => openOrder(o)}
+                    >
+                      <td className="p-3 font-mono text-xs">{o.order_no}</td>
+                      <td className="p-3">
+                        <Badge className={STATUS_COLORS[o.status] || ""} variant="outline">
+                          {o.status === "draft" && <Sparkles className="h-3 w-3 mr-1" />}
+                          {STATUS_LABELS[o.status] || o.status}
+                        </Badge>
+                      </td>
+                      <td className="p-3">{o.customer_name || "—"}</td>
+                      <td className="p-3 font-mono text-xs">{o.external_order_no || "—"}</td>
+                      <td className="p-3">{o.delivery_date || "—"}</td>
+                      <td className="p-3 text-right tabular-nums">
+                        {o.total_amount != null
+                          ? `${o.total_amount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${o.currency}`
+                          : "—"}
+                      </td>
+                      <td className="p-3 text-xs text-muted-foreground">
+                        {o.source === "email_intake" ? "E-Mail" : "Manuell"}
+                      </td>
+                      <td className="p-3 text-xs text-muted-foreground">
+                        {format(new Date(o.created_at), "dd.MM.yyyy HH:mm")}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="issos">
+          <IssosOrdersTab />
+        </TabsContent>
+      </Tabs>
+
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
