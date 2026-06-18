@@ -5,6 +5,7 @@ import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
 import { MtiqNewDraft } from './MtiqNewDraft';
 import { MtiqDraftsTab } from './MtiqDraftsTab';
+import { MtiqScanUpload } from './MtiqScanUpload';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
