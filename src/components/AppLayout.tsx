@@ -36,6 +36,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { MtiqWidget } from '@/components/mtiq/MtiqWidget';
+import { SortableNavList } from '@/components/SortableNavList';
 
 
 function MtiqPendingBadge() {
