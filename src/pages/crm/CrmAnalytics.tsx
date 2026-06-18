@@ -297,15 +297,22 @@ function CompanyCombobox({ companies, value, onChange }: { companies: Company[];
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[420px] p-0" align="start">
-          <Command>
+          <Command filter={(value, search) => {
+            const v = value.toLowerCase();
+            const s = search.trim().toLowerCase();
+            if (!s) return 1;
+            return v.includes(s) ? 1 : 0;
+          }}>
+
             <CommandInput placeholder="Kunde suchen…" />
             <CommandList>
               <CommandEmpty>Kein Treffer.</CommandEmpty>
               <CommandGroup>
-                <CommandItem onSelect={() => { onChange(null); setOpen(false); }}>
+                <CommandItem value="__all__ alle kunden" onSelect={() => { onChange(null); setOpen(false); }}>
                   <Check className={cn('h-4 w-4 mr-2', !value ? 'opacity-100' : 'opacity-0')} />
                   Alle Kunden
                 </CommandItem>
+
                 {companies.map(c => (
                   <CommandItem key={c.id} value={c.name} onSelect={() => { onChange(c.id); setOpen(false); }}>
                     <Check className={cn('h-4 w-4 mr-2', value === c.id ? 'opacity-100' : 'opacity-0')} />
