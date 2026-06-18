@@ -217,7 +217,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/ki-artikel', '/admin/articles'].some(p => location.pathname.startsWith(p))
   );
   const [systemOpen, setSystemOpen] = useState(
-    ['/support', '/docs', '/container', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
+    ['/support', '/docs', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
   );
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
