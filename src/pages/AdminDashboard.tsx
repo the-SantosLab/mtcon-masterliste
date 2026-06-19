@@ -7,8 +7,9 @@ import { formatDate, STATUS_LABELS } from '@/lib/case-utils';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
   ClipboardList, AlertTriangle, FolderKanban, User2,
-  TrendingUp, ArrowRight, RefreshCw, CalendarDays,
+  TrendingUp, ArrowRight, RefreshCw, CalendarDays, Users,
 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
@@ -89,6 +90,29 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [dateRange, setDateRange] = useState<DateRange>('all');
+  const [syncingPersonio, setSyncingPersonio] = useState(false);
+
+  const syncPersonio = async () => {
+    setSyncingPersonio(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-personio-employees', {
+        body: { dry_run: false, deactivate_missing: true, default_role: 'staff', send_invite: false },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: 'Mitarbeitende synchronisiert' });
+      try {
+        const att = await supabase.functions.invoke('sync-personio-attendance', { body: {} });
+        if (!att.error) toast({ title: 'Zeitdaten aktualisiert' });
+      } catch { /* nicht fatal */ }
+      fetchData();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Sync fehlgeschlagen';
+      toast({ title: 'Fehler', description: msg, variant: 'destructive' });
+    } finally {
+      setSyncingPersonio(false);
+    }
+  };
 
   // Redirect non-admins
   useEffect(() => {
@@ -212,6 +236,15 @@ export default function AdminDashboard() {
                 </button>
               ))}
             </div>
+
+            <Button
+              variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+              onClick={syncPersonio} disabled={syncingPersonio}
+              title="Mitarbeitende und Zeitdaten aus Personio synchronisieren"
+            >
+              <Users className={cn('h-3.5 w-3.5', syncingPersonio && 'animate-pulse')} />
+              {syncingPersonio ? 'Synchronisiere…' : 'Personio Sync'}
+            </Button>
 
             <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={fetchData} disabled={loading}>
               <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
