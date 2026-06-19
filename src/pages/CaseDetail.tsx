@@ -700,7 +700,7 @@ export default function CaseDetail() {
               const filledCount = detailFields.filter(v => v !== null && v !== undefined && v !== '').length + (c.project ? 1 : 0);
               const hasAny = filledCount > 0;
               return (
-                <details className="rounded-md border border-border bg-card p-5 group" open={hasAny}>
+                <details className="rounded-md border border-border bg-card p-5 group">
                   <summary className="flex items-center justify-between cursor-pointer list-none">
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Details {!hasAny && <span className="ml-1 normal-case text-[10px] text-muted-foreground/70">(keine Angaben)</span>}
