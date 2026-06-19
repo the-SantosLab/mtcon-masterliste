@@ -7,8 +7,9 @@ import { formatDate, STATUS_LABELS } from '@/lib/case-utils';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
   ClipboardList, AlertTriangle, FolderKanban, User2,
-  TrendingUp, ArrowRight, RefreshCw, CalendarDays,
+  TrendingUp, ArrowRight, RefreshCw, CalendarDays, Users,
 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
