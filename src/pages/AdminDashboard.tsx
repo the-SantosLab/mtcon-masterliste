@@ -90,6 +90,29 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [dateRange, setDateRange] = useState<DateRange>('all');
+  const [syncingPersonio, setSyncingPersonio] = useState(false);
+
+  const syncPersonio = async () => {
+    setSyncingPersonio(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-personio-employees', {
+        body: { dry_run: false, deactivate_missing: true, default_role: 'staff', send_invite: false },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: 'Mitarbeitende synchronisiert' });
+      try {
+        const att = await supabase.functions.invoke('sync-personio-attendance', { body: {} });
+        if (!att.error) toast({ title: 'Zeitdaten aktualisiert' });
+      } catch { /* nicht fatal */ }
+      fetchData();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Sync fehlgeschlagen';
+      toast({ title: 'Fehler', description: msg, variant: 'destructive' });
+    } finally {
+      setSyncingPersonio(false);
+    }
+  };
 
   // Redirect non-admins
   useEffect(() => {
