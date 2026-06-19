@@ -24,9 +24,44 @@ export function MtiqPanel({ open, onClose }: Props) {
   const [expanded, setExpanded] = useState<boolean>(() => {
     try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
   });
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const raw = localStorage.getItem('mtiq-panel-pos');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   useEffect(() => {
     try { localStorage.setItem('mtiq-panel-expanded', expanded ? '1' : '0'); } catch { /* ignore */ }
   }, [expanded]);
+  useEffect(() => {
+    if (pos) {
+      try { localStorage.setItem('mtiq-panel-pos', JSON.stringify(pos)); } catch { /* ignore */ }
+    }
+  }, [pos]);
+
+  const onDragStart = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    const width = expanded ? 920 : 480;
+    const height = expanded ? window.innerHeight - 140 : 680;
+    const current = pos ?? { x: window.innerWidth - width - 28, y: window.innerHeight - height - 96 };
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: current.x, origY: current.y };
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      const nx = Math.max(8, Math.min(window.innerWidth - 80, dragRef.current.origX + dx));
+      const ny = Math.max(8, Math.min(window.innerHeight - 60, dragRef.current.origY + dy));
+      setPos({ x: nx, y: ny });
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   useEffect(() => {
     setMode(vorgangId ? 'current' : 'list');
