@@ -21,6 +21,12 @@ export function MtiqPanel({ open, onClose }: Props) {
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
   const [pendingCount, setPendingCount] = useState(0);
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('mtiq-panel-expanded', expanded ? '1' : '0'); } catch { /* ignore */ }
+  }, [expanded]);
 
   useEffect(() => {
     setMode(vorgangId ? 'current' : 'list');
