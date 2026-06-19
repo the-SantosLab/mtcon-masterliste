@@ -105,8 +105,9 @@ export function MtiqPanel({ open, onClose }: Props) {
       className="mtiq-panel-slide"
       style={{
         position: 'fixed',
-        bottom: 96,
-        right: 28,
+        ...(pos
+          ? { left: pos.x, top: pos.y }
+          : { bottom: 96, right: 28 }),
         width: expanded ? 920 : 480,
         height: expanded ? 'calc(100vh - 140px)' : 680,
         maxHeight: 'calc(100vh - 120px)',
@@ -122,7 +123,11 @@ export function MtiqPanel({ open, onClose }: Props) {
         fontFamily: '"DM Sans", system-ui, sans-serif',
       }}
     >
-      <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ borderBottom: '1px solid #222' }}>
+      <div
+        onMouseDown={onDragStart}
+        className="flex items-center gap-2.5 px-3 py-2.5 select-none"
+        style={{ borderBottom: '1px solid #222', cursor: 'move' }}
+      >
         <div
           className="flex items-center justify-center text-white text-sm"
           style={{ width: 28, height: 28, borderRadius: 9, background: 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' }}
