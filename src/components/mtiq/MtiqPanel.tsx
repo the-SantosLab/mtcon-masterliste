@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { X, Maximize2, Minimize2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, Maximize2, Minimize2, GripVertical } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
@@ -24,9 +24,44 @@ export function MtiqPanel({ open, onClose }: Props) {
   const [expanded, setExpanded] = useState<boolean>(() => {
     try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
   });
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const raw = localStorage.getItem('mtiq-panel-pos');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   useEffect(() => {
     try { localStorage.setItem('mtiq-panel-expanded', expanded ? '1' : '0'); } catch { /* ignore */ }
   }, [expanded]);
+  useEffect(() => {
+    if (pos) {
+      try { localStorage.setItem('mtiq-panel-pos', JSON.stringify(pos)); } catch { /* ignore */ }
+    }
+  }, [pos]);
+
+  const onDragStart = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    const width = expanded ? 920 : 480;
+    const height = expanded ? window.innerHeight - 140 : 680;
+    const current = pos ?? { x: window.innerWidth - width - 28, y: window.innerHeight - height - 96 };
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: current.x, origY: current.y };
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      const nx = Math.max(8, Math.min(window.innerWidth - 80, dragRef.current.origX + dx));
+      const ny = Math.max(8, Math.min(window.innerHeight - 60, dragRef.current.origY + dy));
+      setPos({ x: nx, y: ny });
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   useEffect(() => {
     setMode(vorgangId ? 'current' : 'list');
@@ -70,8 +105,9 @@ export function MtiqPanel({ open, onClose }: Props) {
       className="mtiq-panel-slide"
       style={{
         position: 'fixed',
-        bottom: 96,
-        right: 28,
+        ...(pos
+          ? { left: pos.x, top: pos.y }
+          : { bottom: 96, right: 28 }),
         width: expanded ? 920 : 480,
         height: expanded ? 'calc(100vh - 140px)' : 680,
         maxHeight: 'calc(100vh - 120px)',
@@ -87,7 +123,11 @@ export function MtiqPanel({ open, onClose }: Props) {
         fontFamily: '"DM Sans", system-ui, sans-serif',
       }}
     >
-      <div className="flex items-center gap-2.5 px-3 py-2.5" style={{ borderBottom: '1px solid #222' }}>
+      <div
+        onMouseDown={onDragStart}
+        className="flex items-center gap-2.5 px-3 py-2.5 select-none"
+        style={{ borderBottom: '1px solid #222', cursor: 'move' }}
+      >
         <div
           className="flex items-center justify-center text-white text-sm"
           style={{ width: 28, height: 28, borderRadius: 9, background: 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' }}
