@@ -237,6 +237,15 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            <Button
+              variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+              onClick={syncPersonio} disabled={syncingPersonio}
+              title="Mitarbeitende und Zeitdaten aus Personio synchronisieren"
+            >
+              <Users className={cn('h-3.5 w-3.5', syncingPersonio && 'animate-pulse')} />
+              {syncingPersonio ? 'Synchronisiere…' : 'Personio Sync'}
+            </Button>
+
             <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={fetchData} disabled={loading}>
               <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
               Aktualisieren
