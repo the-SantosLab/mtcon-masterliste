@@ -1,0 +1,2 @@
+ALTER TABLE public.cases ALTER COLUMN received_at SET DEFAULT CURRENT_DATE;
+ALTER TABLE public.mtiq_drafts ALTER COLUMN draft_received_at SET DEFAULT CURRENT_DATE;
