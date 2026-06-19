@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
@@ -21,6 +21,12 @@ export function MtiqPanel({ open, onClose }: Props) {
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
   const [pendingCount, setPendingCount] = useState(0);
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('mtiq-panel-expanded', expanded ? '1' : '0'); } catch { /* ignore */ }
+  }, [expanded]);
 
   useEffect(() => {
     setMode(vorgangId ? 'current' : 'list');
@@ -66,8 +72,8 @@ export function MtiqPanel({ open, onClose }: Props) {
         position: 'fixed',
         bottom: 96,
         right: 28,
-        width: 400,
-        height: 560,
+        width: expanded ? 920 : 480,
+        height: expanded ? 'calc(100vh - 140px)' : 680,
         maxHeight: 'calc(100vh - 120px)',
         maxWidth: 'calc(100vw - 40px)',
         background: '#111',
@@ -90,6 +96,14 @@ export function MtiqPanel({ open, onClose }: Props) {
           <div className="text-[13px] font-semibold" style={{ color: '#e0e0e0' }}>MTIQ</div>
           <div className="text-[10px]" style={{ color: '#666' }}>KI-Assistent {subline}</div>
         </div>
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="p-1 rounded hover:bg-white/5"
+          style={{ color: '#666' }}
+          title={expanded ? 'Verkleinern' : 'Vergrößern'}
+        >
+          {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        </button>
         <button onClick={onClose} className="p-1 rounded hover:bg-white/5" style={{ color: '#666' }}>
           <X className="h-4 w-4" />
         </button>
