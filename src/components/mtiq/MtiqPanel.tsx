@@ -87,8 +87,8 @@ export function MtiqPanel({ open, onClose }: Props) {
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan']]
-    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan']];
+    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']]
+    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
@@ -96,9 +96,11 @@ export function MtiqPanel({ open, onClose }: Props) {
       ? '· neuer Entwurf'
       : mode === 'scan'
         ? '· Dokument-Scan'
-        : mode === 'drafts'
-          ? '· offene Entwürfe'
-          : '· alle Vorgänge';
+        : mode === 'card'
+          ? '· Visitenkarte'
+          : mode === 'drafts'
+            ? '· offene Entwürfe'
+            : '· alle Vorgänge';
 
 
   return (
