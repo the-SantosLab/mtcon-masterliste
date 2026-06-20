@@ -6,6 +6,7 @@ import { MtiqVorgang } from './MtiqVorgang';
 import { MtiqNewDraft } from './MtiqNewDraft';
 import { MtiqDraftsTab } from './MtiqDraftsTab';
 import { MtiqScanUpload } from './MtiqScanUpload';
+import { MtiqCardScan } from './MtiqCardScan';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan';
+type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
@@ -86,8 +87,8 @@ export function MtiqPanel({ open, onClose }: Props) {
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan']]
-    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan']];
+    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']]
+    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
@@ -95,9 +96,11 @@ export function MtiqPanel({ open, onClose }: Props) {
       ? '· neuer Entwurf'
       : mode === 'scan'
         ? '· Dokument-Scan'
-        : mode === 'drafts'
-          ? '· offene Entwürfe'
-          : '· alle Vorgänge';
+        : mode === 'card'
+          ? '· Visitenkarte'
+          : mode === 'drafts'
+            ? '· offene Entwürfe'
+            : '· alle Vorgänge';
 
 
   return (
@@ -177,6 +180,7 @@ export function MtiqPanel({ open, onClose }: Props) {
       <div className="flex-1 min-h-0 flex flex-col">
         {mode === 'new' && <MtiqNewDraft onClose={onClose} />}
         {mode === 'scan' && <MtiqScanUpload onClose={onClose} />}
+        {mode === 'card' && <MtiqCardScan onClose={onClose} />}
         {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
