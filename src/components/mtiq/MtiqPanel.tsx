@@ -6,6 +6,7 @@ import { MtiqVorgang } from './MtiqVorgang';
 import { MtiqNewDraft } from './MtiqNewDraft';
 import { MtiqDraftsTab } from './MtiqDraftsTab';
 import { MtiqScanUpload } from './MtiqScanUpload';
+import { MtiqCardScan } from './MtiqCardScan';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan';
+type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
