@@ -1,0 +1,1 @@
+UPDATE support_tickets SET status='resolved', resolved_at=now() WHERE id='f1fe8c66-0185-4deb-b755-c2ecf907fabd';
