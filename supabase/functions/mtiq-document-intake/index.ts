@@ -13,7 +13,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
+
+// Chunked base64 encoding — avoids O(n^2) string concat & stack overflow on large files.
+function bufferToBase64(buf: Uint8Array): string {
+  const CHUNK = 0x8000; // 32 KB
+  let bin = "";
+  for (let i = 0; i < buf.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, Array.from(buf.subarray(i, i + CHUNK)) as any);
+  }
+  return btoa(bin);
+}
 
 const SYSTEM_PROMPT = `Du bist MTIQ, der interne KI-Assistent von MtCon (PCB-Steckverbinder-Distributor).
 Du erhältst ein eingescanntes Dokument oder PDF (auch handgeschrieben). Analysiere es vollständig (OCR + Inhalt) und ordne es ein.
