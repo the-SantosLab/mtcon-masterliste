@@ -116,10 +116,7 @@ Deno.serve(async (req) => {
 
     const mime = file.type || "application/octet-stream";
     const buf = new Uint8Array(await file.arrayBuffer());
-    // base64 encode
-    let bin = "";
-    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
-    const b64 = btoa(bin);
+    const b64 = bufferToBase64(buf);
 
     const admin = createClient(supabaseUrl, serviceKey);
 
