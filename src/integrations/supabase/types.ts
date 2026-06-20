@@ -8289,6 +8289,7 @@ export type Database = {
           total_received: number
         }[]
       }
+      gen_next_customer_no: { Args: never; Returns: string }
       generate_delivery_no: { Args: never; Returns: string }
       generate_insurance_reminders: { Args: never; Returns: number }
       generate_invoice_no: { Args: never; Returns: string }
