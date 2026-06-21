@@ -297,13 +297,14 @@ Antworte nur mit JSON:
           let activityId: string | null = null;
           if (companyId) {
             const { data: act } = await admin.from("crm_activities").insert({
-              kind: "note",
+              type: "note",
               subject: "Visitenkarte erfasst (MTIQ)",
-              notes: `Erfasst über MTIQ Prozess-Tablet am ${new Date().toLocaleString("de-DE")}\nQuelle: ${tablet.source_file_path || "Upload im Panel"}`,
+              body: `Erfasst über MTIQ Prozess-Tablet am ${new Date().toLocaleString("de-DE")}\nQuelle: ${tablet.source_file_path || "Upload im Panel"}`,
               company_id: companyId,
               contact_id: tablet.contact_id,
               owner_id: userId,
-              created_by: userId,
+              auto_generated: true,
+              completed_at: new Date().toISOString(),
             }).select("id").maybeSingle();
             activityId = act?.id ?? null;
           }
@@ -314,22 +315,27 @@ Antworte nur mit JSON:
             activity_id: activityId,
           };
         } else if (stepN === 8) {
-          // Workflow-Übergabe – Wiedervorlage als case_task an Ersteller
+          // Workflow-Übergabe – Wiedervorlage als CRM-Aktivität (Task)
           const due = new Date(); due.setDate(due.getDate() + 3);
-          const { data: task } = await admin.from("case_tasks").insert({
-            title: `Wiedervorlage Visitenkarte: ${extracted.first_name ?? ""} ${extracted.last_name ?? ""} (${extracted.company_name ?? ""})`,
-            description: `Automatisch erzeugt aus MTIQ Prozess-Tablet ${tablet.id}.`,
-            assigned_to: userId,
-            created_by: userId,
-            due_date: due.toISOString().slice(0, 10),
-            status: "open",
-            priority: "normal",
-          }).select("id").maybeSingle().then((r) => r).catch(() => ({ data: null }) as any);
+          let taskId: string | null = null;
+          if (tablet.company_id) {
+            const { data: act } = await admin.from("crm_activities").insert({
+              type: "task",
+              subject: `Wiedervorlage Visitenkarte: ${extracted.first_name ?? ""} ${extracted.last_name ?? ""}`.trim(),
+              body: `Automatisch aus MTIQ Prozess-Tablet ${tablet.id}.\nFirma: ${extracted.company_name ?? ""}`,
+              company_id: tablet.company_id,
+              contact_id: tablet.contact_id,
+              owner_id: userId,
+              due_at: due.toISOString(),
+              auto_generated: true,
+            }).select("id").maybeSingle();
+            taskId = act?.id ?? null;
+          }
           result = {
-            handover: "Wiedervorlage erstellt",
-            task_id: task?.id ?? null,
+            handover: tablet.company_id ? "Wiedervorlage erstellt" : "Keine Firma verknüpft – bitte Schritt 5 ausführen.",
+            task_id: taskId,
             due_date: due.toISOString().slice(0, 10),
-            pipeline_hint: "Verfügbar im CRM unter Aktivitäten und Aufgaben.",
+            pipeline_hint: "Verfügbar im CRM unter Aktivitäten.",
           };
         }
 
