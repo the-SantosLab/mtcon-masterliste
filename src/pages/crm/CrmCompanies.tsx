@@ -208,9 +208,9 @@ export default function CrmCompanies() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : (
-        <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-hidden">
-          <table className="w-full text-xs">
-            <thead className="bg-muted sticky top-0 z-10 shadow-[0_1px_0_0_hsl(var(--border))]">
+        <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-x-auto isolate">
+          <table className="w-full text-xs border-separate border-spacing-0">
+            <thead className="sticky top-0 z-20 bg-card shadow-[inset_0_-1px_0_0_hsl(var(--border))]">
               <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
                 <th className="px-3 py-2 font-normal w-8">
                   <Checkbox checked={selected.size > 0 && selected.size === filtered.length} onCheckedChange={v => setSelected(v ? new Set(filtered.map(c => c.id)) : new Set())} />
