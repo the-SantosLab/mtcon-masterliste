@@ -208,7 +208,7 @@ export default function CrmCompanies() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : (
-        <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-x-auto isolate">
+        <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl">
           <table className="w-full text-xs border-separate border-spacing-0">
             <thead className="sticky top-0 z-20 bg-card shadow-[inset_0_-1px_0_0_hsl(var(--border))]">
               <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
