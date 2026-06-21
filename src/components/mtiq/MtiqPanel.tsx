@@ -15,7 +15,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card';
+type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
