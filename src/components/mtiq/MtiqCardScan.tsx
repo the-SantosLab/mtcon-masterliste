@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Upload, ScanLine, X, ArrowLeft, Building2, UserPlus, ExternalLink, Check, CreditCard, FileText, Sparkles, Info, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface Props {
   onClose: () => void;
