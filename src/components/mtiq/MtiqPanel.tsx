@@ -184,7 +184,8 @@ export function MtiqPanel({ open, onClose }: Props) {
       <div className="flex-1 min-h-0 flex flex-col">
         {mode === 'new' && <MtiqNewDraft onClose={onClose} />}
         {mode === 'scan' && <MtiqScanUpload onClose={onClose} />}
-        {mode === 'card' && <MtiqCardScan onClose={onClose} />}
+        {mode === 'card' && <MtiqCardScan onClose={onClose} onOpenTablet={(id) => { setActiveTabletId(id); setMode('tablet'); }} />}
+        {mode === 'tablet' && activeTabletId && <MtiqTablet tabletId={activeTabletId} onClose={onClose} />}
         {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
