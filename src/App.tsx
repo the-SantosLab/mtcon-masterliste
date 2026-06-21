@@ -69,6 +69,7 @@ import SupportTicketDetail from "./pages/SupportTicketDetail";
 import MyFeedback from "./pages/MyFeedback";
 import Notes from "./pages/Notes";
 import MtiqDrafts from "./pages/MtiqDrafts";
+import MtiqTabletPage from "./pages/MtiqTabletPage";
 import Inbox from "./pages/Inbox";
 import InboxHub from "./pages/InboxHub";
 import AdminDocumentTypes from "./pages/AdminDocumentTypes";
