@@ -64,6 +64,8 @@ const EMPTY: Extracted = {
 
 export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
   const navigate = useNavigate();
+  const { preferences } = usePreferences();
+  const isLight = preferences.theme === 'light';
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('upload');
