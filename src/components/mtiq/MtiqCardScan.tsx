@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Upload, ScanLine, X, ArrowLeft, Building2, UserPlus, ExternalLink, Check, CreditCard, FileText } from 'lucide-react';
+import { Loader2, Upload, ScanLine, X, ArrowLeft, Building2, UserPlus, ExternalLink, Check, CreditCard, FileText, Sparkles, Info, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,6 +8,9 @@ interface Props {
   onClose: () => void;
   onOpenTablet?: (tabletId: string) => void;
 }
+
+type LogKind = 'user' | 'mtiq' | 'system' | 'hint' | 'success' | 'error';
+type LogEntry = { id: string; ts: number; kind: LogKind; text: string };
 
 const ACCEPT = 'image/png,image/jpeg,image/webp,image/heic,application/pdf';
 
