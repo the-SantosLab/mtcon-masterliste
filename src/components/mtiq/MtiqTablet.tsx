@@ -148,10 +148,10 @@ export function MtiqTablet({ tabletId, onClose }: { tabletId: string; onClose?: 
                   )}
 
                   {s.n !== 1 && s.result && (
-                    <pre className="text-[10px] p-2 rounded overflow-x-auto whitespace-pre-wrap"
+                    <div className="text-[11px] leading-relaxed p-2 rounded space-y-1"
                       style={{ background: '#080808', border: '1px solid #1a1a1a', color: '#cbd5e1' }}>
-                      {JSON.stringify(s.result, null, 2)}
-                    </pre>
+                      {renderResult(s.n, s.result)}
+                    </div>
                   )}
 
                   {s.n === 3 && s.status === 'awaiting_review' && s.result?.candidates?.length > 0 && (
