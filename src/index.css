@@ -713,29 +713,32 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 }
 .mtiq-shell[data-theme="light"] {
   --mtiq-bg: #ffffff;
-  --mtiq-surface: #f1f5f9;
-  --mtiq-surface-2: #f8fafc;
+  --mtiq-surface: #f8fafc;
+  --mtiq-surface-2: #ffffff;
   --mtiq-surface-3: #eff6ff;
   --mtiq-border: #e2e8f0;
-  --mtiq-border-2: #f1f5f9;
+  --mtiq-border-2: #eef2f6;
   --mtiq-border-3: #cbd5e1;
   --mtiq-text: #0f172a;
   --mtiq-text-2: #1e293b;
   --mtiq-text-muted: #475569;
   --mtiq-text-soft: #64748b;
   --mtiq-text-faint: #94a3b8;
+  color-scheme: light;
 }
 
-/* Override the most common inline dark backgrounds inside the panel
-   when running in light mode. Uses attribute substring matching so we
-   don't have to refactor every child component's inline style. */
+/* Backgrounds */
 .mtiq-shell[data-theme="light"] [style*="background: #0f0f0f"],
 .mtiq-shell[data-theme="light"] [style*="background:#0f0f0f"],
+.mtiq-shell[data-theme="light"] [style*="background: #0d0d0d"],
+.mtiq-shell[data-theme="light"] [style*="background: #141414"],
 .mtiq-shell[data-theme="light"] [style*="background: rgb(15, 15, 15)"] {
   background: var(--mtiq-surface-2) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="background: #181818"],
-.mtiq-shell[data-theme="light"] [style*="background:#181818"] {
+.mtiq-shell[data-theme="light"] [style*="background:#181818"],
+.mtiq-shell[data-theme="light"] [style*="background: #1a1a1a"],
+.mtiq-shell[data-theme="light"] [style*="background: #1f1f1f"] {
   background: var(--mtiq-surface) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="background: #111"],
@@ -743,11 +746,11 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   background: var(--mtiq-bg) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="background: #0f172a"],
-.mtiq-shell[data-theme="light"] [style*="background:#0f172a"] {
+.mtiq-shell[data-theme="light"] [style*="background:#0f172a"],
+.mtiq-shell[data-theme="light"] [style*="background: #1e293b"] {
   background: var(--mtiq-surface-3) !important;
 }
-.mtiq-shell[data-theme="light"] [style*="background: #0a1a24"],
-.mtiq-shell[data-theme="light"] [style*="background:#0a1a24"] {
+.mtiq-shell[data-theme="light"] [style*="background: #0a1a24"] {
   background: #e0f2fe !important;
 }
 
@@ -755,47 +758,115 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .mtiq-shell[data-theme="light"] [style*="border: 1px solid #222"],
 .mtiq-shell[data-theme="light"] [style*="border:1px solid #222"],
 .mtiq-shell[data-theme="light"] [style*="border-bottom: 1px solid #222"],
-.mtiq-shell[data-theme="light"] [style*="border-top: 1px solid #222"] {
+.mtiq-shell[data-theme="light"] [style*="border-top: 1px solid #222"],
+.mtiq-shell[data-theme="light"] [style*="borderColor: '#222'"] {
   border-color: var(--mtiq-border) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="border: 1px solid #1a1a1a"],
 .mtiq-shell[data-theme="light"] [style*="border-bottom: 1px solid #1a1a1a"],
-.mtiq-shell[data-theme="light"] [style*="border-top: 1px solid #1a1a1a"] {
+.mtiq-shell[data-theme="light"] [style*="border-top: 1px solid #1a1a1a"],
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #181818"] {
   border-color: var(--mtiq-border-2) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="border: 1px solid #2a2a2a"],
 .mtiq-shell[data-theme="light"] [style*="border:1px solid #2a2a2a"],
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #333"],
 .mtiq-shell[data-theme="light"] [style*="border: 1px dashed #2a2a2a"] {
   border-color: var(--mtiq-border-3) !important;
 }
-.mtiq-shell[data-theme="light"] [style*="border: 1px solid #1e293b"] {
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #1e293b"],
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #334155"] {
   border-color: #bfdbfe !important;
 }
 
-/* Foreground colors */
+/* Foreground */
 .mtiq-shell[data-theme="light"] [style*="color: #e0e0e0"],
-.mtiq-shell[data-theme="light"] [style*="color:#e0e0e0"] {
+.mtiq-shell[data-theme="light"] [style*="color:#e0e0e0"],
+.mtiq-shell[data-theme="light"] [style*="color: #fff"],
+.mtiq-shell[data-theme="light"] [style*="color:#fff"],
+.mtiq-shell[data-theme="light"] [style*="color: #ffffff"],
+.mtiq-shell[data-theme="light"] [style*="color: #eee"],
+.mtiq-shell[data-theme="light"] [style*="color: #ddd"],
+.mtiq-shell[data-theme="light"] [style*="color: #ccc"] {
   color: var(--mtiq-text) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="color: #cbd5e1"],
-.mtiq-shell[data-theme="light"] [style*="color:#cbd5e1"] {
+.mtiq-shell[data-theme="light"] [style*="color: #aaa"],
+.mtiq-shell[data-theme="light"] [style*="color: #9ca3af"] {
   color: var(--mtiq-text-2) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="color: #888"],
-.mtiq-shell[data-theme="light"] [style*="color:#888"],
-.mtiq-shell[data-theme="light"] [style*="color: #999"] {
+.mtiq-shell[data-theme="light"] [style*="color: #999"],
+.mtiq-shell[data-theme="light"] [style*="color: #777"] {
   color: var(--mtiq-text-muted) !important;
 }
-.mtiq-shell[data-theme="light"] [style*="color: #666"],
-.mtiq-shell[data-theme="light"] [style*="color:#666"] {
+.mtiq-shell[data-theme="light"] [style*="color: #666"] {
   color: var(--mtiq-text-soft) !important;
 }
 .mtiq-shell[data-theme="light"] [style*="color: #555"],
-.mtiq-shell[data-theme="light"] [style*="color: #444"] {
+.mtiq-shell[data-theme="light"] [style*="color: #444"],
+.mtiq-shell[data-theme="light"] [style*="color: #333"] {
   color: var(--mtiq-text-faint) !important;
 }
 
-/* Hover layer designed for dark panels — soften on light */
-.mtiq-shell[data-theme="light"] .hover\:bg-white\/5:hover {
+/* Form fields */
+.mtiq-shell[data-theme="light"] input,
+.mtiq-shell[data-theme="light"] textarea,
+.mtiq-shell[data-theme="light"] select {
+  background: #ffffff !important;
+  color: var(--mtiq-text) !important;
+  border-color: var(--mtiq-border-3) !important;
+}
+.mtiq-shell[data-theme="light"] input::placeholder,
+.mtiq-shell[data-theme="light"] textarea::placeholder {
+  color: var(--mtiq-text-faint) !important;
+}
+.mtiq-shell[data-theme="light"] input:focus,
+.mtiq-shell[data-theme="light"] textarea:focus,
+.mtiq-shell[data-theme="light"] select:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+  outline: none !important;
+}
+
+/* Dark-tinted buttons → light tonal */
+.mtiq-shell[data-theme="light"] button[style*="background: #181818"],
+.mtiq-shell[data-theme="light"] button[style*="background: #1f1f1f"] {
+  background: #f1f5f9 !important;
+  color: var(--mtiq-text) !important;
+}
+.mtiq-shell[data-theme="light"] button[style*="background: #0f0f0f"]:hover,
+.mtiq-shell[data-theme="light"] button[style*="background: #181818"]:hover {
+  background: #e2e8f0 !important;
+}
+
+/* Status / accent chips */
+.mtiq-shell[data-theme="light"] [style*="background: #052e1f"] { background: #ecfdf5 !important; }
+.mtiq-shell[data-theme="light"] [style*="background: #065f46"] { background: #10b981 !important; }
+.mtiq-shell[data-theme="light"] [style*="background: #3a2a0a"] { background: #fef3c7 !important; }
+.mtiq-shell[data-theme="light"] [style*="background: #7c2d12"] {
+  background: #fed7aa !important; color: #7c2d12 !important;
+}
+.mtiq-shell[data-theme="light"] [style*="background: #1f1416"] { background: #fef2f2 !important; }
+.mtiq-shell[data-theme="light"] [style*="color: #a7f3d0"] { color: #065f46 !important; }
+.mtiq-shell[data-theme="light"] [style*="color: #d1fae5"] { color: #ffffff !important; }
+.mtiq-shell[data-theme="light"] [style*="color: #fca5a5"] { color: #b91c1c !important; }
+.mtiq-shell[data-theme="light"] [style*="color: #fed7aa"] { color: #7c2d12 !important; }
+.mtiq-shell[data-theme="light"] [style*="color: #fbbf24"] { color: #b45309 !important; }
+.mtiq-shell[data-theme="light"] [style*="color: #4ade80"] { color: #15803d !important; }
+
+/* Hover layers designed for dark panels */
+.mtiq-shell[data-theme="light"] .hover\:bg-white\/5:hover,
+.mtiq-shell[data-theme="light"] .hover\:bg-white\/10:hover {
   background-color: rgba(15, 23, 42, 0.06) !important;
 }
+.mtiq-shell[data-theme="light"] .hover\:bg-\[\#181818\]:hover,
+.mtiq-shell[data-theme="light"] .hover\:bg-\[\#0f0f0f\]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Scrollbars */
+.mtiq-shell[data-theme="light"] ::-webkit-scrollbar { width: 8px; height: 8px; }
+.mtiq-shell[data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.mtiq-shell[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.mtiq-shell[data-theme="light"] ::-webkit-scrollbar-track { background: transparent; }
