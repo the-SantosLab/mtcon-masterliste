@@ -11,29 +11,35 @@ const corsHeaders = {
   "Access-Control-Max-Age": "86400",
 };
 
-const SYSTEM_PROMPT = `Du bist MTIQ und liest eine VISITENKARTE.
+const SYSTEM_PROMPT = `Du bist MTIQ und liest VISITENKARTEN. Es können MEHRERE Karten in einem Bild oder PDF enthalten sein (Vorder-/Rückseite separat, Sammelseite, mehrseitiges PDF).
 Antworte AUSSCHLIESSLICH mit validem JSON in genau diesem Schema:
 {
-  "first_name": "Vorname oder null",
-  "last_name": "Nachname oder null",
-  "position": "Titel/Position oder null",
-  "company_name": "Firma oder null",
-  "email": "primäre E-Mail oder null",
-  "phone": "Festnetz / Zentrale oder null",
-  "mobile": "Mobilnummer oder null",
-  "website": "URL oder null",
-  "street": "Straße + Nr oder null",
-  "zip": "PLZ oder null",
-  "city": "Stadt oder null",
-  "country": "Land oder null",
-  "vat_id": "USt-ID oder null",
-  "notes": "weitere relevante Infos (Slogan, weitere Telefone, …) oder null",
-  "confidence": "low|medium|high"
+  "cards": [
+    {
+      "first_name": "Vorname oder null",
+      "last_name": "Nachname oder null",
+      "position": "Titel/Position oder null",
+      "company_name": "Firma oder null",
+      "email": "primäre E-Mail oder null",
+      "phone": "Festnetz / Zentrale oder null",
+      "mobile": "Mobilnummer oder null",
+      "website": "URL oder null",
+      "street": "Straße + Nr oder null",
+      "zip": "PLZ oder null",
+      "city": "Stadt oder null",
+      "country": "Land oder null",
+      "vat_id": "USt-ID oder null",
+      "notes": "weitere relevante Infos (Slogan, weitere Telefone, …) oder null",
+      "confidence": "low|medium|high"
+    }
+  ]
 }
 Regeln:
+- Eine Karte = eine Person. Mehrere Personen ⇒ mehrere Einträge in "cards".
+- Vorder- und Rückseite derselben Karte ZUSAMMENFÜHREN (ein Eintrag).
 - Telefonnummern im Original-Format belassen (mit Ländervorwahl wenn vorhanden).
 - Niemals Felder erfinden — was nicht lesbar ist → null.
-- Wenn das Bild keine Visitenkarte zeigt: alle Felder null, confidence "low".`;
+- Wenn keine Visitenkarte erkennbar: "cards": [].`;
 
 function bufferToBase64(buf: Uint8Array): string {
   const CHUNK = 0x8000;
