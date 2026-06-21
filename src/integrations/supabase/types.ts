@@ -5416,6 +5416,66 @@ export type Database = {
           },
         ]
       }
+      mtiq_tablets: {
+        Row: {
+          company_id: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          current_step: number
+          extracted: Json
+          id: string
+          kind: string
+          source_file_path: string | null
+          status: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_step?: number
+          extracted?: Json
+          id?: string
+          kind?: string
+          source_file_path?: string | null
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_step?: number
+          extracted?: Json
+          id?: string
+          kind?: string
+          source_file_path?: string | null
+          status?: string
+          steps?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mtiq_tablets_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mtiq_tablets_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       note_board_members: {
         Row: {
           board_id: string
