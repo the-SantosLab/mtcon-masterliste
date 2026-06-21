@@ -72,20 +72,34 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
   const [cards, setCards] = useState<CardItem[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [tabletLoading, setTabletLoading] = useState(false);
+  const [log, setLog] = useState<LogEntry[]>([
+    { id: 'init', ts: Date.now(), kind: 'mtiq', text: 'Hi, ich bin MTIQ. Lade eine oder mehrere Visitenkarten hoch – ich lese jede Karte einzeln, prüfe gegen bestehende Firmen und schlage dir den nächsten Schritt vor.' },
+  ]);
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const addLog = (kind: LogKind, text: string) =>
+    setLog(prev => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), kind, text }]);
+
+  useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [log.length]);
 
   const pick = (fs: FileList | File[] | null) => {
     if (!fs) return;
     const arr = Array.from(fs);
     const valid = arr.filter(f => {
-      if (f.size > 20 * 1024 * 1024) { toast.error(`Zu groß (max. 20 MB): ${f.name}`); return false; }
+      if (f.size > 20 * 1024 * 1024) { toast.error(`Zu groß (max. 20 MB): ${f.name}`); addLog('error', `Übersprungen (max. 20 MB): ${f.name}`); return false; }
       return true;
     });
     setFiles(prev => {
       const merged = [...prev];
+      const added: string[] = [];
       for (const f of valid) {
-        if (!merged.some(m => m.name === f.name && m.size === f.size)) merged.push(f);
+        if (!merged.some(m => m.name === f.name && m.size === f.size)) { merged.push(f); added.push(f.name); }
       }
-      return merged.slice(0, 10);
+      const next = merged.slice(0, 10);
+      if (added.length > 0) {
+        addLog('user', `${added.length} Datei${added.length === 1 ? '' : 'en'} hinzugefügt: ${added.join(', ')}`);
+        addLog('hint', `Insgesamt ${next.length}/10 bereit. Klick auf „Erkennen", um MTIQ starten zu lassen.`);
+      }
+      return next;
     });
   };
 
