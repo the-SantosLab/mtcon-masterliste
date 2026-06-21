@@ -100,9 +100,11 @@ export function MtiqPanel({ open, onClose }: Props) {
         ? '· Dokument-Scan'
         : mode === 'card'
           ? '· Visitenkarte'
-          : mode === 'drafts'
-            ? '· offene Entwürfe'
-            : '· alle Vorgänge';
+          : mode === 'tablet'
+            ? '· Prozess-Tablet'
+            : mode === 'drafts'
+              ? '· offene Entwürfe'
+              : '· alle Vorgänge';
 
 
   return (
