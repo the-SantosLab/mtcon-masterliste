@@ -7,6 +7,7 @@ import { MtiqNewDraft } from './MtiqNewDraft';
 import { MtiqDraftsTab } from './MtiqDraftsTab';
 import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
+import { MtiqTablet } from './MtiqTablet';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
