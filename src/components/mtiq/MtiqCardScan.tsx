@@ -210,6 +210,46 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
   };
 
 
+  // ---------- Activity feed (chat-like) ----------
+  const kindStyle = (k: LogKind) => {
+    switch (k) {
+      case 'user':    return { bg: '#0c2a3d', border: '#155e8a', color: '#bae6fd', label: 'Du',     Icon: UserPlus };
+      case 'mtiq':    return { bg: '#1a1230', border: '#3b2d6b', color: '#e0d7ff', label: 'MTIQ',   Icon: Sparkles };
+      case 'success': return { bg: '#052e1f', border: '#065f46', color: '#a7f3d0', label: 'System', Icon: Check };
+      case 'error':   return { bg: '#2a0d10', border: '#7f1d1d', color: '#fecaca', label: 'Fehler', Icon: AlertCircle };
+      case 'hint':    return { bg: '#1f1a08', border: '#78550c', color: '#fde68a', label: 'Tipp',   Icon: Info };
+      default:        return { bg: '#0f0f0f', border: '#222',    color: '#cbd5e1', label: 'System', Icon: Info };
+    }
+  };
+
+  const renderFeed = () => (
+    <div className="rounded-lg p-2 space-y-1.5" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+      <div className="flex items-center gap-1.5 px-1 pb-1" style={{ borderBottom: '1px solid #1a1a1a' }}>
+        <Sparkles className="h-3 w-3" style={{ color: '#818cf8' }} />
+        <span className="text-[10px] uppercase tracking-wide" style={{ color: '#888' }}>MTIQ Verlauf</span>
+      </div>
+      <div className="max-h-[220px] overflow-y-auto pr-1 space-y-1.5">
+        {log.map(e => {
+          const s = kindStyle(e.kind);
+          const time = new Date(e.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return (
+            <div key={e.id} className="flex items-start gap-1.5 p-1.5 rounded-md" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+              <s.Icon className="h-3 w-3 mt-[2px] shrink-0" style={{ color: s.color }} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wide font-semibold" style={{ color: s.color, opacity: 0.85 }}>{s.label}</span>
+                  <span className="text-[9px]" style={{ color: '#555' }}>{time}</span>
+                </div>
+                <div className="text-[11px] leading-snug" style={{ color: s.color }}>{e.text}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={logEndRef} />
+      </div>
+    </div>
+  );
+
   // ---------- STEP: upload ----------
   if (step === 'upload') {
     return (
@@ -221,6 +261,7 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+          {renderFeed()}
           <div
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
