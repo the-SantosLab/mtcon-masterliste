@@ -20,6 +20,8 @@ type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
+  const { preferences } = usePreferences();
+  const theme = preferences.theme;
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
