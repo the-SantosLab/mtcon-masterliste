@@ -257,6 +257,31 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
             {F('notes', 'Notizen', 2, true)}
           </div>
 
+          {onOpenTablet && (
+            <button
+              disabled={committing}
+              onClick={async () => {
+                setCommitting(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('mtiq-tablet', {
+                    body: { action: 'create', extracted },
+                  });
+                  if (error) throw error;
+                  if (data?.error) throw new Error(data.error);
+                  toast.success('Prozess-Tablet gestartet');
+                  onOpenTablet(data.tablet.id);
+                } catch (e: any) { toast.error(e?.message ?? 'Tablet konnte nicht gestartet werden'); }
+                finally { setCommitting(false); }
+              }}
+              className="w-full px-3 py-2 text-[12px] rounded-md flex items-center justify-center gap-1.5 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg,#0ea5e9,#818cf8)', color: 'white' }}
+            >
+              {committing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanLine className="h-3.5 w-3.5" />}
+              Im Prozess-Tablet weiterführen (8 Schritte)
+            </button>
+          )}
+
+
           <div>
             <div className="text-[10px] uppercase tracking-wide mb-1.5" style={{ color: '#888' }}>
               Neu anlegen als …
