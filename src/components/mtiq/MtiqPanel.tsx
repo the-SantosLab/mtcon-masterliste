@@ -9,6 +9,7 @@ import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
 import { MtiqTablet } from './MtiqTablet';
 import { supabase } from '@/integrations/supabase/client';
+import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface Props {
   open: boolean;
