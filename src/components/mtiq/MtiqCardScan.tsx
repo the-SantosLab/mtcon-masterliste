@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Upload, ScanLine, X, ArrowLeft, Building2, UserPlus, ExternalLink, Check, CreditCard, FileText } from 'lucide-react';
+import { Loader2, Upload, ScanLine, X, ArrowLeft, Building2, UserPlus, ExternalLink, Check, CreditCard, FileText, Sparkles, Info, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,6 +8,9 @@ interface Props {
   onClose: () => void;
   onOpenTablet?: (tabletId: string) => void;
 }
+
+type LogKind = 'user' | 'mtiq' | 'system' | 'hint' | 'success' | 'error';
+type LogEntry = { id: string; ts: number; kind: LogKind; text: string };
 
 const ACCEPT = 'image/png,image/jpeg,image/webp,image/heic,application/pdf';
 
@@ -69,28 +72,48 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
   const [cards, setCards] = useState<CardItem[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [tabletLoading, setTabletLoading] = useState(false);
+  const [log, setLog] = useState<LogEntry[]>([
+    { id: 'init', ts: Date.now(), kind: 'mtiq', text: 'Hi, ich bin MTIQ. Lade eine oder mehrere Visitenkarten hoch – ich lese jede Karte einzeln, prüfe gegen bestehende Firmen und schlage dir den nächsten Schritt vor.' },
+  ]);
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const addLog = (kind: LogKind, text: string) =>
+    setLog(prev => [...prev, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), kind, text }]);
+
+  useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [log.length]);
 
   const pick = (fs: FileList | File[] | null) => {
     if (!fs) return;
     const arr = Array.from(fs);
     const valid = arr.filter(f => {
-      if (f.size > 20 * 1024 * 1024) { toast.error(`Zu groß (max. 20 MB): ${f.name}`); return false; }
+      if (f.size > 20 * 1024 * 1024) { toast.error(`Zu groß (max. 20 MB): ${f.name}`); addLog('error', `Übersprungen (max. 20 MB): ${f.name}`); return false; }
       return true;
     });
     setFiles(prev => {
       const merged = [...prev];
+      const added: string[] = [];
       for (const f of valid) {
-        if (!merged.some(m => m.name === f.name && m.size === f.size)) merged.push(f);
+        if (!merged.some(m => m.name === f.name && m.size === f.size)) { merged.push(f); added.push(f.name); }
       }
-      return merged.slice(0, 10);
+      const next = merged.slice(0, 10);
+      if (added.length > 0) {
+        addLog('user', `${added.length} Datei${added.length === 1 ? '' : 'en'} hinzugefügt: ${added.join(', ')}`);
+        addLog('hint', `Insgesamt ${next.length}/10 bereit. Klick auf „Erkennen", um MTIQ starten zu lassen.`);
+      }
+      return next;
     });
   };
 
-  const removeFile = (i: number) => setFiles(prev => prev.filter((_, n) => n !== i));
+  const removeFile = (i: number) => {
+    const f = files[i];
+    setFiles(prev => prev.filter((_, n) => n !== i));
+    if (f) addLog('user', `Datei entfernt: ${f.name}`);
+  };
 
   const scan = async () => {
     if (files.length === 0) { toast.error('Bitte mindestens eine Datei auswählen.'); return; }
     setScanning(true);
+    addLog('user', `Erkennung gestartet für ${files.length} Datei${files.length === 1 ? '' : 'en'}.`);
+    addLog('mtiq', `Lese ${files.length === 1 ? 'die Karte' : 'die Karten'} per OCR & extrahiere Felder (Name, Firma, Kontakt, Adresse, USt-ID)…`);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
@@ -109,13 +132,25 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
         candidates: r.candidates || [],
         status: 'pending',
       }));
-      if (list.length === 0) { toast.error('Keine Visitenkarte erkannt.'); return; }
+      if (list.length === 0) { toast.error('Keine Visitenkarte erkannt.'); addLog('error', 'Keine Visitenkarte erkannt. Bitte schärferes Bild verwenden.'); return; }
       setCards(list);
       setActiveIdx(0);
       setStep('review');
       toast.success(`${list.length} Visitenkarte${list.length === 1 ? '' : 'n'} erkannt`);
+      addLog('success', `${list.length} Karte${list.length === 1 ? '' : 'n'} erkannt.`);
+      list.forEach((c, i) => {
+        const name = [c.extracted.first_name, c.extracted.last_name].filter(Boolean).join(' ') || '–';
+        const firma = c.extracted.company_name || '–';
+        addLog('mtiq', `Karte ${i + 1}: ${name} · ${firma}${c.extracted.email ? ` · ${c.extracted.email}` : ''}`);
+        if (c.candidates.length > 0) {
+          addLog('hint', `Karte ${i + 1}: ${c.candidates.length} mögliche bestehende Firma${c.candidates.length === 1 ? '' : 'en'} gefunden – Kontakt anhängen oder neu anlegen.`);
+        } else {
+          addLog('hint', `Karte ${i + 1}: keine Dublette gefunden – als Kunde, Vertriebspartner, Lieferant oder Sonstiges neu anlegen.`);
+        }
+      });
     } catch (e: any) {
       toast.error(e?.message ?? 'Erkennung fehlgeschlagen');
+      addLog('error', `Erkennung fehlgeschlagen: ${e?.message ?? 'Unbekannter Fehler'}`);
     } finally {
       setScanning(false);
     }
@@ -134,9 +169,13 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
     if (!card) return;
     if (choice !== 'attach' && !card.extracted.company_name?.trim()) {
       toast.error('Firmenname fehlt – bitte ergänzen.');
+      addLog('error', `Karte ${idx + 1}: Firmenname fehlt – bitte ergänzen.`);
       return;
     }
     setCardStatus(idx, { status: 'saving' });
+    const label = choice === 'attach' ? 'Kontakt anhängen' : `neu anlegen als ${choice}`;
+    addLog('user', `Karte ${idx + 1}: ${label}.`);
+    addLog('mtiq', `Speichere & prüfe Dubletten in der Datenbank…`);
     try {
       const { data, error } = await supabase.functions.invoke('mtiq-business-card-commit', {
         body: { extracted: card.extracted, choice, company_id: companyId ?? null },
@@ -148,18 +187,68 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
         result: { company_id: data.company_id, customer_no: data.customer_no, isNew: choice !== 'attach' },
       });
       toast.success(choice === 'attach' ? 'Kontakt angelegt' : `Firma angelegt · ${data.customer_no ?? ''}`);
+      addLog('success', choice === 'attach'
+        ? `Karte ${idx + 1}: Kontakt an bestehende Firma angehängt.`
+        : `Karte ${idx + 1}: Firma angelegt${data.customer_no ? ` · ${data.customer_no}` : ''}.`);
       // Auto-jump to next pending card
       const next = cards.findIndex((c, i) => i > idx && c.status === 'pending');
-      if (next >= 0) setActiveIdx(next);
+      if (next >= 0) { setActiveIdx(next); addLog('hint', `Weiter mit Karte ${next + 1}.`); }
+      else {
+        const remaining = cards.filter((c, i) => i !== idx && c.status === 'pending').length;
+        if (remaining === 0) addLog('hint', 'Alle Karten verarbeitet. Du kannst das Fenster jetzt schließen.');
+      }
     } catch (e: any) {
       setCardStatus(idx, { status: 'pending' });
       toast.error(e?.message ?? 'Anlegen fehlgeschlagen');
+      addLog('error', `Karte ${idx + 1}: Anlegen fehlgeschlagen – ${e?.message ?? 'Unbekannter Fehler'}`);
     }
   };
 
   const reset = () => {
     setFiles([]); setCards([]); setActiveIdx(0); setStep('upload');
+    addLog('system', 'Zurück zum Upload. Du kannst neue Karten hochladen.');
   };
+
+
+  // ---------- Activity feed (chat-like) ----------
+  const kindStyle = (k: LogKind) => {
+    switch (k) {
+      case 'user':    return { bg: '#0c2a3d', border: '#155e8a', color: '#bae6fd', label: 'Du',     Icon: UserPlus };
+      case 'mtiq':    return { bg: '#1a1230', border: '#3b2d6b', color: '#e0d7ff', label: 'MTIQ',   Icon: Sparkles };
+      case 'success': return { bg: '#052e1f', border: '#065f46', color: '#a7f3d0', label: 'System', Icon: Check };
+      case 'error':   return { bg: '#2a0d10', border: '#7f1d1d', color: '#fecaca', label: 'Fehler', Icon: AlertCircle };
+      case 'hint':    return { bg: '#1f1a08', border: '#78550c', color: '#fde68a', label: 'Tipp',   Icon: Info };
+      default:        return { bg: '#0f0f0f', border: '#222',    color: '#cbd5e1', label: 'System', Icon: Info };
+    }
+  };
+
+  const renderFeed = () => (
+    <div className="rounded-lg p-2 space-y-1.5" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+      <div className="flex items-center gap-1.5 px-1 pb-1" style={{ borderBottom: '1px solid #1a1a1a' }}>
+        <Sparkles className="h-3 w-3" style={{ color: '#818cf8' }} />
+        <span className="text-[10px] uppercase tracking-wide" style={{ color: '#888' }}>MTIQ Verlauf</span>
+      </div>
+      <div className="max-h-[220px] overflow-y-auto pr-1 space-y-1.5">
+        {log.map(e => {
+          const s = kindStyle(e.kind);
+          const time = new Date(e.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return (
+            <div key={e.id} className="flex items-start gap-1.5 p-1.5 rounded-md" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+              <s.Icon className="h-3 w-3 mt-[2px] shrink-0" style={{ color: s.color }} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] uppercase tracking-wide font-semibold" style={{ color: s.color, opacity: 0.85 }}>{s.label}</span>
+                  <span className="text-[9px]" style={{ color: '#555' }}>{time}</span>
+                </div>
+                <div className="text-[11px] leading-snug" style={{ color: s.color }}>{e.text}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={logEndRef} />
+      </div>
+    </div>
+  );
 
   // ---------- STEP: upload ----------
   if (step === 'upload') {
@@ -172,6 +261,7 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+          {renderFeed()}
           <div
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
@@ -306,6 +396,7 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
 
       {active && (
         <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+          {renderFeed()}
           {active.status === 'done' && active.result && (
             <div className="p-2.5 rounded-md flex items-center gap-2" style={{ background: '#052e1f', border: '1px solid #065f46' }}>
               <Check className="h-4 w-4" style={{ color: '#10b981' }} />
@@ -422,8 +513,9 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
                 <button
                   onClick={() => {
                     setCardStatus(activeIdx, { status: 'skipped' });
+                    addLog('user', `Karte ${activeIdx + 1} übersprungen.`);
                     const next = cards.findIndex((c, i) => i > activeIdx && c.status === 'pending');
-                    if (next >= 0) setActiveIdx(next);
+                    if (next >= 0) { setActiveIdx(next); addLog('hint', `Weiter mit Karte ${next + 1}.`); }
                   }}
                   className="mt-2 w-full px-2 py-1.5 text-[11px] rounded-md"
                   style={{ background: 'transparent', border: '1px solid #2a2a2a', color: '#888' }}
