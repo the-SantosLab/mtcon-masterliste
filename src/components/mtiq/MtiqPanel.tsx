@@ -7,6 +7,7 @@ import { MtiqNewDraft } from './MtiqNewDraft';
 import { MtiqDraftsTab } from './MtiqDraftsTab';
 import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
+import { MtiqTablet } from './MtiqTablet';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
@@ -14,13 +15,14 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card';
+type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
+  const [activeTabletId, setActiveTabletId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [expanded, setExpanded] = useState<boolean>(() => {
     try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
@@ -98,9 +100,11 @@ export function MtiqPanel({ open, onClose }: Props) {
         ? '· Dokument-Scan'
         : mode === 'card'
           ? '· Visitenkarte'
-          : mode === 'drafts'
-            ? '· offene Entwürfe'
-            : '· alle Vorgänge';
+          : mode === 'tablet'
+            ? '· Prozess-Tablet'
+            : mode === 'drafts'
+              ? '· offene Entwürfe'
+              : '· alle Vorgänge';
 
 
   return (
@@ -180,7 +184,8 @@ export function MtiqPanel({ open, onClose }: Props) {
       <div className="flex-1 min-h-0 flex flex-col">
         {mode === 'new' && <MtiqNewDraft onClose={onClose} />}
         {mode === 'scan' && <MtiqScanUpload onClose={onClose} />}
-        {mode === 'card' && <MtiqCardScan onClose={onClose} />}
+        {mode === 'card' && <MtiqCardScan onClose={onClose} onOpenTablet={(id) => { setActiveTabletId(id); setMode('tablet'); }} />}
+        {mode === 'tablet' && activeTabletId && <MtiqTablet tabletId={activeTabletId} onClose={onClose} />}
         {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
