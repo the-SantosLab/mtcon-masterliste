@@ -691,3 +691,111 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   width: 1.125rem;
   height: 1.125rem;
 }
+
+/* ============================================================
+   MTIQ panel theming (BUG-2026-0099)
+   Wrapping element gets class .mtiq-shell and data-theme attr.
+   Overrides common dark inline colors when theme is "light".
+   ============================================================ */
+.mtiq-shell {
+  --mtiq-bg: #111;
+  --mtiq-surface: #181818;
+  --mtiq-surface-2: #0f0f0f;
+  --mtiq-surface-3: #0f172a;
+  --mtiq-border: #222;
+  --mtiq-border-2: #1a1a1a;
+  --mtiq-border-3: #2a2a2a;
+  --mtiq-text: #e0e0e0;
+  --mtiq-text-2: #cbd5e1;
+  --mtiq-text-muted: #888;
+  --mtiq-text-soft: #666;
+  --mtiq-text-faint: #444;
+}
+.mtiq-shell[data-theme="light"] {
+  --mtiq-bg: #ffffff;
+  --mtiq-surface: #f1f5f9;
+  --mtiq-surface-2: #f8fafc;
+  --mtiq-surface-3: #eff6ff;
+  --mtiq-border: #e2e8f0;
+  --mtiq-border-2: #f1f5f9;
+  --mtiq-border-3: #cbd5e1;
+  --mtiq-text: #0f172a;
+  --mtiq-text-2: #1e293b;
+  --mtiq-text-muted: #475569;
+  --mtiq-text-soft: #64748b;
+  --mtiq-text-faint: #94a3b8;
+}
+
+/* Override the most common inline dark backgrounds inside the panel
+   when running in light mode. Uses attribute substring matching so we
+   don't have to refactor every child component's inline style. */
+.mtiq-shell[data-theme="light"] [style*="background: #0f0f0f"],
+.mtiq-shell[data-theme="light"] [style*="background:#0f0f0f"],
+.mtiq-shell[data-theme="light"] [style*="background: rgb(15, 15, 15)"] {
+  background: var(--mtiq-surface-2) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="background: #181818"],
+.mtiq-shell[data-theme="light"] [style*="background:#181818"] {
+  background: var(--mtiq-surface) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="background: #111"],
+.mtiq-shell[data-theme="light"] [style*="background:#111"] {
+  background: var(--mtiq-bg) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="background: #0f172a"],
+.mtiq-shell[data-theme="light"] [style*="background:#0f172a"] {
+  background: var(--mtiq-surface-3) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="background: #0a1a24"],
+.mtiq-shell[data-theme="light"] [style*="background:#0a1a24"] {
+  background: #e0f2fe !important;
+}
+
+/* Borders */
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #222"],
+.mtiq-shell[data-theme="light"] [style*="border:1px solid #222"],
+.mtiq-shell[data-theme="light"] [style*="border-bottom: 1px solid #222"],
+.mtiq-shell[data-theme="light"] [style*="border-top: 1px solid #222"] {
+  border-color: var(--mtiq-border) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #1a1a1a"],
+.mtiq-shell[data-theme="light"] [style*="border-bottom: 1px solid #1a1a1a"],
+.mtiq-shell[data-theme="light"] [style*="border-top: 1px solid #1a1a1a"] {
+  border-color: var(--mtiq-border-2) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #2a2a2a"],
+.mtiq-shell[data-theme="light"] [style*="border:1px solid #2a2a2a"],
+.mtiq-shell[data-theme="light"] [style*="border: 1px dashed #2a2a2a"] {
+  border-color: var(--mtiq-border-3) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="border: 1px solid #1e293b"] {
+  border-color: #bfdbfe !important;
+}
+
+/* Foreground colors */
+.mtiq-shell[data-theme="light"] [style*="color: #e0e0e0"],
+.mtiq-shell[data-theme="light"] [style*="color:#e0e0e0"] {
+  color: var(--mtiq-text) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="color: #cbd5e1"],
+.mtiq-shell[data-theme="light"] [style*="color:#cbd5e1"] {
+  color: var(--mtiq-text-2) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="color: #888"],
+.mtiq-shell[data-theme="light"] [style*="color:#888"],
+.mtiq-shell[data-theme="light"] [style*="color: #999"] {
+  color: var(--mtiq-text-muted) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="color: #666"],
+.mtiq-shell[data-theme="light"] [style*="color:#666"] {
+  color: var(--mtiq-text-soft) !important;
+}
+.mtiq-shell[data-theme="light"] [style*="color: #555"],
+.mtiq-shell[data-theme="light"] [style*="color: #444"] {
+  color: var(--mtiq-text-faint) !important;
+}
+
+/* Hover layer designed for dark panels — soften on light */
+.mtiq-shell[data-theme="light"] .hover\:bg-white\/5:hover {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}

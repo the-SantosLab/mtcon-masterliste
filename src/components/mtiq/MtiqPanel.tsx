@@ -9,6 +9,7 @@ import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
 import { MtiqTablet } from './MtiqTablet';
 import { supabase } from '@/integrations/supabase/client';
+import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface Props {
   open: boolean;
@@ -19,6 +20,8 @@ type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
+  const { preferences } = usePreferences();
+  const theme = preferences.theme;
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
   const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
@@ -109,7 +112,8 @@ export function MtiqPanel({ open, onClose }: Props) {
 
   return (
     <div
-      className="mtiq-panel-slide"
+      className="mtiq-panel-slide mtiq-shell"
+      data-theme={theme}
       style={{
         position: 'fixed',
         ...(pos
@@ -119,10 +123,12 @@ export function MtiqPanel({ open, onClose }: Props) {
         height: expanded ? 'calc(100vh - 140px)' : 680,
         maxHeight: 'calc(100vh - 120px)',
         maxWidth: 'calc(100vw - 40px)',
-        background: '#111',
-        border: '1px solid #222',
+        background: 'var(--mtiq-bg)',
+        border: '1px solid var(--mtiq-border)',
         borderRadius: 20,
-        boxShadow: '0 24px 60px -20px rgba(0,0,0,0.7)',
+        boxShadow: theme === 'light'
+          ? '0 24px 60px -20px rgba(15,23,42,0.25)'
+          : '0 24px 60px -20px rgba(0,0,0,0.7)',
         zIndex: 9998,
         display: 'flex',
         flexDirection: 'column',
