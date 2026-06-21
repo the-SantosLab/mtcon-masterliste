@@ -396,6 +396,7 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
 
       {active && (
         <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+          {renderFeed()}
           {active.status === 'done' && active.result && (
             <div className="p-2.5 rounded-md flex items-center gap-2" style={{ background: '#052e1f', border: '1px solid #065f46' }}>
               <Check className="h-4 w-4" style={{ color: '#10b981' }} />
