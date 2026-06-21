@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 interface Props {
   onClose: () => void;
+  onOpenTablet?: (tabletId: string) => void;
 }
 
 const ACCEPT = 'image/png,image/jpeg,image/webp,image/heic,application/pdf';
