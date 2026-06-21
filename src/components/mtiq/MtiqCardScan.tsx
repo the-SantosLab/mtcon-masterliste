@@ -215,6 +215,16 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
 
   // ---------- Activity feed (chat-like) ----------
   const kindStyle = (k: LogKind) => {
+    if (isLight) {
+      switch (k) {
+        case 'user':    return { bg: '#eff6ff', border: '#bfdbfe', color: '#1e40af', label: 'Du',     Icon: UserPlus };
+        case 'mtiq':    return { bg: '#f5f3ff', border: '#ddd6fe', color: '#5b21b6', label: 'MTIQ',   Icon: Sparkles };
+        case 'success': return { bg: '#ecfdf5', border: '#a7f3d0', color: '#065f46', label: 'System', Icon: Check };
+        case 'error':   return { bg: '#fef2f2', border: '#fecaca', color: '#991b1b', label: 'Fehler', Icon: AlertCircle };
+        case 'hint':    return { bg: '#fffbeb', border: '#fde68a', color: '#92400e', label: 'Tipp',   Icon: Info };
+        default:        return { bg: '#f8fafc', border: '#e2e8f0', color: '#334155', label: 'System', Icon: Info };
+      }
+    }
     switch (k) {
       case 'user':    return { bg: '#0c2a3d', border: '#155e8a', color: '#bae6fd', label: 'Du',     Icon: UserPlus };
       case 'mtiq':    return { bg: '#1a1230', border: '#3b2d6b', color: '#e0d7ff', label: 'MTIQ',   Icon: Sparkles };
@@ -225,11 +235,17 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
     }
   };
 
+  const feedBg = isLight ? '#ffffff' : '#0a0a0a';
+  const feedBorder = isLight ? '#e5e7eb' : '#1a1a1a';
+  const feedHeaderBorder = isLight ? '#f1f5f9' : '#1a1a1a';
+  const feedLabel = isLight ? '#475569' : '#888';
+  const feedTime = isLight ? '#94a3b8' : '#555';
+
   const renderFeed = () => (
-    <div className="rounded-lg p-2 space-y-1.5" style={{ background: '#0a0a0a', border: '1px solid #1a1a1a' }}>
-      <div className="flex items-center gap-1.5 px-1 pb-1" style={{ borderBottom: '1px solid #1a1a1a' }}>
+    <div className="rounded-lg p-2 space-y-1.5" style={{ background: feedBg, border: `1px solid ${feedBorder}` }}>
+      <div className="flex items-center gap-1.5 px-1 pb-1" style={{ borderBottom: `1px solid ${feedHeaderBorder}` }}>
         <Sparkles className="h-3 w-3" style={{ color: '#818cf8' }} />
-        <span className="text-[10px] uppercase tracking-wide" style={{ color: '#888' }}>MTIQ Verlauf</span>
+        <span className="text-[10px] uppercase tracking-wide" style={{ color: feedLabel }}>MTIQ Verlauf</span>
       </div>
       <div className="max-h-[220px] overflow-y-auto pr-1 space-y-1.5">
         {log.map(e => {
@@ -241,7 +257,7 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[9px] uppercase tracking-wide font-semibold" style={{ color: s.color, opacity: 0.85 }}>{s.label}</span>
-                  <span className="text-[9px]" style={{ color: '#555' }}>{time}</span>
+                  <span className="text-[9px]" style={{ color: feedTime }}>{time}</span>
                 </div>
                 <div className="text-[11px] leading-snug" style={{ color: s.color }}>{e.text}</div>
               </div>
