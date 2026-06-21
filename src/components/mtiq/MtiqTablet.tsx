@@ -28,6 +28,128 @@ const DESC: Record<number, string> = {
   8: 'Wiedervorlage / Übergabe in den Vertriebsprozess.',
 };
 
+function Row({ label, value }: { label: string; value: any }) {
+  if (value === null || value === undefined || value === '') return null;
+  return (
+    <div className="flex gap-2">
+      <span className="shrink-0" style={{ color: '#777', minWidth: 110 }}>{label}</span>
+      <span style={{ color: '#e0e0e0' }}>{String(value)}</span>
+    </div>
+  );
+}
+
+function renderResult(n: number, r: any): JSX.Element | null {
+  if (!r) return null;
+  if (n === 2) {
+    const e = r.enrichment ?? {};
+    return (
+      <>
+        <div style={{ color: '#a7f3d0' }}>
+          E-Mail {r.email_valid ? 'gültig ✓' : 'ungültig ✗'} · Telefon {r.phone_valid ? 'gültig ✓' : 'ungültig ✗'} · Domain {r.domain_match ? 'passt zur Firma' : 'weicht ab'}
+        </div>
+        {(e.industry || e.size || e.hq || e.linkedin || e.summary) && (
+          <div className="pt-1 mt-1" style={{ borderTop: '1px solid #1a1a1a' }}>
+            <div style={{ color: '#888' }} className="text-[10px] uppercase mb-1">Firmenprofil</div>
+            <Row label="Branche" value={e.industry} />
+            <Row label="Größe" value={e.size} />
+            <Row label="Standort" value={e.hq} />
+            <Row label="LinkedIn" value={e.linkedin} />
+            {e.summary && <div className="pt-1" style={{ color: '#cbd5e1' }}>{e.summary}</div>}
+          </div>
+        )}
+      </>
+    );
+  }
+  if (n === 3) {
+    const cands = r.candidates ?? [];
+    const contacts = r.contact_candidates ?? r.contacts ?? [];
+    if (!cands.length && !contacts.length && !r.has_duplicates) {
+      return <div style={{ color: '#a7f3d0' }}>Keine Dubletten gefunden – Firma und Kontakt sind neu.</div>;
+    }
+    return (
+      <>
+        <div style={{ color: r.has_duplicates ? '#fde68a' : '#a7f3d0' }}>
+          {r.has_duplicates ? 'Mögliche Dubletten gefunden:' : 'Treffer geprüft – keine eindeutige Dublette.'}
+        </div>
+        {cands.length > 0 && (
+          <div className="pt-1 mt-1" style={{ borderTop: '1px solid #1a1a1a' }}>
+            <div style={{ color: '#888' }} className="text-[10px] uppercase mb-1">Firmen-Treffer</div>
+            {cands.slice(0, 5).map((c: any, i: number) => (
+              <div key={i} style={{ color: '#e0e0e0' }}>
+                · {c.name}{c.customer_no ? ` (${c.customer_no})` : ''}{typeof c.score === 'number' ? ` – Score ${c.score}` : ''}
+                {c.reasons?.length ? <span style={{ color: '#888' }}> – {c.reasons.join(', ')}</span> : null}
+              </div>
+            ))}
+          </div>
+        )}
+        {contacts.length > 0 && (
+          <div className="pt-1 mt-1" style={{ borderTop: '1px solid #1a1a1a' }}>
+            <div style={{ color: '#888' }} className="text-[10px] uppercase mb-1">Kontakt-Treffer</div>
+            {contacts.slice(0, 5).map((c: any, i: number) => (
+              <div key={i} style={{ color: '#e0e0e0' }}>
+                · {[c.first_name, c.last_name].filter(Boolean).join(' ')}{c.email ? ` – ${c.email}` : ''}
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+  if (n === 4) {
+    return (
+      <>
+        <Row label="Einordnung" value={r.kind} />
+        <Row label="Lead-Score" value={typeof r.score === 'number' ? `${r.score}/100` : r.score} />
+        {r.reason && <div className="pt-1" style={{ color: '#cbd5e1' }}>{r.reason}</div>}
+      </>
+    );
+  }
+  if (n === 5) {
+    return (
+      <>
+        <div style={{ color: '#a7f3d0' }}>
+          {r.created_new ? 'Neue Firma und Kontakt im CRM angelegt.' : 'Bestehendem Datensatz zugeordnet.'}
+        </div>
+        <Row label="Kundennummer" value={r.customer_no} />
+      </>
+    );
+  }
+  if (n === 6) {
+    return (
+      <>
+        <div style={{ color: '#a7f3d0' }}>E-Mail-Entwürfe erstellt:</div>
+        {r.welcome_subject && <Row label="Begrüßung" value={r.welcome_subject} />}
+        {r.followup_subject && <Row label="Follow-up" value={r.followup_subject} />}
+        {!r.welcome_subject && !r.followup_subject && r.drafts_created && (
+          <div style={{ color: '#cbd5e1' }}>{r.drafts_created} Entwurf/Entwürfe erzeugt.</div>
+        )}
+      </>
+    );
+  }
+  if (n === 7) {
+    return (
+      <>
+        <div style={{ color: '#a7f3d0' }}>Aktivität im CRM hinterlegt.</div>
+        <Row label="Typ" value={r.activity_type} />
+        <Row label="Notiz" value={r.note ?? r.summary} />
+      </>
+    );
+  }
+  if (n === 8) {
+    return (
+      <>
+        <div style={{ color: '#a7f3d0' }}>An den Vertriebsprozess übergeben.</div>
+        <Row label="Wiedervorlage" value={r.followup_date ?? r.due_date} />
+        <Row label="Zugewiesen an" value={r.assigned_to_name ?? r.assigned_to} />
+      </>
+    );
+  }
+  // Fallback: list key/values flat in plain language
+  const entries = Object.entries(r).filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object');
+  if (entries.length === 0) return <div style={{ color: '#888' }}>Schritt abgeschlossen.</div>;
+  return <>{entries.map(([k, v]) => <Row key={k} label={k} value={v} />)}</>;
+}
+
 export function MtiqTablet({ tabletId, onClose }: { tabletId: string; onClose?: () => void }) {
   const navigate = useNavigate();
   const [tablet, setTablet] = useState<Tablet | null>(null);
