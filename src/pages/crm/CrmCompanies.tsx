@@ -76,8 +76,25 @@ export default function CrmCompanies() {
   useEffect(() => { void load(); }, []);
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from('companies').select('*').order('name');
-    setRows(data ?? []);
+    const PAGE = 1000;
+    let from = 0;
+    const all: any[] = [];
+    // PostgREST liefert max. 1000 Zeilen pro Request – seitenweise nachladen
+    // bis eine Teilseite unter PAGE zurückkommt.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('name')
+        .range(from, from + PAGE - 1);
+      if (error) { toast.error(error.message); break; }
+      const batch = data ?? [];
+      all.push(...batch);
+      if (batch.length < PAGE) break;
+      from += PAGE;
+    }
+    setRows(all);
     setLoading(false);
   };
 
