@@ -513,8 +513,9 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
                 <button
                   onClick={() => {
                     setCardStatus(activeIdx, { status: 'skipped' });
+                    addLog('user', `Karte ${activeIdx + 1} übersprungen.`);
                     const next = cards.findIndex((c, i) => i > activeIdx && c.status === 'pending');
-                    if (next >= 0) setActiveIdx(next);
+                    if (next >= 0) { setActiveIdx(next); addLog('hint', `Weiter mit Karte ${next + 1}.`); }
                   }}
                   className="mt-2 w-full px-2 py-1.5 text-[11px] rounded-md"
                   style={{ background: 'transparent', border: '1px solid #2a2a2a', color: '#888' }}
