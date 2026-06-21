@@ -103,11 +103,17 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
     });
   };
 
-  const removeFile = (i: number) => setFiles(prev => prev.filter((_, n) => n !== i));
+  const removeFile = (i: number) => {
+    const f = files[i];
+    setFiles(prev => prev.filter((_, n) => n !== i));
+    if (f) addLog('user', `Datei entfernt: ${f.name}`);
+  };
 
   const scan = async () => {
     if (files.length === 0) { toast.error('Bitte mindestens eine Datei auswählen.'); return; }
     setScanning(true);
+    addLog('user', `Erkennung gestartet für ${files.length} Datei${files.length === 1 ? '' : 'en'}.`);
+    addLog('mtiq', `Lese ${files.length === 1 ? 'die Karte' : 'die Karten'} per OCR & extrahiere Felder (Name, Firma, Kontakt, Adresse, USt-ID)…`);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const token = sess.session?.access_token;
@@ -126,13 +132,25 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
         candidates: r.candidates || [],
         status: 'pending',
       }));
-      if (list.length === 0) { toast.error('Keine Visitenkarte erkannt.'); return; }
+      if (list.length === 0) { toast.error('Keine Visitenkarte erkannt.'); addLog('error', 'Keine Visitenkarte erkannt. Bitte schärferes Bild verwenden.'); return; }
       setCards(list);
       setActiveIdx(0);
       setStep('review');
       toast.success(`${list.length} Visitenkarte${list.length === 1 ? '' : 'n'} erkannt`);
+      addLog('success', `${list.length} Karte${list.length === 1 ? '' : 'n'} erkannt.`);
+      list.forEach((c, i) => {
+        const name = [c.extracted.first_name, c.extracted.last_name].filter(Boolean).join(' ') || '–';
+        const firma = c.extracted.company_name || '–';
+        addLog('mtiq', `Karte ${i + 1}: ${name} · ${firma}${c.extracted.email ? ` · ${c.extracted.email}` : ''}`);
+        if (c.candidates.length > 0) {
+          addLog('hint', `Karte ${i + 1}: ${c.candidates.length} mögliche bestehende Firma${c.candidates.length === 1 ? '' : 'en'} gefunden – Kontakt anhängen oder neu anlegen.`);
+        } else {
+          addLog('hint', `Karte ${i + 1}: keine Dublette gefunden – als Kunde, Vertriebspartner, Lieferant oder Sonstiges neu anlegen.`);
+        }
+      });
     } catch (e: any) {
       toast.error(e?.message ?? 'Erkennung fehlgeschlagen');
+      addLog('error', `Erkennung fehlgeschlagen: ${e?.message ?? 'Unbekannter Fehler'}`);
     } finally {
       setScanning(false);
     }
@@ -151,9 +169,13 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
     if (!card) return;
     if (choice !== 'attach' && !card.extracted.company_name?.trim()) {
       toast.error('Firmenname fehlt – bitte ergänzen.');
+      addLog('error', `Karte ${idx + 1}: Firmenname fehlt – bitte ergänzen.`);
       return;
     }
     setCardStatus(idx, { status: 'saving' });
+    const label = choice === 'attach' ? 'Kontakt anhängen' : `neu anlegen als ${choice}`;
+    addLog('user', `Karte ${idx + 1}: ${label}.`);
+    addLog('mtiq', `Speichere & prüfe Dubletten in der Datenbank…`);
     try {
       const { data, error } = await supabase.functions.invoke('mtiq-business-card-commit', {
         body: { extracted: card.extracted, choice, company_id: companyId ?? null },
@@ -165,18 +187,28 @@ export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
         result: { company_id: data.company_id, customer_no: data.customer_no, isNew: choice !== 'attach' },
       });
       toast.success(choice === 'attach' ? 'Kontakt angelegt' : `Firma angelegt · ${data.customer_no ?? ''}`);
+      addLog('success', choice === 'attach'
+        ? `Karte ${idx + 1}: Kontakt an bestehende Firma angehängt.`
+        : `Karte ${idx + 1}: Firma angelegt${data.customer_no ? ` · ${data.customer_no}` : ''}.`);
       // Auto-jump to next pending card
       const next = cards.findIndex((c, i) => i > idx && c.status === 'pending');
-      if (next >= 0) setActiveIdx(next);
+      if (next >= 0) { setActiveIdx(next); addLog('hint', `Weiter mit Karte ${next + 1}.`); }
+      else {
+        const remaining = cards.filter((c, i) => i !== idx && c.status === 'pending').length;
+        if (remaining === 0) addLog('hint', 'Alle Karten verarbeitet. Du kannst das Fenster jetzt schließen.');
+      }
     } catch (e: any) {
       setCardStatus(idx, { status: 'pending' });
       toast.error(e?.message ?? 'Anlegen fehlgeschlagen');
+      addLog('error', `Karte ${idx + 1}: Anlegen fehlgeschlagen – ${e?.message ?? 'Unbekannter Fehler'}`);
     }
   };
 
   const reset = () => {
     setFiles([]); setCards([]); setActiveIdx(0); setStep('upload');
+    addLog('system', 'Zurück zum Upload. Du kannst neue Karten hochladen.');
   };
+
 
   // ---------- STEP: upload ----------
   if (step === 'upload') {
