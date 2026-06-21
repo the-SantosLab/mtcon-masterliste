@@ -51,7 +51,7 @@ const EMPTY: Extracted = {
   vat_id: null, notes: null,
 };
 
-export function MtiqCardScan({ onClose }: Props) {
+export function MtiqCardScan({ onClose, onOpenTablet }: Props) {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
