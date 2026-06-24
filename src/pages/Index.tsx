@@ -413,16 +413,18 @@ export default function Dashboard() {
                       key={key}
                       type="button"
                       onClick={() => toggleFilter(key)}
+                      data-active={isActive}
                       className={cn(
-                        'group relative rounded-xl border text-left p-3 transition-all',
-                        'backdrop-blur-2xl bg-background/40 hover:bg-background/55',
-                        isActive ? 'border-primary/60 shadow-[0_0_0_1px_hsl(var(--primary)/0.5)]' : 'border-border/40',
+                        'dashboard-kpi group relative rounded-xl border text-left p-3 transition-all',
+                        'backdrop-blur-2xl bg-background/45 hover:bg-background/60',
+                        isActive ? 'border-primary/60' : 'border-border/40',
                       )}
                     >
-                      <Icon className="h-3.5 w-3.5 mb-2" style={{ color: accent }} />
-                      <div className="text-xl lg:text-2xl font-semibold tabular-nums leading-none" style={{ color: accent }}>{counts[key]}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">{title}</div>
+                      <Icon className="h-3.5 w-3.5 mb-2 relative z-10" style={{ color: accent }} />
+                      <div className="relative z-10 text-xl lg:text-2xl font-semibold tabular-nums leading-none" style={{ color: accent }}>{counts[key]}</div>
+                      <div className="relative z-10 text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">{title}</div>
                     </button>
+
                   );
                 })}
               </div>
