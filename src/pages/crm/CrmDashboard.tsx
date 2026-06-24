@@ -79,18 +79,24 @@ export default function CrmDashboard() {
   };
 
   const KPI = ({ label, value, icon: Icon, color }: any) => (
-    <div className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4" style={{ borderLeft: `4px solid ${color}` }}>
-      <div className="flex items-center justify-between mb-2">
+    <div className="crm-kpi" style={{ ['--kpi-accent' as any]: color }}>
+      <div className="flex items-center justify-between mb-2 relative z-10">
         <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
         <Icon className="h-4 w-4" style={{ color }} />
       </div>
-      <p className="text-2xl font-semibold tabular-nums" style={{ color }}>{value}</p>
+      <p className="text-2xl font-semibold tabular-nums relative z-10" style={{ color }}>{value}</p>
     </div>
   );
 
   return (
     <CrmLayout>
-      <h1 className="text-xl font-semibold mb-5">CRM-Dashboard</h1>
+      <div className="crm-surface">
+        <div className="crm-hero mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">CRM-Dashboard</h1>
+            <p className="text-xs text-muted-foreground mt-1">Pipeline, Forecast und tägliche Aktivitäten auf einen Blick.</p>
+          </div>
+        </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <KPI label="Pipeline-Wert" value={formatEUR(pipelineValue)} icon={Briefcase} color="hsl(var(--status-open))" />
@@ -98,6 +104,7 @@ export default function CrmDashboard() {
         <KPI label="Angebote offen" value={sentOpen} icon={FileText} color="hsl(var(--status-overdue))" />
         <KPI label="Won-Rate" value={`${winRate}%`} icon={Trophy} color="hsl(var(--status-done))" />
       </div>
+
 
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
         <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
