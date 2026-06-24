@@ -163,30 +163,31 @@ export default function CrmCompanies() {
 
   return (
     <CrmLayout>
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <Building2 className="h-5 w-5" /> Geschäftspartner
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Kunden, Lieferanten, Leads, Mitbewerber und Distributoren – eine Quelle.</p>
-        </div>
-        <div className="flex gap-2">
-          {selected.size > 0 && (
-            <Button onClick={() => setBulkOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-              <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
+      <div className="crm-surface">
+        <div className="crm-hero mb-5 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground flex items-center gap-2 tracking-tight">
+              <Building2 className="h-5 w-5" /> Geschäftspartner
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">Kunden, Lieferanten, Leads, Mitbewerber und Distributoren – eine Quelle.</p>
+          </div>
+          <div className="flex gap-2">
+            {selected.size > 0 && (
+              <Button onClick={() => setBulkOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+                <Send className="h-3.5 w-3.5" /> {selected.size} in Sequenz
+              </Button>
+            )}
+            <Button onClick={exportCsv} disabled={!filtered.length} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+              <Download className="h-3.5 w-3.5" /> CSV
             </Button>
-          )}
-          <Button onClick={exportCsv} disabled={!filtered.length} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-            <Download className="h-3.5 w-3.5" /> CSV
-          </Button>
-          <Button onClick={() => setImportOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
-            <Upload className="h-3.5 w-3.5" /> Importieren
-          </Button>
-          <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> Neu
-          </Button>
+            <Button onClick={() => setImportOpen(true)} size="sm" variant="outline" className="h-8 text-xs gap-1.5">
+              <Upload className="h-3.5 w-3.5" /> Importieren
+            </Button>
+            <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
+              <Plus className="h-3.5 w-3.5" /> Neu
+            </Button>
+          </div>
         </div>
-      </div>
 
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <Tabs value={tab} onValueChange={v => setTab(v as Tab)}>
@@ -208,7 +209,8 @@ export default function CrmCompanies() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : (
-        <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl">
+        <div className="crm-table-wrap">
+
           <table className="w-full text-xs border-separate border-spacing-0">
             <thead>
               <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground [&>th]:sticky [&>th]:top-[-0.75rem] sm:[&>th]:top-[-1.25rem] lg:[&>th]:top-[-2rem] [&>th]:z-30 [&>th]:bg-card [&>th]:shadow-[inset_0_-1px_0_0_hsl(var(--border))]">
