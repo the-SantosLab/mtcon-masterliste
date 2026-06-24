@@ -305,6 +305,7 @@ export default function CrmCompanies() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </CrmLayout>
   );
 }
