@@ -107,34 +107,34 @@ export default function CrmDashboard() {
 
 
       <div className="grid lg:grid-cols-2 gap-4 mb-4">
-        <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
-          <h2 className="text-sm font-semibold mb-3">Forecast — letzte 6 Monate</h2>
+        <section className="crm-glass p-5">
+          <h2 className="crm-section-title mb-3">Forecast — letzte 6 Monate</h2>
           <div className="h-56">
             <ResponsiveContainer>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: any) => formatEUR(Number(v))} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11 }} />
+                <Tooltip formatter={(v: any) => formatEUR(Number(v))} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 11, borderRadius: 10 }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="actual" name="Tatsächlich" fill="hsl(var(--status-done))" />
-                <Bar dataKey="forecast" name="Forecast" fill="hsl(var(--status-working))" />
+                <Bar dataKey="actual" name="Tatsächlich" fill="hsl(var(--status-done))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="forecast" name="Forecast" fill="hsl(var(--status-working))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
-          <h2 className="text-sm font-semibold mb-3">Pipeline-Funnel</h2>
+        <section className="crm-glass p-5">
+          <h2 className="crm-section-title mb-3">Pipeline-Funnel</h2>
           <ul className="space-y-1.5">
             {funnel.map(s => (
               <li key={s.key} className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded" style={{ background: stageColor(s.key as StageKey) }} />
+                <span className="w-2 h-2 rounded-full" style={{ background: stageColor(s.key as StageKey), boxShadow: `0 0 8px ${stageColor(s.key as StageKey)}` }} />
                 <span className="text-xs flex-1">{s.label}</span>
                 <span className="text-xs text-muted-foreground tabular-nums">{s.count} · {formatEUR(s.value)}</span>
               </li>
             ))}
-            <li className="flex items-center gap-2 pt-2 border-t border-border">
+            <li className="flex items-center gap-2 pt-2 border-t border-border/50">
               <span className="text-xs flex-1 text-muted-foreground">Angebot → Won</span>
               <span className="text-xs font-semibold tabular-nums">{winRate}%</span>
             </li>
@@ -143,8 +143,8 @@ export default function CrmDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
-          <h2 className="text-sm font-semibold mb-3 flex items-center gap-1.5">
+        <section className="crm-glass p-5">
+          <h2 className="crm-section-title mb-3 flex items-center gap-1.5">
             <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Engpass — &gt;14 Tage in Stage
           </h2>
           {stuckDeals.length === 0 ? (
@@ -161,8 +161,8 @@ export default function CrmDashboard() {
           )}
         </section>
 
-        <section className="rounded-lg border border-border bg-card/60 backdrop-blur-xl p-4">
-          <h2 className="text-sm font-semibold mb-3">Meine Aktivitäten heute</h2>
+        <section className="crm-glass p-5">
+          <h2 className="crm-section-title mb-3">Meine Aktivitäten heute</h2>
           {myToday.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nichts offen.</p>
           ) : (
@@ -178,6 +178,8 @@ export default function CrmDashboard() {
           )}
         </section>
       </div>
+      </div>
     </CrmLayout>
   );
 }
+
