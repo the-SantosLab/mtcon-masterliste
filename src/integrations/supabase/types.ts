@@ -3210,6 +3210,30 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          rate_to_eur: number
+          valid_from: string
+        }
+        Insert: {
+          created_at?: string
+          currency: string
+          id?: string
+          rate_to_eur: number
+          valid_from: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          rate_to_eur?: number
+          valid_from?: string
+        }
+        Relationships: []
+      }
       goods_receipt_items: {
         Row: {
           created_at: string
