@@ -78,10 +78,14 @@ export default function CrmOffers() {
 
   return (
     <CrmLayout>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Angebote</h1>
-        <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
-      </div>
+      <div className="crm-surface">
+        <div className="crm-hero mb-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Angebote</h1>
+            <p className="text-xs text-muted-foreground mt-1">Versendete, angenommene und ablaufende Offerten.</p>
+          </div>
+          <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
+        </div>
 
       <div className="flex gap-2 mb-3">
         <Input placeholder="Suchen…" value={search} onChange={e => setSearch(e.target.value)} className="h-8 text-xs max-w-xs" />
@@ -94,17 +98,17 @@ export default function CrmOffers() {
         </Select>
       </div>
 
-      <div className="rounded-lg border border-border bg-card/40 overflow-hidden">
+      <div className="crm-table-wrap">
         <table className="w-full text-xs">
-          <thead className="bg-muted/30">
+          <thead>
             <tr className="text-left text-muted-foreground">
-              <th className="px-3 py-2 font-medium">Nr.</th>
-              <th className="px-3 py-2 font-medium">Deal</th>
-              <th className="px-3 py-2 font-medium">Unternehmen</th>
-              <th className="px-3 py-2 font-medium text-right">Wert</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Erstellt</th>
-              <th className="px-3 py-2 font-medium">Gültig bis</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Nr.</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Deal</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Unternehmen</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider text-right">Wert</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Status</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Erstellt</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Gültig bis</th>
             </tr>
           </thead>
           <tbody>
@@ -113,23 +117,25 @@ export default function CrmOffers() {
             ) : filtered.length === 0 ? (
               <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">Keine Angebote.</td></tr>
             ) : filtered.map(r => (
-              <tr key={r.id} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer" onClick={() => nav(`/crm/offers/${r.id}`)}>
-                <td className="px-3 py-2 tabular-nums text-foreground">{r.offer_no}{r.version > 1 ? ` v${r.version}` : ''}</td>
-                <td className="px-3 py-2 text-foreground">{r.deals?.title ?? '–'}</td>
-                <td className="px-3 py-2 text-muted-foreground">{r.deals?.companies?.name ?? '–'}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatEUR(Number(r.total))}</td>
-                <td className="px-3 py-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase text-white" style={{ background: STATUS_COLOR[r.status] }}>
+              <tr key={r.id} className="border-t border-border/30 cursor-pointer" onClick={() => nav(`/crm/offers/${r.id}`)}>
+                <td className="px-3 py-2.5 tabular-nums text-foreground font-medium">{r.offer_no}{r.version > 1 ? ` v${r.version}` : ''}</td>
+                <td className="px-3 py-2.5 text-foreground">{r.deals?.title ?? '–'}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{r.deals?.companies?.name ?? '–'}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums">{formatEUR(Number(r.total))}</td>
+                <td className="px-3 py-2.5">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase text-white shadow-sm" style={{ background: STATUS_COLOR[r.status], boxShadow: `0 0 12px ${STATUS_COLOR[r.status]}55` }}>
                     {STATUS_LABEL[r.status]}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-muted-foreground">{new Date(r.created_at).toLocaleDateString('de-DE')}</td>
-                <td className="px-3 py-2 text-muted-foreground">{r.valid_until ? new Date(r.valid_until).toLocaleDateString('de-DE') : '–'}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{new Date(r.created_at).toLocaleDateString('de-DE')}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{r.valid_until ? new Date(r.valid_until).toLocaleDateString('de-DE') : '–'}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      </div>
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
