@@ -66,49 +66,55 @@ export default function CrmDeals() {
 
   return (
     <CrmLayout>
-      <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-semibold text-foreground">Deal-Pipeline</h1>
-        <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Neuer Deal
-        </Button>
-      </div>
+      <div className="crm-surface">
+        <div className="crm-hero mb-5 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight">Deal-Pipeline</h1>
+            <p className="text-xs text-muted-foreground mt-1">Stages, Werte und Aging — drag-free Übersicht.</p>
+          </div>
+          <Button onClick={() => setOpen(true)} size="sm" className="h-8 text-xs gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> Neuer Deal
+          </Button>
+        </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {grouped.map(col => (
-            <div key={col.key} className="flex flex-col rounded-lg border border-border bg-card/40 backdrop-blur-xl min-h-[300px]">
-              <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+            <div key={col.key} className="crm-column flex flex-col min-h-[320px]">
+              <div className="px-3 py-2.5 border-b border-border/40 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: stageColor(col.key) }} />
+                  <span className="h-2 w-2 rounded-full" style={{ background: stageColor(col.key), boxShadow: `0 0 8px ${stageColor(col.key)}` }} />
                   <p className="text-[11px] font-semibold text-foreground uppercase tracking-wide">{col.label}</p>
                 </div>
-                <span className="text-[10px] text-muted-foreground tabular-nums">{col.deals.length}</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted/50">{col.deals.length}</span>
               </div>
               <div className="p-2 space-y-2 flex-1 overflow-y-auto">
                 {col.deals.map(d => (
                   <button
                     key={d.id}
                     onClick={() => navigate(`/crm/deals/${d.id}`)}
-                    className="w-full text-left p-2.5 rounded border border-border bg-background/60 hover:border-primary/60 hover:bg-background transition-colors"
+                    className="crm-deal-card w-full text-left"
                   >
                     <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1">{d.title}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{d.companies?.name ?? '–'}</p>
                     <div className="mt-1.5 flex items-center justify-between">
-                      <span className="text-[11px] tabular-nums text-foreground">
+                      <span className="text-[11px] tabular-nums text-foreground font-medium">
                         {formatEUR(d.stage === 'won' ? d.value_final : d.value_estimated)}
                       </span>
                       <span className="text-[10px] text-muted-foreground tabular-nums">{daysSince(d.stage_changed_at)} T</span>
                     </div>
                   </button>
                 ))}
-                {col.deals.length === 0 && <p className="text-[11px] text-muted-foreground text-center py-4">leer</p>}
+                {col.deals.length === 0 && <p className="text-[11px] text-muted-foreground/70 text-center py-4 italic">leer</p>}
               </div>
             </div>
           ))}
         </div>
       )}
+      </div>
+
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
