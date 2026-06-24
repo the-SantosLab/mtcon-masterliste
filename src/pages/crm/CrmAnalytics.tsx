@@ -29,6 +29,20 @@ type Invoice = {
   matchcode: string | null;
 };
 type Company = { id: string; name: string };
+type FxRate = { currency: string; valid_from: string; rate_to_eur: number };
+
+// Picks the most recent rate for `currency` with valid_from <= date.
+// Returns 1 for EUR (and unknown blanks). Returns null if no rate found for a non-EUR currency.
+function convertToEur(amount: number, currency: string | null, date: string | null, rates: FxRate[]): number | null {
+  const cur = (currency || 'EUR').trim().toUpperCase();
+  if (!cur || cur === 'EUR' || cur === '€') return amount;
+  const d = date || '9999-12-31';
+  const match = rates
+    .filter(r => r.currency.toUpperCase() === cur && r.valid_from <= d)
+    .sort((a, b) => b.valid_from.localeCompare(a.valid_from))[0];
+  if (!match) return null;
+  return amount * Number(match.rate_to_eur);
+}
 
 const fmtEUR = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const fmtEUR2 = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
