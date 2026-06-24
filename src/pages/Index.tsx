@@ -336,11 +336,12 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-[1600px]">
+      <div className="dashboard-shell space-y-4 max-w-[1600px]">
         {/* Hero zone — Left 60% / Right 40% */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* LEFT: Hero image with greeting + KPIs overlay */}
-          <div className="lg:col-span-3 relative rounded-2xl overflow-hidden border border-border/50 bg-gradient-to-br from-muted/40 to-background min-h-[640px] lg:min-h-[560px]">
+          <div className="dashboard-hero lg:col-span-3 relative rounded-3xl overflow-hidden bg-gradient-to-br from-muted/40 to-background min-h-[640px] lg:min-h-[560px]">
+
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
