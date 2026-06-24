@@ -167,8 +167,13 @@ export default function CrmAnalytics() {
             <TrendingUp className="h-3.5 w-3.5" /> CRM · Auswertungen
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Umsatz-Auswertungen</h1>
-          <p className="text-sm text-muted-foreground">Basis: ISSOS-Rechnungen (ohne stornierte). Netto in Belegwährung.</p>
+          <p className="text-sm text-muted-foreground">Basis: ISSOS-Rechnungen (ohne stornierte). Fremdwährungen werden anhand der hinterlegten FX-Kurse auf EUR umgerechnet.</p>
         </div>
+
+        {missingCurrencies.length > 0 && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 px-3 py-2 text-xs">
+            Für folgende Währungen ist kein Wechselkurs hinterlegt – diese Beträge fließen mit 0 € in die Summen ein: <b>{missingCurrencies.join(', ')}</b>. Admins können Kurse in der Tabelle <code>fx_rates</code> pflegen.</div>
+        )}
 
         {/* Filter bar */}
         <Card className="p-4 border border-border/50 bg-card/40 backdrop-blur-xl">
