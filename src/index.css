@@ -222,6 +222,111 @@
 }
 
 /* ============================================================
+   ERP SHELL — MODERN GLASSMORPHISM LAYER (auto-applied)
+   Targets all standard shadcn Card/Tabs/Table surfaces inside
+   the main app shell, without touching individual pages.
+============================================================ */
+.erp-shell {
+  position: relative;
+  isolation: isolate;
+}
+.erp-shell::before {
+  content: '';
+  position: absolute;
+  inset: -60px -60px auto -60px;
+  height: 380px;
+  background:
+    radial-gradient(ellipse 70% 60% at 10% 0%, hsl(210 100% 60% / 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 60% at 90% 5%, hsl(250 80% 65% / 0.07), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 0%, hsl(170 80% 55% / 0.04), transparent 70%);
+  filter: blur(24px);
+  pointer-events: none;
+  z-index: -1;
+}
+.dark .erp-shell::before {
+  background:
+    radial-gradient(ellipse 70% 60% at 10% 0%, hsl(210 100% 60% / 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 60% at 90% 5%, hsl(250 80% 65% / 0.10), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 0%, hsl(170 80% 55% / 0.05), transparent 70%);
+}
+
+/* Cards — glassmorph in dark + light */
+.erp-shell .bg-card {
+  background: hsl(var(--card) / 0.55);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-color: hsl(var(--border) / 0.6);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.03) inset,
+    0 8px 28px -16px hsl(228 60% 4% / 0.25);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.dark .erp-shell .bg-card {
+  background: hsl(228 14% 14% / 0.55);
+  border-color: hsl(228 14% 22% / 0.55);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.04) inset,
+    0 12px 36px -18px hsl(228 60% 2% / 0.55);
+}
+
+/* Tabs list — glass pill */
+.erp-shell [role="tablist"] {
+  background: hsl(var(--muted) / 0.4) !important;
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 12px;
+}
+.dark .erp-shell [role="tablist"] {
+  background: hsl(228 14% 12% / 0.55) !important;
+  border-color: hsl(228 14% 22% / 0.5);
+}
+
+/* Tables — refined header + zebra */
+.erp-shell table thead tr {
+  background: hsl(var(--muted) / 0.35);
+}
+.dark .erp-shell table thead tr {
+  background: hsl(228 14% 14% / 0.5);
+}
+.erp-shell table thead th {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: hsl(var(--muted-foreground));
+}
+.erp-shell table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.erp-shell table tbody tr:hover {
+  background: hsl(var(--muted) / 0.3);
+}
+.dark .erp-shell table tbody tr:hover {
+  background: hsl(228 14% 18% / 0.4);
+}
+
+/* Inputs — subtle glass */
+.dark .erp-shell input:not([type="checkbox"]):not([type="radio"]),
+.dark .erp-shell textarea,
+.dark .erp-shell select,
+.dark .erp-shell [role="combobox"] {
+  background: hsl(228 14% 12% / 0.5);
+  border-color: hsl(228 14% 22% / 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Section headings inside cards — tighter, modern */
+.erp-shell h1, .erp-shell h2, .erp-shell h3 {
+  letter-spacing: -0.01em;
+}
+
+/* Buttons — subtle elevation for primary */
+.erp-shell .bg-primary {
+  box-shadow: 0 6px 18px -10px hsl(var(--primary) / 0.55);
+}
+
+/* ============================================================
    CRM — MODERN GLASSMORPHISM LAYER
 ============================================================ */
 .crm-surface {
