@@ -29,6 +29,20 @@ type Invoice = {
   matchcode: string | null;
 };
 type Company = { id: string; name: string };
+type FxRate = { currency: string; valid_from: string; rate_to_eur: number };
+
+// Picks the most recent rate for `currency` with valid_from <= date.
+// Returns 1 for EUR (and unknown blanks). Returns null if no rate found for a non-EUR currency.
+function convertToEur(amount: number, currency: string | null, date: string | null, rates: FxRate[]): number | null {
+  const cur = (currency || 'EUR').trim().toUpperCase();
+  if (!cur || cur === 'EUR' || cur === '€') return amount;
+  const d = date || '9999-12-31';
+  const match = rates
+    .filter(r => r.currency.toUpperCase() === cur && r.valid_from <= d)
+    .sort((a, b) => b.valid_from.localeCompare(a.valid_from))[0];
+  if (!match) return null;
+  return amount * Number(match.rate_to_eur);
+}
 
 const fmtEUR = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const fmtEUR2 = (n: number) => n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -48,6 +62,7 @@ const PRESETS: Preset[] = [
 export default function CrmAnalytics() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [fxRates, setFxRates] = useState<FxRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [from, setFrom] = useState<Date>(startOfYear(new Date()));
   const [to, setTo] = useState<Date>(new Date());
@@ -72,28 +87,42 @@ export default function CrmAnalytics() {
         off += pageSize; if (off > 100000) break;
       }
       const { data: cs } = await supabase.from('companies').select('id, name').order('name');
+      const { data: fx } = await supabase.from('fx_rates' as any).select('currency, valid_from, rate_to_eur');
       if (mounted) {
         setInvoices(all as any);
         setCompanies((cs as any) || []);
+        setFxRates((fx as any) || []);
         setLoading(false);
       }
     })();
     return () => { mounted = false; };
   }, []);
 
+  // Pre-compute EUR-converted amounts per invoice, plus track unconverted currencies for the warning.
+  const { withEur, missingCurrencies } = useMemo(() => {
+    const missing = new Set<string>();
+    const withEur = invoices.map(i => {
+      const netto = convertToEur(Number(i.netto_fw || 0), i.waehrung, i.rech_dat, fxRates);
+      const brutto = convertToEur(Number(i.brutto_fw || 0), i.waehrung, i.rech_dat, fxRates);
+      if (netto === null && i.waehrung) missing.add(i.waehrung);
+      return { ...i, netto_eur: netto ?? 0, brutto_eur: brutto ?? 0, _converted: netto !== null };
+    });
+    return { withEur, missingCurrencies: Array.from(missing) };
+  }, [invoices, fxRates]);
+
   const filtered = useMemo(() => {
-    return invoices.filter(i => {
+    return withEur.filter(i => {
       if (i.storno_kz) return false;
       if (selectedCompanyId && i.company_id !== selectedCompanyId) return false;
       if (!i.rech_dat) return false;
       const d = parseISO(i.rech_dat);
       return isWithinInterval(d, { start: from, end: to });
     });
-  }, [invoices, from, to, selectedCompanyId]);
+  }, [withEur, from, to, selectedCompanyId]);
 
   const kpis = useMemo(() => {
-    const netto = filtered.reduce((s, i) => s + Number(i.netto_fw || 0), 0);
-    const brutto = filtered.reduce((s, i) => s + Number(i.brutto_fw || 0), 0);
+    const netto = filtered.reduce((s, i) => s + i.netto_eur, 0);
+    const brutto = filtered.reduce((s, i) => s + i.brutto_eur, 0);
     const count = filtered.length;
     const avg = count > 0 ? netto / count : 0;
     const customers = new Set(filtered.map(i => i.company_id || `mc:${i.matchcode}`)).size;
@@ -108,7 +137,7 @@ export default function CrmAnalytics() {
     for (const i of filtered) {
       if (!i.rech_dat) continue;
       const key = i.rech_dat.slice(0, 7);
-      map.set(key, (map.get(key) || 0) + Number(i.netto_fw || 0));
+      map.set(key, (map.get(key) || 0) + i.netto_eur);
     }
     return Array.from(map.entries()).map(([k, v]) => ({ month: k, label: format(parseISO(k + '-01'), 'MMM yy', { locale: de }), netto: Math.round(v) }));
   }, [filtered, from, to]);
@@ -119,7 +148,7 @@ export default function CrmAnalytics() {
       const id = i.company_id || `mc:${i.matchcode}`;
       const name = companies.find(c => c.id === i.company_id)?.name || i.matchcode || 'Unbekannt';
       const e = m.get(id) || { id: i.company_id, name, netto: 0, count: 0 };
-      e.netto += Number(i.netto_fw || 0); e.count += 1;
+      e.netto += i.netto_eur; e.count += 1;
       m.set(id, e);
     }
     const arr = Array.from(m.values());
@@ -138,8 +167,13 @@ export default function CrmAnalytics() {
             <TrendingUp className="h-3.5 w-3.5" /> CRM · Auswertungen
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Umsatz-Auswertungen</h1>
-          <p className="text-sm text-muted-foreground">Basis: ISSOS-Rechnungen (ohne stornierte). Netto in Belegwährung.</p>
+          <p className="text-sm text-muted-foreground">Basis: ISSOS-Rechnungen (ohne stornierte). Fremdwährungen werden anhand der hinterlegten FX-Kurse auf EUR umgerechnet.</p>
         </div>
+
+        {missingCurrencies.length > 0 && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 px-3 py-2 text-xs">
+            Für folgende Währungen ist kein Wechselkurs hinterlegt – diese Beträge fließen mit 0 € in die Summen ein: <b>{missingCurrencies.join(', ')}</b>. Admins können Kurse in der Tabelle <code>fx_rates</code> pflegen.</div>
+        )}
 
         {/* Filter bar */}
         <Card className="p-4 border border-border/50 bg-card/40 backdrop-blur-xl">
