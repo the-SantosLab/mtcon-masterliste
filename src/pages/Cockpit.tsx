@@ -1381,7 +1381,7 @@ function pickIcon(name: string) {
 }
 // late import via dynamic reference (already imported at top): we need Headphones, ShoppingCart
 // add to lucide imports below if missing
-import type {} from 'lucide-react';
+
 
 function PipelineShape({
   tasks, deptName, caseLabel, userName,
