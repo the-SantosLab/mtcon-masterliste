@@ -8,6 +8,7 @@ const TABS = [
   { href: '/crm/settings/routing', label: 'Routing' },
   { href: '/crm/settings/roles', label: 'Rollen' },
   { href: '/crm/settings/zugang', label: 'Zugang' },
+  { href: '/crm/settings/microsoft-365', label: 'Microsoft 365' },
 ];
 
 export function CrmSettingsTabs() {
