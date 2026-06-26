@@ -350,6 +350,37 @@ export default function Cockpit() {
     return 0;
   };
 
+  // Prognose-ETA pro Abteilung — Median der historischen Bearbeitungsdauer abgeschlossener Aufgaben (in Stunden)
+  const etaByDept = useMemo(() => {
+    const buckets: Record<string, number[]> = {};
+    for (const t of tasks) {
+      if (!t.department_id) continue;
+      if (!t.completed_at) continue;
+      const h = (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000;
+      if (!isFinite(h) || h <= 0) continue;
+      (buckets[t.department_id] ??= []).push(h);
+    }
+    const out: Record<string, number> = {};
+    for (const k of Object.keys(buckets)) {
+      const a = buckets[k].sort((x, y) => x - y);
+      out[k] = a[Math.floor(a.length / 2)];
+    }
+    return out;
+  }, [tasks]);
+  const etaForDept = (id: string | null) => (id ? etaByDept[id] : undefined);
+
+  // Phase-Dauer pro Vorgang (für Compare Δ)
+  const phaseDurations = useMemo(() => {
+    const out: Record<string, Record<string, number>> = {};
+    for (const t of tasks) {
+      if (!t.department_id || !t.completed_at) continue;
+      const h = (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000;
+      (out[t.case_id] ??= {});
+      out[t.case_id][t.department_id] = h;
+    }
+    return out;
+  }, [tasks]);
+
   // Lade Chat-Preview + Anhänge-Anzahl beim Öffnen eines Pipeline-Knotens
   useEffect(() => {
     if (!selectedNodeId || !selectedCaseId) {
