@@ -86,7 +86,7 @@ export function CommandPalette({ open, onClose }: Props) {
     setLoading(true);
 
     const term = `%${q.trim()}%`;
-    const [projRes, caseRes, userRes] = await Promise.all([
+    const [projRes, caseRes, userRes, companyRes, dealRes, contactRes] = await Promise.all([
       supabase.from('projects')
         .select('id, project_number, name, status')
         .or(`name.ilike.${term},project_number.ilike.${term},project_code.ilike.${term}`)
@@ -101,6 +101,18 @@ export function CommandPalette({ open, onClose }: Props) {
         .or(`display_name.ilike.${term},short_code.ilike.${term}`)
         .eq('active', true)
         .limit(4),
+      supabase.from('companies')
+        .select('id, name, customer_no, supplier_code')
+        .or(`name.ilike.${term},customer_no.ilike.${term},supplier_code.ilike.${term}`)
+        .limit(5),
+      supabase.from('deals')
+        .select('id, deal_no, title, stage')
+        .or(`title.ilike.${term},deal_no.ilike.${term}`)
+        .limit(5),
+      supabase.from('contacts')
+        .select('id, first_name, last_name, email, company_id')
+        .or(`first_name.ilike.${term},last_name.ilike.${term},email.ilike.${term}`)
+        .limit(5),
     ]);
 
     const mapped: Result[] = [
@@ -114,12 +126,28 @@ export function CommandPalette({ open, onClose }: Props) {
         title: c.project_name, sub: c.case_no,
         href: `/cases/${c.id}`,
       })),
+      ...((companyRes.data ?? []) as any[]).map(co => ({
+        id: co.id, type: 'company' as const,
+        title: co.name, sub: co.customer_no ?? co.supplier_code ?? '',
+        href: `/crm/companies/${co.id}`,
+      })),
+      ...((dealRes.data ?? []) as any[]).map(d => ({
+        id: d.id, type: 'deal' as const,
+        title: d.title, sub: `${d.deal_no} · ${d.stage}`,
+        href: `/crm/deals/${d.id}`,
+      })),
+      ...((contactRes.data ?? []) as any[]).map(ct => ({
+        id: ct.id, type: 'contact' as const,
+        title: `${ct.first_name} ${ct.last_name}`, sub: ct.email ?? '',
+        href: ct.company_id ? `/crm/companies/${ct.company_id}` : '/crm/contacts',
+      })),
       ...((userRes.data ?? []) as any[]).map(u => ({
         id: u.id, type: 'user' as const,
         title: u.display_name, sub: u.short_code,
         href: `/admin/users`,
       })),
     ];
+
 
     setResults(mapped);
     setActive(0);
