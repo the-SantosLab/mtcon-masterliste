@@ -169,6 +169,12 @@ export default function Cockpit() {
       ((profRes.data as Profile[]) || []).forEach((p) => (map[p.id] = p));
       setProfiles(map);
       setActivity(((actRes.data as any[]) || []) as ActivityRow[]);
+      const cap: Record<string, number> = {};
+      ((dmRes.data as Array<{ department_id: string }>) || []).forEach((r) => {
+        if (r.department_id) cap[r.department_id] = (cap[r.department_id] || 0) + 1;
+      });
+      setDeptCapacity(cap);
+
       if (!selectedCaseId && caseRes.data && caseRes.data.length) {
         setSelectedCaseId((caseRes.data[0] as any).id);
       }
