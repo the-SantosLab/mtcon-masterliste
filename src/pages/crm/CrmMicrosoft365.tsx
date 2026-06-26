@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { Loader2, Save, PlugZap, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { CrmLayout } from '@/components/CrmLayout';
+import { CrmSettingsTabs } from '@/components/crm/CrmSettingsTabs';
 
 type Status = {
   configured: boolean;
