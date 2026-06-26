@@ -231,7 +231,7 @@ export function CommandPalette({ open, onClose }: Props) {
     // grouped by type
     return (
       <div className="p-1.5">
-        {(['project', 'case', 'user'] as const).map(type => {
+        {(['company', 'deal', 'contact', 'project', 'case', 'user'] as const).map(type => {
           const group = list.filter(r => r.type === type);
           if (!group.length) return null;
           const Icon = TYPE_ICON[type];
