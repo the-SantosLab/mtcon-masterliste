@@ -1668,7 +1668,7 @@ function PipelineShape({
 
 /* ---------- SQUARE (1:1 port of quad_infografik.html) ---------- */
 function ShapeSquare({
-  depts, hover, setHover, onDeptClick, activeDeptId,
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics,
 }: {
   depts: ShapeDept[];
   hover: number | null;
@@ -1676,6 +1676,7 @@ function ShapeSquare({
   accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
   onDeptClick?: (id: string) => void;
   activeDeptId?: string | null;
+  metrics: ShapeMetrics;
 }) {
   const SLOTS = [
     { pos: 'sales',   numCls: 'o',  outer: '#ff9d33', inner: '#ffc06a' },
@@ -1737,8 +1738,14 @@ function ShapeSquare({
       {SLOTS.map((s, i) => {
         const d = depts[i];
         if (!d) return null;
-        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done');
+        const m = metrics.perDept.get(d.id);
+        const open = riskSort(d.tasks.filter((t) => !t.completed && t.status !== 'done'));
         const isActive = activeDeptId === d.id;
+        const halo = m?.bottleneck
+          ? '0 0 0 1.5px rgba(255,90,100,0.85), 0 0 26px 6px rgba(255,90,100,0.35)'
+          : m && (m.sla === 'warn' || m.sla === 'crit')
+            ? `inset 0 0 0 1px ${m.slaColor}`
+            : undefined;
         return (
           <button
             key={d.id}
@@ -1749,16 +1756,27 @@ function ShapeSquare({
             onFocus={() => setHover(i)}
             onBlur={() => setHover(null)}
             onClick={() => onDeptClick?.(d.id)}
+            style={halo ? { boxShadow: halo } : undefined}
           >
             <div className={cn('quad-txt', `quad-txt--${s.pos}`)}>
               <p className={cn('quad-num', `quad-num--${s.numCls}`)}>{String(i + 1).padStart(2, '0')}</p>
-              <p className="quad-title">{d.name.toUpperCase()}</p>
+              <p className="quad-title">
+                {d.name.toUpperCase()}
+                {m?.bottleneck && <span style={{ marginLeft: 6, fontSize: 9, color: '#ff8090', letterSpacing: '0.15em' }}>· ENGPASS</span>}
+              </p>
               <ul className={cn('quad-bul', `quad-bul--${s.numCls}`)}>
-                {open.slice(0, 3).map((t) => (<li key={t.id}><span className="truncate">{t.title}</span></li>))}
+                {open.slice(0, 3).map((t) => (
+                  <li key={t.id}>
+                    <span className="truncate">
+                      {t.status === 'in_progress' && <span style={{ color: '#7fe3ff' }}>▸ </span>}
+                      {t.title}
+                    </span>
+                  </li>
+                ))}
                 {open.length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
               </ul>
             </div>
-            <div className="quad-count">{open.length}/{d.tasks.length}</div>
+            <div className="quad-count">{m?.progressPct ?? 0}%</div>
           </button>
         );
       })}
@@ -1766,11 +1784,21 @@ function ShapeSquare({
       {SLOTS.map((s, i) => {
         const d = depts[i]; if (!d) return null;
         const Icon = pickIcon(d.name);
+        const m = metrics.perDept.get(d.id);
+        const halo = m?.bottleneck
+          ? '0 0 0 2px rgba(255,90,100,0.9), 0 0 22px 6px rgba(255,90,100,0.5)'
+          : m && (m.sla === 'warn' || m.sla === 'crit')
+            ? `0 0 0 1.5px ${m.slaColor}, 0 0 18px 4px ${m.slaColor.replace(/,[\d.]+\)$/, ',0.45)')}`
+            : undefined;
         return (
           <div
             key={`ring-${i}`}
-            className={cn('quad-ring', `quad-ring--${s.pos}`)}
-            style={{ ['--ac' as any]: s.outer, ['--ai' as any]: s.inner } as React.CSSProperties}
+            className={cn('quad-ring', `quad-ring--${s.pos}`, m?.pulse && 'cockpit-pulse')}
+            style={{
+              ['--ac' as any]: s.outer,
+              ['--ai' as any]: s.inner,
+              ...(halo ? { boxShadow: halo } : {}),
+            } as React.CSSProperties}
             aria-hidden="true"
           >
             <Icon size={22} strokeWidth={2} />
@@ -1779,22 +1807,33 @@ function ShapeSquare({
       })}
 
       <div className="quad-center" aria-hidden="true">
-        <p className="quad-center__l">NAHTLOS<br/>VERBUNDEN</p>
-        <p className="quad-center__s">EIN PROZESS.<br/>EIN ZIEL.<br/>GEMEINSAMER ERFOLG.</p>
+        <p className="quad-center__l" style={{ fontSize: '1.4em', lineHeight: 1.05 }}>{metrics.hub.caseNo}</p>
+        <p className="quad-center__s" style={{ marginTop: 4 }}>
+          {metrics.hub.progressPct}% FORTSCHRITT<br/>
+          {metrics.hub.deadlineLabel !== '—' && (
+            <span style={{
+              color: metrics.hub.deadlineState === 'crit' ? '#ff8090'
+                  : metrics.hub.deadlineState === 'warn' ? '#ffc06a'
+                  : '#7fe3ff'
+            }}>DEADLINE {metrics.hub.deadlineLabel}<br/></span>
+          )}
+          NEXT: {metrics.hub.nextMilestone.slice(0, 24).toUpperCase()}
+        </p>
       </div>
 
       <div className="quad-footer" aria-hidden="true">
-        <div className="quad-fi"><Database size={14} strokeWidth={2}/>TRANSPARENTE DATEN</div>
+        <div className="quad-fi"><Gauge size={14} strokeWidth={2}/>WIP {metrics.footer.wip}</div>
         <div className="quad-fd"/>
-        <div className="quad-fi"><Users size={14} strokeWidth={2}/>ECHTE ZUSAMMENARBEIT</div>
+        <div className="quad-fi"><Check size={14} strokeWidth={2}/>HEUTE {metrics.footer.closedToday}</div>
         <div className="quad-fd"/>
-        <div className="quad-fi"><Cpu size={14} strokeWidth={2}/>INTELLIGENTE PROZESSE</div>
+        <div className="quad-fi"><AlertTriangle size={14} strokeWidth={2}/>ESKAL. {metrics.footer.escalations}</div>
         <div className="quad-fd"/>
-        <div className="quad-fi"><Target size={14} strokeWidth={2}/>GEMEINSAMER ERFOLG</div>
+        <div className="quad-fi"><Clock size={14} strokeWidth={2}/>Ø {metrics.footer.medianLeadH ? `${Math.round(metrics.footer.medianLeadH)}h` : '—'}</div>
       </div>
     </div>
   );
 }
+
 
 /* ---------- TRIANGLE (1:1 port of triangle_infografik.html) ---------- */
 const TRI_WEDGE = [
