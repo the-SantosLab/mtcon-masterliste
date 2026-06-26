@@ -1527,104 +1527,159 @@ function ShapeSquare({
   );
 }
 
-/* ---------- TRIANGLE (3 panels arranged as outer triangle) ---------- */
+/* ---------- TRIANGLE (3 rounded neon panels forming outer triangle) ---------- */
+type Pt = { x: number; y: number };
+
+function roundedPolygonPath(pts: Pt[], r: number): string {
+  const n = pts.length;
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const prev = pts[(i - 1 + n) % n];
+    const cur = pts[i];
+    const next = pts[(i + 1) % n];
+    const v1 = { x: prev.x - cur.x, y: prev.y - cur.y };
+    const v2 = { x: next.x - cur.x, y: next.y - cur.y };
+    const l1 = Math.hypot(v1.x, v1.y) || 1;
+    const l2 = Math.hypot(v2.x, v2.y) || 1;
+    const rr = Math.min(r, l1 / 2.2, l2 / 2.2);
+    const p1 = { x: cur.x + (v1.x / l1) * rr, y: cur.y + (v1.y / l1) * rr };
+    const p2 = { x: cur.x + (v2.x / l2) * rr, y: cur.y + (v2.y / l2) * rr };
+    d += i === 0 ? `M ${p1.x} ${p1.y} ` : `L ${p1.x} ${p1.y} `;
+    d += `Q ${cur.x} ${cur.y} ${p2.x} ${p2.y} `;
+  }
+  return d + 'Z';
+}
+
 function ShapeTriangle({
   depts, hover, setHover, accentFor,
 }: { depts: ShapeDept[]; hover: number | null; setHover: (n: number | null) => void; accentFor: (i: number) => typeof SHAPE_ACCENTS[number] }) {
-  const positions: Array<'top' | 'br' | 'bl'> = ['top', 'br', 'bl'];
-
-  // outer triangle vertices (viewBox 1000x1000) and midpoints
-  const V = { A: { x: 500, y: 60 }, B: { x: 940, y: 880 }, C: { x: 60, y: 880 } };
+  // outer triangle vertices in viewBox 1000x1000
+  const V = { A: { x: 500, y: 90 }, B: { x: 935, y: 880 }, C: { x: 65, y: 880 } };
   const M = {
-    AB: { x: (V.A.x + V.B.x) / 2, y: (V.A.y + V.B.y) / 2 }, // right mid
-    BC: { x: (V.B.x + V.C.x) / 2, y: (V.B.y + V.C.y) / 2 }, // bottom mid
-    CA: { x: (V.C.x + V.A.x) / 2, y: (V.C.y + V.A.y) / 2 }, // left mid
+    AB: { x: (V.A.x + V.B.x) / 2, y: (V.A.y + V.B.y) / 2 },
+    BC: { x: (V.B.x + V.C.x) / 2, y: (V.B.y + V.C.y) / 2 },
+    CA: { x: (V.C.x + V.A.x) / 2, y: (V.C.y + V.A.y) / 2 },
   };
-  // three outer sub-triangles (each shares the central inverted triangle's edge as base)
-  const tris = {
-    top: { a: V.A, b: M.AB, c: M.CA }, // apex at A (top)
-    br:  { a: V.B, b: M.BC, c: M.AB }, // apex at B (bottom-right)
-    bl:  { a: V.C, b: M.CA, c: M.BC }, // apex at C (bottom-left)
+  const Cn: Pt = { x: 500, y: (V.A.y + V.B.y + V.C.y) / 3 };
+  const inset = (p: Pt, amt = 30): Pt => {
+    const dx = p.x - Cn.x, dy = p.y - Cn.y;
+    const l = Math.hypot(dx, dy) || 1;
+    return { x: p.x + (dx / l) * amt, y: p.y + (dy / l) * amt };
   };
+
+  // each sub-panel: outer apex first, then two inner mid-points (clockwise)
+  const subs: Array<{ key: 'top' | 'br' | 'bl'; pts: Pt[]; apex: Pt }> = [
+    { key: 'top', apex: V.A, pts: [V.A, inset(M.AB), inset(M.CA)] },
+    { key: 'br',  apex: V.B, pts: [V.B, inset(M.BC), inset(M.AB)] },
+    { key: 'bl',  apex: V.C, pts: [V.C, inset(M.CA), inset(M.BC)] },
+  ];
 
   return (
     <div className="cs-tri">
       <svg viewBox="0 0 1000 1000" className="cs-tri__svg" preserveAspectRatio="xMidYMid meet">
         <defs>
-          <filter id="triGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="5" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          {subs.map((s, i) => {
+            const a = accentFor(i);
+            return (
+              <radialGradient key={s.key} id={`tri-fill-${i}`} cx="50%" cy="55%" r="75%">
+                <stop offset="0%"   stopColor={`hsl(${a.hue} 90% 55%)`} stopOpacity="0.22" />
+                <stop offset="65%"  stopColor={`hsl(${a.hue} 90% 40%)`} stopOpacity="0.08" />
+                <stop offset="100%" stopColor={`hsl(${a.hue} 90% 30%)`} stopOpacity="0.02" />
+              </radialGradient>
+            );
+          })}
+          <filter id="triGlowSoft" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="8" />
           </filter>
         </defs>
-        {positions.map((pos, i) => {
-          const t = tris[pos];
+
+        {subs.map((s, i) => {
           const a = accentFor(i);
-          const pts = `${t.a.x},${t.a.y} ${t.b.x},${t.b.y} ${t.c.x},${t.c.y}`;
+          const d = roundedPolygonPath(s.pts, 36);
+          const isHover = hover === i;
+          const dim = hover !== null && !isHover ? 0.45 : 1;
           return (
-            <g key={pos} filter="url(#triGlow)" opacity={hover === null || hover === i ? 1 : 0.55}>
-              <polygon
-                points={pts}
-                fill={`hsl(${a.hue} 90% 55% / ${hover === i ? 0.14 : 0.07})`}
+            <g key={s.key} opacity={dim}>
+              {/* outer soft glow */}
+              <path d={d} fill="none" stroke={a.light} strokeWidth={isHover ? 14 : 10} opacity="0.55" filter="url(#triGlowSoft)" />
+              {/* main panel */}
+              <path
+                d={d}
+                fill={`url(#tri-fill-${i})`}
                 stroke={a.light}
-                strokeWidth={hover === i ? 4 : 3}
+                strokeWidth={isHover ? 4 : 3}
                 strokeLinejoin="round"
+                style={{ cursor: 'pointer', pointerEvents: 'auto', filter: `drop-shadow(0 0 6px ${a.glow})` }}
+                onMouseEnter={() => setHover(i)}
+                onMouseLeave={() => setHover(null)}
               />
+              {/* inner thin highlight */}
+              <path d={d} fill="none" stroke={`hsl(${a.hue} 100% 80%)`} strokeWidth="1" opacity="0.45" strokeLinejoin="round" pointerEvents="none" />
             </g>
           );
         })}
       </svg>
 
-      {/* HTML overlays per sub-triangle */}
-      {positions.map((pos, i) => {
-        const d = depts[i];
+      {/* Icon circles at outer apex */}
+      {subs.map((s, i) => {
         const a = accentFor(i);
-        const Icon = pickIcon(d.name);
-        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
-        const t = tris[pos];
-        // bounding box for hover (use SVG triangle clip-path scaled to %)
-        const xs = [t.a.x, t.b.x, t.c.x], ys = [t.a.y, t.b.y, t.c.y];
-        const minX = Math.min(...xs), maxX = Math.max(...xs);
-        const minY = Math.min(...ys), maxY = Math.max(...ys);
-        const pct = (n: number, total = 1000) => `${(n / total) * 100}%`;
-        const clip = `polygon(${xs.map((x, k) => `${((x - minX) / (maxX - minX)) * 100}% ${((ys[k] - minY) / (maxY - minY)) * 100}%`).join(', ')})`;
+        const Icon = pickIcon(depts[i].name);
         return (
           <div
-            key={pos}
-            className={cn('cs-trip-hit', `cs-trip-hit--${pos}`, hover === i && 'is-hover')}
+            key={`ico-${s.key}`}
+            className={cn('cs-trip__icon', `cs-trip__icon--${s.key}`, hover === i && 'is-hover')}
             style={{
-              left: pct(minX), top: pct(minY),
-              width: pct(maxX - minX), height: pct(maxY - minY),
-              clipPath: clip,
-              ['--ac' as any]: a.light, ['--gl' as any]: a.glow,
+              left: `${(s.apex.x / 1000) * 100}%`,
+              top: `${(s.apex.y / 1000) * 100}%`,
+              ['--ac' as any]: a.light,
+              ['--gl' as any]: a.glow,
             }}
-            onMouseEnter={() => setHover(i)}
-            onMouseLeave={() => setHover(null)}
           >
-            <div className={cn('cs-trip__icon', `cs-trip__icon--${pos}`)}>
-              <Icon size={22} strokeWidth={1.8} />
-            </div>
-            <div className={cn('cs-trip__content', `cs-trip__content--${pos}`)}>
-              <div className="cs-trip__head">
-                <span className="cs-trip__num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="cs-trip__name">{d.name.toUpperCase()}</span>
-              </div>
-              <ul className="cs-trip__list">
-                {d.tasks.filter((tk) => !tk.completed).slice(0, 3).map((tk) => (
-                  <li key={tk.id}><span className="cs-quad__bullet" /> {tk.title}</li>
-                ))}
-                {d.tasks.filter((tk) => !tk.completed).length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
-              </ul>
-              <div className="cs-trip__count">{open}/{d.tasks.length}</div>
-            </div>
+            <Icon size={24} strokeWidth={1.9} />
           </div>
         );
       })}
 
+      {/* Content overlays positioned inside each panel */}
+      {subs.map((s, i) => {
+        const d = depts[i];
+        const a = accentFor(i);
+        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
+        return (
+          <div
+            key={`ov-${s.key}`}
+            className={cn('cs-trip-overlay', `cs-trip-overlay--${s.key}`, hover === i && 'is-hover')}
+            style={{ ['--ac' as any]: a.light, ['--gl' as any]: a.glow }}
+          >
+            <div className="cs-trip__head">
+              <span className="cs-trip__num">{String(i + 1).padStart(2, '0')}</span>
+              <span className="cs-trip__name">{d.name.toUpperCase()}</span>
+            </div>
+            <ul className="cs-trip__list">
+              {d.tasks.filter((tk) => !tk.completed).slice(0, 3).map((tk) => (
+                <li key={tk.id}><span className="cs-quad__bullet" /> {tk.title}</li>
+              ))}
+              {d.tasks.filter((tk) => !tk.completed).length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
+            </ul>
+            <div className="cs-trip__count">{open}/{d.tasks.length}</div>
+          </div>
+        );
+      })}
+
+      {/* Central medallion */}
       <div className="cs-center cs-center--tri" aria-hidden="true">
         <div className="cs-center__ring cs-center__ring--outer" />
         <div className="cs-center__ring cs-center__ring--inner" />
         <div className="cs-center__title">NAHTLOS<br/>VERBUNDEN</div>
         <div className="cs-center__sub">EIN PROZESS · EIN ZIEL<br/>GEMEINSAMER ERFOLG</div>
+      </div>
+
+      {/* Feature bar at bottom */}
+      <div className="cs-feature-bar">
+        <span><Boxes size={13} strokeWidth={1.8} /> TRANSPARENTE DATEN</span>
+        <span><Users size={13} strokeWidth={1.8} /> ECHTE ZUSAMMENARBEIT</span>
+        <span><Cpu size={13} strokeWidth={1.8} /> INTELLIGENTE PROZESSE</span>
+        <span><Target size={13} strokeWidth={1.8} /> GEMEINSAMER ERFOLG</span>
       </div>
     </div>
   );
