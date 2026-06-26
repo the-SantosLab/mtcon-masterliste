@@ -465,8 +465,6 @@ export default function Cockpit() {
                 </div>
               )}
               <div className="cockpit-chip cockpit-chip--beta">BETA</div>
-              <div className="cockpit-radar" aria-hidden><span /></div>
-
             </div>
           </header>
 
