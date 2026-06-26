@@ -745,9 +745,9 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
 
         <div className="overflow-y-auto flex-1">
 
-          {days.length === 0 ? (
+          {visibleDays.length === 0 ? (
             <div className="p-8 text-center text-xs text-muted-foreground">
-              Keine Transaktionen für den gewählten Zeitraum und Filter.
+              {drill ? `Keine Transaktionen im gewählten Bereich (${drill.label}).` : 'Keine Transaktionen für den gewählten Zeitraum und Filter.'}
             </div>
           ) : (
             <table className="w-full text-xs">
@@ -761,7 +761,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {days.map((d) => {
+                {visibleDays.map((d) => {
                   const delta = d.att?.worked_minutes ? d.att.worked_minutes - 480 : 0;
                   const seen = new Set<string>();
                   const uniqAbs = d.absences.filter((a) => {
