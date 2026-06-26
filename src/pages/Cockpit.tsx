@@ -1455,7 +1455,14 @@ function PipelineShape({
         <ShapeSquare depts={depts} hover={hover} setHover={setHover} accentFor={accentFor} />
       )}
       {shape === 'triangle' && (
-        <ShapeTriangle depts={depts} hover={hover} setHover={setHover} accentFor={accentFor} />
+        <ShapeTriangle
+          depts={depts}
+          hover={hover}
+          setHover={setHover}
+          accentFor={accentFor}
+          onDeptClick={onDeptClick}
+          activeDeptId={activeDeptId ?? null}
+        />
       )}
       {shape === 'line' && (
         <ShapeLine depts={depts} hover={hover} setHover={setHover} accentFor={accentFor} />
