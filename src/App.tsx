@@ -95,6 +95,7 @@ import CrmOffers from "./pages/crm/CrmOffers";
 import CrmOfferDetail from "./pages/crm/CrmOfferDetail";
 import CrmActivities from "./pages/crm/CrmActivities";
 import CrmSettings from "./pages/crm/CrmSettings";
+import CrmMicrosoft365 from "./pages/crm/CrmMicrosoft365";
 import CrmWiki from "./pages/crm/CrmWiki";
 import CrmOutbound from "./pages/crm/CrmOutbound";
 import CrmSequenceDetail from "./pages/crm/CrmSequenceDetail";
