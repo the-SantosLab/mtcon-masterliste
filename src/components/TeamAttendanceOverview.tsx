@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Profile {
