@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   Check, Clock, CircleDot, Activity, Layers, Boxes, Cpu, Zap, Truck, Wrench,
   Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles,
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
+  Search, GitCompare, X, MessageSquare, Paperclip,
 } from 'lucide-react';
+
 
 type Dept = { id: string; name: string };
 type Task = {
