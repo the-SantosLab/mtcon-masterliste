@@ -942,3 +942,134 @@ function PipelineFlow({ count, currentIdx }: { count: number; currentIdx: number
     </svg>
   );
 }
+
+/** Renders a single horizontal pipeline (used for primary + compare lanes). */
+function PipelineLane({
+  tasks,
+  accentBaseHue,
+  selectedNodeId,
+  onSelectNode,
+  deptName,
+  heatLevel,
+  caseLabel,
+  extraDrawer,
+}: {
+  tasks: Task[];
+  accentBaseHue: number;
+  selectedNodeId: string | null;
+  onSelectNode: (id: string) => void;
+  deptName: (id: string | null) => string;
+  heatLevel: (a: string | null, b: string | null) => number;
+  caseLabel: string | null;
+  extraDrawer?: React.ReactNode;
+}) {
+  const currentIdx = tasks.findIndex((t) => !t.completed && t.status !== 'done');
+  return (
+    <div className="cockpit-panel cockpit-hud">
+      <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
+      {caseLabel && (
+        <div className="cockpit-lane-label">
+          <span className="font-mono text-cyan-300">{caseLabel}</span>
+        </div>
+      )}
+      {tasks.length === 0 ? (
+        <div className="text-sm text-white/50 py-10 text-center">Keine Aufgaben für diesen Vorgang.</div>
+      ) : (
+        <>
+          <div className="overflow-x-auto pb-4 relative">
+            <PipelineFlow count={tasks.length} currentIdx={currentIdx} />
+            <ol className="cockpit-pipeline relative" style={{ zIndex: 1 }}>
+              {tasks.map((t, i) => {
+                const done = t.completed || t.status === 'done';
+                const current = !done && i === currentIdx;
+                const upcoming = !done && !current;
+                const active = selectedNodeId === t.id;
+                const progress = tasks.length > 1 ? i / (tasks.length - 1) : 0;
+                const hue = accentBaseHue - progress * 60;
+                const accentHsl = `${hue} 90% 58%`;
+                const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
+                const nextHue = accentBaseHue - ((i + 1) / Math.max(1, tasks.length - 1)) * 60;
+                const heat = i < tasks.length - 1 ? heatLevel(t.department_id, tasks[i + 1].department_id) : 0;
+                return (
+                  <li key={t.id} className="flex items-start">
+                    <button
+                      type="button"
+                      onClick={() => onSelectNode(t.id)}
+                      className={cn('cockpit-step', active && 'cockpit-step--active', upcoming && 'cockpit-step--upcoming')}
+                      style={{
+                        // @ts-ignore
+                        '--accent': `hsl(${accentHsl})`,
+                        '--accent-glow': accentGlow,
+                      } as React.CSSProperties}
+                    >
+                      <div className="cockpit-step__hex">
+                        {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
+                      </div>
+                      <div className="cockpit-step__label">
+                        <div className="cockpit-step__label-status">
+                          {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
+                        </div>
+                        <div className="cockpit-step__label-title" data-text={t.title}>{t.title}</div>
+                        <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
+                      </div>
+                    </button>
+                    {i < tasks.length - 1 && (
+                      <div
+                        className={cn(
+                          'cockpit-connector',
+                          (done || tasks[i + 1].completed || tasks[i + 1].status === 'done') && 'cockpit-connector--lit'
+                        )}
+                        data-heat={heat || undefined}
+                        style={{
+                          // @ts-ignore
+                          '--from': `hsl(${accentHsl})`,
+                          '--to': `hsl(${nextHue} 90% 58%)`,
+                        } as React.CSSProperties}
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+
+          {extraDrawer}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Read-only compare lane: scopes tasks to a single case and renders a PipelineLane. */
+function CompareLane({
+  caseId,
+  tasks,
+  deptName,
+  heatLevel,
+  accentBaseHue,
+  caseLabel,
+}: {
+  caseId: string;
+  tasks: Task[];
+  deptName: (id: string | null) => string;
+  heatLevel: (a: string | null, b: string | null) => number;
+  accentBaseHue: number;
+  caseLabel: string;
+}) {
+  const scoped = useMemo(
+    () => tasks.filter((t) => t.case_id === caseId).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+    [tasks, caseId]
+  );
+  return (
+    <PipelineLane
+      tasks={scoped}
+      accentBaseHue={accentBaseHue}
+      selectedNodeId={null}
+      onSelectNode={() => {}}
+      deptName={deptName}
+      heatLevel={heatLevel}
+      caseLabel={caseLabel}
+    />
+  );
+}
+
