@@ -1527,51 +1527,99 @@ function ShapeSquare({
   );
 }
 
-/* ---------- TRIANGLE (3 panels) ---------- */
+/* ---------- TRIANGLE (3 panels arranged as outer triangle) ---------- */
 function ShapeTriangle({
   depts, hover, setHover, accentFor,
 }: { depts: ShapeDept[]; hover: number | null; setHover: (n: number | null) => void; accentFor: (i: number) => typeof SHAPE_ACCENTS[number] }) {
-  // order: top (01), bottom-right (02), bottom-left (03) — like reference
   const positions: Array<'top' | 'br' | 'bl'> = ['top', 'br', 'bl'];
+
+  // outer triangle vertices (viewBox 1000x1000) and midpoints
+  const V = { A: { x: 500, y: 60 }, B: { x: 940, y: 880 }, C: { x: 60, y: 880 } };
+  const M = {
+    AB: { x: (V.A.x + V.B.x) / 2, y: (V.A.y + V.B.y) / 2 }, // right mid
+    BC: { x: (V.B.x + V.C.x) / 2, y: (V.B.y + V.C.y) / 2 }, // bottom mid
+    CA: { x: (V.C.x + V.A.x) / 2, y: (V.C.y + V.A.y) / 2 }, // left mid
+  };
+  // three outer sub-triangles (each shares the central inverted triangle's edge as base)
+  const tris = {
+    top: { a: V.A, b: M.AB, c: M.CA }, // apex at A (top)
+    br:  { a: V.B, b: M.BC, c: M.AB }, // apex at B (bottom-right)
+    bl:  { a: V.C, b: M.CA, c: M.BC }, // apex at C (bottom-left)
+  };
+
   return (
     <div className="cs-tri">
-      <div className="cs-tri__grid">
-        {depts.slice(0, 3).map((d, i) => {
+      <svg viewBox="0 0 1000 1000" className="cs-tri__svg" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="triGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        {positions.map((pos, i) => {
+          const t = tris[pos];
           const a = accentFor(i);
-          const Icon = pickIcon(d.name);
-          const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
-          const pos = positions[i];
+          const pts = `${t.a.x},${t.a.y} ${t.b.x},${t.b.y} ${t.c.x},${t.c.y}`;
           return (
-            <button
-              key={d.id}
-              type="button"
-              className={cn('cs-trip', `cs-trip--${pos}`, hover === i && 'is-hover')}
-              style={{ ['--ac' as any]: a.light, ['--gl' as any]: a.glow }}
-              onMouseEnter={() => setHover(i)}
-              onMouseLeave={() => setHover(null)}
-              onFocus={() => setHover(i)}
-              onBlur={() => setHover(null)}
-            >
-              <div className={cn('cs-trip__icon', `cs-trip__icon--${pos}`)}>
-                <Icon size={22} strokeWidth={1.8} />
-              </div>
-              <div className="cs-trip__inner">
-                <div className="cs-trip__head">
-                  <span className="cs-trip__num">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="cs-trip__name">{d.name.toUpperCase()}</span>
-                </div>
-                <ul className="cs-trip__list">
-                  {d.tasks.filter((t) => !t.completed).slice(0, 3).map((t) => (
-                    <li key={t.id}><span className="cs-quad__bullet" /> {t.title}</li>
-                  ))}
-                  {d.tasks.filter((t) => !t.completed).length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
-                </ul>
-                <div className="cs-trip__count">{open}/{d.tasks.length}</div>
-              </div>
-            </button>
+            <g key={pos} filter="url(#triGlow)" opacity={hover === null || hover === i ? 1 : 0.55}>
+              <polygon
+                points={pts}
+                fill={`hsl(${a.hue} 90% 55% / ${hover === i ? 0.14 : 0.07})`}
+                stroke={a.light}
+                strokeWidth={hover === i ? 4 : 3}
+                strokeLinejoin="round"
+              />
+            </g>
           );
         })}
-      </div>
+      </svg>
+
+      {/* HTML overlays per sub-triangle */}
+      {positions.map((pos, i) => {
+        const d = depts[i];
+        const a = accentFor(i);
+        const Icon = pickIcon(d.name);
+        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
+        const t = tris[pos];
+        // bounding box for hover (use SVG triangle clip-path scaled to %)
+        const xs = [t.a.x, t.b.x, t.c.x], ys = [t.a.y, t.b.y, t.c.y];
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        const pct = (n: number, total = 1000) => `${(n / total) * 100}%`;
+        const clip = `polygon(${xs.map((x, k) => `${((x - minX) / (maxX - minX)) * 100}% ${((ys[k] - minY) / (maxY - minY)) * 100}%`).join(', ')})`;
+        return (
+          <div
+            key={pos}
+            className={cn('cs-trip-hit', `cs-trip-hit--${pos}`, hover === i && 'is-hover')}
+            style={{
+              left: pct(minX), top: pct(minY),
+              width: pct(maxX - minX), height: pct(maxY - minY),
+              clipPath: clip,
+              ['--ac' as any]: a.light, ['--gl' as any]: a.glow,
+            }}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+          >
+            <div className={cn('cs-trip__icon', `cs-trip__icon--${pos}`)}>
+              <Icon size={22} strokeWidth={1.8} />
+            </div>
+            <div className={cn('cs-trip__content', `cs-trip__content--${pos}`)}>
+              <div className="cs-trip__head">
+                <span className="cs-trip__num">{String(i + 1).padStart(2, '0')}</span>
+                <span className="cs-trip__name">{d.name.toUpperCase()}</span>
+              </div>
+              <ul className="cs-trip__list">
+                {d.tasks.filter((tk) => !tk.completed).slice(0, 3).map((tk) => (
+                  <li key={tk.id}><span className="cs-quad__bullet" /> {tk.title}</li>
+                ))}
+                {d.tasks.filter((tk) => !tk.completed).length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
+              </ul>
+              <div className="cs-trip__count">{open}/{d.tasks.length}</div>
+            </div>
+          </div>
+        );
+      })}
+
       <div className="cs-center cs-center--tri" aria-hidden="true">
         <div className="cs-center__ring cs-center__ring--outer" />
         <div className="cs-center__ring cs-center__ring--inner" />
@@ -1581,6 +1629,7 @@ function ShapeTriangle({
     </div>
   );
 }
+
 
 /* ---------- LINE (horizontal pipeline of octagons) ---------- */
 function ShapeLine({
