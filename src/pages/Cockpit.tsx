@@ -819,9 +819,8 @@ export default function Cockpit() {
                 caseLabel={caseNo(cid)}
               />
             ))}
-
-            </div>
           </section>
+
 
           {/* FEATURE BAR */}
           <div className="cockpit-featurebar">
