@@ -75,7 +75,8 @@ export function TeamAttendanceOverview() {
 
 
   const load = async () => {
-    const from = startOfYear();
+    // Load current + previous year to enable year-over-year comparison in detail dialog
+    const from = `${new Date().getFullYear() - 1}-01-01`;
     const to = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
     const [u, a, ab] = await Promise.all([
       supabase.from('users_profile')
@@ -417,83 +418,129 @@ function matchesAbsenceFilter(a: Abs, filter: string) {
   return a.absence_type === filter;
 }
 
+function buildSeries(
+  userAtt: Att[],
+  userAbs: Abs[],
+  pFrom: string,
+  pTo: string,
+  absFilter: string,
+) {
+  const map = new Map<string, DayRow>();
+  const ensure = (date: string) => {
+    if (!map.has(date)) map.set(date, { date, absences: [] });
+    return map.get(date)!;
+  };
+  for (const a of userAtt) {
+    if (a.work_date < pFrom || a.work_date > pTo) continue;
+    ensure(a.work_date).att = a;
+  }
+  for (const ab of userAbs) {
+    const start = ab.start_date > pFrom ? ab.start_date : pFrom;
+    const end = ab.end_date < pTo ? ab.end_date : pTo;
+    if (start > end) continue;
+    const d = new Date(start + 'T00:00:00');
+    const endD = new Date(end + 'T00:00:00');
+    while (d <= endD) {
+      const iso = d.toISOString().slice(0, 10);
+      ensure(iso).absences.push(ab);
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  const allDays = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+  let worked = 0, overtime = 0, vacation = 0, sick = 0, other = 0;
+  const filteredDays: DayRow[] = [];
+  for (const d of allDays) {
+    if (d.att?.worked_minutes) {
+      worked += d.att.worked_minutes;
+      overtime += d.att.worked_minutes - 480;
+    }
+    const seen = new Set<string>();
+    let dayVac = 0, daySick = 0, dayOther = 0;
+    for (const a of d.absences) {
+      const key = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (a.category === 'vacation') dayVac += 1;
+      else if (a.category === 'sick') daySick += 1;
+      else dayOther += 1;
+    }
+    const hasMatchingAbs = d.absences.some((a) => matchesAbsenceFilter(a, absFilter));
+    const include = absFilter === 'all' || hasMatchingAbs;
+    if (include) {
+      filteredDays.push(d);
+      vacation += dayVac;
+      sick += daySick;
+      other += dayOther;
+    }
+  }
+  return { days: filteredDays, totals: { worked, overtime, vacation, sick, other } };
+}
+
+function shiftIsoYear(iso: string, delta: number) {
+  return `${parseInt(iso.slice(0, 4), 10) + delta}${iso.slice(4)}`;
+}
+
+function daysBetween(a: string, b: string) {
+  return Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000) + 1;
+}
+
+function addDaysIso(iso: string, n: number) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+
+
 function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
   const [period, setPeriod] = useState('year');
   const [absFilter, setAbsFilter] = useState('all');
   const [bucketChoice, setBucketChoice] = useState<'auto' | 'day' | 'week' | 'month'>('auto');
   const [drill, setDrill] = useState<{ from: string; to: string; label: string } | null>(null);
+  const [comparePreset, setComparePreset] = useState<'off' | 'prev_year' | 'prev_period'>('off');
   const currentYear = parseInt(yearFrom.slice(0, 4), 10);
 
-  // Reset drill when filters change
+  // Reset drill when filters change (compare toggle preserves drill on purpose)
   useEffect(() => { setDrill(null); }, [period, absFilter, bucketChoice, user?.id]);
 
+  const primaryRange = useMemo(
+    () => resolvePeriod(period, currentYear, today),
+    [period, currentYear, today],
+  );
+
+  const compareRange = useMemo(() => {
+    if (comparePreset === 'off') return null;
+    if (comparePreset === 'prev_year') {
+      return {
+        from: shiftIsoYear(primaryRange.from, -1),
+        to: shiftIsoYear(primaryRange.to, -1),
+        label: `${currentYear - 1}`,
+      };
+    }
+    const len = daysBetween(primaryRange.from, primaryRange.to);
+    const to = addDaysIso(primaryRange.from, -1);
+    const from = addDaysIso(to, -(len - 1));
+    return { from, to, label: 'Vorperiode' };
+  }, [comparePreset, primaryRange, currentYear]);
+
+  const userSeries = useMemo(() => {
+    if (!user) return { att: [] as Att[], abs: [] as Abs[] };
+    return {
+      att: att.filter((x) => x.user_id === user.id),
+      abs: abs.filter((x) => x.user_id === user.id),
+    };
+  }, [user, att, abs]);
 
   const { days, totals } = useMemo(() => {
     if (!user) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
-    const userAtt = att.filter((x) => x.user_id === user.id);
-    const userAbs = abs.filter((x) => x.user_id === user.id);
+    return buildSeries(userSeries.att, userSeries.abs, primaryRange.from, primaryRange.to, absFilter);
+  }, [user, userSeries, primaryRange, absFilter]);
 
-    const { from: pFrom, to: pTo } = resolvePeriod(period, currentYear, today);
+  const { days: daysCompare, totals: totalsCompare } = useMemo(() => {
+    if (!user || !compareRange) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
+    return buildSeries(userSeries.att, userSeries.abs, compareRange.from, compareRange.to, absFilter);
+  }, [user, userSeries, compareRange, absFilter]);
 
-    const map = new Map<string, DayRow>();
-    const ensure = (date: string) => {
-      if (!map.has(date)) map.set(date, { date, absences: [] });
-      return map.get(date)!;
-    };
-
-    for (const a of userAtt) {
-      if (a.work_date < yearFrom || a.work_date > today) continue;
-      if (a.work_date < pFrom || a.work_date > pTo) continue;
-      ensure(a.work_date).att = a;
-    }
-    for (const ab of userAbs) {
-      const start = ab.start_date > yearFrom ? ab.start_date : yearFrom;
-      const end = ab.end_date < today ? ab.end_date : today;
-      if (start > end) continue;
-      const d = new Date(start + 'T00:00:00');
-      const endD = new Date(end + 'T00:00:00');
-      while (d <= endD) {
-        const iso = d.toISOString().slice(0, 10);
-        if (iso >= pFrom && iso <= pTo) {
-          ensure(iso).absences.push(ab);
-        }
-        d.setDate(d.getDate() + 1);
-      }
-    }
-
-    const allDays = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
-
-    let worked = 0, overtime = 0, vacation = 0, sick = 0, other = 0;
-    const filteredDays: DayRow[] = [];
-
-    for (const d of allDays) {
-      if (d.att?.worked_minutes) {
-        worked += d.att.worked_minutes;
-        overtime += (d.att.worked_minutes - 480);
-      }
-      const seen = new Set<string>();
-      let dayVac = 0, daySick = 0, dayOther = 0;
-      for (const a of d.absences) {
-        const key = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        if (a.category === 'vacation') dayVac += 1;
-        else if (a.category === 'sick') daySick += 1;
-        else dayOther += 1;
-      }
-
-      const hasMatchingAbs = d.absences.some((a) => matchesAbsenceFilter(a, absFilter));
-      const include = absFilter === 'all' || hasMatchingAbs;
-
-      if (include) {
-        filteredDays.push(d);
-        vacation += dayVac;
-        sick += daySick;
-        other += dayOther;
-      }
-    }
-    return { days: filteredDays, totals: { worked, overtime, vacation, sick, other } };
-  }, [user, att, abs, yearFrom, today, period, absFilter, currentYear]);
 
   const open = !!user;
   const periodLabel = period === 'year' ? 'Gesamtjahr' : period.startsWith('Q') ? period : monthNames[parseInt(period.slice(1)) - 1];
@@ -502,17 +549,9 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
     const autoMode: 'month' | 'day' = period === 'year' || period.startsWith('Q') ? 'month' : 'day';
     const mode: 'day' | 'week' | 'month' = bucketChoice === 'auto' ? autoMode : bucketChoice;
     type Bucket = { key: string; label: string; from: string; to: string; overtime: number; vacation: number; sick: number; other: number };
-    const buckets = new Map<string, Bucket>();
-    const ensure = (key: string, label: string, from: string, to: string) => {
-      if (!buckets.has(key)) buckets.set(key, { key, label, from, to, overtime: 0, vacation: 0, sick: 0, other: 0 });
-      return buckets.get(key)!;
-    };
 
-    const { from: pFrom, to: pTo } = resolvePeriod(period, currentYear, today);
-    const fromD = new Date(pFrom + 'T00:00:00');
-    const toD = new Date(pTo + 'T00:00:00');
-
-    const isoWeek = (d: Date): { year: number; week: number; monday: Date; sunday: Date } => {
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const isoWeek = (d: Date) => {
       const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
       const dayNum = (date.getUTCDay() + 6) % 7;
       date.setUTCDate(date.getUTCDate() - dayNum + 3);
@@ -524,62 +563,86 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
       sunday.setDate(monday.getDate() + 6);
       return { year: date.getUTCFullYear(), week, monday, sunday };
     };
-    const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-    // Seed continuous buckets across the period
-    if (mode === 'month') {
-      const cur = new Date(fromD.getFullYear(), fromD.getMonth(), 1);
-      while (cur <= toD) {
-        const y = cur.getFullYear(); const m = cur.getMonth();
-        const key = `${y}-${String(m + 1).padStart(2, '0')}`;
-        const last = new Date(y, m + 1, 0);
-        ensure(key, monthNames[m].slice(0, 3), `${key}-01`, iso(last));
-        cur.setMonth(cur.getMonth() + 1);
+    const buildBuckets = (rangeFrom: string, rangeTo: string, sourceDays: DayRow[]): Bucket[] => {
+      const buckets = new Map<string, Bucket>();
+      const ensure = (key: string, label: string, from: string, to: string) => {
+        if (!buckets.has(key)) buckets.set(key, { key, label, from, to, overtime: 0, vacation: 0, sick: 0, other: 0 });
+        return buckets.get(key)!;
+      };
+      const fromD = new Date(rangeFrom + 'T00:00:00');
+      const toD = new Date(rangeTo + 'T00:00:00');
+      if (mode === 'month') {
+        const cur = new Date(fromD.getFullYear(), fromD.getMonth(), 1);
+        while (cur <= toD) {
+          const y = cur.getFullYear(); const m = cur.getMonth();
+          const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+          const last = new Date(y, m + 1, 0);
+          ensure(key, monthNames[m].slice(0, 3), `${key}-01`, iso(last));
+          cur.setMonth(cur.getMonth() + 1);
+        }
+      } else if (mode === 'week') {
+        const w0 = isoWeek(fromD);
+        const cur = new Date(w0.monday);
+        while (cur <= toD) {
+          const w = isoWeek(cur);
+          const key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
+          ensure(key, `KW${w.week}`, iso(w.monday), iso(w.sunday));
+          cur.setDate(cur.getDate() + 7);
+        }
+      } else {
+        const cur = new Date(fromD);
+        while (cur <= toD) {
+          const key = iso(cur);
+          ensure(key, `${String(cur.getDate()).padStart(2, '0')}.${String(cur.getMonth() + 1).padStart(2, '0')}`, key, key);
+          cur.setDate(cur.getDate() + 1);
+        }
       }
-    } else if (mode === 'week') {
-      const w0 = isoWeek(fromD);
-      const cur = new Date(w0.monday);
-      while (cur <= toD) {
-        const w = isoWeek(cur);
-        const key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
-        ensure(key, `KW${w.week}`, iso(w.monday), iso(w.sunday));
-        cur.setDate(cur.getDate() + 7);
+      for (const d of sourceDays) {
+        const dDate = new Date(d.date + 'T00:00:00');
+        let key: string;
+        if (mode === 'month') key = d.date.slice(0, 7);
+        else if (mode === 'week') {
+          const w = isoWeek(dDate);
+          key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
+        } else key = d.date;
+        const b = buckets.get(key);
+        if (!b) continue;
+        if (d.att?.worked_minutes) b.overtime += (d.att.worked_minutes - 480) / 60;
+        const seen = new Set<string>();
+        for (const a of d.absences) {
+          const k = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+          if (seen.has(k)) continue;
+          seen.add(k);
+          if (a.category === 'vacation') b.vacation += 1;
+          else if (a.category === 'sick') b.sick += 1;
+          else b.other += 1;
+        }
       }
-    } else {
-      const cur = new Date(fromD);
-      while (cur <= toD) {
-        const key = iso(cur);
-        ensure(key, `${String(cur.getDate()).padStart(2, '0')}.${String(cur.getMonth() + 1).padStart(2, '0')}`, key, key);
-        cur.setDate(cur.getDate() + 1);
-      }
-    }
+      return Array.from(buckets.values()).sort((a, b) => (a.key < b.key ? -1 : 1));
+    };
 
-    for (const d of days) {
-      const dDate = new Date(d.date + 'T00:00:00');
-      let key: string;
-      if (mode === 'month') key = d.date.slice(0, 7);
-      else if (mode === 'week') {
-        const w = isoWeek(dDate);
-        key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
-      } else key = d.date;
-      const b = buckets.get(key);
-      if (!b) continue;
-      if (d.att?.worked_minutes) b.overtime += (d.att.worked_minutes - 480) / 60;
-      const seen = new Set<string>();
-      for (const a of d.absences) {
-        const k = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
-        if (seen.has(k)) continue;
-        seen.add(k);
-        if (a.category === 'vacation') b.vacation += 1;
-        else if (a.category === 'sick') b.sick += 1;
-        else b.other += 1;
-      }
-    }
-    const data = Array.from(buckets.values())
-      .sort((a, b) => (a.key < b.key ? -1 : 1))
-      .map((b) => ({ ...b, overtime: Math.round(b.overtime * 10) / 10 }));
-    return { chartData: data, bucketMode: mode };
-  }, [days, period, currentYear, bucketChoice, today]);
+    const primary = buildBuckets(primaryRange.from, primaryRange.to, days);
+    const compare = compareRange ? buildBuckets(compareRange.from, compareRange.to, daysCompare) : [];
+
+    // Align positionally by index so X-axis stays in primary's domain
+    const merged = primary.map((p, i) => {
+      const c = compare[i];
+      return {
+        ...p,
+        overtime: Math.round(p.overtime * 10) / 10,
+        c_overtime: c ? Math.round(c.overtime * 10) / 10 : null,
+        c_vacation: c?.vacation ?? null,
+        c_sick: c?.sick ?? null,
+        c_other: c?.other ?? null,
+        c_label: c?.label ?? null,
+        c_from: c?.from ?? null,
+        c_to: c?.to ?? null,
+      };
+    });
+    return { chartData: merged, bucketMode: mode };
+  }, [days, daysCompare, primaryRange, compareRange, period, bucketChoice]);
+
 
   const visibleDays = useMemo(() => {
     if (!drill) return days;
@@ -613,29 +676,13 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
         </DialogHeader>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border border-b border-border">
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Arbeitszeit</div>
-            <div className="text-sm font-semibold tabular-nums">{(totals.worked / 60).toFixed(1)}h</div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Überstunden</div>
-            <div className={cn('text-sm font-semibold tabular-nums', totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive')}>
-              {totals.overtime >= 0 ? '+' : ''}{(totals.overtime / 60).toFixed(1)}h
-            </div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Urlaubstage</div>
-            <div className="text-sm font-semibold tabular-nums text-sky-400">{totals.vacation}</div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Krankheitstage</div>
-            <div className="text-sm font-semibold tabular-nums text-amber-400">{totals.sick}</div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Sonstige</div>
-            <div className="text-sm font-semibold tabular-nums text-violet-400">{totals.other}</div>
-          </div>
+          <KpiCard label="Arbeitszeit" value={`${(totals.worked / 60).toFixed(1)}h`} compare={compareRange ? `${(totalsCompare.worked / 60).toFixed(1)}h` : null} delta={compareRange ? (totals.worked - totalsCompare.worked) / 60 : null} unit="h" />
+          <KpiCard label="Überstunden" value={`${totals.overtime >= 0 ? '+' : ''}${(totals.overtime / 60).toFixed(1)}h`} valueTone={totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive'} compare={compareRange ? `${totalsCompare.overtime >= 0 ? '+' : ''}${(totalsCompare.overtime / 60).toFixed(1)}h` : null} delta={compareRange ? (totals.overtime - totalsCompare.overtime) / 60 : null} unit="h" />
+          <KpiCard label="Urlaubstage" value={String(totals.vacation)} valueTone="text-sky-400" compare={compareRange ? String(totalsCompare.vacation) : null} delta={compareRange ? totals.vacation - totalsCompare.vacation : null} unit="d" />
+          <KpiCard label="Krankheitstage" value={String(totals.sick)} valueTone="text-amber-400" compare={compareRange ? String(totalsCompare.sick) : null} delta={compareRange ? totals.sick - totalsCompare.sick : null} unit="d" />
+          <KpiCard label="Sonstige" value={String(totals.other)} valueTone="text-violet-400" compare={compareRange ? String(totalsCompare.other) : null} delta={compareRange ? totals.other - totalsCompare.other : null} unit="d" />
         </div>
+
 
         <div className="px-5 py-3 border-b border-border bg-muted/20 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
@@ -697,6 +744,16 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                   Filter: {drill.label} ✕
                 </button>
               )}
+              <Select value={comparePreset} onValueChange={(v) => setComparePreset(v as any)}>
+                <SelectTrigger className="h-7 w-[140px] text-[11px] bg-card">
+                  <SelectValue placeholder="Vergleich" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="off">Kein Vergleich</SelectItem>
+                  <SelectItem value="prev_year">vs Vorjahr</SelectItem>
+                  <SelectItem value="prev_period">vs Vorperiode</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={bucketChoice} onValueChange={(v) => setBucketChoice(v as any)}>
                 <SelectTrigger className="h-7 w-[110px] text-[11px] bg-card">
                   <SelectValue />
@@ -710,6 +767,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
               </Select>
             </div>
           </div>
+
           <div className="h-[180px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} onClick={handleBarClick}>
@@ -724,23 +782,42 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                     borderRadius: 6,
                     fontSize: 11,
                   }}
-                  formatter={(value: any, name: string) => {
-                    if (name === 'Überstunden') return [`${Number(value) >= 0 ? '+' : ''}${value}h`, name];
+                  formatter={(value: any, name: string, item: any) => {
+                    if (value == null) return ['–', name];
+                    const isHours = name === 'Überstunden' || name === `Überstunden (${compareRange?.label ?? ''})`;
+                    if (isHours) return [`${Number(value) >= 0 ? '+' : ''}${value}h`, name];
                     return [`${value} Tage`, name];
+                  }}
+                  labelFormatter={(label, payload) => {
+                    const p = payload?.[0]?.payload;
+                    if (compareRange && p?.c_label) return `${label} · vs ${p.c_label}`;
+                    return label as string;
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
                 <Bar yAxisId="right" dataKey="vacation" name="Urlaub" stackId="abs" fill="hsl(199 89% 60%)" radius={[2, 2, 0, 0]} cursor="pointer" />
                 <Bar yAxisId="right" dataKey="sick" name="Krank" stackId="abs" fill="hsl(38 92% 60%)" radius={[2, 2, 0, 0]} cursor="pointer" />
                 <Bar yAxisId="right" dataKey="other" name="Sonstige" stackId="abs" fill="hsl(262 70% 65%)" radius={[2, 2, 0, 0]} cursor="pointer" />
+                {compareRange && (
+                  <>
+                    <Bar yAxisId="right" dataKey="c_vacation" name={`Urlaub (${compareRange.label})`} stackId="absC" fill="hsl(199 89% 60% / 0.35)" radius={[2, 2, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="c_sick" name={`Krank (${compareRange.label})`} stackId="absC" fill="hsl(38 92% 60% / 0.35)" radius={[2, 2, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="c_other" name={`Sonstige (${compareRange.label})`} stackId="absC" fill="hsl(262 70% 65% / 0.35)" radius={[2, 2, 0, 0]} />
+                  </>
+                )}
                 <Line yAxisId="left" type="monotone" dataKey="overtime" name="Überstunden" stroke="hsl(160 70% 50%)" strokeWidth={2} dot={{ r: 2, cursor: 'pointer' }} activeDot={{ r: 4, cursor: 'pointer' }} />
+                {compareRange && (
+                  <Line yAxisId="left" type="monotone" dataKey="c_overtime" name={`Überstunden (${compareRange.label})`} stroke="hsl(160 70% 50%)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} />
+                )}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-1 text-[9px] text-muted-foreground text-center">
             Tipp: Auf einen Balken/Punkt klicken, um die Tabelle auf diesen Zeitraum zu filtern.
+            {compareRange && ` · Vergleich: ${compareRange.from} bis ${compareRange.to}`}
           </div>
         </div>
+
 
 
         <div className="overflow-y-auto flex-1">
@@ -823,3 +900,33 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
   );
 }
 
+
+interface KpiCardProps {
+  label: string;
+  value: string;
+  valueTone?: string;
+  compare?: string | null;
+  delta?: number | null;
+  unit?: 'h' | 'd';
+}
+
+function KpiCard({ label, value, valueTone, compare, delta, unit }: KpiCardProps) {
+  const hasCompare = compare !== null && compare !== undefined;
+  const deltaSign = (delta ?? 0) > 0 ? '+' : '';
+  const deltaTone = (delta ?? 0) === 0
+    ? 'text-muted-foreground'
+    : (delta ?? 0) > 0 ? 'text-emerald-400' : 'text-destructive';
+  const deltaStr = delta == null ? '' : unit === 'h' ? `${deltaSign}${delta.toFixed(1)}h` : `${deltaSign}${delta}d`;
+  return (
+    <div className="bg-card px-3 py-2">
+      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={cn('text-sm font-semibold tabular-nums', valueTone)}>{value}</div>
+      {hasCompare && (
+        <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+          <span className="text-muted-foreground tabular-nums">vs {compare}</span>
+          <span className={cn('tabular-nums font-medium', deltaTone)}>{deltaStr}</span>
+        </div>
+      )}
+    </div>
+  );
+}
