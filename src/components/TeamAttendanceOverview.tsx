@@ -244,8 +244,10 @@ export function TeamAttendanceOverview() {
                   <th className="text-right font-medium px-3 py-2">Woche</th>
                   <th className="text-right font-medium px-3 py-2">Monat</th>
                   <th className="text-right font-medium px-3 py-2">Jahr</th>
+                  <th className="text-right font-medium px-3 py-2">Überstd.</th>
                   <th className="text-right font-medium px-3 py-2">Urlaub</th>
                   <th className="text-right font-medium px-3 py-2">Krank</th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
