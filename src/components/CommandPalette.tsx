@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils';
 import {
   Search, FolderKanban, ClipboardList, User2,
   ArrowRight, X, Loader2, Plus, LayoutDashboard, Zap,
+  Building2, Briefcase, Contact,
 } from 'lucide-react';
+
 
 interface Result {
   id: string;
