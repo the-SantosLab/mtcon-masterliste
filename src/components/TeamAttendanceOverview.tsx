@@ -75,7 +75,8 @@ export function TeamAttendanceOverview() {
 
 
   const load = async () => {
-    const from = startOfYear();
+    // Load current + previous year to enable year-over-year comparison in detail dialog
+    const from = `${new Date().getFullYear() - 1}-01-01`;
     const to = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
     const [u, a, ab] = await Promise.all([
       supabase.from('users_profile')
