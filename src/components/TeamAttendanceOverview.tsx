@@ -313,6 +313,209 @@ export function TeamAttendanceOverview() {
           )}
         </>
       )}
+      <EmployeeDetailDialog
+        user={selected}
+        onClose={() => setSelected(null)}
+        att={att}
+        abs={abs}
+        yearFrom={yFrom}
+        today={today}
+      />
     </div>
   );
 }
+
+interface DetailProps {
+  user: Profile | null;
+  onClose: () => void;
+  att: Att[];
+  abs: Abs[];
+  yearFrom: string;
+  today: string;
+}
+
+interface DayRow {
+  date: string;
+  att?: Att;
+  absences: Abs[];
+}
+
+const fmtDateDE = (s: string) => {
+  const d = new Date(s + 'T00:00:00');
+  return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const absenceLabel = (a: Abs) => {
+  if (a.category === 'vacation') return 'Urlaub';
+  if (a.category === 'sick') return 'Krank';
+  return a.absence_type || 'Abwesenheit';
+};
+
+const absenceTone = (a: Abs) => {
+  if (a.category === 'vacation') return 'text-sky-400 bg-sky-400/10 border-sky-400/20';
+  if (a.category === 'sick') return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+  return 'text-violet-400 bg-violet-400/10 border-violet-400/20';
+};
+
+function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
+  const data = useMemo(() => {
+    if (!user) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
+    const userAtt = att.filter((x) => x.user_id === user.id);
+    const userAbs = abs.filter((x) => x.user_id === user.id);
+
+    const map = new Map<string, DayRow>();
+    const ensure = (date: string) => {
+      if (!map.has(date)) map.set(date, { date, absences: [] });
+      return map.get(date)!;
+    };
+
+    for (const a of userAtt) {
+      if (a.work_date < yearFrom || a.work_date > today) continue;
+      ensure(a.work_date).att = a;
+    }
+    for (const ab of userAbs) {
+      const start = ab.start_date > yearFrom ? ab.start_date : yearFrom;
+      const end = ab.end_date < today ? ab.end_date : today;
+      if (start > end) continue;
+      const d = new Date(start + 'T00:00:00');
+      const endD = new Date(end + 'T00:00:00');
+      while (d <= endD) {
+        const iso = d.toISOString().slice(0, 10);
+        ensure(iso).absences.push(ab);
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
+    const days = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+    let worked = 0, overtime = 0, vacation = 0, sick = 0, other = 0;
+    for (const d of days) {
+      if (d.att?.worked_minutes) {
+        worked += d.att.worked_minutes;
+        overtime += (d.att.worked_minutes - 480);
+      }
+      const seen = new Set<string>();
+      for (const a of d.absences) {
+        const key = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (a.category === 'vacation') vacation += 1;
+        else if (a.category === 'sick') sick += 1;
+        else other += 1;
+      }
+    }
+    return { days, totals: { worked, overtime, vacation, sick, other } };
+  }, [user, att, abs, yearFrom, today]);
+
+  const open = !!user;
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-3xl p-0 gap-0 max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader className="px-5 py-4 border-b border-border flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-3">
+            {user && <UserAvatar user={user as any} size="md" />}
+            <div>
+              <DialogTitle className="text-sm font-medium">{user?.display_name}</DialogTitle>
+              <div className="text-[10px] font-mono text-muted-foreground">{user?.short_code} · Personio-Transaktionen {new Date().getFullYear()}</div>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border border-b border-border">
+          <div className="bg-card px-3 py-2">
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Arbeitszeit</div>
+            <div className="text-sm font-semibold tabular-nums">{(data.totals.worked / 60).toFixed(1)}h</div>
+          </div>
+          <div className="bg-card px-3 py-2">
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Überstunden</div>
+            <div className={cn('text-sm font-semibold tabular-nums', data.totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive')}>
+              {data.totals.overtime >= 0 ? '+' : ''}{(data.totals.overtime / 60).toFixed(1)}h
+            </div>
+          </div>
+          <div className="bg-card px-3 py-2">
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Urlaubstage</div>
+            <div className="text-sm font-semibold tabular-nums text-sky-400">{data.totals.vacation}</div>
+          </div>
+          <div className="bg-card px-3 py-2">
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Krankheitstage</div>
+            <div className="text-sm font-semibold tabular-nums text-amber-400">{data.totals.sick}</div>
+          </div>
+          <div className="bg-card px-3 py-2">
+            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Sonstige</div>
+            <div className="text-sm font-semibold tabular-nums text-violet-400">{data.totals.other}</div>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto flex-1">
+          {data.days.length === 0 ? (
+            <div className="p-8 text-center text-xs text-muted-foreground">Keine Transaktionen im laufenden Jahr.</div>
+          ) : (
+            <table className="w-full text-xs">
+              <thead className="bg-muted/30 sticky top-0">
+                <tr className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <th className="text-left font-medium px-4 py-2">Datum</th>
+                  <th className="text-left font-medium px-3 py-2">Stempelzeiten</th>
+                  <th className="text-right font-medium px-3 py-2">Arbeitszeit</th>
+                  <th className="text-right font-medium px-3 py-2">Δ 8h</th>
+                  <th className="text-left font-medium px-3 py-2">Abwesenheit</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {data.days.map((d) => {
+                  const delta = d.att?.worked_minutes ? d.att.worked_minutes - 480 : 0;
+                  const seen = new Set<string>();
+                  const uniqAbs = d.absences.filter((a) => {
+                    const k = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+                    if (seen.has(k)) return false;
+                    seen.add(k);
+                    return true;
+                  });
+                  return (
+                    <tr key={d.date} className="hover:bg-muted/30">
+                      <td className="px-4 py-2 whitespace-nowrap text-foreground">{fmtDateDE(d.date)}</td>
+                      <td className="px-3 py-2 font-mono text-[11px] text-muted-foreground">
+                        {d.att?.start_time
+                          ? `${fmtTime(d.att.start_time)}–${fmtTime(d.att.end_time)}`
+                          : '–'}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {d.att?.worked_minutes ? fmtHours(d.att.worked_minutes) : '–'}
+                      </td>
+                      <td className={cn(
+                        'px-3 py-2 text-right tabular-nums',
+                        d.att?.worked_minutes
+                          ? (delta >= 0 ? 'text-emerald-400' : 'text-destructive')
+                          : 'text-muted-foreground',
+                      )}>
+                        {d.att?.worked_minutes
+                          ? `${delta >= 0 ? '+' : ''}${(delta / 60).toFixed(1)}h`
+                          : '–'}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap gap-1">
+                          {uniqAbs.map((a, i) => (
+                            <span
+                              key={i}
+                              className={cn(
+                                'inline-flex items-center px-1.5 py-0.5 rounded border text-[10px]',
+                                absenceTone(a),
+                              )}
+                              title={`${a.start_date} → ${a.end_date} (${a.days_count} Tage)`}
+                            >
+                              {absenceLabel(a)}
+                            </span>
+                          ))}
+                          {uniqAbs.length === 0 && <span className="text-muted-foreground">–</span>}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
