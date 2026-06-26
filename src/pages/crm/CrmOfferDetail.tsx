@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, FileDown } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, FileDown, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { generateOfferPdf } from '@/lib/crm-pdf';
