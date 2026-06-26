@@ -276,6 +276,65 @@ export default function Cockpit() {
     return m || 1;
   }, [departments, deptStats]);
 
+  // Pipeline-Heatmap: historische Übergangsfrequenz zwischen aufeinanderfolgenden Dept-Paaren
+  const heatmap = useMemo(() => {
+    const byCase = new Map<string, Task[]>();
+    for (const t of tasks) {
+      (byCase.get(t.case_id) ?? byCase.set(t.case_id, []).get(t.case_id)!).push(t);
+    }
+    const pairCount = new Map<string, number>();
+    for (const arr of byCase.values()) {
+      arr.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      for (let i = 0; i < arr.length - 1; i++) {
+        const a = arr[i].department_id, b = arr[i + 1].department_id;
+        if (!a || !b || a === b) continue;
+        const key = `${a}->${b}`;
+        pairCount.set(key, (pairCount.get(key) || 0) + 1);
+      }
+    }
+    return pairCount;
+  }, [tasks]);
+  const heatLevel = (a: string | null, b: string | null) => {
+    if (!a || !b) return 0;
+    const c = heatmap.get(`${a}->${b}`) || 0;
+    if (c >= 12) return 4;
+    if (c >= 6) return 3;
+    if (c >= 2) return 2;
+    if (c >= 1) return 1;
+    return 0;
+  };
+
+  // Lade Chat-Preview + Anhänge-Anzahl beim Öffnen eines Pipeline-Knotens
+  useEffect(() => {
+    if (!selectedNodeId || !selectedCaseId) {
+      setDrawerChat([]); setDrawerAttachments(0); return;
+    }
+    let cancelled = false;
+    setDrawerLoading(true);
+    (async () => {
+      const [chatRes, attRes] = await Promise.all([
+        supabase
+          .from('case_chat_messages')
+          .select('id,author_id,body,created_at')
+          .eq('case_id', selectedCaseId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('case_chat_attachments')
+          .select('id', { count: 'exact', head: true })
+          .eq('case_id', selectedCaseId),
+      ]);
+      if (cancelled) return;
+      setDrawerChat(((chatRes.data as any[]) || []).reverse());
+      setDrawerAttachments(attRes.count ?? 0);
+      setDrawerLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedNodeId, selectedCaseId]);
+
+
+
   const deptOpenTasks = useMemo(() => {
     if (!selectedDept) return [];
     const caseMap = new Map(cases.map((c) => [c.id, c]));
