@@ -91,9 +91,19 @@ export default function Cockpit() {
   const [newestActivityId, setNewestActivityId] = useState<string | null>(null);
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]); // multi-case compare
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deptCapacity, setDeptCapacity] = useState<Record<string, number>>({});
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'select' | 'compare'>('select');
+  const [bootDone, setBootDone] = useState(false);
+
+  // Mini-drawer data per node (lazy)
+  const [drawerChat, setDrawerChat] = useState<Array<{ id: string; author_id: string | null; body: string; created_at: string }>>([]);
+  const [drawerAttachments, setDrawerAttachments] = useState<number>(0);
+  const [drawerLoading, setDrawerLoading] = useState(false);
 
   // Filters
   const [timeframe, setTimeframe] = useState<TimeframeId>('7d');
@@ -106,6 +116,26 @@ export default function Cockpit() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
   }, []);
+
+  // Boot sequence — hide after a short delay
+  useEffect(() => {
+    const t = window.setTimeout(() => setBootDone(true), 1700);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // Command-K shortcut
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPickerMode('select');
+        setPickerOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
 
   useEffect(() => {
     let cancelled = false;
