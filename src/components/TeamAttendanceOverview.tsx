@@ -499,32 +499,71 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
   const periodLabel = period === 'year' ? 'Gesamtjahr' : period.startsWith('Q') ? period : monthNames[parseInt(period.slice(1)) - 1];
 
   const { chartData, bucketMode } = useMemo(() => {
-    // Bucket monthly for year/quarter; daily for month
-    const mode: 'month' | 'day' = period === 'year' || period.startsWith('Q') ? 'month' : 'day';
-    type Bucket = { key: string; label: string; overtime: number; vacation: number; sick: number; other: number };
+    const autoMode: 'month' | 'day' = period === 'year' || period.startsWith('Q') ? 'month' : 'day';
+    const mode: 'day' | 'week' | 'month' = bucketChoice === 'auto' ? autoMode : bucketChoice;
+    type Bucket = { key: string; label: string; from: string; to: string; overtime: number; vacation: number; sick: number; other: number };
     const buckets = new Map<string, Bucket>();
-    const ensure = (key: string, label: string) => {
-      if (!buckets.has(key)) buckets.set(key, { key, label, overtime: 0, vacation: 0, sick: 0, other: 0 });
+    const ensure = (key: string, label: string, from: string, to: string) => {
+      if (!buckets.has(key)) buckets.set(key, { key, label, from, to, overtime: 0, vacation: 0, sick: 0, other: 0 });
       return buckets.get(key)!;
     };
 
-    // Seed buckets so the X-axis is continuous
+    const { from: pFrom, to: pTo } = resolvePeriod(period, currentYear, today);
+    const fromD = new Date(pFrom + 'T00:00:00');
+    const toD = new Date(pTo + 'T00:00:00');
+
+    const isoWeek = (d: Date): { year: number; week: number; monday: Date; sunday: Date } => {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = (date.getUTCDay() + 6) % 7;
+      date.setUTCDate(date.getUTCDate() - dayNum + 3);
+      const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+      const week = 1 + Math.round(((date.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - dayNum);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      return { year: date.getUTCFullYear(), week, monday, sunday };
+    };
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+    // Seed continuous buckets across the period
     if (mode === 'month') {
-      const months = period === 'year' ? [0,1,2,3,4,5,6,7,8,9,10,11]
-        : period === 'Q1' ? [0,1,2] : period === 'Q2' ? [3,4,5] : period === 'Q3' ? [6,7,8] : [9,10,11];
-      for (const m of months) ensure(`${currentYear}-${String(m+1).padStart(2,'0')}`, monthNames[m].slice(0,3));
+      const cur = new Date(fromD.getFullYear(), fromD.getMonth(), 1);
+      while (cur <= toD) {
+        const y = cur.getFullYear(); const m = cur.getMonth();
+        const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+        const last = new Date(y, m + 1, 0);
+        ensure(key, monthNames[m].slice(0, 3), `${key}-01`, iso(last));
+        cur.setMonth(cur.getMonth() + 1);
+      }
+    } else if (mode === 'week') {
+      const w0 = isoWeek(fromD);
+      const cur = new Date(w0.monday);
+      while (cur <= toD) {
+        const w = isoWeek(cur);
+        const key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
+        ensure(key, `KW${w.week}`, iso(w.monday), iso(w.sunday));
+        cur.setDate(cur.getDate() + 7);
+      }
+    } else {
+      const cur = new Date(fromD);
+      while (cur <= toD) {
+        const key = iso(cur);
+        ensure(key, `${String(cur.getDate()).padStart(2, '0')}.${String(cur.getMonth() + 1).padStart(2, '0')}`, key, key);
+        cur.setDate(cur.getDate() + 1);
+      }
     }
 
     for (const d of days) {
-      let key: string, label: string;
-      if (mode === 'month') {
-        key = d.date.slice(0, 7);
-        label = monthNames[parseInt(d.date.slice(5, 7), 10) - 1].slice(0, 3);
-      } else {
-        key = d.date;
-        label = d.date.slice(8, 10);
-      }
-      const b = ensure(key, label);
+      const dDate = new Date(d.date + 'T00:00:00');
+      let key: string;
+      if (mode === 'month') key = d.date.slice(0, 7);
+      else if (mode === 'week') {
+        const w = isoWeek(dDate);
+        key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
+      } else key = d.date;
+      const b = buckets.get(key);
+      if (!b) continue;
       if (d.att?.worked_minutes) b.overtime += (d.att.worked_minutes - 480) / 60;
       const seen = new Set<string>();
       for (const a of d.absences) {
@@ -540,7 +579,24 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
       .sort((a, b) => (a.key < b.key ? -1 : 1))
       .map((b) => ({ ...b, overtime: Math.round(b.overtime * 10) / 10 }));
     return { chartData: data, bucketMode: mode };
-  }, [days, period, currentYear]);
+  }, [days, period, currentYear, bucketChoice, today]);
+
+  const visibleDays = useMemo(() => {
+    if (!drill) return days;
+    return days.filter((d) => d.date >= drill.from && d.date <= drill.to);
+  }, [days, drill]);
+
+  const handleBarClick = (data: any) => {
+    if (!data) return;
+    const payload = data.activePayload?.[0]?.payload ?? data.payload ?? data;
+    if (!payload?.from || !payload?.to) return;
+    if (drill && drill.from === payload.from && drill.to === payload.to) {
+      setDrill(null);
+    } else {
+      setDrill({ from: payload.from, to: payload.to, label: payload.label });
+    }
+  };
+
 
 
   return (
