@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
+import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp, TrendingUp, SlidersHorizontal, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
@@ -357,11 +365,58 @@ const absenceTone = (a: Abs) => {
   return 'text-violet-400 bg-violet-400/10 border-violet-400/20';
 };
 
+const monthNames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+function resolvePeriod(value: string, year: number, todayIso: string) {
+  let from: string;
+  let to: string;
+  switch (value) {
+    case 'year': from = `${year}-01-01`; to = `${year}-12-31`; break;
+    case 'Q1': from = `${year}-01-01`; to = `${year}-03-31`; break;
+    case 'Q2': from = `${year}-04-01`; to = `${year}-06-30`; break;
+    case 'Q3': from = `${year}-07-01`; to = `${year}-09-30`; break;
+    case 'Q4': from = `${year}-10-01`; to = `${year}-12-31`; break;
+    default: {
+      const m = parseInt(value.slice(1), 10);
+      from = `${year}-${String(m).padStart(2, '0')}-01`;
+      to = new Date(year, m, 0).toISOString().slice(0, 10);
+    }
+  }
+  if (to > todayIso) to = todayIso;
+  return { from, to };
+}
+
+const absenceOptions = [
+  { value: 'all', label: 'Alle Abwesenheiten' },
+  { value: 'cat:vacation', label: 'Urlaub (alle)' },
+  { value: 'cat:sick', label: 'Krankheit' },
+  { value: 'cat:other', label: 'Sonstige (alle)' },
+  { value: 'Bezahlter Urlaub', label: 'Bezahlter Urlaub' },
+  { value: 'Sonderurlaub', label: 'Sonderurlaub' },
+  { value: 'Home Office', label: 'Home Office' },
+  { value: 'Dienstreise', label: 'Dienstreise' },
+  { value: 'Fortbildung', label: 'Fortbildung' },
+  { value: 'Berufsschule', label: 'Berufsschule' },
+  { value: 'Freizeitausgleich', label: 'Freizeitausgleich' },
+];
+
+function matchesAbsenceFilter(a: Abs, filter: string) {
+  if (filter === 'all') return true;
+  if (filter.startsWith('cat:')) return a.category === filter.slice(4);
+  return a.absence_type === filter;
+}
+
 function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
-  const data = useMemo(() => {
+  const [period, setPeriod] = useState('year');
+  const [absFilter, setAbsFilter] = useState('all');
+  const currentYear = parseInt(yearFrom.slice(0, 4), 10);
+
+  const { days, totals } = useMemo(() => {
     if (!user) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
     const userAtt = att.filter((x) => x.user_id === user.id);
     const userAbs = abs.filter((x) => x.user_id === user.id);
+
+    const { from: pFrom, to: pTo } = resolvePeriod(period, currentYear, today);
 
     const map = new Map<string, DayRow>();
     const ensure = (date: string) => {
@@ -371,6 +426,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
 
     for (const a of userAtt) {
       if (a.work_date < yearFrom || a.work_date > today) continue;
+      if (a.work_date < pFrom || a.work_date > pTo) continue;
       ensure(a.work_date).att = a;
     }
     for (const ab of userAbs) {
@@ -381,32 +437,50 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
       const endD = new Date(end + 'T00:00:00');
       while (d <= endD) {
         const iso = d.toISOString().slice(0, 10);
-        ensure(iso).absences.push(ab);
+        if (iso >= pFrom && iso <= pTo) {
+          ensure(iso).absences.push(ab);
+        }
         d.setDate(d.getDate() + 1);
       }
     }
 
-    const days = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+    const allDays = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+
     let worked = 0, overtime = 0, vacation = 0, sick = 0, other = 0;
-    for (const d of days) {
+    const filteredDays: DayRow[] = [];
+
+    for (const d of allDays) {
       if (d.att?.worked_minutes) {
         worked += d.att.worked_minutes;
         overtime += (d.att.worked_minutes - 480);
       }
       const seen = new Set<string>();
+      let dayVac = 0, daySick = 0, dayOther = 0;
       for (const a of d.absences) {
         const key = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        if (a.category === 'vacation') vacation += 1;
-        else if (a.category === 'sick') sick += 1;
-        else other += 1;
+        if (a.category === 'vacation') dayVac += 1;
+        else if (a.category === 'sick') daySick += 1;
+        else dayOther += 1;
+      }
+
+      const hasMatchingAbs = d.absences.some((a) => matchesAbsenceFilter(a, absFilter));
+      const include = absFilter === 'all' || hasMatchingAbs;
+
+      if (include) {
+        filteredDays.push(d);
+        vacation += dayVac;
+        sick += daySick;
+        other += dayOther;
       }
     }
-    return { days, totals: { worked, overtime, vacation, sick, other } };
-  }, [user, att, abs, yearFrom, today]);
+    return { days: filteredDays, totals: { worked, overtime, vacation, sick, other } };
+  }, [user, att, abs, yearFrom, today, period, absFilter, currentYear]);
 
   const open = !!user;
+  const periodLabel = period === 'year' ? 'Gesamtjahr' : period.startsWith('Q') ? period : monthNames[parseInt(period.slice(1)) - 1];
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-3xl p-0 gap-0 max-h-[85vh] overflow-hidden flex flex-col">
@@ -415,7 +489,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
             {user && <UserAvatar user={user as any} size="md" />}
             <div>
               <DialogTitle className="text-sm font-medium">{user?.display_name}</DialogTitle>
-              <div className="text-[10px] font-mono text-muted-foreground">{user?.short_code} · Personio-Transaktionen {new Date().getFullYear()}</div>
+              <div className="text-[10px] font-mono text-muted-foreground">{user?.short_code} · Personio-Transaktionen {currentYear}</div>
             </div>
           </div>
         </DialogHeader>
@@ -423,31 +497,77 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
         <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border border-b border-border">
           <div className="bg-card px-3 py-2">
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Arbeitszeit</div>
-            <div className="text-sm font-semibold tabular-nums">{(data.totals.worked / 60).toFixed(1)}h</div>
+            <div className="text-sm font-semibold tabular-nums">{(totals.worked / 60).toFixed(1)}h</div>
           </div>
           <div className="bg-card px-3 py-2">
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Überstunden</div>
-            <div className={cn('text-sm font-semibold tabular-nums', data.totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive')}>
-              {data.totals.overtime >= 0 ? '+' : ''}{(data.totals.overtime / 60).toFixed(1)}h
+            <div className={cn('text-sm font-semibold tabular-nums', totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive')}>
+              {totals.overtime >= 0 ? '+' : ''}{(totals.overtime / 60).toFixed(1)}h
             </div>
           </div>
           <div className="bg-card px-3 py-2">
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Urlaubstage</div>
-            <div className="text-sm font-semibold tabular-nums text-sky-400">{data.totals.vacation}</div>
+            <div className="text-sm font-semibold tabular-nums text-sky-400">{totals.vacation}</div>
           </div>
           <div className="bg-card px-3 py-2">
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Krankheitstage</div>
-            <div className="text-sm font-semibold tabular-nums text-amber-400">{data.totals.sick}</div>
+            <div className="text-sm font-semibold tabular-nums text-amber-400">{totals.sick}</div>
           </div>
           <div className="bg-card px-3 py-2">
             <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Sonstige</div>
-            <div className="text-sm font-semibold tabular-nums text-violet-400">{data.totals.other}</div>
+            <div className="text-sm font-semibold tabular-nums text-violet-400">{totals.other}</div>
           </div>
         </div>
 
+        <div className="px-5 py-3 border-b border-border bg-muted/20 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
+            <CalendarDays className="h-3 w-3" />
+            Zeitraum
+          </div>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="h-8 w-[140px] text-xs bg-card">
+              <SelectValue placeholder="Zeitraum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="year">Gesamtjahr</SelectItem>
+              <SelectItem value="Q1">Q1</SelectItem>
+              <SelectItem value="Q2">Q2</SelectItem>
+              <SelectItem value="Q3">Q3</SelectItem>
+              <SelectItem value="Q4">Q4</SelectItem>
+              {monthNames.map((name, i) => (
+                <SelectItem key={i} value={`M${i + 1}`}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide ml-2">
+            <SlidersHorizontal className="h-3 w-3" />
+            Abwesenheit
+          </div>
+          <Select value={absFilter} onValueChange={setAbsFilter}>
+            <SelectTrigger className="h-8 w-[180px] text-xs bg-card">
+              <SelectValue placeholder="Abwesenheitsart" />
+            </SelectTrigger>
+            <SelectContent>
+              {absenceOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {(period !== 'year' || absFilter !== 'all') && (
+            <div className="ml-auto text-[10px] text-muted-foreground">
+              {days.length} {days.length === 1 ? 'Tag' : 'Tage'} · {periodLabel}
+              {absFilter !== 'all' && ` · ${absenceOptions.find((o) => o.value === absFilter)?.label}`}
+            </div>
+          )}
+        </div>
+
         <div className="overflow-y-auto flex-1">
-          {data.days.length === 0 ? (
-            <div className="p-8 text-center text-xs text-muted-foreground">Keine Transaktionen im laufenden Jahr.</div>
+          {days.length === 0 ? (
+            <div className="p-8 text-center text-xs text-muted-foreground">
+              Keine Transaktionen für den gewählten Zeitraum und Filter.
+            </div>
           ) : (
             <table className="w-full text-xs">
               <thead className="bg-muted/30 sticky top-0">
@@ -460,7 +580,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {data.days.map((d) => {
+                {days.map((d) => {
                   const delta = d.att?.worked_minutes ? d.att.worked_minutes - 480 : 0;
                   const seen = new Set<string>();
                   const uniqAbs = d.absences.filter((a) => {
@@ -469,6 +589,9 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                     seen.add(k);
                     return true;
                   });
+                  const visibleAbs = absFilter === 'all'
+                    ? uniqAbs
+                    : uniqAbs.filter((a) => matchesAbsenceFilter(a, absFilter));
                   return (
                     <tr key={d.date} className="hover:bg-muted/30">
                       <td className="px-4 py-2 whitespace-nowrap text-foreground">{fmtDateDE(d.date)}</td>
@@ -492,7 +615,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
-                          {uniqAbs.map((a, i) => (
+                          {visibleAbs.map((a, i) => (
                             <span
                               key={i}
                               className={cn(
@@ -504,7 +627,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                               {absenceLabel(a)}
                             </span>
                           ))}
-                          {uniqAbs.length === 0 && <span className="text-muted-foreground">–</span>}
+                          {visibleAbs.length === 0 && <span className="text-muted-foreground">–</span>}
                         </div>
                       </td>
                     </tr>
