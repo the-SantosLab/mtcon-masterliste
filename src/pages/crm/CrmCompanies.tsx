@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+import { SavedViewsBar } from '@/components/crm/SavedViewsBar';
+
 
 const COMPANY_TYPE_MAP: Record<string, string> = {
   customer: 'kunde', kunde: 'kunde',
