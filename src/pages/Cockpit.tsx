@@ -38,6 +38,8 @@ type CaseRow = {
   project_name: string | null;
   status: string;
   created_at: string;
+  due_at?: string | null;
+  client_name?: string | null;
 };
 type Profile = { id: string; display_name: string | null };
 type ActivityRow = {
@@ -184,7 +186,7 @@ export default function Cockpit() {
           .is('archived_at', null),
         supabase
           .from('cases')
-          .select('id,case_no,project_name,status,created_at')
+          .select('id,case_no,project_name,status,created_at,due_at,client_name')
           .eq('deleted', false)
           .order('created_at', { ascending: false })
           .limit(500),
