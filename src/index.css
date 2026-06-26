@@ -1980,86 +1980,170 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   line-height: 1.5;
 }
 
-/* ----- SQUARE ----- */
-.cs-square {
+/* ----- SQUARE (1:1 port of quad_infografik.html) ----- */
+.quad-scene {
   position: relative;
-  width: 100%;
+  width: 100%; max-width: 920px; margin: 0 auto;
   aspect-ratio: 1/1;
-  max-width: 880px;
-  margin: 0 auto;
-}
-.cs-square__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 10px;
-  width: 100%; height: 100%;
-}
-.cs-quad {
-  position: relative;
-  text-align: left;
-  padding: 22px 22px 18px;
+  border-radius: 22px; overflow: hidden;
+  color: #fff;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--ac) 14%, transparent), rgba(8,14,26,0.7) 70%),
-    rgba(6,10,20,0.6);
-  border: 1.5px solid color-mix(in srgb, var(--ac) 75%, transparent);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,0.4) inset,
-    0 0 24px var(--gl),
-    0 0 60px color-mix(in srgb, var(--gl) 50%, transparent) inset;
-  color: rgba(255,255,255,0.92);
-  transition: transform .18s ease, box-shadow .18s ease;
+    radial-gradient(circle at 28% 26%, rgba(255,157,51,0.16), transparent 26%),
+    radial-gradient(circle at 74% 26%, rgba(47,185,255,0.15), transparent 26%),
+    radial-gradient(circle at 74% 72%, rgba(98,226,58,0.15), transparent 26%),
+    radial-gradient(circle at 28% 72%, rgba(47,125,255,0.15), transparent 26%),
+    #04050d;
+}
+.quad-scene .quad-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(120,170,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,170,255,0.04) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(circle at 50% 46%, black 0%, transparent 72%);
+  pointer-events: none;
+}
+.quad-scene .quad-layer {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 2; pointer-events: none;
+}
+.quad-scene .quad-disc { z-index: 3; }
+
+.quad-panel {
+  position: absolute; z-index: 4;
+  border-style: solid; border-width: 3px;
+  padding: 0; text-align: left;
   cursor: pointer;
-  overflow: hidden;
+  transition: box-shadow .18s ease, transform .18s ease, filter .18s ease;
+  color: inherit;
 }
-.cs-quad--tl { border-top-left-radius: 28px; }
-.cs-quad--tr { border-top-right-radius: 28px; }
-.cs-quad--br { border-bottom-right-radius: 28px; }
-.cs-quad--bl { border-bottom-left-radius: 28px; }
-.cs-quad.is-hover {
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset, 0 0 40px var(--gl), 0 0 80px color-mix(in srgb, var(--gl) 60%, transparent) inset;
+.quad-panel.is-hover, .quad-panel.is-active { filter: brightness(1.18); transform: scale(1.012); }
+
+.quad-panel--sales {
+  left: 12%; top: 10%; width: 36.5%; height: 35%;
+  border-color: #ff9d33; border-radius: 64px 16px 16px 16px;
+  background: linear-gradient(145deg, rgba(255,157,51,0.10), rgba(255,157,51,0.01) 55%);
+  box-shadow: 0 0 22px rgba(255,157,51,0.40), inset 0 0 26px rgba(255,157,51,0.10);
 }
-.cs-quad__icon {
-  position: absolute;
-  width: 52px; height: 52px; border-radius: 50%;
-  background: rgba(6,10,20,0.92);
-  border: 2px solid var(--ac);
+.quad-panel--support {
+  right: 12%; top: 10%; width: 36.5%; height: 35%;
+  border-color: #2fb9ff; border-radius: 16px 64px 16px 16px;
+  background: linear-gradient(215deg, rgba(47,185,255,0.10), rgba(47,185,255,0.01) 55%);
+  box-shadow: 0 0 22px rgba(47,185,255,0.40), inset 0 0 26px rgba(47,185,255,0.10);
+}
+.quad-panel--log {
+  left: 12%; bottom: 14%; width: 36.5%; height: 35%;
+  border-color: #2f7dff; border-radius: 16px 16px 16px 64px;
+  background: linear-gradient(55deg, rgba(47,125,255,0.10), rgba(47,125,255,0.01) 55%);
+  box-shadow: 0 0 22px rgba(47,125,255,0.40), inset 0 0 26px rgba(47,125,255,0.10);
+}
+.quad-panel--besch {
+  right: 12%; bottom: 14%; width: 36.5%; height: 35%;
+  border-color: #62e23a; border-radius: 16px 16px 64px 16px;
+  background: linear-gradient(305deg, rgba(98,226,58,0.10), rgba(98,226,58,0.01) 55%);
+  box-shadow: 0 0 22px rgba(98,226,58,0.40), inset 0 0 26px rgba(98,226,58,0.10);
+}
+
+.quad-txt { position: absolute; padding: 16px 22px; width: 82%; }
+.quad-txt--sales   { left: 6%;  top: 12%; }
+.quad-txt--support { right: 6%; top: 12%; text-align: left; }
+.quad-txt--log     { left: 6%;  top: 12%; }
+.quad-txt--besch   { right: 6%; top: 12%; text-align: left; }
+
+.quad-num {
+  font-size: clamp(15px, 2.5vw, 26px); font-weight: 800;
+  letter-spacing: 1px; margin: 0 0 2px;
+}
+.quad-num--o  { color: #ff9d33; }
+.quad-num--c  { color: #2fb9ff; }
+.quad-num--g  { color: #62e23a; }
+.quad-num--bl { color: #2f7dff; }
+
+.quad-title {
+  font-size: clamp(12px, 1.9vw, 20px); font-weight: 800;
+  letter-spacing: 1px; margin: 0 0 8px; color: #fff;
+  text-shadow: 0 0 10px rgba(255,255,255,0.22); line-height: 1.05;
+}
+.quad-bul {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.quad-bul li {
+  font-size: clamp(9px, 1.1vw, 12.5px);
+  color: #e3e9f6;
+  display: flex; align-items: flex-start; gap: 7px;
+  line-height: 1.3;
+}
+.quad-bul li::before {
+  content: ""; flex-shrink: 0;
+  width: 10px; height: 10px; margin-top: 3px;
+  border-radius: 50%; border: 2px solid;
+}
+.quad-bul--o  li::before { border-color: #ff9d33; }
+.quad-bul--c  li::before { border-color: #2fb9ff; }
+.quad-bul--g  li::before { border-color: #62e23a; }
+.quad-bul--bl li::before { border-color: #2f7dff; }
+
+.quad-count {
+  position: absolute; bottom: 8px; right: 12px;
+  font-family: ui-monospace, monospace; font-size: 10.5px;
+  letter-spacing: 1px; color: rgba(255,255,255,0.7);
+}
+
+.quad-ring {
+  position: absolute; z-index: 6;
+  width: 11%; aspect-ratio: 1/1; border-radius: 50%;
   display: grid; place-items: center;
-  color: var(--ac);
-  box-shadow: 0 0 18px var(--gl), 0 0 36px var(--gl);
+  background: rgba(4,6,16,0.92);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  color: var(--ai);
+  border: 2px solid var(--ac);
+  box-shadow:
+    0 0 20px 2px color-mix(in srgb, var(--ac) 60%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--ac) 35%, transparent);
 }
-.cs-quad__icon--tl { top: -18px; left: -18px; }
-.cs-quad__icon--tr { top: -18px; right: -18px; }
-.cs-quad__icon--br { bottom: -18px; right: -18px; }
-.cs-quad__icon--bl { bottom: -18px; left: -18px; }
-.cs-quad__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-.cs-quad__num {
-  font-family: ui-monospace, monospace; font-size: 22px; font-weight: 700;
-  color: var(--ac); letter-spacing: 1px;
-  text-shadow: 0 0 12px var(--gl);
+.quad-ring svg { width: 48%; height: 48%; }
+.quad-ring--sales   { left: 12%; top: 23.5%; }
+.quad-ring--support { left: 88%; top: 23.5%; }
+.quad-ring--log     { left: 12%; top: 63%; }
+.quad-ring--besch   { left: 88%; top: 63%; }
+
+.quad-center {
+  position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
+  width: 24%; text-align: center; z-index: 6; pointer-events: none;
 }
-.cs-quad__name {
-  font-size: 13px; font-weight: 600; letter-spacing: 3px;
-  color: rgba(255,255,255,0.92);
+.quad-center__l {
+  font-size: clamp(11px, 1.9vw, 20px); font-weight: 800;
+  letter-spacing: 0.5px; line-height: 1.15; color: #fff;
+  text-shadow: 0 0 12px rgba(120,210,255,0.55);
+  margin: 0 0 6px;
 }
-.cs-quad__list {
-  display: flex; flex-direction: column; gap: 7px;
-  font-size: 11.5px; color: rgba(255,255,255,0.78); line-height: 1.35;
-  max-width: 78%;
+.quad-center__s {
+  font-size: clamp(6px, 1vw, 10.5px); color: #3ad6ff;
+  line-height: 1.5; letter-spacing: 0.4px; margin: 0;
 }
-.cs-quad__list li { display: flex; align-items: flex-start; gap: 8px; }
-.cs-quad__bullet {
-  width: 6px; height: 6px; border-radius: 2px;
-  background: var(--ac);
-  box-shadow: 0 0 8px var(--gl);
-  margin-top: 6px; flex-shrink: 0;
+
+.quad-footer {
+  position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%);
+  width: 93%; z-index: 6;
+  display: flex; align-items: center; justify-content: space-around;
+  background: rgba(6,10,24,0.72);
+  border: 1px solid rgba(120,170,255,0.32);
+  border-radius: 14px;
+  padding: 11px 6px;
+  box-shadow: 0 0 16px rgba(47,157,255,0.16);
+  pointer-events: none;
 }
-.cs-quad__count {
-  position: absolute; bottom: 10px; right: 14px;
-  font-family: ui-monospace, monospace; font-size: 11px;
-  color: var(--ac); opacity: 0.85;
-  letter-spacing: 1px;
+.quad-fi {
+  display: flex; align-items: center; gap: 6px;
+  font-size: clamp(7px, 1.02vw, 11px);
+  color: #d3e2ff; letter-spacing: 0.3px; white-space: nowrap;
 }
+.quad-fi svg { color: #3ad6ff; flex-shrink: 0; }
+.quad-fd { width: 1px; height: 16px; background: rgba(120,170,255,0.3); }
+
 
 /* ----- TRIANGLE ----- */
 /* ============ TRIANGLE: 1:1 port of triangle_infografik.html ============ */
@@ -2201,75 +2285,98 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .tri-footer-divider { width: 1px; height: 16px; background: rgba(120,170,255,0.3); }
 
 
-/* ----- LINE (horizontal pipeline of octagons) ----- */
-.cs-line {
+/* ----- LINE (1:1 port of flow_infografik.html) ----- */
+.flow-scene {
   position: relative;
-  width: 100%;
-  padding: 40px 12px 24px;
+  width: 100%; max-width: 1500px; margin: 0 auto;
+  aspect-ratio: 1800/880;
+  border-radius: 16px; overflow: hidden;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 25% 42%, rgba(47,157,255,0.20), transparent 38%),
+    radial-gradient(ellipse at 78% 38%, rgba(91,226,58,0.18), transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(160,240,255,0.10), transparent 30%),
+    linear-gradient(90deg, #04060f 0%, #050a16 45%, #04100a 100%);
 }
-.cs-line__rail {
+.flow-scene .flow-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(120,170,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,170,255,0.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 78%);
+  pointer-events: none;
+}
+.flow-scene .flow-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.flow-nodes {
+  position: absolute; inset: 0; pointer-events: none;
+}
+
+.flow-oct {
   position: absolute;
-  left: 5%; right: 5%; top: 50%;
-  height: 2px;
-  transform: translateY(-50%);
-  background: linear-gradient(90deg,
-    hsl(215 100% 60% / 0.0) 0%,
-    hsl(215 100% 60% / 0.8) 12%,
-    hsl(195 100% 60% / 0.9) 35%,
-    hsl(142 90% 55% / 0.9) 65%,
-    hsl(142 90% 55% / 0.0) 100%);
-  box-shadow: 0 0 18px rgba(120,200,255,0.55);
-}
-.cs-line__nodes {
-  position: relative;
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 8px;
-}
-.cs-oct {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  top: 53.4%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
   background: transparent; border: 0; padding: 0;
   cursor: pointer;
-  --size: clamp(64px, 7vw, 96px);
 }
-.cs-oct__shape {
+.flow-oct__shape {
   position: relative;
-  width: var(--size); height: var(--size);
-  display: grid; place-items: center;
-  color: var(--ac);
-  background:
-    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--ac) 30%, transparent), rgba(6,10,20,0.95) 70%);
-  border: 2px solid var(--ac);
+  width: clamp(58px, 6.4vw, 100px);
+  aspect-ratio: 1/1;
+}
+.flow-oct__ring {
+  position: absolute; inset: 0;
+  background: var(--ac);
   clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-  box-shadow: 0 0 18px var(--gl), 0 0 40px var(--gl);
-  transition: transform .2s ease, box-shadow .2s ease;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ac) 70%, transparent))
+          drop-shadow(0 0 20px color-mix(in srgb, var(--ac) 45%, transparent));
+  opacity: 0.55;
+  transition: opacity .18s ease, filter .18s ease;
 }
-.cs-oct.is-hover .cs-oct__shape {
-  transform: scale(1.08);
-  box-shadow: 0 0 28px var(--gl), 0 0 60px var(--gl);
+.flow-oct__inner {
+  position: absolute; inset: 4px;
+  background: rgba(6,12,26,0.92);
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  display: grid; place-items: center;
+  color: var(--ai);
+  border: 2.4px solid transparent;
 }
-.cs-oct__pill {
+.flow-oct.is-hover .flow-oct__ring,
+.flow-oct.is-active .flow-oct__ring {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--ac) 85%, transparent))
+          drop-shadow(0 0 28px color-mix(in srgb, var(--ac) 60%, transparent));
+}
+.flow-oct__pill {
   position: absolute;
-  bottom: 6px;
+  left: 50%; bottom: -10px;
+  transform: translateX(-50%);
   font-family: ui-monospace, monospace;
   font-size: 9px; letter-spacing: 1px;
   color: rgba(255,255,255,0.85);
   background: rgba(0,0,0,0.55);
   padding: 1px 6px; border-radius: 8px;
+  pointer-events: none;
 }
-.cs-oct__label {
+.flow-oct__label {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  text-align: center;
+  text-align: center; margin-top: 10px;
 }
-.cs-oct__num {
-  font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700;
-  color: var(--ac); letter-spacing: 1px;
-  text-shadow: 0 0 8px var(--gl);
+.flow-oct__num {
+  font-family: ui-monospace, monospace; font-weight: 700;
+  font-size: 11px; color: var(--ac); letter-spacing: 1.2px;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--ac) 60%, transparent);
 }
-.cs-oct__name {
-  font-size: 10px; font-weight: 600; letter-spacing: 2px;
-  color: rgba(255,255,255,0.82);
-  max-width: 110px;
-  line-height: 1.25;
+.flow-oct__name {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: #dfeaf7; line-height: 1.1;
+  max-width: 130px;
 }
+
 
