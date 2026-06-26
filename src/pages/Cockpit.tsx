@@ -945,7 +945,16 @@ export default function Cockpit() {
               deptName={deptName}
               caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
               userName={userName}
+              activeDeptId={selectedDept}
+              onDeptClick={(id) => {
+                setSelectedDept((cur) => {
+                  const next = cur === id ? null : id;
+                  if (next) toast.success(`Filter aktiv · ${deptName(next)}`, { duration: 2200 });
+                  return next;
+                });
+              }}
             />
+
 
             <PipelineLane
               key={selectedCaseId ?? 'none'}
