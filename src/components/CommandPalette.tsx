@@ -29,6 +29,9 @@ const TYPE_ICON = {
   case: ClipboardList,
   user: User2,
   action: Zap,
+  company: Building2,
+  deal: Briefcase,
+  contact: Contact,
 };
 
 const TYPE_LABEL = {
@@ -36,6 +39,9 @@ const TYPE_LABEL = {
   case: 'Vorgang',
   user: 'Benutzer',
   action: 'Schnellaktion',
+  company: 'Geschäftspartner',
+  deal: 'Deal',
+  contact: 'Kontakt',
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -43,7 +49,11 @@ const TYPE_COLOR: Record<string, string> = {
   case: 'text-primary bg-primary/10',
   user: 'text-muted-foreground bg-muted',
   action: 'text-[hsl(var(--status-done))] bg-[hsl(var(--status-done))]/10',
+  company: 'text-blue-400 bg-blue-500/10',
+  deal: 'text-violet-400 bg-violet-500/10',
+  contact: 'text-amber-400 bg-amber-500/10',
 };
+
 
 const QUICK_ACTIONS: Result[] = [
   { id: 'qa-dashboard', type: 'action', title: 'Zum Dashboard', sub: 'Startseite öffnen', href: '/', icon: LayoutDashboard },
