@@ -252,7 +252,19 @@ export default function Cockpit() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  // ---------- Filter logic ----------
+  // SLA alerts: toast on every new task that crosses critical age while open
+  useEffect(() => {
+    const seen = alertedTaskIdsRef.current;
+    for (const t of tasks) {
+      if (t.completed || t.status === 'done') continue;
+      if (hoursSince(t.created_at) < SLA_CRIT_H) continue;
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      const cNo = cases.find((c) => c.id === t.case_id)?.case_no ?? '—';
+      toast.warning(`SLA kritisch · ${cNo}`, { description: t.title, duration: 6000 });
+    }
+  }, [tasks, cases]);
+
   const timeframeMs = TIMEFRAMES.find((t) => t.id === timeframe)!.ms;
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
