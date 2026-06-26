@@ -682,102 +682,144 @@ export default function Cockpit() {
               <div className="text-xs text-white/55 tracking-wide">
                 EINE LINIE · EIN ZIEL — Nahtlos vernetzte Prozesse von Sales bis Lieferung.
               </div>
-              <div className="w-[380px] max-w-full">
-                <Select value={selectedCaseId ?? undefined} onValueChange={(v) => { setSelectedCaseId(v); setSelectedNodeId(null); }}>
-                  <SelectTrigger className="cockpit-select">
-                    <SelectValue placeholder="Vorgang wählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cases.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="font-mono text-xs mr-2">{c.case_no ?? '—'}</span>
-                        <span className="truncate">{c.project_name ?? '—'}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => { setPickerMode('select'); setPickerOpen(true); }}
+                  className="cockpit-toggle"
+                  style={{
+                    // @ts-ignore
+                    '--accent': 'hsl(195 100% 60%)',
+                    '--accent-glow': 'rgba(60,200,255,0.6)',
+                  } as React.CSSProperties}
+                >
+                  <Search className="h-3 w-3" /> Vorgang suchen
+                  <span className="font-mono text-[9px] opacity-60 ml-1">⌘K</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPickerMode('compare'); setPickerOpen(true); }}
+                  className={cn('cockpit-toggle', compareIds.length > 0 && 'cockpit-toggle--on')}
+                  style={{
+                    // @ts-ignore
+                    '--accent': 'hsl(270 90% 70%)',
+                    '--accent-glow': 'rgba(170,120,255,0.6)',
+                  } as React.CSSProperties}
+                >
+                  <GitCompare className="h-3 w-3" /> Vergleichen
+                  {compareIds.length > 0 && <span className="font-mono text-[10px]">+{compareIds.length}</span>}
+                </button>
               </div>
             </div>
 
-            <div className="cockpit-panel cockpit-hud">
-              <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
-              {selectedCaseTasks.length === 0 ? (
-                <div className="text-sm text-white/50 py-10 text-center">Keine Aufgaben für diesen Vorgang.</div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto pb-4 relative" ref={pipelineWrapRef}>
-                    <PipelineFlow count={selectedCaseTasks.length} currentIdx={currentIdx} />
-                    <ol className="cockpit-pipeline relative" style={{ zIndex: 1 }}>
-                      {selectedCaseTasks.map((t, i) => {
-                        const done = t.completed || t.status === 'done';
-                        const current = !done && i === currentIdx;
-                        const upcoming = !done && !current;
-                        const active = selectedNodeId === t.id;
-                        const progress = selectedCaseTasks.length > 1 ? i / (selectedCaseTasks.length - 1) : 0;
-                        const hue = 200 - progress * 60;
-                        const accentHsl = `${hue} 90% 58%`;
-                        const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
-                        const nextHue = 200 - ((i + 1) / Math.max(1, selectedCaseTasks.length - 1)) * 60;
-                        return (
-                          <li key={t.id} className="flex items-start">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedNodeId(active ? null : t.id)}
-                              className={cn('cockpit-step', active && 'cockpit-step--active', upcoming && 'cockpit-step--upcoming')}
-                              style={{
-                                // @ts-ignore
-                                '--accent': `hsl(${accentHsl})`,
-                                '--accent-glow': accentGlow,
-                              } as React.CSSProperties}
-                            >
-                              <div className="cockpit-step__hex">
-                                {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
-                              </div>
-                              <div className="cockpit-step__label">
-                                <div className="cockpit-step__label-status">
-                                  {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
-                                </div>
-                                <div className="cockpit-step__label-title">{t.title}</div>
-                                <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
-                              </div>
-                            </button>
-                            {i < selectedCaseTasks.length - 1 && (
-                              <div
-                                className={cn('cockpit-connector', (done || selectedCaseTasks[i + 1].completed || selectedCaseTasks[i + 1].status === 'done') && 'cockpit-connector--lit')}
-                                style={{
-                                  // @ts-ignore
-                                  '--from': `hsl(${accentHsl})`,
-                                  '--to': `hsl(${nextHue} 90% 58%)`,
-                                } as React.CSSProperties}
-                              />
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </div>
+            {compareIds.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="cockpit-filterbar__label">Vergleich</span>
+                {[selectedCaseId, ...compareIds].filter(Boolean).map((cid, idx) => {
+                  const accent = accentFor(idx + 1);
+                  return (
+                    <span
+                      key={cid as string}
+                      className="cockpit-compare-pill"
+                      style={{
+                        // @ts-ignore
+                        '--accent': `hsl(${accent.hue})`,
+                      } as React.CSSProperties}
+                    >
+                      {caseNo(cid as string)}
+                      {idx > 0 && (
+                        <X
+                          className="h-3 w-3 cockpit-compare-pill__close"
+                          onClick={() => setCompareIds((prev) => prev.filter((x) => x !== cid))}
+                        />
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
-                  {selectedNodeId && (() => {
-                    const t = selectedCaseTasks.find((x) => x.id === selectedNodeId);
-                    if (!t) return null;
-                    const done = t.completed || t.status === 'done';
-                    return (
-                      <div className="mt-4 cockpit-subpanel">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <Field label="Abteilung" value={deptName(t.department_id)} />
-                          <Field label="Zugewiesen" value={userName(t.assigned_to)} />
-                          <Field label="Status" value={done ? 'erledigt' : t.status === 'in_progress' ? 'in Arbeit' : 'offen'} />
-                          <Field label="Abgeschlossen am" value={t.completed_at ? new Date(t.completed_at).toLocaleString('de-DE') : t.status === 'in_progress' ? 'in Arbeit' : 'noch nicht gestartet'} />
-                          <div className="sm:col-span-2">
-                            <div className="cockpit-field__label">Beschreibung</div>
-                            <div className="whitespace-pre-wrap text-sm text-white/80">{t.description || '—'}</div>
+            {/* Primary pipeline */}
+            <PipelineLane
+              key={selectedCaseId ?? 'none'}
+              tasks={selectedCaseTasks}
+              accentBaseHue={200}
+              selectedNodeId={selectedNodeId}
+              onSelectNode={(id) => setSelectedNodeId(id)}
+              deptName={deptName}
+              heatLevel={heatLevel}
+              caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
+              extraDrawer={
+                selectedNodeId
+                  ? (() => {
+                      const t = selectedCaseTasks.find((x) => x.id === selectedNodeId);
+                      if (!t) return null;
+                      const done = t.completed || t.status === 'done';
+                      return (
+                        <div className="mt-4 cockpit-subpanel">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <Field label="Abteilung" value={deptName(t.department_id)} />
+                            <Field label="Zugewiesen" value={userName(t.assigned_to)} />
+                            <Field label="Status" value={done ? 'erledigt' : t.status === 'in_progress' ? 'in Arbeit' : 'offen'} />
+                            <Field label="Abgeschlossen am" value={t.completed_at ? new Date(t.completed_at).toLocaleString('de-DE') : t.status === 'in_progress' ? 'in Arbeit' : 'noch nicht gestartet'} />
+                            <div className="sm:col-span-2">
+                              <div className="cockpit-field__label">Beschreibung</div>
+                              <div className="whitespace-pre-wrap text-sm text-white/80">{t.description || '—'}</div>
+                            </div>
+                          </div>
+
+                          <div className="cockpit-drawer-section">
+                            <h4 className="flex items-center gap-2">
+                              <MessageSquare className="h-3 w-3" /> Chat-Vorschau
+                              <span className="ml-auto flex items-center gap-1 text-[10px] text-white/45 normal-case tracking-normal">
+                                <Paperclip className="h-3 w-3" /> {drawerAttachments} Anhänge
+                              </span>
+                            </h4>
+                            {drawerLoading ? (
+                              <div className="text-xs text-white/45">// lade …</div>
+                            ) : drawerChat.length === 0 ? (
+                              <div className="text-xs text-white/45">Keine Nachrichten zu diesem Vorgang.</div>
+                            ) : (
+                              <div>
+                                {drawerChat.map((m) => (
+                                  <div key={m.id} className="cockpit-chat-msg">
+                                    <span className="cockpit-chat-msg__author">{userName(m.author_id)}</span>
+                                    <span className="cockpit-chat-msg__body">{m.body}</span>
+                                    <span className="cockpit-chat-msg__time">{fmtAgo(m.created_at)}</span>
+                                  </div>
+                                ))}
+                                {selectedCaseId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => navigate(`/cases/${selectedCaseId}`)}
+                                    className="mt-2 text-[10px] uppercase tracking-[0.22em] text-cyan-300 hover:underline"
+                                  >
+                                    → kompletten Vorgang öffnen
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
-                </>
-              )}
+                      );
+                    })()
+                  : null
+              }
+            />
+
+            {/* Compare lanes */}
+            {compareIds.map((cid, idx) => (
+              <CompareLane
+                key={cid}
+                caseId={cid}
+                tasks={tasks}
+                deptName={deptName}
+                heatLevel={heatLevel}
+                accentBaseHue={[40, 280, 340, 160][idx % 4]}
+                caseLabel={caseNo(cid)}
+              />
+            ))}
+
             </div>
           </section>
 
