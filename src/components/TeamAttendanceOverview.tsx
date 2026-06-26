@@ -682,18 +682,37 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
         </div>
 
         <div className="px-5 py-3 border-b border-border bg-muted/10">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
               <TrendingUp className="h-3 w-3" />
               Trend · Überstunden & Abwesenheiten
             </div>
-            <div className="text-[10px] text-muted-foreground">
-              {bucketMode === 'month' ? 'Monatlich' : 'Täglich'}
+            <div className="flex items-center gap-2">
+              {drill && (
+                <button
+                  onClick={() => setDrill(null)}
+                  className="text-[10px] px-2 py-0.5 rounded border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                  title="Drill-Down zurücksetzen"
+                >
+                  Filter: {drill.label} ✕
+                </button>
+              )}
+              <Select value={bucketChoice} onValueChange={(v) => setBucketChoice(v as any)}>
+                <SelectTrigger className="h-7 w-[110px] text-[11px] bg-card">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Automatisch</SelectItem>
+                  <SelectItem value="day">Täglich</SelectItem>
+                  <SelectItem value="week">Wöchentlich</SelectItem>
+                  <SelectItem value="month">Monatlich</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="h-[180px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} onClick={handleBarClick}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <YAxis yAxisId="left" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
@@ -711,14 +730,18 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
-                <Bar yAxisId="right" dataKey="vacation" name="Urlaub" stackId="abs" fill="hsl(199 89% 60%)" radius={[2, 2, 0, 0]} />
-                <Bar yAxisId="right" dataKey="sick" name="Krank" stackId="abs" fill="hsl(38 92% 60%)" radius={[2, 2, 0, 0]} />
-                <Bar yAxisId="right" dataKey="other" name="Sonstige" stackId="abs" fill="hsl(262 70% 65%)" radius={[2, 2, 0, 0]} />
-                <Line yAxisId="left" type="monotone" dataKey="overtime" name="Überstunden" stroke="hsl(160 70% 50%)" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                <Bar yAxisId="right" dataKey="vacation" name="Urlaub" stackId="abs" fill="hsl(199 89% 60%)" radius={[2, 2, 0, 0]} cursor="pointer" />
+                <Bar yAxisId="right" dataKey="sick" name="Krank" stackId="abs" fill="hsl(38 92% 60%)" radius={[2, 2, 0, 0]} cursor="pointer" />
+                <Bar yAxisId="right" dataKey="other" name="Sonstige" stackId="abs" fill="hsl(262 70% 65%)" radius={[2, 2, 0, 0]} cursor="pointer" />
+                <Line yAxisId="left" type="monotone" dataKey="overtime" name="Überstunden" stroke="hsl(160 70% 50%)" strokeWidth={2} dot={{ r: 2, cursor: 'pointer' }} activeDot={{ r: 4, cursor: 'pointer' }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
+          <div className="mt-1 text-[9px] text-muted-foreground text-center">
+            Tipp: Auf einen Balken/Punkt klicken, um die Tabelle auf diesen Zeitraum zu filtern.
+          </div>
         </div>
+
 
         <div className="overflow-y-auto flex-1">
 
