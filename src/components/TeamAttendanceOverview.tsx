@@ -497,78 +497,50 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
   const [absFilter, setAbsFilter] = useState('all');
   const [bucketChoice, setBucketChoice] = useState<'auto' | 'day' | 'week' | 'month'>('auto');
   const [drill, setDrill] = useState<{ from: string; to: string; label: string } | null>(null);
+  const [comparePreset, setComparePreset] = useState<'off' | 'prev_year' | 'prev_period'>('off');
   const currentYear = parseInt(yearFrom.slice(0, 4), 10);
 
-  // Reset drill when filters change
+  // Reset drill when filters change (compare toggle preserves drill on purpose)
   useEffect(() => { setDrill(null); }, [period, absFilter, bucketChoice, user?.id]);
 
+  const primaryRange = useMemo(
+    () => resolvePeriod(period, currentYear, today),
+    [period, currentYear, today],
+  );
+
+  const compareRange = useMemo(() => {
+    if (comparePreset === 'off') return null;
+    if (comparePreset === 'prev_year') {
+      return {
+        from: shiftIsoYear(primaryRange.from, -1),
+        to: shiftIsoYear(primaryRange.to, -1),
+        label: `${currentYear - 1}`,
+      };
+    }
+    const len = daysBetween(primaryRange.from, primaryRange.to);
+    const to = addDaysIso(primaryRange.from, -1);
+    const from = addDaysIso(to, -(len - 1));
+    return { from, to, label: 'Vorperiode' };
+  }, [comparePreset, primaryRange, currentYear]);
+
+  const userSeries = useMemo(() => {
+    if (!user) return { att: [] as Att[], abs: [] as Abs[] };
+    return {
+      att: att.filter((x) => x.user_id === user.id),
+      abs: abs.filter((x) => x.user_id === user.id),
+    };
+  }, [user, att, abs]);
 
   const { days, totals } = useMemo(() => {
     if (!user) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
-    const userAtt = att.filter((x) => x.user_id === user.id);
-    const userAbs = abs.filter((x) => x.user_id === user.id);
+    return buildSeries(userSeries.att, userSeries.abs, primaryRange.from, primaryRange.to, absFilter);
+  }, [user, userSeries, primaryRange, absFilter]);
 
-    const { from: pFrom, to: pTo } = resolvePeriod(period, currentYear, today);
+  const { days: daysCompare, totals: totalsCompare } = useMemo(() => {
+    if (!user || !compareRange) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
+    return buildSeries(userSeries.att, userSeries.abs, compareRange.from, compareRange.to, absFilter);
+  }, [user, userSeries, compareRange, absFilter]);
 
-    const map = new Map<string, DayRow>();
-    const ensure = (date: string) => {
-      if (!map.has(date)) map.set(date, { date, absences: [] });
-      return map.get(date)!;
-    };
-
-    for (const a of userAtt) {
-      if (a.work_date < yearFrom || a.work_date > today) continue;
-      if (a.work_date < pFrom || a.work_date > pTo) continue;
-      ensure(a.work_date).att = a;
-    }
-    for (const ab of userAbs) {
-      const start = ab.start_date > yearFrom ? ab.start_date : yearFrom;
-      const end = ab.end_date < today ? ab.end_date : today;
-      if (start > end) continue;
-      const d = new Date(start + 'T00:00:00');
-      const endD = new Date(end + 'T00:00:00');
-      while (d <= endD) {
-        const iso = d.toISOString().slice(0, 10);
-        if (iso >= pFrom && iso <= pTo) {
-          ensure(iso).absences.push(ab);
-        }
-        d.setDate(d.getDate() + 1);
-      }
-    }
-
-    const allDays = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
-
-    let worked = 0, overtime = 0, vacation = 0, sick = 0, other = 0;
-    const filteredDays: DayRow[] = [];
-
-    for (const d of allDays) {
-      if (d.att?.worked_minutes) {
-        worked += d.att.worked_minutes;
-        overtime += (d.att.worked_minutes - 480);
-      }
-      const seen = new Set<string>();
-      let dayVac = 0, daySick = 0, dayOther = 0;
-      for (const a of d.absences) {
-        const key = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        if (a.category === 'vacation') dayVac += 1;
-        else if (a.category === 'sick') daySick += 1;
-        else dayOther += 1;
-      }
-
-      const hasMatchingAbs = d.absences.some((a) => matchesAbsenceFilter(a, absFilter));
-      const include = absFilter === 'all' || hasMatchingAbs;
-
-      if (include) {
-        filteredDays.push(d);
-        vacation += dayVac;
-        sick += daySick;
-        other += dayOther;
-      }
-    }
-    return { days: filteredDays, totals: { worked, overtime, vacation, sick, other } };
-  }, [user, att, abs, yearFrom, today, period, absFilter, currentYear]);
 
   const open = !!user;
   const periodLabel = period === 'year' ? 'Gesamtjahr' : period.startsWith('Q') ? period : monthNames[parseInt(period.slice(1)) - 1];
