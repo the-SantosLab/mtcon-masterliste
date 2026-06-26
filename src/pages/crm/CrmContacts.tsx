@@ -59,7 +59,7 @@ export default function CrmContacts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', position: '', company_id: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', salutation: '', email: '', phone: '', mobile: '', position: '', company_id: '', linkedin_url: '', is_decision_maker: false, email_opt_in: false });
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
