@@ -151,6 +151,19 @@ export default function CrmOfferDetail() {
     doc.save(`${offer.offer_no}_v${offer.version}.pdf`);
   };
 
+  const createShareLink = async () => {
+    if (!id) return;
+    const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+    const expires = new Date(); expires.setDate(expires.getDate() + 30);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from('offer_share_tokens').insert({
+      offer_id: id, token, expires_at: expires.toISOString(), created_by: u.user?.id,
+    });
+    if (error) { toast.error(error.message); return; }
+    const url = `${location.origin}/p/offer/${token}`;
+    await navigator.clipboard.writeText(url);
+    toast.success('Freigabe-Link kopiert (30 Tage gültig)');
+
   const newVersion = async () => {
     if (!id) return;
     setSaving(true);
