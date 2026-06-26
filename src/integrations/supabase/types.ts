@@ -2289,6 +2289,105 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_lead_scoring_rules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          field: string
+          id: string
+          is_active: boolean
+          name: string
+          operator: string
+          points: number
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          field: string
+          id?: string
+          is_active?: boolean
+          name: string
+          operator?: string
+          points?: number
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          field?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          operator?: string
+          points?: number
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
+      crm_sales_goals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          metric: string
+          notes: string | null
+          owner_id: string | null
+          period_month: number | null
+          period_year: number
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metric?: string
+          notes?: string | null
+          owner_id?: string | null
+          period_month?: number | null
+          period_year: number
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metric?: string
+          notes?: string | null
+          owner_id?: string | null
+          period_month?: number | null
+          period_year?: number
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_stage_probabilities: {
+        Row: {
+          probability: number
+          stage: Database["public"]["Enums"]["deal_stage"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          probability: number
+          stage: Database["public"]["Enums"]["deal_stage"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          probability?: number
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       crm_unsubscribes: {
         Row: {
           contact_id: string
@@ -2383,11 +2482,15 @@ export type Database = {
           currency: string
           deal_no: string
           delivery_address: string | null
+          expected_close_date: string | null
           id: string
+          lead_source: Database["public"]["Enums"]["lead_source"] | null
+          lost_at: string | null
           lost_details: string | null
           lost_reason_id: string | null
           owner_id: string | null
           primary_contact_id: string | null
+          probability_override: number | null
           quantity: number | null
           sop: string | null
           stage: Database["public"]["Enums"]["deal_stage"]
@@ -2396,6 +2499,7 @@ export type Database = {
           updated_at: string
           value_estimated: number | null
           value_final: number | null
+          won_at: string | null
           won_case_id: string | null
         }
         Insert: {
@@ -2405,11 +2509,15 @@ export type Database = {
           currency?: string
           deal_no?: string
           delivery_address?: string | null
+          expected_close_date?: string | null
           id?: string
+          lead_source?: Database["public"]["Enums"]["lead_source"] | null
+          lost_at?: string | null
           lost_details?: string | null
           lost_reason_id?: string | null
           owner_id?: string | null
           primary_contact_id?: string | null
+          probability_override?: number | null
           quantity?: number | null
           sop?: string | null
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -2418,6 +2526,7 @@ export type Database = {
           updated_at?: string
           value_estimated?: number | null
           value_final?: number | null
+          won_at?: string | null
           won_case_id?: string | null
         }
         Update: {
@@ -2427,11 +2536,15 @@ export type Database = {
           currency?: string
           deal_no?: string
           delivery_address?: string | null
+          expected_close_date?: string | null
           id?: string
+          lead_source?: Database["public"]["Enums"]["lead_source"] | null
+          lost_at?: string | null
           lost_details?: string | null
           lost_reason_id?: string | null
           owner_id?: string | null
           primary_contact_id?: string | null
+          probability_override?: number | null
           quantity?: number | null
           sop?: string | null
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -2440,6 +2553,7 @@ export type Database = {
           updated_at?: string
           value_estimated?: number | null
           value_final?: number | null
+          won_at?: string | null
           won_case_id?: string | null
         }
         Relationships: [
@@ -4973,6 +5087,8 @@ export type Database = {
           phone: string | null
           rejection_reason: string | null
           routed_by_rule_id: string | null
+          score: number
+          score_calculated_at: string | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
@@ -4993,6 +5109,8 @@ export type Database = {
           phone?: string | null
           rejection_reason?: string | null
           routed_by_rule_id?: string | null
+          score?: number
+          score_calculated_at?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -5013,6 +5131,8 @@ export type Database = {
           phone?: string | null
           rejection_reason?: string | null
           routed_by_rule_id?: string | null
+          score?: number
+          score_calculated_at?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -6981,45 +7101,57 @@ export type Database = {
       }
       sales_routing_rules: {
         Row: {
-          assigned_to: string
+          assigned_to: string | null
           created_at: string
           created_by: string | null
           id: string
           is_active: boolean
+          last_assigned_index: number
           match_country: string | null
           match_industry: string | null
           match_keyword: string | null
           match_source: string | null
+          min_score: number
           name: string
+          pool_user_ids: string[]
           priority: number
+          strategy: string
           updated_at: string
         }
         Insert: {
-          assigned_to: string
+          assigned_to?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           is_active?: boolean
+          last_assigned_index?: number
           match_country?: string | null
           match_industry?: string | null
           match_keyword?: string | null
           match_source?: string | null
+          min_score?: number
           name: string
+          pool_user_ids?: string[]
           priority?: number
+          strategy?: string
           updated_at?: string
         }
         Update: {
-          assigned_to?: string
+          assigned_to?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           is_active?: boolean
+          last_assigned_index?: number
           match_country?: string | null
           match_industry?: string | null
           match_keyword?: string | null
           match_source?: string | null
+          min_score?: number
           name?: string
+          pool_user_ids?: string[]
           priority?: number
+          strategy?: string
           updated_at?: string
         }
         Relationships: []
@@ -8285,6 +8417,10 @@ export type Database = {
       build_tracking_url: {
         Args: { _carrier: string; _tracking_no: string }
         Returns: string
+      }
+      calculate_lead_score: {
+        Args: { _lead: Database["public"]["Tables"]["leads"]["Row"] }
+        Returns: number
       }
       can_access_case_chat: {
         Args: { p_case_id: string; p_uid?: string }
