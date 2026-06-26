@@ -286,12 +286,12 @@ export default function Cockpit() {
                         </div>
                       </button>
                       {selectedDept && renderPanelAfterMobile && (
-                        <div key={`panel-mobile-${d.id}`} className="sm:hidden col-span-full">
+                        <div key={`panel-mobile-${d.id}-${selectedDept}`} className="sm:hidden col-span-full cockpit-panel--enter">
                           {renderDeptPanel()}
                         </div>
                       )}
                       {selectedDept && renderPanelAfterDesktop && (
-                        <div key={`panel-desktop-${d.id}`} className="hidden sm:block col-span-full">
+                        <div key={`panel-desktop-${d.id}-${selectedDept}`} className="hidden sm:block col-span-full cockpit-panel--enter">
                           {renderDeptPanel()}
                         </div>
                       )}
