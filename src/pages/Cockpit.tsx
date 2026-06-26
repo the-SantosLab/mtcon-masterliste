@@ -1461,7 +1461,14 @@ function PipelineShape({
       </div>
 
       {shape === 'square' && (
-        <ShapeSquare depts={depts} hover={hover} setHover={setHover} accentFor={accentFor} />
+        <ShapeSquare
+          depts={depts}
+          hover={hover}
+          setHover={setHover}
+          accentFor={accentFor}
+          onDeptClick={onDeptClick}
+          activeDeptId={activeDeptId ?? null}
+        />
       )}
       {shape === 'triangle' && (
         <ShapeTriangle
@@ -1474,7 +1481,14 @@ function PipelineShape({
         />
       )}
       {shape === 'line' && (
-        <ShapeLine depts={depts} hover={hover} setHover={setHover} accentFor={accentFor} />
+        <ShapeLine
+          depts={depts}
+          hover={hover}
+          setHover={setHover}
+          accentFor={accentFor}
+          onDeptClick={onDeptClick}
+          activeDeptId={activeDeptId ?? null}
+        />
       )}
 
       {/* hover tooltip — rendered below the shape */}
@@ -1513,54 +1527,131 @@ function PipelineShape({
   );
 }
 
-/* ---------- SQUARE (2x2) ---------- */
+/* ---------- SQUARE (1:1 port of quad_infografik.html) ---------- */
 function ShapeSquare({
-  depts, hover, setHover, accentFor,
-}: { depts: ShapeDept[]; hover: number | null; setHover: (n: number | null) => void; accentFor: (i: number) => typeof SHAPE_ACCENTS[number] }) {
-  // visual order: TL, TR, BR, BL (matches numbered 01..04 in reference)
-  const positions: Array<'tl' | 'tr' | 'br' | 'bl'> = ['tl', 'tr', 'br', 'bl'];
+  depts, hover, setHover, onDeptClick, activeDeptId,
+}: {
+  depts: ShapeDept[];
+  hover: number | null;
+  setHover: (n: number | null) => void;
+  accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
+  onDeptClick?: (id: string) => void;
+  activeDeptId?: string | null;
+}) {
+  const SLOTS = [
+    { pos: 'sales',   numCls: 'o',  outer: '#ff9d33', inner: '#ffc06a' },
+    { pos: 'support', numCls: 'c',  outer: '#2fb9ff', inner: '#8fd9ff' },
+    { pos: 'besch',   numCls: 'g',  outer: '#62e23a', inner: '#9bff63' },
+    { pos: 'log',     numCls: 'bl', outer: '#2f7dff', inner: '#7cb0ff' },
+  ] as const;
+
+  const arrowPath = "M-62,-20 L18,-20 L18,-42 L72,0 L18,42 L18,20 L-62,20 Z";
+
   return (
-    <div className="cs-square">
-      <div className="cs-square__grid">
-        {depts.slice(0, 4).map((d, i) => {
-          const a = accentFor(i);
-          const Icon = pickIcon(d.name);
-          const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
-          const pos = positions[i];
-          return (
-            <button
-              key={d.id}
-              type="button"
-              className={cn('cs-quad', `cs-quad--${pos}`, hover === i && 'is-hover')}
-              style={{ ['--ac' as any]: a.light, ['--gl' as any]: a.glow }}
-              onMouseEnter={() => setHover(i)}
-              onMouseLeave={() => setHover(null)}
-              onFocus={() => setHover(i)}
-              onBlur={() => setHover(null)}
-            >
-              <div className={cn('cs-quad__icon', `cs-quad__icon--${pos}`)}>
-                <Icon size={22} strokeWidth={1.8} />
-              </div>
-              <div className="cs-quad__head">
-                <span className="cs-quad__num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="cs-quad__name">{d.name.toUpperCase()}</span>
-              </div>
-              <ul className="cs-quad__list">
-                {d.tasks.filter((t) => !t.completed).slice(0, 3).map((t) => (
-                  <li key={t.id}><span className="cs-quad__bullet" /> {t.title}</li>
-                ))}
-                {d.tasks.filter((t) => !t.completed).length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
+    <div className="quad-scene">
+      <div className="quad-grid" />
+      <svg className="quad-layer" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="qgTop"    x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#ff9d33"/><stop offset="1" stopColor="#2fb9ff"/></linearGradient>
+          <linearGradient id="qgRight"  x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#2fb9ff"/><stop offset="1" stopColor="#62e23a"/></linearGradient>
+          <linearGradient id="qgBottom" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#62e23a"/><stop offset="1" stopColor="#2f7dff"/></linearGradient>
+          <linearGradient id="qgLeft"   x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#2f7dff"/><stop offset="1" stopColor="#ff9d33"/></linearGradient>
+          <filter id="qag" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>
+        </defs>
+        <g transform="translate(500,150)">
+          <path d={arrowPath} fill="rgba(255,200,120,0.10)" stroke="url(#qgTop)" strokeWidth={5} filter="url(#qag)"/>
+          <path d={arrowPath} fill="none" stroke="url(#qgTop)" strokeWidth={3.5}/>
+        </g>
+        <g transform="translate(853,495) rotate(90)">
+          <path d={arrowPath} fill="rgba(140,220,160,0.10)" stroke="url(#qgRight)" strokeWidth={5} filter="url(#qag)"/>
+          <path d={arrowPath} fill="none" stroke="url(#qgRight)" strokeWidth={3.5}/>
+        </g>
+        <g transform="translate(500,853) rotate(180)">
+          <path d={arrowPath} fill="rgba(120,200,160,0.10)" stroke="url(#qgBottom)" strokeWidth={5} filter="url(#qag)"/>
+          <path d={arrowPath} fill="none" stroke="url(#qgBottom)" strokeWidth={3.5}/>
+        </g>
+        <g transform="translate(147,495) rotate(270)">
+          <path d={arrowPath} fill="rgba(160,180,255,0.10)" stroke="url(#qgLeft)" strokeWidth={5} filter="url(#qag)"/>
+          <path d={arrowPath} fill="none" stroke="url(#qgLeft)" strokeWidth={3.5}/>
+        </g>
+
+        <circle cx="500" cy="495" r="118" fill="none" stroke="#3ad6ff" strokeWidth={1.4} strokeDasharray="2 8" opacity="0.8"/>
+        <g fill="#7fe3ff">
+          <circle cx="500" cy="377" r="5"/><circle cx="618" cy="495" r="5"/>
+          <circle cx="500" cy="613" r="5"/><circle cx="382" cy="495" r="5"/>
+          <circle cx="585" cy="410" r="3.5"/><circle cx="585" cy="580" r="3.5"/>
+          <circle cx="415" cy="410" r="3.5"/><circle cx="415" cy="580" r="3.5"/>
+        </g>
+        <g stroke="#3ad6ff" strokeWidth={1.6} opacity="0.55">
+          <line x1="500" y1="377" x2="500" y2="300"/><line x1="500" y1="613" x2="500" y2="690"/>
+          <line x1="618" y1="495" x2="700" y2="495"/><line x1="382" y1="495" x2="300" y2="495"/>
+        </g>
+        <g fill="#7fe3ff">
+          <circle cx="500" cy="300" r="4"/><circle cx="500" cy="690" r="4"/>
+          <circle cx="700" cy="495" r="4"/><circle cx="300" cy="495" r="4"/>
+        </g>
+      </svg>
+      <svg className="quad-layer quad-disc" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
+        <circle cx="500" cy="495" r="100" fill="rgba(6,10,26,0.78)"/>
+      </svg>
+
+      {SLOTS.map((s, i) => {
+        const d = depts[i];
+        if (!d) return null;
+        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done');
+        const isActive = activeDeptId === d.id;
+        return (
+          <button
+            key={d.id}
+            type="button"
+            className={cn('quad-panel', `quad-panel--${s.pos}`, hover === i && 'is-hover', isActive && 'is-active')}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+            onFocus={() => setHover(i)}
+            onBlur={() => setHover(null)}
+            onClick={() => onDeptClick?.(d.id)}
+          >
+            <div className={cn('quad-txt', `quad-txt--${s.pos}`)}>
+              <p className={cn('quad-num', `quad-num--${s.numCls}`)}>{String(i + 1).padStart(2, '0')}</p>
+              <p className="quad-title">{d.name.toUpperCase()}</p>
+              <ul className={cn('quad-bul', `quad-bul--${s.numCls}`)}>
+                {open.slice(0, 3).map((t) => (<li key={t.id}><span className="truncate">{t.title}</span></li>))}
+                {open.length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
               </ul>
-              <div className="cs-quad__count">{open}/{d.tasks.length}</div>
-            </button>
-          );
-        })}
+            </div>
+            <div className="quad-count">{open.length}/{d.tasks.length}</div>
+          </button>
+        );
+      })}
+
+      {SLOTS.map((s, i) => {
+        const d = depts[i]; if (!d) return null;
+        const Icon = pickIcon(d.name);
+        return (
+          <div
+            key={`ring-${i}`}
+            className={cn('quad-ring', `quad-ring--${s.pos}`)}
+            style={{ ['--ac' as any]: s.outer, ['--ai' as any]: s.inner } as React.CSSProperties}
+            aria-hidden="true"
+          >
+            <Icon size={22} strokeWidth={2} />
+          </div>
+        );
+      })}
+
+      <div className="quad-center" aria-hidden="true">
+        <p className="quad-center__l">NAHTLOS<br/>VERBUNDEN</p>
+        <p className="quad-center__s">EIN PROZESS.<br/>EIN ZIEL.<br/>GEMEINSAMER ERFOLG.</p>
       </div>
-      <div className="cs-center" aria-hidden="true">
-        <div className="cs-center__ring cs-center__ring--outer" />
-        <div className="cs-center__ring cs-center__ring--inner" />
-        <div className="cs-center__title">NAHTLOS<br/>VERBUNDEN</div>
-        <div className="cs-center__sub">EIN PROZESS · EIN ZIEL<br/>GEMEINSAMER ERFOLG</div>
+
+      <div className="quad-footer" aria-hidden="true">
+        <div className="quad-fi"><Database size={14} strokeWidth={2}/>TRANSPARENTE DATEN</div>
+        <div className="quad-fd"/>
+        <div className="quad-fi"><Users size={14} strokeWidth={2}/>ECHTE ZUSAMMENARBEIT</div>
+        <div className="quad-fd"/>
+        <div className="quad-fi"><Cpu size={14} strokeWidth={2}/>INTELLIGENTE PROZESSE</div>
+        <div className="quad-fd"/>
+        <div className="quad-fi"><Target size={14} strokeWidth={2}/>GEMEINSAMER ERFOLG</div>
       </div>
     </div>
   );
@@ -1647,36 +1738,107 @@ function ShapeTriangle({
 }
 
 
-/* ---------- LINE (horizontal pipeline of octagons) ---------- */
+/* ---------- LINE (1:1 port of flow_infografik.html) ---------- */
 function ShapeLine({
-  depts, hover, setHover, accentFor,
-}: { depts: ShapeDept[]; hover: number | null; setHover: (n: number | null) => void; accentFor: (i: number) => typeof SHAPE_ACCENTS[number] }) {
+  depts, hover, setHover, onDeptClick, activeDeptId,
+}: {
+  depts: ShapeDept[];
+  hover: number | null;
+  setHover: (n: number | null) => void;
+  accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
+  onDeptClick?: (id: string) => void;
+  activeDeptId?: string | null;
+}) {
+  const N = depts.length;
+  // distribute nodes evenly between 8% and 92% horizontally
+  const nodes = depts.map((d, i) => {
+    const t = N === 1 ? 0.5 : i / (N - 1);
+    const xPct = 8 + t * 84;
+    const isTail = i >= Math.ceil(N * 0.55);
+    const accent = isTail
+      ? { outer: '#5be23a', inner: '#9bff63' }
+      : { outer: '#2f9dff', inner: '#7cc4ff' };
+    return { d, xPct, ...accent };
+  });
+
   return (
-    <div className="cs-line">
-      <div className="cs-line__rail" aria-hidden="true" />
-      <div className="cs-line__nodes">
-        {depts.map((d, i) => {
-          const a = accentFor(i);
+    <div className="flow-scene">
+      <div className="flow-grid" />
+      <svg className="flow-svg" viewBox="0 0 1800 880" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="flLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#2f9dff"/>
+            <stop offset="0.42" stopColor="#3ad6ff"/>
+            <stop offset="0.5" stopColor="#eafdff"/>
+            <stop offset="0.58" stopColor="#3ad6ff"/>
+            <stop offset="1" stopColor="#5be23a"/>
+          </linearGradient>
+          <filter id="flGlow"  x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
+          <filter id="flGlowS" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.5"/></filter>
+          <radialGradient id="flBurst" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#bff3ff" stopOpacity="0.9"/>
+            <stop offset="1" stopColor="#bff3ff" stopOpacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect x="847" y="40" width="6" height="760" fill="url(#flBurst)" opacity="0.5"/>
+        <ellipse cx="850" cy="470" rx="120" ry="300" fill="url(#flBurst)" opacity="0.25"/>
+        <line x1="80" y1="470" x2="1720" y2="470" stroke="url(#flLine)" strokeWidth="14" filter="url(#flGlow)" opacity="0.6"/>
+        <line x1="80" y1="470" x2="1720" y2="470" stroke="url(#flLine)" strokeWidth="4"/>
+        {Array.from({ length: 14 }).map((_, k) => (
+          <circle key={k} cx={150 + k * 120} cy={470} r={3} fill="#dffaff"/>
+        ))}
+        <circle cx="850" cy="470" r="120" fill="url(#flBurst)" opacity="0.5"/>
+        <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#3ad6ff" strokeWidth="10" filter="url(#flGlowS)" opacity="0.6"/>
+        <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#bdeeff" strokeWidth="2.6"/>
+        <circle cx="850" cy="470" r="64" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="1.4"/>
+        <g transform="translate(850,470) scale(3.1) translate(-12,-12)" fill="none" stroke="#f2fbff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2 21 7v10l-9 5-9-5V7z"/>
+          <path d="M3 7l9 5 9-5"/>
+          <path d="M12 12v10"/>
+        </g>
+
+        <text x="560" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eaf3ff">SALES</text>
+        <text x="560" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">KUNDEN VERSTEHEN.</text>
+        <text x="560" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">LÖSUNGEN SCHAFFEN.</text>
+        <text x="1245" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eafff0">LOGISTIK</text>
+        <text x="1245" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">LIEFERN. VERBINDEN.</text>
+        <text x="1245" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">WERT SCHAFFEN.</text>
+
+        <text x="850" y="650" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">EINE LINIE.</text>
+        <text x="850" y="688" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">EIN ZIEL.</text>
+        <text x="850" y="722" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="2" fill="#3ad6ff">NAHTLOS. EFFIZIENT. ZUKUNFT.</text>
+
+        <path d="M340 774 h1120 l34 26 l-34 26 h-1120 l-34 -26 z" fill="rgba(6,12,26,0.6)" stroke="rgba(120,170,255,0.3)" strokeWidth="1.5"/>
+        <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">ECHTZEIT-DATEN</text>
+        <text x="900" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">VERNETZTE SYSTEME</text>
+        <text x="1300" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">KI &amp; AUTOMATISIERUNG</text>
+      </svg>
+
+      <div className="flow-nodes" aria-hidden="false">
+        {nodes.map(({ d, xPct, outer, inner }, i) => {
           const Icon = pickIcon(d.name);
           const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
+          const isActive = activeDeptId === d.id;
           return (
             <button
               key={d.id}
               type="button"
-              className={cn('cs-oct', hover === i && 'is-hover')}
-              style={{ ['--ac' as any]: a.light, ['--gl' as any]: a.glow }}
+              className={cn('flow-oct', hover === i && 'is-hover', isActive && 'is-active')}
+              style={{ left: `${xPct}%`, ['--ac' as any]: outer, ['--ai' as any]: inner } as React.CSSProperties}
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
               onFocus={() => setHover(i)}
               onBlur={() => setHover(null)}
+              onClick={() => onDeptClick?.(d.id)}
             >
-              <div className="cs-oct__shape">
-                <Icon size={26} strokeWidth={1.8} />
-                <span className="cs-oct__pill">{open}/{d.tasks.length}</span>
+              <div className="flow-oct__shape">
+                <div className="flow-oct__ring" />
+                <div className="flow-oct__inner"><Icon size={20} strokeWidth={1.8} /></div>
+                <span className="flow-oct__pill">{open}/{d.tasks.length}</span>
               </div>
-              <div className="cs-oct__label">
-                <span className="cs-oct__num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="cs-oct__name">{d.name.toUpperCase()}</span>
+              <div className="flow-oct__label">
+                <span className="flow-oct__num">{String(i + 1).padStart(2, '0')}</span>
+                <span className="flow-oct__name">{d.name.toUpperCase()}</span>
               </div>
             </button>
           );
