@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Profile {
@@ -113,6 +113,10 @@ export function TeamAttendanceOverview() {
       const sumAbs = (from: string, cat: string) =>
         userAbs.filter((x) => x.category === cat && x.end_date >= from && x.start_date <= today)
           .reduce((s, x) => s + (Number(x.days_count) || 0), 0);
+      // Überstunden = worked_minutes - 8h pro gearbeitetem Tag (Baseline)
+      const overtimeMin = (from: string) =>
+        userAtt.filter((x) => x.work_date >= from && x.work_date <= today && (x.worked_minutes || 0) > 0)
+          .reduce((s, x) => s + ((x.worked_minutes || 0) - 480), 0);
 
       return {
         user: u,
@@ -122,6 +126,7 @@ export function TeamAttendanceOverview() {
         week: sumMin(wkFrom),
         month: sumMin(mFrom),
         year: sumMin(yFrom),
+        overtimeYear: overtimeMin(yFrom),
         vacYear: sumAbs(yFrom, 'vacation'),
         sickYear: sumAbs(yFrom, 'sick'),
         present: !!(todayAtt?.start_time && !todayAtt?.end_time),
@@ -129,6 +134,7 @@ export function TeamAttendanceOverview() {
       };
     });
   }, [users, att, abs, today, wkFrom, mFrom, yFrom]);
+
 
   const filtered = rows.filter((r) => {
     if (filter === 'present') return r.present;
@@ -139,6 +145,12 @@ export function TeamAttendanceOverview() {
   const presentCount = rows.filter((r) => r.present).length;
   const absentCount = rows.filter((r) => r.absent).length;
   const visible = expanded ? filtered : filtered.slice(0, 8);
+  const totalOvertimeYear = rows.reduce((s, r) => s + r.overtimeYear, 0);
+  const totalSickYear = rows.reduce((s, r) => s + r.sickYear, 0);
+  const totalVacYear = rows.reduce((s, r) => s + r.vacYear, 0);
+  const totalWorkedYear = rows.reduce((s, r) => s + r.year, 0);
+  const currentYear = new Date().getFullYear();
+
 
   return (
     <div className="rounded-md border border-border bg-card overflow-hidden">
@@ -169,6 +181,51 @@ export function TeamAttendanceOverview() {
         </div>
       </div>
 
+      {!loading && rows.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border-b border-border">
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <TrendingUp className="h-3 w-3" /> Überstunden {currentYear}
+            </div>
+            <div className={cn(
+              'text-lg font-semibold tabular-nums mt-1',
+              totalOvertimeYear >= 0 ? 'text-emerald-400' : 'text-destructive',
+            )}>
+              {totalOvertimeYear >= 0 ? '+' : ''}{(totalOvertimeYear / 60).toFixed(1)}h
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt (Basis 8h/Tag)</div>
+          </div>
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <Stethoscope className="h-3 w-3" /> Krankheitstage {currentYear}
+            </div>
+            <div className="text-lg font-semibold tabular-nums mt-1 text-amber-400">
+              {totalSickYear.toFixed(1)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt</div>
+          </div>
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <Plane className="h-3 w-3" /> Urlaubstage {currentYear}
+            </div>
+            <div className="text-lg font-semibold tabular-nums mt-1 text-sky-400">
+              {totalVacYear.toFixed(1)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt</div>
+          </div>
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <Clock className="h-3 w-3" /> Arbeitszeit {currentYear}
+            </div>
+            <div className="text-lg font-semibold tabular-nums mt-1 text-foreground">
+              {(totalWorkedYear / 60).toFixed(0)}h
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt</div>
+          </div>
+        </div>
+      )}
+
+
       {loading ? (
         <div className="p-8 flex items-center justify-center">
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -187,8 +244,10 @@ export function TeamAttendanceOverview() {
                   <th className="text-right font-medium px-3 py-2">Woche</th>
                   <th className="text-right font-medium px-3 py-2">Monat</th>
                   <th className="text-right font-medium px-3 py-2">Jahr</th>
+                  <th className="text-right font-medium px-3 py-2">Überstd.</th>
                   <th className="text-right font-medium px-3 py-2">Urlaub</th>
                   <th className="text-right font-medium px-3 py-2">Krank</th>
+
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -217,6 +276,13 @@ export function TeamAttendanceOverview() {
                     <td className="px-3 py-2 text-right tabular-nums">{fmtHours(r.week)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{fmtHours(r.month)}</td>
                     <td className="px-3 py-2 text-right tabular-nums font-medium">{fmtHours(r.year)}</td>
+                    <td className={cn(
+                      'px-3 py-2 text-right tabular-nums font-medium',
+                      r.overtimeYear >= 0 ? 'text-emerald-400' : 'text-destructive',
+                    )}>
+                      {r.overtimeYear >= 0 ? '+' : ''}{(r.overtimeYear / 60).toFixed(1)}h
+                    </td>
+
                     <td className="px-3 py-2 text-right tabular-nums text-sky-400">
                       <span className="inline-flex items-center gap-1"><Plane className="h-2.5 w-2.5" />{r.vacYear.toFixed(1)}</span>
                     </td>
