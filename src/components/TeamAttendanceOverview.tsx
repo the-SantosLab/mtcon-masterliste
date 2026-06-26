@@ -145,6 +145,12 @@ export function TeamAttendanceOverview() {
   const presentCount = rows.filter((r) => r.present).length;
   const absentCount = rows.filter((r) => r.absent).length;
   const visible = expanded ? filtered : filtered.slice(0, 8);
+  const totalOvertimeYear = rows.reduce((s, r) => s + r.overtimeYear, 0);
+  const totalSickYear = rows.reduce((s, r) => s + r.sickYear, 0);
+  const totalVacYear = rows.reduce((s, r) => s + r.vacYear, 0);
+  const totalWorkedYear = rows.reduce((s, r) => s + r.year, 0);
+  const currentYear = new Date().getFullYear();
+
 
   return (
     <div className="rounded-md border border-border bg-card overflow-hidden">
