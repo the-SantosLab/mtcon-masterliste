@@ -112,6 +112,18 @@ export default function Cockpit() {
   const [onlyCritical, setOnlyCritical] = useState(false);
   const [myOnly, setMyOnly] = useState(false);
 
+  // Extended functional features
+  const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('cockpit:pinned') || '[]'); } catch { return []; }
+  });
+  const [personLayer, setPersonLayer] = useState<boolean>(() => localStorage.getItem('cockpit:personLayer') === '1');
+  const [savedViews, setSavedViews] = useState<Array<{ name: string; timeframe: TimeframeId; onlyCritical: boolean; myOnly: boolean; pinnedIds: string[] }>>(() => {
+    try { return JSON.parse(localStorage.getItem('cockpit:views') || '[]'); } catch { return []; }
+  });
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [simAdd, setSimAdd] = useState<Record<string, number>>({}); // dept_id → extra capacity
+  const alertedTaskIdsRef = useRef<Set<string>>(new Set());
+
   // Pipeline SVG flow refs
   const pipelineWrapRef = useRef<HTMLDivElement | null>(null);
 
