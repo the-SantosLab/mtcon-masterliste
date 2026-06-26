@@ -829,10 +829,61 @@ export default function Cockpit() {
             <div className="cockpit-featurebar__item"><Brain className="h-3.5 w-3.5" /> Intelligente Prozesse</div>
             <div className="cockpit-featurebar__item"><Target className="h-3.5 w-3.5" /> Gemeinsamer Erfolg</div>
           </div>
+
+          {/* COMMAND PALETTE */}
+          <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+            <DialogContent className="cockpit-cmd-dialog p-0 max-w-xl bg-[#0b1322] border border-cyan-400/30">
+              <Command className="bg-transparent text-white">
+                <CommandInput
+                  placeholder={pickerMode === 'compare' ? 'Vorgang zum Vergleich hinzufügen…' : 'Vorgang suchen (Nr. oder Projekt)…'}
+                  className="text-sm"
+                />
+                <CommandList className="max-h-[360px]">
+                  <CommandEmpty>Keine Treffer.</CommandEmpty>
+                  <CommandGroup heading={pickerMode === 'compare' ? 'Vergleichen' : 'Vorgänge'}>
+                    {cases.map((c) => {
+                      const disabled =
+                        pickerMode === 'compare' &&
+                        (c.id === selectedCaseId || compareIds.includes(c.id));
+                      return (
+                        <CommandItem
+                          key={c.id}
+                          value={`${c.case_no ?? ''} ${c.project_name ?? ''}`}
+                          disabled={disabled}
+                          onSelect={() => {
+                            if (pickerMode === 'compare') {
+                              if (!disabled) setCompareIds((prev) => [...prev, c.id].slice(0, 3));
+                            } else {
+                              setSelectedCaseId(c.id);
+                              setSelectedNodeId(null);
+                            }
+                            setPickerOpen(false);
+                          }}
+                          className="text-white/85 aria-selected:bg-cyan-500/10"
+                        >
+                          <span className="font-mono text-xs text-cyan-300 mr-3">{c.case_no ?? '—'}</span>
+                          <span className="truncate">{c.project_name ?? '—'}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </DialogContent>
+          </Dialog>
         </div>
+
+        {!bootDone && (
+          <div className="cockpit-boot" aria-hidden>
+            <div className="cockpit-boot__line">// COCKPIT v1.0 — initialisiere subsysteme</div>
+            <div className="cockpit-boot__line">// telemetrie · netzwerk · pipeline … <span className="text-emerald-300">OK</span></div>
+            <div className="cockpit-boot__line">// engage.</div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
+
 }
 
 function Field({ label, value }: { label: string; value: string }) {
