@@ -3,7 +3,11 @@ import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Check, Clock, CircleDot, Activity, Layers, Boxes, Cpu, Zap, Truck, Wrench, Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  Check, Clock, CircleDot, Activity, Layers, Boxes, Cpu, Zap, Truck, Wrench,
+  Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles,
+  Database, Network, Brain, Target,
+} from 'lucide-react';
 
 type Dept = { id: string; name: string };
 type Task = {
@@ -28,17 +32,17 @@ type CaseRow = {
 };
 type Profile = { id: string; display_name: string | null };
 
-// Neon accent palette — cycled per department, matching the reference art (orange, cyan, green, violet, amber)
+// Neon accent palette — cycled per department, matching reference art
 const ACCENTS = [
   { name: 'amber',   hue: '32 100% 58%',  glow: 'rgba(255,160,40,0.55)' },
-  { name: 'cyan',    hue: '190 100% 60%', glow: 'rgba(60,200,255,0.55)' },
-  { name: 'emerald', hue: '152 90% 55%',  glow: 'rgba(60,255,170,0.55)' },
+  { name: 'cyan',    hue: '195 100% 60%', glow: 'rgba(60,200,255,0.55)' },
+  { name: 'emerald', hue: '142 80% 52%',  glow: 'rgba(70,230,140,0.55)' },
+  { name: 'blue',    hue: '215 100% 62%', glow: 'rgba(80,150,255,0.55)' },
   { name: 'violet',  hue: '270 90% 70%',  glow: 'rgba(170,120,255,0.55)' },
   { name: 'rose',    hue: '340 95% 65%',  glow: 'rgba(255,90,160,0.55)' },
 ];
 
 const DEPT_ICONS = [Cpu, Boxes, Truck, Wrench, Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles, Zap, Activity, Layers];
-
 const accentFor = (i: number) => ACCENTS[i % ACCENTS.length];
 
 export default function Cockpit() {
@@ -84,7 +88,6 @@ export default function Cockpit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Realtime
   useEffect(() => {
     const ch = supabase
       .channel('cockpit-tasks')
@@ -138,28 +141,28 @@ export default function Cockpit() {
   const userName = (id: string | null) => (id ? profiles[id]?.display_name ?? '—' : '—');
 
   const selectedDeptIdx = selectedDept ? departments.findIndex((d) => d.id === selectedDept) : -1;
-  const selectedDeptAccent = selectedDeptIdx >= 0 ? accentFor(selectedDeptIdx) : ACCENTS[0];
+  const selectedDeptAccent = selectedDeptIdx >= 0 ? accentFor(selectedDeptIdx) : ACCENTS[1];
 
   return (
     <AppLayout>
       <div className="cockpit-shell relative min-h-[calc(100vh-1rem)] overflow-hidden">
-        {/* ambient backdrop */}
         <div aria-hidden className="cockpit-grid" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-1" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-2" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-3" />
 
-        <div className="relative p-6 md:p-8 space-y-10 max-w-[1500px] mx-auto">
+        <div className="relative p-6 md:p-10 space-y-12 max-w-[1500px] mx-auto">
+          {/* HEADER */}
           <header className="flex items-end justify-between gap-4 flex-wrap">
             <div>
-              <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] text-white/50 uppercase">
+              <div className="flex items-center gap-2 text-[10px] tracking-[0.32em] text-white/55 uppercase">
                 <span className="inline-block h-px w-8 bg-white/30" />
                 Mission Control
                 <span className="cockpit-pulse" />
               </div>
-              <h1 className="cockpit-title">COCKPIT</h1>
-              <p className="text-sm text-white/55 max-w-xl mt-1">
-                Live-Übersicht über alle Abteilungen und den Vorgangsfluss durch die Organisation. Read-only Telemetrie.
+              <h1 className="cockpit-title mt-2">COCKPIT</h1>
+              <p className="text-sm text-white/55 max-w-xl mt-2">
+                Live-Übersicht über alle Abteilungen und den Vorgangsfluss durch die Organisation.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -170,18 +173,18 @@ export default function Cockpit() {
             </div>
           </header>
 
-          {/* DEPARTMENTS — hex grid */}
-          <section className="space-y-5">
+          {/* DEPARTMENTS */}
+          <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <h2 className="text-[11px] tracking-[0.35em] text-white/60 uppercase">Departments / Knotenpunkte</h2>
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <h2 className="text-[11px] tracking-[0.38em] text-white/55 uppercase">Departments</h2>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             </div>
 
             {loading ? (
               <div className="text-sm text-white/50 text-center py-10">// initialisiere Telemetrie …</div>
             ) : (
-              <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="grid gap-x-12 gap-y-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 pl-7">
                 {departments.map((d, i) => {
                   const s = deptStats[d.id] ?? { open: 0, inProgress: 0, done: 0 };
                   const active = selectedDept === d.id;
@@ -194,35 +197,30 @@ export default function Cockpit() {
                       onClick={() => setSelectedDept(active ? null : d.id)}
                       className={cn('cockpit-node group', active && 'cockpit-node--active')}
                       style={{
-                        // @ts-ignore custom props
+                        // @ts-ignore
                         '--accent': `hsl(${accent.hue})`,
                         '--accent-glow': accent.glow,
                       } as React.CSSProperties}
                     >
-                      <span className="cockpit-node__corner cockpit-node__corner--tl" />
-                      <span className="cockpit-node__corner cockpit-node__corner--tr" />
-                      <span className="cockpit-node__corner cockpit-node__corner--bl" />
-                      <span className="cockpit-node__corner cockpit-node__corner--br" />
-
-                      <div className="flex items-start justify-between">
-                        <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
-                        <div className="cockpit-node__icon">
-                          <Icon className="h-4 w-4" />
-                        </div>
+                      <div className="cockpit-node__badge">
+                        <Icon className="h-7 w-7" strokeWidth={1.6} />
                       </div>
-                      <div className="mt-3 text-[10px] tracking-[0.25em] uppercase text-white/45">Knoten</div>
+
+                      <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
                       <div className="cockpit-node__name">{d.name}</div>
 
-                      <div className="mt-4 flex items-end justify-between">
-                        <div>
-                          <div className="cockpit-node__metric">{s.open}</div>
-                          <div className="text-[9px] uppercase tracking-widest text-white/45">offen</div>
+                      <div className="cockpit-node__bullets">
+                        <div className="cockpit-node__bullet">
+                          <span className="cockpit-node__bullet-icon" />
+                          <span><span className="cockpit-node__bullet-value">{s.open}</span> offene Vorgänge</span>
                         </div>
-                        <div className="text-right space-y-1">
-                          <div className="cockpit-node__pill">
-                            <span className="cockpit-dot" /> {s.inProgress} aktiv
-                          </div>
-                          <div className="text-[9px] text-white/35 tracking-wider">{s.done} erledigt</div>
+                        <div className="cockpit-node__bullet">
+                          <span className="cockpit-node__bullet-icon" />
+                          <span><span className="cockpit-node__bullet-value">{s.inProgress}</span> in Bearbeitung</span>
+                        </div>
+                        <div className="cockpit-node__bullet">
+                          <span className="cockpit-node__bullet-icon" />
+                          <span><span className="cockpit-node__bullet-value">{s.done}</span> erledigt</span>
                         </div>
                       </div>
                     </button>
@@ -233,24 +231,20 @@ export default function Cockpit() {
 
             {selectedDept && (
               <div
-                className="cockpit-panel mt-4"
+                className="cockpit-panel mt-6"
                 style={{
                   // @ts-ignore
                   '--accent': `hsl(${selectedDeptAccent.hue})`,
                   '--accent-glow': selectedDeptAccent.glow,
                 } as React.CSSProperties}
               >
-                <span className="cockpit-node__corner cockpit-node__corner--tl" />
-                <span className="cockpit-node__corner cockpit-node__corner--tr" />
-                <span className="cockpit-node__corner cockpit-node__corner--bl" />
-                <span className="cockpit-node__corner cockpit-node__corner--br" />
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="cockpit-dot" />
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="cockpit-node__bullet-icon" />
                     <div className="text-[11px] tracking-[0.3em] uppercase text-white/55">offene Aufgaben</div>
-                    <div className="text-sm text-white/90">{deptName(selectedDept)}</div>
+                    <div className="text-sm text-white/90 font-medium">{deptName(selectedDept)}</div>
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40">Top 10 · neueste</div>
+                  <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">Top 10 · neueste</div>
                 </div>
                 {deptOpenTasks.length === 0 ? (
                   <div className="text-sm text-white/50 py-8 text-center">Keine offenen Aufgaben.</div>
@@ -258,7 +252,7 @@ export default function Cockpit() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-[10px] uppercase tracking-widest text-white/45 border-b border-white/10">
+                        <tr className="text-left text-[10px] uppercase tracking-[0.22em] text-white/45 border-b border-white/10">
                           <th className="py-2 pr-3 font-normal">Vorgang</th>
                           <th className="py-2 pr-3 font-normal">Aufgabe</th>
                           <th className="py-2 pr-3 font-normal">Status</th>
@@ -267,9 +261,9 @@ export default function Cockpit() {
                       <tbody>
                         {deptOpenTasks.map(({ task, case: c }) => (
                           <tr key={task.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
-                            <td className="py-2 pr-3 font-mono text-xs text-white/70">{c?.case_no ?? '—'}</td>
-                            <td className="py-2 pr-3 truncate max-w-[420px] text-white/85">{task.title}</td>
-                            <td className="py-2 pr-3">
+                            <td className="py-2.5 pr-3 font-mono text-xs text-white/70">{c?.case_no ?? '—'}</td>
+                            <td className="py-2.5 pr-3 truncate max-w-[420px] text-white/85">{task.title}</td>
+                            <td className="py-2.5 pr-3">
                               <span className={cn('cockpit-status', task.status === 'in_progress' ? 'cockpit-status--active' : 'cockpit-status--open')}>
                                 {task.status === 'in_progress' ? 'in Arbeit' : 'offen'}
                               </span>
@@ -284,17 +278,17 @@ export default function Cockpit() {
             )}
           </section>
 
-          {/* LIFECYCLE — process flow */}
-          <section className="space-y-5">
+          {/* LIFECYCLE PIPELINE */}
+          <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <h2 className="text-[11px] tracking-[0.35em] text-white/60 uppercase">Vorgangs-Flow / Lifecycle</h2>
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              <h2 className="text-[11px] tracking-[0.38em] text-white/55 uppercase">Vorgangs-Pipeline</h2>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             </div>
 
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="text-xs text-white/50">
-                Wähle einen Vorgang, um den vollständigen Kettenfluss zu sehen.
+              <div className="text-xs text-white/55 tracking-wide">
+                EINE LINIE · EIN ZIEL — Nahtlos vernetzte Prozesse von Sales bis Lieferung.
               </div>
               <div className="w-[380px] max-w-full">
                 <Select value={selectedCaseId ?? undefined} onValueChange={(v) => { setSelectedCaseId(v); setSelectedNodeId(null); }}>
@@ -314,52 +308,55 @@ export default function Cockpit() {
             </div>
 
             <div className="cockpit-panel">
-              <span className="cockpit-node__corner cockpit-node__corner--tl" />
-              <span className="cockpit-node__corner cockpit-node__corner--tr" />
-              <span className="cockpit-node__corner cockpit-node__corner--bl" />
-              <span className="cockpit-node__corner cockpit-node__corner--br" />
-
               {selectedCaseTasks.length === 0 ? (
                 <div className="text-sm text-white/50 py-10 text-center">Keine Aufgaben für diesen Vorgang.</div>
               ) : (
                 <>
-                  <div className="overflow-x-auto pb-3">
-                    <ol className="flex items-stretch gap-0 min-w-max px-1 pt-2">
+                  <div className="overflow-x-auto pb-4">
+                    <ol className="cockpit-pipeline">
                       {selectedCaseTasks.map((t, i) => {
                         const done = t.completed || t.status === 'done';
                         const current = !done && i === currentIdx;
                         const upcoming = !done && !current;
                         const active = selectedNodeId === t.id;
-                        const accent = done
-                          ? ACCENTS[2] /* emerald for done */
-                          : current
-                          ? ACCENTS[0] /* amber for current */
-                          : { name: 'mute', hue: '220 10% 55%', glow: 'rgba(150,160,180,0.25)' };
+                        // Color gradient: progresses from cyan (start) through to emerald (end)
+                        const progress = selectedCaseTasks.length > 1 ? i / (selectedCaseTasks.length - 1) : 0;
+                        const hue = 200 - progress * 60; // 200 (cyan) -> 140 (emerald)
+                        const accentHsl = `${hue} 90% 58%`;
+                        const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
+                        const nextHue = 200 - ((i + 1) / Math.max(1, selectedCaseTasks.length - 1)) * 60;
                         return (
-                          <li key={t.id} className="flex items-center">
+                          <li key={t.id} className="flex items-start">
                             <button
                               type="button"
                               onClick={() => setSelectedNodeId(active ? null : t.id)}
                               className={cn('cockpit-step', active && 'cockpit-step--active', upcoming && 'cockpit-step--upcoming')}
                               style={{
                                 // @ts-ignore
-                                '--accent': `hsl(${accent.hue})`,
-                                '--accent-glow': accent.glow,
+                                '--accent': `hsl(${accentHsl})`,
+                                '--accent-glow': accentGlow,
                               } as React.CSSProperties}
                             >
                               <div className="cockpit-step__hex">
-                                {done ? <Check className="h-5 w-5" /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
+                                {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
                               </div>
                               <div className="cockpit-step__label">
-                                <div className="text-[9px] uppercase tracking-[0.25em] text-white/45">
+                                <div className="cockpit-step__label-status">
                                   {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
                                 </div>
-                                <div className="text-xs font-medium text-white/90 truncate max-w-[160px]">{t.title}</div>
-                                <div className="text-[10px] text-white/45 truncate max-w-[160px]">{deptName(t.department_id)}</div>
+                                <div className="cockpit-step__label-title">{t.title}</div>
+                                <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
                               </div>
                             </button>
                             {i < selectedCaseTasks.length - 1 && (
-                              <div className={cn('cockpit-connector', (selectedCaseTasks[i + 1].completed || selectedCaseTasks[i + 1].status === 'done' || done) && 'cockpit-connector--lit')} />
+                              <div
+                                className={cn('cockpit-connector', (done || selectedCaseTasks[i + 1].completed || selectedCaseTasks[i + 1].status === 'done') && 'cockpit-connector--lit')}
+                                style={{
+                                  // @ts-ignore
+                                  '--from': `hsl(${accentHsl})`,
+                                  '--to': `hsl(${nextHue} 90% 58%)`,
+                                } as React.CSSProperties}
+                              />
                             )}
                           </li>
                         );
@@ -390,6 +387,14 @@ export default function Cockpit() {
               )}
             </div>
           </section>
+
+          {/* FEATURE BAR */}
+          <div className="cockpit-featurebar">
+            <div className="cockpit-featurebar__item"><Database className="h-3.5 w-3.5" /> Echtzeit-Daten</div>
+            <div className="cockpit-featurebar__item"><Network className="h-3.5 w-3.5" /> Vernetzte Systeme</div>
+            <div className="cockpit-featurebar__item"><Brain className="h-3.5 w-3.5" /> Intelligente Prozesse</div>
+            <div className="cockpit-featurebar__item"><Target className="h-3.5 w-3.5" /> Gemeinsamer Erfolg</div>
+          </div>
         </div>
       </div>
     </AppLayout>
