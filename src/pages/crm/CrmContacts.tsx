@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+import { TagPicker } from '@/components/crm/TagPicker';
+
 
 let _missingCompany = 0;
 
@@ -59,7 +61,7 @@ export default function CrmContacts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', position: '', company_id: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', salutation: '', email: '', phone: '', mobile: '', position: '', company_id: '', linkedin_url: '', is_decision_maker: false, email_opt_in: false });
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
@@ -72,13 +74,23 @@ export default function CrmContacts() {
     setRows(data ?? []); setCompanies(c ?? []); setLoading(false);
   };
 
-  const openNew = () => { setEditing(null); setForm({ first_name: '', last_name: '', email: '', phone: '', position: '', company_id: '' }); setOpen(true); };
-  const openEdit = (r: any) => { setEditing(r); setForm({ first_name: r.first_name, last_name: r.last_name, email: r.email ?? '', phone: r.phone ?? '', position: r.position ?? '', company_id: r.company_id ?? '' }); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ first_name: '', last_name: '', salutation: '', email: '', phone: '', mobile: '', position: '', company_id: '', linkedin_url: '', is_decision_maker: false, email_opt_in: false }); setOpen(true); };
+  const openEdit = (r: any) => { setEditing(r); setForm({ first_name: r.first_name, last_name: r.last_name, salutation: r.salutation ?? '', email: r.email ?? '', phone: r.phone ?? '', mobile: r.mobile ?? '', position: r.position ?? '', company_id: r.company_id ?? '', linkedin_url: r.linkedin_url ?? '', is_decision_maker: !!r.is_decision_maker, email_opt_in: !!r.email_opt_in }); setOpen(true); };
+
 
   const save = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) { toast.error('Vor- und Nachname erforderlich'); return; }
     setSaving(true);
-    const payload = { ...form, company_id: form.company_id || null };
+    const wasOptIn = !!editing?.email_opt_in;
+    const payload: any = {
+      ...form,
+      company_id: form.company_id || null,
+      salutation: form.salutation || null,
+      mobile: form.mobile || null,
+      linkedin_url: form.linkedin_url || null,
+    };
+    if (!wasOptIn && form.email_opt_in) payload.email_opt_in_at = new Date().toISOString();
+    if (wasOptIn && !form.email_opt_in) payload.email_opt_out_at = new Date().toISOString();
     const { error } = editing
       ? await supabase.from('contacts').update(payload).eq('id', editing.id)
       : await supabase.from('contacts').insert(payload);
@@ -86,6 +98,7 @@ export default function CrmContacts() {
     if (error) { toast.error(error.message); return; }
     toast.success('Gespeichert'); setOpen(false); void load();
   };
+
 
   return (
     <CrmLayout>
@@ -152,7 +165,18 @@ export default function CrmContacts() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? 'Kontakt bearbeiten' : 'Neuer Kontakt'}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[80px_1fr_1fr] gap-3">
+              <Field label="Anrede">
+                <Select value={form.salutation || 'none'} onValueChange={v => setForm({ ...form, salutation: v === 'none' ? '' : v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="–" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">–</SelectItem>
+                    <SelectItem value="Herr">Herr</SelectItem>
+                    <SelectItem value="Frau">Frau</SelectItem>
+                    <SelectItem value="Divers">Divers</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field label="Vorname *"><Input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} className="h-8 text-xs" /></Field>
               <Field label="Nachname *"><Input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} className="h-8 text-xs" /></Field>
             </div>
@@ -162,12 +186,31 @@ export default function CrmContacts() {
                 <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
-            <Field label="Position"><Input value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} className="h-8 text-xs" /></Field>
+            <Field label="Position / Rolle"><Input value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} className="h-8 text-xs" placeholder="z. B. Einkaufsleiter" /></Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="E-Mail"><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-8 text-xs" /></Field>
               <Field label="Telefon"><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="h-8 text-xs" /></Field>
+              <Field label="Mobil"><Input value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} className="h-8 text-xs" /></Field>
+              <Field label="LinkedIn-URL"><Input value={form.linkedin_url} onChange={e => setForm({ ...form, linkedin_url: e.target.value })} className="h-8 text-xs" placeholder="https://linkedin.com/in/…" /></Field>
             </div>
+            <div className="flex items-center gap-6 pt-1">
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={form.is_decision_maker} onCheckedChange={v => setForm({ ...form, is_decision_maker: !!v })} />
+                Entscheider
+              </label>
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={form.email_opt_in} onCheckedChange={v => setForm({ ...form, email_opt_in: !!v })} />
+                E-Mail Opt-In (Marketing)
+              </label>
+            </div>
+            {editing && (
+              <div className="pt-2 border-t border-border/40">
+                <p className="text-[10px] text-muted-foreground mb-1.5 uppercase tracking-wider">Tags</p>
+                <TagPicker entityType="contact" entityId={editing.id} />
+              </div>
+            )}
           </div>
+
           <DialogFooter>
             <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setOpen(false)}>Abbrechen</Button>
             <Button onClick={save} disabled={saving} size="sm" className="h-8 text-xs">

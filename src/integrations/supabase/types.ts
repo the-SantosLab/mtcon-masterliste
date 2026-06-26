@@ -2060,36 +2060,57 @@ export type Database = {
           company_id: string | null
           created_at: string
           email: string | null
+          email_opt_in: boolean
+          email_opt_in_at: string | null
+          email_opt_out_at: string | null
           first_name: string
           id: string
+          is_decision_maker: boolean
           last_name: string
+          linkedin_url: string | null
+          mobile: string | null
           notes: string | null
           phone: string | null
           position: string | null
+          salutation: string | null
           updated_at: string
         }
         Insert: {
           company_id?: string | null
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
+          email_opt_in_at?: string | null
+          email_opt_out_at?: string | null
           first_name: string
           id?: string
+          is_decision_maker?: boolean
           last_name: string
+          linkedin_url?: string | null
+          mobile?: string | null
           notes?: string | null
           phone?: string | null
           position?: string | null
+          salutation?: string | null
           updated_at?: string
         }
         Update: {
           company_id?: string | null
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
+          email_opt_in_at?: string | null
+          email_opt_out_at?: string | null
           first_name?: string
           id?: string
+          is_decision_maker?: boolean
           last_name?: string
+          linkedin_url?: string | null
+          mobile?: string | null
           notes?: string | null
           phone?: string | null
           position?: string | null
+          salutation?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2367,6 +2388,42 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_saved_views: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          is_default: boolean
+          is_shared: boolean
+          name: string
+          scope: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          is_shared?: boolean
+          name: string
+          scope: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean
+          is_shared?: boolean
+          name?: string
+          scope?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crm_stage_probabilities: {
         Row: {
           probability: number
@@ -2385,6 +2442,68 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      crm_tag_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "crm_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tags: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          scope: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          scope?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          scope?: string
         }
         Relationships: []
       }

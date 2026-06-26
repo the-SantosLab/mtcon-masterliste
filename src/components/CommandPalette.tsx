@@ -5,16 +5,19 @@ import { cn } from '@/lib/utils';
 import {
   Search, FolderKanban, ClipboardList, User2,
   ArrowRight, X, Loader2, Plus, LayoutDashboard, Zap,
+  Building2, Briefcase, Contact,
 } from 'lucide-react';
+
 
 interface Result {
   id: string;
-  type: 'project' | 'case' | 'user' | 'action';
+  type: 'project' | 'case' | 'user' | 'action' | 'company' | 'deal' | 'contact';
   title: string;
   sub: string;
   href: string;
   icon?: React.ElementType;
 }
+
 
 interface Props {
   open: boolean;
@@ -26,6 +29,9 @@ const TYPE_ICON = {
   case: ClipboardList,
   user: User2,
   action: Zap,
+  company: Building2,
+  deal: Briefcase,
+  contact: Contact,
 };
 
 const TYPE_LABEL = {
@@ -33,6 +39,9 @@ const TYPE_LABEL = {
   case: 'Vorgang',
   user: 'Benutzer',
   action: 'Schnellaktion',
+  company: 'Geschäftspartner',
+  deal: 'Deal',
+  contact: 'Kontakt',
 };
 
 const TYPE_COLOR: Record<string, string> = {
@@ -40,7 +49,11 @@ const TYPE_COLOR: Record<string, string> = {
   case: 'text-primary bg-primary/10',
   user: 'text-muted-foreground bg-muted',
   action: 'text-[hsl(var(--status-done))] bg-[hsl(var(--status-done))]/10',
+  company: 'text-blue-400 bg-blue-500/10',
+  deal: 'text-violet-400 bg-violet-500/10',
+  contact: 'text-amber-400 bg-amber-500/10',
 };
+
 
 const QUICK_ACTIONS: Result[] = [
   { id: 'qa-dashboard', type: 'action', title: 'Zum Dashboard', sub: 'Startseite öffnen', href: '/', icon: LayoutDashboard },
@@ -73,7 +86,7 @@ export function CommandPalette({ open, onClose }: Props) {
     setLoading(true);
 
     const term = `%${q.trim()}%`;
-    const [projRes, caseRes, userRes] = await Promise.all([
+    const [projRes, caseRes, userRes, companyRes, dealRes, contactRes] = await Promise.all([
       supabase.from('projects')
         .select('id, project_number, name, status')
         .or(`name.ilike.${term},project_number.ilike.${term},project_code.ilike.${term}`)
@@ -88,6 +101,18 @@ export function CommandPalette({ open, onClose }: Props) {
         .or(`display_name.ilike.${term},short_code.ilike.${term}`)
         .eq('active', true)
         .limit(4),
+      supabase.from('companies')
+        .select('id, name, customer_no, supplier_code')
+        .or(`name.ilike.${term},customer_no.ilike.${term},supplier_code.ilike.${term}`)
+        .limit(5),
+      supabase.from('deals')
+        .select('id, deal_no, title, stage')
+        .or(`title.ilike.${term},deal_no.ilike.${term}`)
+        .limit(5),
+      supabase.from('contacts')
+        .select('id, first_name, last_name, email, company_id')
+        .or(`first_name.ilike.${term},last_name.ilike.${term},email.ilike.${term}`)
+        .limit(5),
     ]);
 
     const mapped: Result[] = [
@@ -101,12 +126,28 @@ export function CommandPalette({ open, onClose }: Props) {
         title: c.project_name, sub: c.case_no,
         href: `/cases/${c.id}`,
       })),
+      ...((companyRes.data ?? []) as any[]).map(co => ({
+        id: co.id, type: 'company' as const,
+        title: co.name, sub: co.customer_no ?? co.supplier_code ?? '',
+        href: `/crm/companies/${co.id}`,
+      })),
+      ...((dealRes.data ?? []) as any[]).map(d => ({
+        id: d.id, type: 'deal' as const,
+        title: d.title, sub: `${d.deal_no} · ${d.stage}`,
+        href: `/crm/deals/${d.id}`,
+      })),
+      ...((contactRes.data ?? []) as any[]).map(ct => ({
+        id: ct.id, type: 'contact' as const,
+        title: `${ct.first_name} ${ct.last_name}`, sub: ct.email ?? '',
+        href: ct.company_id ? `/crm/companies/${ct.company_id}` : '/crm/contacts',
+      })),
       ...((userRes.data ?? []) as any[]).map(u => ({
         id: u.id, type: 'user' as const,
         title: u.display_name, sub: u.short_code,
         href: `/admin/users`,
       })),
     ];
+
 
     setResults(mapped);
     setActive(0);
@@ -190,7 +231,7 @@ export function CommandPalette({ open, onClose }: Props) {
     // grouped by type
     return (
       <div className="p-1.5">
-        {(['project', 'case', 'user'] as const).map(type => {
+        {(['company', 'deal', 'contact', 'project', 'case', 'user'] as const).map(type => {
           const group = list.filter(r => r.type === type);
           if (!group.length) return null;
           const Icon = TYPE_ICON[type];
@@ -276,7 +317,7 @@ export function CommandPalette({ open, onClose }: Props) {
               </div>
               {renderList(QUICK_ACTIONS, false)}
               <div className="px-4 py-2 text-[11px] text-muted-foreground/60 text-center border-t border-border mt-1">
-                Tippe um in Projekten, Vorgängen &amp; Benutzern zu suchen
+                Tippe um in CRM, Projekten, Vorgängen &amp; Benutzern zu suchen
               </div>
             </>
           )}

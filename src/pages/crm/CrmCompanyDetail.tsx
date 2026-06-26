@@ -18,7 +18,9 @@ import { IssosDeliveriesTab } from '@/components/IssosDeliveriesTab';
 import { IssosOffersTab } from '@/components/IssosOffersTab';
 import { IssosOrdersTab } from '@/components/IssosOrdersTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { TagPicker } from '@/components/crm/TagPicker';
 import { toast } from 'sonner';
+
 
 const ROLE_LABEL: Record<string, string> = { lead: 'Lead', customer: 'Kunde', supplier: 'Lieferant', both: 'Kunde + Lieferant' };
 const ROLE_COLOR: Record<string, string> = {
@@ -93,7 +95,9 @@ export default function CrmCompanyDetail() {
             {company.customer_no && <> · {company.customer_no}</>}
             {company.supplier_code && <> · {company.supplier_code}</>}
           </p>
+          <div className="mt-2"><TagPicker entityType="company" entityId={company.id} /></div>
         </div>
+
         <Button size="sm" variant="outline" onClick={() => setLookalike(true)} className="h-8 text-xs gap-1.5"><Sparkles className="h-3.5 w-3.5" />Ähnliche finden</Button>
       </div>
 

@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+import { SavedViewsBar } from '@/components/crm/SavedViewsBar';
+
 
 const COMPANY_TYPE_MAP: Record<string, string> = {
   customer: 'kunde', kunde: 'kunde',
@@ -205,6 +207,15 @@ export default function CrmCompanies() {
           <Input value={q} onChange={e => setQ(e.target.value)} placeholder="Name, Nummer, E-Mail, USt-ID, Branche…" className="pl-8 h-9" />
         </div>
       </div>
+
+      <div className="mb-3">
+        <SavedViewsBar
+          scope="companies"
+          currentFilters={{ tab, q }}
+          onApply={(f) => { if (f.tab) setTab(f.tab); setQ(f.q ?? ''); }}
+        />
+      </div>
+
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
