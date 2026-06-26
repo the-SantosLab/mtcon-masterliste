@@ -1420,15 +1420,63 @@ function pickIcon(name: string) {
 // add to lucide imports below if missing
 
 
+/* ---------- Shared metrics for the shape (live status / hub / footer) ---------- */
+export type ShapeMetrics = {
+  perDept: Map<string, {
+    open: number; done: number; inProgress: number; total: number;
+    oldestH: number; progressPct: number;
+    sla: 'idle' | 'live' | 'ok' | 'warn' | 'crit';
+    slaColor: string;        // rgba border tint
+    bottleneck: boolean;
+    pulse: boolean;          // live in_progress
+  }>;
+  hub: {
+    caseNo: string;
+    project: string;
+    progressPct: number;
+    nextMilestone: string;
+    deadlineLabel: string;   // "−3h", "in 2d", "—"
+    deadlineState: 'ok' | 'warn' | 'crit' | 'none';
+  };
+  footer: {
+    wip: number;
+    closedToday: number;
+    escalations: number;
+    medianLeadH: number | null;
+  };
+};
+
+const SLA_TINT = {
+  idle: 'rgba(140,160,180,0.0)',
+  live: 'rgba(80,210,255,0.85)',
+  ok:   'rgba(98,226,58,0.75)',
+  warn: 'rgba(255,170,60,0.85)',
+  crit: 'rgba(255,80,100,0.95)',
+} as const;
+
+function riskSort(arr: Task[]): Task[] {
+  return [...arr].sort((a, b) => {
+    const ap = a.status === 'in_progress' ? 1 : 0;
+    const bp = b.status === 'in_progress' ? 1 : 0;
+    if (ap !== bp) return bp - ap;
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  });
+}
+
 function PipelineShape({
-  tasks, deptName, caseLabel, userName, onDeptClick, activeDeptId,
+  tasks, allTasks, caseRow, deptName, caseLabel, userName, onDeptClick, activeDeptId,
+  bottleneckDeptId, etaForDept,
 }: {
   tasks: Task[];
+  allTasks?: Task[];
+  caseRow?: CaseRow | null;
   deptName: (id: string | null) => string;
   caseLabel: string | null;
   userName?: (id: string | null) => string;
   onDeptClick?: (deptId: string) => void;
   activeDeptId?: string | null;
+  bottleneckDeptId?: string | null;
+  etaForDept?: (id: string | null) => number | undefined;
 }) {
   const [hover, setHover] = useState<number | null>(null);
 
@@ -1442,6 +1490,85 @@ function PipelineShape({
     return Array.from(seen.values());
   }, [tasks, deptName]);
 
+  const metrics: ShapeMetrics = useMemo(() => {
+    const perDept: ShapeMetrics['perDept'] = new Map();
+    for (const d of depts) {
+      const total = d.tasks.length;
+      const open = d.tasks.filter((t) => !t.completed && t.status !== 'done');
+      const done = total - open.length;
+      const inProgress = open.filter((t) => t.status === 'in_progress').length;
+      const oldestH = open.reduce((m, t) => Math.max(m, hoursSince(t.created_at)), 0);
+      let sla: ShapeMetrics['perDept'] extends Map<any, infer V> ? V['sla'] : never =
+        open.length === 0 ? 'idle'
+        : oldestH >= SLA_CRIT_H ? 'crit'
+        : oldestH >= SLA_WARN_H ? 'warn'
+        : inProgress > 0 ? 'live'
+        : 'ok';
+      perDept.set(d.id, {
+        open: open.length, done, inProgress, total,
+        oldestH,
+        progressPct: total === 0 ? 0 : Math.round((done / total) * 100),
+        sla,
+        slaColor: SLA_TINT[sla],
+        bottleneck: bottleneckDeptId === d.id,
+        pulse: inProgress > 0,
+      });
+    }
+
+    // Hub
+    const allCaseTasks = tasks;
+    const allDone = allCaseTasks.filter((t) => t.completed || t.status === 'done').length;
+    const totalAll = allCaseTasks.length;
+    const next = [...allCaseTasks]
+      .filter((t) => !t.completed && t.status !== 'done')
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
+    let deadlineLabel = '—';
+    let deadlineState: ShapeMetrics['hub']['deadlineState'] = 'none';
+    if (caseRow?.due_at) {
+      const dl = new Date(caseRow.due_at).getTime();
+      const diffH = (dl - Date.now()) / 3_600_000;
+      deadlineState = diffH < 0 ? 'crit' : diffH < 48 ? 'warn' : 'ok';
+      const absH = Math.abs(diffH);
+      deadlineLabel = absH < 48
+        ? `${diffH < 0 ? '−' : 'in '}${Math.round(absH)}h`
+        : `${diffH < 0 ? '−' : 'in '}${Math.round(absH / 24)}d`;
+    }
+
+    // Footer (global if allTasks provided, else per-case)
+    const src = allTasks ?? allCaseTasks;
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    let closedToday = 0;
+    let wip = 0;
+    let escalations = 0;
+    const leadTimes: number[] = [];
+    for (const t of src) {
+      const isDone = t.completed || t.status === 'done';
+      if (isDone) {
+        if (t.completed_at && new Date(t.completed_at).getTime() >= startOfDay.getTime()) closedToday += 1;
+        const h = t.completed_at ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000 : 0;
+        if (h > 0 && isFinite(h)) leadTimes.push(h);
+      } else {
+        wip += 1;
+        if (hoursSince(t.created_at) >= SLA_CRIT_H) escalations += 1;
+      }
+    }
+    leadTimes.sort((a, b) => a - b);
+    const medianLeadH = leadTimes.length ? leadTimes[Math.floor(leadTimes.length / 2)] : null;
+
+    return {
+      perDept,
+      hub: {
+        caseNo: caseRow?.case_no ?? caseLabel ?? '—',
+        project: caseRow?.project_name ?? caseRow?.client_name ?? '',
+        progressPct: totalAll === 0 ? 0 : Math.round((allDone / totalAll) * 100),
+        nextMilestone: next ? next.title : 'Alle erledigt',
+        deadlineLabel,
+        deadlineState,
+      },
+      footer: { wip, closedToday, escalations, medianLeadH },
+    };
+  }, [depts, tasks, allTasks, caseRow, caseLabel, bottleneckDeptId]);
+
   if (tasks.length === 0 || depts.length < 2) return null;
   const shape: 'triangle' | 'square' | 'line' =
     depts.length === 3 ? 'triangle' : depts.length === 4 ? 'square' : 'line';
@@ -1449,7 +1576,7 @@ function PipelineShape({
   const accentFor = (i: number) => SHAPE_ACCENTS[i % SHAPE_ACCENTS.length];
 
   const activeDept = hover != null ? depts[hover] : null;
-  const activeWork = activeDept ? activeDept.tasks.filter((t) => !t.completed && t.status !== 'done') : [];
+  const activeWork = activeDept ? riskSort(activeDept.tasks.filter((t) => !t.completed && t.status !== 'done')) : [];
   const activeDone = activeDept ? activeDept.tasks.length - activeWork.length : 0;
 
   return (
@@ -1463,7 +1590,7 @@ function PipelineShape({
           </span>
         </div>
         <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 hidden sm:block">
-          Hover für Live-Status
+          Hover für Live-Status · Klick filtert
         </div>
       </div>
 
@@ -1475,6 +1602,7 @@ function PipelineShape({
           accentFor={accentFor}
           onDeptClick={onDeptClick}
           activeDeptId={activeDeptId ?? null}
+          metrics={metrics}
         />
       )}
       {shape === 'triangle' && (
@@ -1485,6 +1613,7 @@ function PipelineShape({
           accentFor={accentFor}
           onDeptClick={onDeptClick}
           activeDeptId={activeDeptId ?? null}
+          metrics={metrics}
         />
       )}
       {shape === 'line' && (
@@ -1495,8 +1624,11 @@ function PipelineShape({
           accentFor={accentFor}
           onDeptClick={onDeptClick}
           activeDeptId={activeDeptId ?? null}
+          metrics={metrics}
+          etaForDept={etaForDept}
         />
       )}
+
 
       {/* hover tooltip — rendered below the shape */}
       {activeDept && (
