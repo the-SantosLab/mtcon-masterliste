@@ -1405,12 +1405,14 @@ function pickIcon(name: string) {
 
 
 function PipelineShape({
-  tasks, deptName, caseLabel, userName,
+  tasks, deptName, caseLabel, userName, onDeptClick, activeDeptId,
 }: {
   tasks: Task[];
   deptName: (id: string | null) => string;
   caseLabel: string | null;
   userName?: (id: string | null) => string;
+  onDeptClick?: (deptId: string) => void;
+  activeDeptId?: string | null;
 }) {
   const [hover, setHover] = useState<number | null>(null);
 
