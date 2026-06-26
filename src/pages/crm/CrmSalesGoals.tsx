@@ -16,7 +16,7 @@ type Goal = {
   id: string; owner_id: string | null; period_year: number; period_month: number | null;
   metric: string; target_value: number; notes: string | null;
 };
-type Profile = { id: string; first_name: string | null; last_name: string | null; email: string };
+type Profile = { id: string; display_name: string };
 
 const METRIC_LABEL: Record<string, string> = {
   revenue: 'Umsatz (Won)', won_count: 'Anzahl Won-Deals', pipeline: 'Pipeline-Wert',
@@ -36,7 +36,7 @@ export default function CrmSalesGoals() {
   const load = async () => {
     const [g, p] = await Promise.all([
       supabase.from('crm_sales_goals').select('*').eq('period_year', year).order('period_month'),
-      supabase.from('users_profile').select('id,first_name,last_name,email').order('first_name'),
+      supabase.from('users_profile').select('id,display_name').eq('active', true).order('display_name'),
     ]);
     setGoals((g.data as Goal[]) ?? []);
     setProfiles((p.data as Profile[]) ?? []);
@@ -46,7 +46,7 @@ export default function CrmSalesGoals() {
   const ownerLabel = (id: string | null) => {
     if (!id) return 'Team-Gesamt';
     const p = profiles.find(x => x.id === id);
-    return p ? ([p.first_name, p.last_name].filter(Boolean).join(' ') || p.email) : id.slice(0, 8);
+    return p?.display_name ?? id.slice(0, 8);
   };
 
   const save = async () => {
@@ -147,7 +147,7 @@ export default function CrmSalesGoals() {
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__team">Team-Gesamt</SelectItem>
-                    {profiles.map(p => <SelectItem key={p.id} value={p.id}>{[p.first_name, p.last_name].filter(Boolean).join(' ') || p.email}</SelectItem>)}
+                    {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.display_name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

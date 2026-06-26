@@ -26,7 +26,7 @@ type Deal = {
   created_at: string;
 };
 type StageProb = { stage: string; probability: number };
-type Profile = { id: string; first_name: string | null; last_name: string | null; email: string };
+type Profile = { id: string; display_name: string };
 type Goal = {
   id: string; owner_id: string | null; period_year: number; period_month: number | null;
   metric: string; target_value: number;
@@ -59,7 +59,7 @@ export default function CrmForecast() {
       const [d, sp, p, g] = await Promise.all([
         supabase.from('deals').select('id,title,stage,value_estimated,value_final,currency,owner_id,lead_source,probability_override,expected_close_date,stage_changed_at,won_at,lost_at,created_at').limit(5000),
         supabase.from('crm_stage_probabilities').select('*'),
-        supabase.from('users_profile').select('id,first_name,last_name,email'),
+        supabase.from('users_profile').select('id,display_name').eq('active', true).order('display_name'),
         supabase.from('crm_sales_goals').select('*').eq('period_year', year),
       ]);
       if (!alive) return;
@@ -81,7 +81,7 @@ export default function CrmForecast() {
   const ownerLabel = (id: string | null) => {
     if (!id) return 'Unzugewiesen';
     const p = profiles.find(x => x.id === id);
-    return p ? ([p.first_name, p.last_name].filter(Boolean).join(' ') || p.email) : id.slice(0, 8);
+    return p?.display_name ?? id.slice(0, 8);
   };
 
   const dealsFiltered = useMemo(() => {
@@ -205,9 +205,7 @@ export default function CrmForecast() {
                 <SelectContent>
                   <SelectItem value="all">Alle Owner</SelectItem>
                   {profiles.map(p => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {[p.first_name, p.last_name].filter(Boolean).join(' ') || p.email}
-                    </SelectItem>
+                    <SelectItem key={p.id} value={p.id}>{p.display_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
