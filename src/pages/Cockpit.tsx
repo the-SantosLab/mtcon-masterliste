@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Check, Circle, Clock } from 'lucide-react';
+import { Check, Clock, CircleDot, Activity, Layers, Boxes, Cpu, Zap, Truck, Wrench, Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
 
 type Dept = { id: string; name: string };
 type Task = {
@@ -30,7 +28,18 @@ type CaseRow = {
 };
 type Profile = { id: string; display_name: string | null };
 
-const OPEN_STATUSES = ['open', 'in_progress'] as const;
+// Neon accent palette — cycled per department, matching the reference art (orange, cyan, green, violet, amber)
+const ACCENTS = [
+  { name: 'amber',   hue: '32 100% 58%',  glow: 'rgba(255,160,40,0.55)' },
+  { name: 'cyan',    hue: '190 100% 60%', glow: 'rgba(60,200,255,0.55)' },
+  { name: 'emerald', hue: '152 90% 55%',  glow: 'rgba(60,255,170,0.55)' },
+  { name: 'violet',  hue: '270 90% 70%',  glow: 'rgba(170,120,255,0.55)' },
+  { name: 'rose',    hue: '340 95% 65%',  glow: 'rgba(255,90,160,0.55)' },
+];
+
+const DEPT_ICONS = [Cpu, Boxes, Truck, Wrench, Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles, Zap, Activity, Layers];
+
+const accentFor = (i: number) => ACCENTS[i % ACCENTS.length];
 
 export default function Cockpit() {
   const [departments, setDepartments] = useState<Dept[]>([]);
@@ -71,13 +80,11 @@ export default function Cockpit() {
       }
       setLoading(false);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Realtime: keep tasks fresh
+  // Realtime
   useEffect(() => {
     const ch = supabase
       .channel('cockpit-tasks')
@@ -93,17 +100,15 @@ export default function Cockpit() {
         });
       })
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   const deptStats = useMemo(() => {
-    const stats: Record<string, { open: number; inProgress: number }> = {};
-    for (const d of departments) stats[d.id] = { open: 0, inProgress: 0 };
+    const stats: Record<string, { open: number; inProgress: number; done: number }> = {};
+    for (const d of departments) stats[d.id] = { open: 0, inProgress: 0, done: 0 };
     for (const t of tasks) {
       if (!t.department_id || !(t.department_id in stats)) continue;
-      if (t.status === 'done' || t.completed) continue;
+      if (t.status === 'done' || t.completed) { stats[t.department_id].done += 1; continue; }
       stats[t.department_id].open += 1;
       if (t.status === 'in_progress') stats[t.department_id].inProgress += 1;
     }
@@ -127,208 +132,275 @@ export default function Cockpit() {
       .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || (a.created_at || '').localeCompare(b.created_at || ''));
   }, [tasks, selectedCaseId]);
 
-  const currentIdx = useMemo(() => {
-    const i = selectedCaseTasks.findIndex((t) => !t.completed && t.status !== 'done');
-    return i;
-  }, [selectedCaseTasks]);
+  const currentIdx = useMemo(() => selectedCaseTasks.findIndex((t) => !t.completed && t.status !== 'done'), [selectedCaseTasks]);
 
   const deptName = (id: string | null) => (id ? departments.find((d) => d.id === id)?.name ?? '—' : '—');
   const userName = (id: string | null) => (id ? profiles[id]?.display_name ?? '—' : '—');
 
+  const selectedDeptIdx = selectedDept ? departments.findIndex((d) => d.id === selectedDept) : -1;
+  const selectedDeptAccent = selectedDeptIdx >= 0 ? accentFor(selectedDeptIdx) : ACCENTS[0];
+
   return (
     <AppLayout>
-      <div className="p-6 space-y-8 max-w-[1400px]">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Cockpit</h1>
-            <p className="text-sm text-muted-foreground">
-              Read-only Übersicht über Abteilungen und Vorgangsverlauf.
-            </p>
-          </div>
-          <Badge variant="outline" className="text-[10px]">Beta</Badge>
-        </header>
+      <div className="cockpit-shell relative min-h-[calc(100vh-1rem)] overflow-hidden">
+        {/* ambient backdrop */}
+        <div aria-hidden className="cockpit-grid" />
+        <div aria-hidden className="cockpit-aurora cockpit-aurora-1" />
+        <div aria-hidden className="cockpit-aurora cockpit-aurora-2" />
+        <div aria-hidden className="cockpit-aurora cockpit-aurora-3" />
 
-        {/* Departments */}
-        <section className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Abteilungen</h2>
-          {loading ? (
-            <div className="text-sm text-muted-foreground">Lade…</div>
-          ) : (
-            <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {departments.map((d) => {
-                const s = deptStats[d.id] ?? { open: 0, inProgress: 0 };
-                const active = selectedDept === d.id;
-                return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => setSelectedDept(active ? null : d.id)}
-                    className={cn(
-                      'text-left rounded-lg border bg-card p-4 transition-colors hover:bg-accent/40 focus:outline-none',
-                      active ? 'border-primary border-2' : 'border-border',
-                    )}
-                  >
-                    <div className="text-xs text-muted-foreground truncate">Abteilung</div>
-                    <div className="text-sm font-medium truncate">{d.name}</div>
-                    <div className="mt-3 flex items-end justify-between">
-                      <div>
-                        <div className="text-2xl font-semibold tabular-nums">{s.open}</div>
-                        <div className="text-[10px] text-muted-foreground">offen</div>
-                      </div>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {s.inProgress} in Arbeit
-                      </Badge>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {selectedDept && (
-            <Card className="p-4 mt-2">
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-medium">Offene Aufgaben · {deptName(selectedDept)}</div>
-                <div className="text-[11px] text-muted-foreground">Top 10 neueste</div>
+        <div className="relative p-6 md:p-8 space-y-10 max-w-[1500px] mx-auto">
+          <header className="flex items-end justify-between gap-4 flex-wrap">
+            <div>
+              <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] text-white/50 uppercase">
+                <span className="inline-block h-px w-8 bg-white/30" />
+                Mission Control
+                <span className="cockpit-pulse" />
               </div>
-              {deptOpenTasks.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-6 text-center">Keine offenen Aufgaben.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-[11px] uppercase text-muted-foreground border-b">
-                        <th className="py-2 pr-3 font-medium">Vorgang</th>
-                        <th className="py-2 pr-3 font-medium">Aufgabe</th>
-                        <th className="py-2 pr-3 font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {deptOpenTasks.map(({ task, case: c }) => (
-                        <tr key={task.id} className="border-b last:border-0">
-                          <td className="py-2 pr-3 font-mono text-xs">{c?.case_no ?? '—'}</td>
-                          <td className="py-2 pr-3 truncate max-w-[420px]">{task.title}</td>
-                          <td className="py-2 pr-3">
-                            <Badge variant={task.status === 'in_progress' ? 'default' : 'outline'} className="text-[10px]">
-                              {task.status === 'in_progress' ? 'in Arbeit' : 'offen'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-          )}
-        </section>
-
-        {/* Lifecycle timeline */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Vorgangsverlauf</h2>
-            <div className="w-[360px] max-w-full">
-              <Select value={selectedCaseId ?? undefined} onValueChange={(v) => { setSelectedCaseId(v); setSelectedNodeId(null); }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Vorgang wählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cases.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      <span className="font-mono text-xs mr-2">{c.case_no ?? '—'}</span>
-                      <span className="truncate">{c.project_name ?? '—'}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h1 className="cockpit-title">COCKPIT</h1>
+              <p className="text-sm text-white/55 max-w-xl mt-1">
+                Live-Übersicht über alle Abteilungen und den Vorgangsfluss durch die Organisation. Read-only Telemetrie.
+              </p>
             </div>
-          </div>
+            <div className="flex items-center gap-2">
+              <div className="cockpit-chip">
+                <CircleDot className="h-3 w-3" /> {tasks.filter((t) => t.status !== 'done' && !t.completed).length} aktive Vorgänge
+              </div>
+              <div className="cockpit-chip cockpit-chip--beta">BETA</div>
+            </div>
+          </header>
 
-          <Card className="p-4">
-            {selectedCaseTasks.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-6 text-center">Keine Aufgaben für diesen Vorgang.</div>
+          {/* DEPARTMENTS — hex grid */}
+          <section className="space-y-5">
+            <div className="flex items-center gap-3">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <h2 className="text-[11px] tracking-[0.35em] text-white/60 uppercase">Departments / Knotenpunkte</h2>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            </div>
+
+            {loading ? (
+              <div className="text-sm text-white/50 text-center py-10">// initialisiere Telemetrie …</div>
             ) : (
-              <>
-                <div className="overflow-x-auto pb-2">
-                  <ol className="flex items-stretch gap-2 min-w-max">
-                    {selectedCaseTasks.map((t, i) => {
-                      const done = t.completed || t.status === 'done';
-                      const current = !done && i === currentIdx;
-                      const upcoming = !done && !current;
-                      const active = selectedNodeId === t.id;
-                      return (
-                        <li key={t.id} className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedNodeId(active ? null : t.id)}
-                            className={cn(
-                              'rounded-md border px-3 py-2 text-left min-w-[180px] transition-colors hover:bg-accent/40',
-                              active && 'border-primary border-2',
-                              !active && done && 'border-border bg-muted/40',
-                              !active && current && 'border-foreground/40',
-                              !active && upcoming && 'border-dashed border-border',
-                            )}
-                          >
-                            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-                              {done ? <Check className="h-3 w-3" /> : current ? <Clock className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-                              <span>{done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}</span>
-                            </div>
-                            <div className="text-xs font-medium mt-1 truncate max-w-[200px]">{t.title}</div>
-                            <div className="text-[10px] text-muted-foreground truncate max-w-[200px]">{deptName(t.department_id)}</div>
-                          </button>
-                          {i < selectedCaseTasks.length - 1 && (
-                            <span className="h-px w-4 bg-border" aria-hidden />
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-
-                {selectedNodeId && (() => {
-                  const t = selectedCaseTasks.find((x) => x.id === selectedNodeId);
-                  if (!t) return null;
-                  const done = t.completed || t.status === 'done';
+              <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {departments.map((d, i) => {
+                  const s = deptStats[d.id] ?? { open: 0, inProgress: 0, done: 0 };
+                  const active = selectedDept === d.id;
+                  const accent = accentFor(i);
+                  const Icon = DEPT_ICONS[i % DEPT_ICONS.length];
                   return (
-                    <div className="mt-4 rounded-md border bg-muted/30 p-4 text-sm">
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <div className="text-[10px] uppercase text-muted-foreground">Abteilung</div>
-                          <div>{deptName(t.department_id)}</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase text-muted-foreground">Zugewiesen</div>
-                          <div>{userName(t.assigned_to)}</div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase text-muted-foreground">Status</div>
-                          <div>
-                            {done ? 'erledigt' : t.status === 'in_progress' ? 'in Arbeit' : 'offen'}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase text-muted-foreground">Abgeschlossen am</div>
-                          <div>
-                            {t.completed_at
-                              ? new Date(t.completed_at).toLocaleString('de-DE')
-                              : t.status === 'in_progress'
-                              ? 'in Arbeit'
-                              : 'noch nicht gestartet'}
-                          </div>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <div className="text-[10px] uppercase text-muted-foreground">Beschreibung</div>
-                          <div className="whitespace-pre-wrap text-sm">{t.description || '—'}</div>
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setSelectedDept(active ? null : d.id)}
+                      className={cn('cockpit-node group', active && 'cockpit-node--active')}
+                      style={{
+                        // @ts-ignore custom props
+                        '--accent': `hsl(${accent.hue})`,
+                        '--accent-glow': accent.glow,
+                      } as React.CSSProperties}
+                    >
+                      <span className="cockpit-node__corner cockpit-node__corner--tl" />
+                      <span className="cockpit-node__corner cockpit-node__corner--tr" />
+                      <span className="cockpit-node__corner cockpit-node__corner--bl" />
+                      <span className="cockpit-node__corner cockpit-node__corner--br" />
+
+                      <div className="flex items-start justify-between">
+                        <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
+                        <div className="cockpit-node__icon">
+                          <Icon className="h-4 w-4" />
                         </div>
                       </div>
-                    </div>
+                      <div className="mt-3 text-[10px] tracking-[0.25em] uppercase text-white/45">Knoten</div>
+                      <div className="cockpit-node__name">{d.name}</div>
+
+                      <div className="mt-4 flex items-end justify-between">
+                        <div>
+                          <div className="cockpit-node__metric">{s.open}</div>
+                          <div className="text-[9px] uppercase tracking-widest text-white/45">offen</div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <div className="cockpit-node__pill">
+                            <span className="cockpit-dot" /> {s.inProgress} aktiv
+                          </div>
+                          <div className="text-[9px] text-white/35 tracking-wider">{s.done} erledigt</div>
+                        </div>
+                      </div>
+                    </button>
                   );
-                })()}
-              </>
+                })}
+              </div>
             )}
-          </Card>
-        </section>
+
+            {selectedDept && (
+              <div
+                className="cockpit-panel mt-4"
+                style={{
+                  // @ts-ignore
+                  '--accent': `hsl(${selectedDeptAccent.hue})`,
+                  '--accent-glow': selectedDeptAccent.glow,
+                } as React.CSSProperties}
+              >
+                <span className="cockpit-node__corner cockpit-node__corner--tl" />
+                <span className="cockpit-node__corner cockpit-node__corner--tr" />
+                <span className="cockpit-node__corner cockpit-node__corner--bl" />
+                <span className="cockpit-node__corner cockpit-node__corner--br" />
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="cockpit-dot" />
+                    <div className="text-[11px] tracking-[0.3em] uppercase text-white/55">offene Aufgaben</div>
+                    <div className="text-sm text-white/90">{deptName(selectedDept)}</div>
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40">Top 10 · neueste</div>
+                </div>
+                {deptOpenTasks.length === 0 ? (
+                  <div className="text-sm text-white/50 py-8 text-center">Keine offenen Aufgaben.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-[10px] uppercase tracking-widest text-white/45 border-b border-white/10">
+                          <th className="py-2 pr-3 font-normal">Vorgang</th>
+                          <th className="py-2 pr-3 font-normal">Aufgabe</th>
+                          <th className="py-2 pr-3 font-normal">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deptOpenTasks.map(({ task, case: c }) => (
+                          <tr key={task.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
+                            <td className="py-2 pr-3 font-mono text-xs text-white/70">{c?.case_no ?? '—'}</td>
+                            <td className="py-2 pr-3 truncate max-w-[420px] text-white/85">{task.title}</td>
+                            <td className="py-2 pr-3">
+                              <span className={cn('cockpit-status', task.status === 'in_progress' ? 'cockpit-status--active' : 'cockpit-status--open')}>
+                                {task.status === 'in_progress' ? 'in Arbeit' : 'offen'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* LIFECYCLE — process flow */}
+          <section className="space-y-5">
+            <div className="flex items-center gap-3">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <h2 className="text-[11px] tracking-[0.35em] text-white/60 uppercase">Vorgangs-Flow / Lifecycle</h2>
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            </div>
+
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="text-xs text-white/50">
+                Wähle einen Vorgang, um den vollständigen Kettenfluss zu sehen.
+              </div>
+              <div className="w-[380px] max-w-full">
+                <Select value={selectedCaseId ?? undefined} onValueChange={(v) => { setSelectedCaseId(v); setSelectedNodeId(null); }}>
+                  <SelectTrigger className="cockpit-select">
+                    <SelectValue placeholder="Vorgang wählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cases.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="font-mono text-xs mr-2">{c.case_no ?? '—'}</span>
+                        <span className="truncate">{c.project_name ?? '—'}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="cockpit-panel">
+              <span className="cockpit-node__corner cockpit-node__corner--tl" />
+              <span className="cockpit-node__corner cockpit-node__corner--tr" />
+              <span className="cockpit-node__corner cockpit-node__corner--bl" />
+              <span className="cockpit-node__corner cockpit-node__corner--br" />
+
+              {selectedCaseTasks.length === 0 ? (
+                <div className="text-sm text-white/50 py-10 text-center">Keine Aufgaben für diesen Vorgang.</div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto pb-3">
+                    <ol className="flex items-stretch gap-0 min-w-max px-1 pt-2">
+                      {selectedCaseTasks.map((t, i) => {
+                        const done = t.completed || t.status === 'done';
+                        const current = !done && i === currentIdx;
+                        const upcoming = !done && !current;
+                        const active = selectedNodeId === t.id;
+                        const accent = done
+                          ? ACCENTS[2] /* emerald for done */
+                          : current
+                          ? ACCENTS[0] /* amber for current */
+                          : { name: 'mute', hue: '220 10% 55%', glow: 'rgba(150,160,180,0.25)' };
+                        return (
+                          <li key={t.id} className="flex items-center">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedNodeId(active ? null : t.id)}
+                              className={cn('cockpit-step', active && 'cockpit-step--active', upcoming && 'cockpit-step--upcoming')}
+                              style={{
+                                // @ts-ignore
+                                '--accent': `hsl(${accent.hue})`,
+                                '--accent-glow': accent.glow,
+                              } as React.CSSProperties}
+                            >
+                              <div className="cockpit-step__hex">
+                                {done ? <Check className="h-5 w-5" /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
+                              </div>
+                              <div className="cockpit-step__label">
+                                <div className="text-[9px] uppercase tracking-[0.25em] text-white/45">
+                                  {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
+                                </div>
+                                <div className="text-xs font-medium text-white/90 truncate max-w-[160px]">{t.title}</div>
+                                <div className="text-[10px] text-white/45 truncate max-w-[160px]">{deptName(t.department_id)}</div>
+                              </div>
+                            </button>
+                            {i < selectedCaseTasks.length - 1 && (
+                              <div className={cn('cockpit-connector', (selectedCaseTasks[i + 1].completed || selectedCaseTasks[i + 1].status === 'done' || done) && 'cockpit-connector--lit')} />
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+
+                  {selectedNodeId && (() => {
+                    const t = selectedCaseTasks.find((x) => x.id === selectedNodeId);
+                    if (!t) return null;
+                    const done = t.completed || t.status === 'done';
+                    return (
+                      <div className="mt-4 cockpit-subpanel">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Field label="Abteilung" value={deptName(t.department_id)} />
+                          <Field label="Zugewiesen" value={userName(t.assigned_to)} />
+                          <Field label="Status" value={done ? 'erledigt' : t.status === 'in_progress' ? 'in Arbeit' : 'offen'} />
+                          <Field label="Abgeschlossen am" value={t.completed_at ? new Date(t.completed_at).toLocaleString('de-DE') : t.status === 'in_progress' ? 'in Arbeit' : 'noch nicht gestartet'} />
+                          <div className="sm:col-span-2">
+                            <div className="cockpit-field__label">Beschreibung</div>
+                            <div className="whitespace-pre-wrap text-sm text-white/80">{t.description || '—'}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </AppLayout>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="cockpit-field__label">{label}</div>
+      <div className="text-sm text-white/85">{value}</div>
+    </div>
   );
 }
