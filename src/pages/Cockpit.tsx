@@ -638,6 +638,52 @@ export default function Cockpit() {
             </span>
           </div>
 
+          {/* TOOLBAR: Aktionen */}
+          <div className="cockpit-filterbar">
+            <span className="cockpit-filterbar__label flex items-center gap-1.5"><Settings2 className="h-3 w-3" /> Tools</span>
+            <button
+              type="button"
+              onClick={() => setPersonLayer((v) => !v)}
+              className={cn('cockpit-toggle', personLayer && 'cockpit-toggle--on')}
+              style={{ ['--accent' as any]: 'hsl(215 100% 62%)', ['--accent-glow' as any]: 'rgba(80,150,255,0.55)' } as React.CSSProperties}
+            >
+              {personLayer ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />} Personen-Layer
+            </button>
+            <button type="button" onClick={exportCsv} className="cockpit-toggle"
+              style={{ ['--accent' as any]: 'hsl(142 80% 52%)', ['--accent-glow' as any]: 'rgba(70,230,140,0.55)' } as React.CSSProperties}>
+              <Download className="h-3 w-3" /> CSV Export
+            </button>
+            <button type="button" onClick={saveCurrentView} className="cockpit-toggle"
+              style={{ ['--accent' as any]: 'hsl(270 90% 70%)', ['--accent-glow' as any]: 'rgba(170,120,255,0.55)' } as React.CSSProperties}>
+              <Save className="h-3 w-3" /> Ansicht speichern
+            </button>
+            {savedViews.length > 0 && (
+              <Select onValueChange={applyView}>
+                <SelectTrigger className="h-7 w-[170px] bg-white/[0.04] border-white/15 text-[11px] text-white/80">
+                  <SelectValue placeholder="Gespeicherte Ansicht…" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0b1322] border-white/15 text-white/85">
+                  {savedViews.map((v) => (
+                    <SelectItem key={v.name} value={v.name} className="text-xs">
+                      <span className="flex items-center justify-between gap-2 w-full">
+                        <span>{v.name}</span>
+                        <X className="h-3 w-3 opacity-50 hover:opacity-100" onClick={(e) => { e.stopPropagation(); deleteView(v.name); }} />
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <button type="button" onClick={() => setHelpOpen(true)} className="cockpit-toggle ml-auto"
+              style={{ ['--accent' as any]: 'hsl(195 100% 60%)', ['--accent-glow' as any]: 'rgba(60,200,255,0.55)' } as React.CSSProperties}>
+              <Keyboard className="h-3 w-3" /> Shortcuts <span className="font-mono opacity-60 ml-1">?</span>
+            </button>
+            {pinnedIds.length > 0 && (
+              <span className="cockpit-chip"><Pin className="h-3 w-3" /> {pinnedIds.length} angepinnt</span>
+            )}
+          </div>
+
+
           {/* MAIN GRID: Departments + Activity Ticker */}
           <section className="grid gap-8 lg:grid-cols-[1fr_320px]">
             {/* LEFT — DEPARTMENTS */}
