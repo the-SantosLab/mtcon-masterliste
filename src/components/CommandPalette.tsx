@@ -317,7 +317,7 @@ export function CommandPalette({ open, onClose }: Props) {
               </div>
               {renderList(QUICK_ACTIONS, false)}
               <div className="px-4 py-2 text-[11px] text-muted-foreground/60 text-center border-t border-border mt-1">
-                Tippe um in Projekten, Vorgängen &amp; Benutzern zu suchen
+                Tippe um in CRM, Projekten, Vorgängen &amp; Benutzern zu suchen
               </div>
             </>
           )}
