@@ -569,7 +569,7 @@ export default function Cockpit() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
-                              <div className="cockpit-node__name">{d.name}</div>
+                              <div className="cockpit-node__name" data-text={d.name}>{d.name}</div>
                             </div>
                             {s.open > 0 && (
                               <span className={cn('cockpit-sla', slaClass(s.avgAgeH))} title="Durchschnittsalter offener Aufgaben">
