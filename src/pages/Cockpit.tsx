@@ -793,9 +793,13 @@ export default function Cockpit() {
             {/* Primary pipeline — shape (triangle/square) if 3-4 depts, else linear */}
             <PipelineShape
               tasks={selectedCaseTasks}
+              allTasks={tasks}
+              caseRow={selectedCaseId ? cases.find((c) => c.id === selectedCaseId) ?? null : null}
               deptName={deptName}
               caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
               userName={userName}
+              bottleneckDeptId={bottleneckDeptId}
+              etaForDept={etaForDept}
               activeDeptId={selectedDept}
               onDeptClick={(id) => {
                 setSelectedDept((cur) => {
@@ -805,6 +809,7 @@ export default function Cockpit() {
                 });
               }}
             />
+
 
 
             <PipelineLane
