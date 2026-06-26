@@ -38,6 +38,8 @@ type CaseRow = {
   project_name: string | null;
   status: string;
   created_at: string;
+  due_at?: string | null;
+  client_name?: string | null;
 };
 type Profile = { id: string; display_name: string | null };
 type ActivityRow = {
@@ -184,7 +186,7 @@ export default function Cockpit() {
           .is('archived_at', null),
         supabase
           .from('cases')
-          .select('id,case_no,project_name,status,created_at')
+          .select('id,case_no,project_name,status,created_at,due_at,client_name')
           .eq('deleted', false)
           .order('created_at', { ascending: false })
           .limit(500),
@@ -791,9 +793,13 @@ export default function Cockpit() {
             {/* Primary pipeline — shape (triangle/square) if 3-4 depts, else linear */}
             <PipelineShape
               tasks={selectedCaseTasks}
+              allTasks={tasks}
+              caseRow={selectedCaseId ? cases.find((c) => c.id === selectedCaseId) ?? null : null}
               deptName={deptName}
               caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
               userName={userName}
+              bottleneckDeptId={bottleneckDeptId}
+              etaForDept={etaForDept}
               activeDeptId={selectedDept}
               onDeptClick={(id) => {
                 setSelectedDept((cur) => {
@@ -803,6 +809,7 @@ export default function Cockpit() {
                 });
               }}
             />
+
 
 
             <PipelineLane
@@ -1413,15 +1420,63 @@ function pickIcon(name: string) {
 // add to lucide imports below if missing
 
 
+/* ---------- Shared metrics for the shape (live status / hub / footer) ---------- */
+export type ShapeMetrics = {
+  perDept: Map<string, {
+    open: number; done: number; inProgress: number; total: number;
+    oldestH: number; progressPct: number;
+    sla: 'idle' | 'live' | 'ok' | 'warn' | 'crit';
+    slaColor: string;        // rgba border tint
+    bottleneck: boolean;
+    pulse: boolean;          // live in_progress
+  }>;
+  hub: {
+    caseNo: string;
+    project: string;
+    progressPct: number;
+    nextMilestone: string;
+    deadlineLabel: string;   // "−3h", "in 2d", "—"
+    deadlineState: 'ok' | 'warn' | 'crit' | 'none';
+  };
+  footer: {
+    wip: number;
+    closedToday: number;
+    escalations: number;
+    medianLeadH: number | null;
+  };
+};
+
+const SLA_TINT = {
+  idle: 'rgba(140,160,180,0.0)',
+  live: 'rgba(80,210,255,0.85)',
+  ok:   'rgba(98,226,58,0.75)',
+  warn: 'rgba(255,170,60,0.85)',
+  crit: 'rgba(255,80,100,0.95)',
+} as const;
+
+function riskSort(arr: Task[]): Task[] {
+  return [...arr].sort((a, b) => {
+    const ap = a.status === 'in_progress' ? 1 : 0;
+    const bp = b.status === 'in_progress' ? 1 : 0;
+    if (ap !== bp) return bp - ap;
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  });
+}
+
 function PipelineShape({
-  tasks, deptName, caseLabel, userName, onDeptClick, activeDeptId,
+  tasks, allTasks, caseRow, deptName, caseLabel, userName, onDeptClick, activeDeptId,
+  bottleneckDeptId, etaForDept,
 }: {
   tasks: Task[];
+  allTasks?: Task[];
+  caseRow?: CaseRow | null;
   deptName: (id: string | null) => string;
   caseLabel: string | null;
   userName?: (id: string | null) => string;
   onDeptClick?: (deptId: string) => void;
   activeDeptId?: string | null;
+  bottleneckDeptId?: string | null;
+  etaForDept?: (id: string | null) => number | undefined;
 }) {
   const [hover, setHover] = useState<number | null>(null);
 
@@ -1435,6 +1490,85 @@ function PipelineShape({
     return Array.from(seen.values());
   }, [tasks, deptName]);
 
+  const metrics: ShapeMetrics = useMemo(() => {
+    const perDept: ShapeMetrics['perDept'] = new Map();
+    for (const d of depts) {
+      const total = d.tasks.length;
+      const open = d.tasks.filter((t) => !t.completed && t.status !== 'done');
+      const done = total - open.length;
+      const inProgress = open.filter((t) => t.status === 'in_progress').length;
+      const oldestH = open.reduce((m, t) => Math.max(m, hoursSince(t.created_at)), 0);
+      const sla: 'idle' | 'live' | 'ok' | 'warn' | 'crit' =
+        open.length === 0 ? 'idle'
+        : oldestH >= SLA_CRIT_H ? 'crit'
+        : oldestH >= SLA_WARN_H ? 'warn'
+        : inProgress > 0 ? 'live'
+        : 'ok';
+      perDept.set(d.id, {
+        open: open.length, done, inProgress, total,
+        oldestH,
+        progressPct: total === 0 ? 0 : Math.round((done / total) * 100),
+        sla,
+        slaColor: SLA_TINT[sla],
+        bottleneck: bottleneckDeptId === d.id,
+        pulse: inProgress > 0,
+      });
+    }
+
+    // Hub
+    const allCaseTasks = tasks;
+    const allDone = allCaseTasks.filter((t) => t.completed || t.status === 'done').length;
+    const totalAll = allCaseTasks.length;
+    const next = [...allCaseTasks]
+      .filter((t) => !t.completed && t.status !== 'done')
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0];
+    let deadlineLabel = '—';
+    let deadlineState: ShapeMetrics['hub']['deadlineState'] = 'none';
+    if (caseRow?.due_at) {
+      const dl = new Date(caseRow.due_at).getTime();
+      const diffH = (dl - Date.now()) / 3_600_000;
+      deadlineState = diffH < 0 ? 'crit' : diffH < 48 ? 'warn' : 'ok';
+      const absH = Math.abs(diffH);
+      deadlineLabel = absH < 48
+        ? `${diffH < 0 ? '−' : 'in '}${Math.round(absH)}h`
+        : `${diffH < 0 ? '−' : 'in '}${Math.round(absH / 24)}d`;
+    }
+
+    // Footer (global if allTasks provided, else per-case)
+    const src = allTasks ?? allCaseTasks;
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    let closedToday = 0;
+    let wip = 0;
+    let escalations = 0;
+    const leadTimes: number[] = [];
+    for (const t of src) {
+      const isDone = t.completed || t.status === 'done';
+      if (isDone) {
+        if (t.completed_at && new Date(t.completed_at).getTime() >= startOfDay.getTime()) closedToday += 1;
+        const h = t.completed_at ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000 : 0;
+        if (h > 0 && isFinite(h)) leadTimes.push(h);
+      } else {
+        wip += 1;
+        if (hoursSince(t.created_at) >= SLA_CRIT_H) escalations += 1;
+      }
+    }
+    leadTimes.sort((a, b) => a - b);
+    const medianLeadH = leadTimes.length ? leadTimes[Math.floor(leadTimes.length / 2)] : null;
+
+    return {
+      perDept,
+      hub: {
+        caseNo: caseRow?.case_no ?? caseLabel ?? '—',
+        project: caseRow?.project_name ?? caseRow?.client_name ?? '',
+        progressPct: totalAll === 0 ? 0 : Math.round((allDone / totalAll) * 100),
+        nextMilestone: next ? next.title : 'Alle erledigt',
+        deadlineLabel,
+        deadlineState,
+      },
+      footer: { wip, closedToday, escalations, medianLeadH },
+    };
+  }, [depts, tasks, allTasks, caseRow, caseLabel, bottleneckDeptId]);
+
   if (tasks.length === 0 || depts.length < 2) return null;
   const shape: 'triangle' | 'square' | 'line' =
     depts.length === 3 ? 'triangle' : depts.length === 4 ? 'square' : 'line';
@@ -1442,7 +1576,7 @@ function PipelineShape({
   const accentFor = (i: number) => SHAPE_ACCENTS[i % SHAPE_ACCENTS.length];
 
   const activeDept = hover != null ? depts[hover] : null;
-  const activeWork = activeDept ? activeDept.tasks.filter((t) => !t.completed && t.status !== 'done') : [];
+  const activeWork = activeDept ? riskSort(activeDept.tasks.filter((t) => !t.completed && t.status !== 'done')) : [];
   const activeDone = activeDept ? activeDept.tasks.length - activeWork.length : 0;
 
   return (
@@ -1456,7 +1590,7 @@ function PipelineShape({
           </span>
         </div>
         <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 hidden sm:block">
-          Hover für Live-Status
+          Hover für Live-Status · Klick filtert
         </div>
       </div>
 
@@ -1468,6 +1602,7 @@ function PipelineShape({
           accentFor={accentFor}
           onDeptClick={onDeptClick}
           activeDeptId={activeDeptId ?? null}
+          metrics={metrics}
         />
       )}
       {shape === 'triangle' && (
@@ -1478,6 +1613,7 @@ function PipelineShape({
           accentFor={accentFor}
           onDeptClick={onDeptClick}
           activeDeptId={activeDeptId ?? null}
+          metrics={metrics}
         />
       )}
       {shape === 'line' && (
@@ -1488,8 +1624,11 @@ function PipelineShape({
           accentFor={accentFor}
           onDeptClick={onDeptClick}
           activeDeptId={activeDeptId ?? null}
+          metrics={metrics}
+          etaForDept={etaForDept}
         />
       )}
+
 
       {/* hover tooltip — rendered below the shape */}
       {activeDept && (
@@ -1529,7 +1668,7 @@ function PipelineShape({
 
 /* ---------- SQUARE (1:1 port of quad_infografik.html) ---------- */
 function ShapeSquare({
-  depts, hover, setHover, onDeptClick, activeDeptId,
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics,
 }: {
   depts: ShapeDept[];
   hover: number | null;
@@ -1537,6 +1676,7 @@ function ShapeSquare({
   accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
   onDeptClick?: (id: string) => void;
   activeDeptId?: string | null;
+  metrics: ShapeMetrics;
 }) {
   const SLOTS = [
     { pos: 'sales',   numCls: 'o',  outer: '#ff9d33', inner: '#ffc06a' },
@@ -1598,8 +1738,14 @@ function ShapeSquare({
       {SLOTS.map((s, i) => {
         const d = depts[i];
         if (!d) return null;
-        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done');
+        const m = metrics.perDept.get(d.id);
+        const open = riskSort(d.tasks.filter((t) => !t.completed && t.status !== 'done'));
         const isActive = activeDeptId === d.id;
+        const halo = m?.bottleneck
+          ? '0 0 0 1.5px rgba(255,90,100,0.85), 0 0 26px 6px rgba(255,90,100,0.35)'
+          : m && (m.sla === 'warn' || m.sla === 'crit')
+            ? `inset 0 0 0 1px ${m.slaColor}`
+            : undefined;
         return (
           <button
             key={d.id}
@@ -1610,16 +1756,27 @@ function ShapeSquare({
             onFocus={() => setHover(i)}
             onBlur={() => setHover(null)}
             onClick={() => onDeptClick?.(d.id)}
+            style={halo ? { boxShadow: halo } : undefined}
           >
             <div className={cn('quad-txt', `quad-txt--${s.pos}`)}>
               <p className={cn('quad-num', `quad-num--${s.numCls}`)}>{String(i + 1).padStart(2, '0')}</p>
-              <p className="quad-title">{d.name.toUpperCase()}</p>
+              <p className="quad-title">
+                {d.name.toUpperCase()}
+                {m?.bottleneck && <span style={{ marginLeft: 6, fontSize: 9, color: '#ff8090', letterSpacing: '0.15em' }}>· ENGPASS</span>}
+              </p>
               <ul className={cn('quad-bul', `quad-bul--${s.numCls}`)}>
-                {open.slice(0, 3).map((t) => (<li key={t.id}><span className="truncate">{t.title}</span></li>))}
+                {open.slice(0, 3).map((t) => (
+                  <li key={t.id}>
+                    <span className="truncate">
+                      {t.status === 'in_progress' && <span style={{ color: '#7fe3ff' }}>▸ </span>}
+                      {t.title}
+                    </span>
+                  </li>
+                ))}
                 {open.length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
               </ul>
             </div>
-            <div className="quad-count">{open.length}/{d.tasks.length}</div>
+            <div className="quad-count">{m?.progressPct ?? 0}%</div>
           </button>
         );
       })}
@@ -1627,11 +1784,21 @@ function ShapeSquare({
       {SLOTS.map((s, i) => {
         const d = depts[i]; if (!d) return null;
         const Icon = pickIcon(d.name);
+        const m = metrics.perDept.get(d.id);
+        const halo = m?.bottleneck
+          ? '0 0 0 2px rgba(255,90,100,0.9), 0 0 22px 6px rgba(255,90,100,0.5)'
+          : m && (m.sla === 'warn' || m.sla === 'crit')
+            ? `0 0 0 1.5px ${m.slaColor}, 0 0 18px 4px ${m.slaColor.replace(/,[\d.]+\)$/, ',0.45)')}`
+            : undefined;
         return (
           <div
             key={`ring-${i}`}
-            className={cn('quad-ring', `quad-ring--${s.pos}`)}
-            style={{ ['--ac' as any]: s.outer, ['--ai' as any]: s.inner } as React.CSSProperties}
+            className={cn('quad-ring', `quad-ring--${s.pos}`, m?.pulse && 'cockpit-pulse')}
+            style={{
+              ['--ac' as any]: s.outer,
+              ['--ai' as any]: s.inner,
+              ...(halo ? { boxShadow: halo } : {}),
+            } as React.CSSProperties}
             aria-hidden="true"
           >
             <Icon size={22} strokeWidth={2} />
@@ -1640,22 +1807,33 @@ function ShapeSquare({
       })}
 
       <div className="quad-center" aria-hidden="true">
-        <p className="quad-center__l">NAHTLOS<br/>VERBUNDEN</p>
-        <p className="quad-center__s">EIN PROZESS.<br/>EIN ZIEL.<br/>GEMEINSAMER ERFOLG.</p>
+        <p className="quad-center__l" style={{ fontSize: '1.4em', lineHeight: 1.05 }}>{metrics.hub.caseNo}</p>
+        <p className="quad-center__s" style={{ marginTop: 4 }}>
+          {metrics.hub.progressPct}% FORTSCHRITT<br/>
+          {metrics.hub.deadlineLabel !== '—' && (
+            <span style={{
+              color: metrics.hub.deadlineState === 'crit' ? '#ff8090'
+                  : metrics.hub.deadlineState === 'warn' ? '#ffc06a'
+                  : '#7fe3ff'
+            }}>DEADLINE {metrics.hub.deadlineLabel}<br/></span>
+          )}
+          NEXT: {metrics.hub.nextMilestone.slice(0, 24).toUpperCase()}
+        </p>
       </div>
 
       <div className="quad-footer" aria-hidden="true">
-        <div className="quad-fi"><Database size={14} strokeWidth={2}/>TRANSPARENTE DATEN</div>
+        <div className="quad-fi"><Gauge size={14} strokeWidth={2}/>WIP {metrics.footer.wip}</div>
         <div className="quad-fd"/>
-        <div className="quad-fi"><Users size={14} strokeWidth={2}/>ECHTE ZUSAMMENARBEIT</div>
+        <div className="quad-fi"><Check size={14} strokeWidth={2}/>HEUTE {metrics.footer.closedToday}</div>
         <div className="quad-fd"/>
-        <div className="quad-fi"><Cpu size={14} strokeWidth={2}/>INTELLIGENTE PROZESSE</div>
+        <div className="quad-fi"><AlertTriangle size={14} strokeWidth={2}/>ESKAL. {metrics.footer.escalations}</div>
         <div className="quad-fd"/>
-        <div className="quad-fi"><Target size={14} strokeWidth={2}/>GEMEINSAMER ERFOLG</div>
+        <div className="quad-fi"><Clock size={14} strokeWidth={2}/>Ø {metrics.footer.medianLeadH ? `${Math.round(metrics.footer.medianLeadH)}h` : '—'}</div>
       </div>
     </div>
   );
 }
+
 
 /* ---------- TRIANGLE (1:1 port of triangle_infografik.html) ---------- */
 const TRI_WEDGE = [
@@ -1665,7 +1843,7 @@ const TRI_WEDGE = [
 ] as const;
 
 function ShapeTriangle({
-  depts, hover, setHover, onDeptClick, activeDeptId,
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics,
 }: {
   depts: ShapeDept[];
   hover: number | null;
@@ -1673,6 +1851,7 @@ function ShapeTriangle({
   accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
   onDeptClick?: (deptId: string) => void;
   activeDeptId?: string | null;
+  metrics: ShapeMetrics;
 }) {
   const TRI_STYLE = [
     { outer: '#ff9d33', inner: '#ffc06a', glowRgba: '255,157,51', apexClass: 'tri-ring-sales',       contentClass: 'sales-content',       numClass: 'orange' },
@@ -1688,11 +1867,15 @@ function ShapeTriangle({
 
   const wings = TRI_STYLE.map((s, i) => {
     const d = depts[i];
-    const open = d ? d.tasks.filter((t) => !t.completed && t.status !== 'done') : [];
+    const m = d ? metrics.perDept.get(d.id) : undefined;
+    const open = d ? riskSort(d.tasks.filter((t) => !t.completed && t.status !== 'done')) : [];
     const bullets = open.slice(0, 3).map((tk) => (
       <li key={tk.id}>
         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-        <span className="truncate">{tk.title}</span>
+        <span className="truncate">
+          {tk.status === 'in_progress' && <span style={{ color: '#7fe3ff' }}>▸ </span>}
+          {tk.title}
+        </span>
       </li>
     ));
     return {
@@ -1707,11 +1890,19 @@ function ShapeTriangle({
       numClass: s.numClass,
       icon: APEX_ICONS[i],
       bullets,
-      countLabel: d ? `${open.length}/${d.tasks.length}` : undefined,
+      countLabel: d ? `${m?.progressPct ?? 0}% · ${m?.open ?? 0}/${d.tasks.length}` : undefined,
+      slaColor: m && (m.sla === 'warn' || m.sla === 'crit') ? m.slaColor : undefined,
+      bottleneck: m?.bottleneck,
+      pulse: m?.pulse,
     } satisfies TriangleWing;
   }) as [TriangleWing, TriangleWing, TriangleWing];
 
   const activeIndex = activeDeptId ? depts.findIndex((d) => d.id === activeDeptId) : -1;
+
+  const hub = metrics.hub;
+  const deadlineColor =
+    hub.deadlineState === 'crit' ? '#ff8090' :
+    hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff';
 
   return (
     <PipelineTriangle
@@ -1724,14 +1915,20 @@ function ShapeTriangle({
         if (d && onDeptClick) onDeptClick(d.id);
       }}
       center={{
-        title: <>NAHTLOS<br />VERBUNDEN</>,
-        sub: <>EIN PROZESS.<br />EIN ZIEL.<br />GEMEINSAMER ERFOLG.</>,
+        title: <span style={{ fontSize: '0.85em' }}>{hub.caseNo}</span>,
+        sub: (
+          <>
+            <span style={{ color: '#7fe3ff', fontWeight: 700 }}>{hub.progressPct}% FORTSCHRITT</span><br />
+            {hub.deadlineLabel !== '—' && (<><span style={{ color: deadlineColor }}>DEADLINE {hub.deadlineLabel}</span><br /></>)}
+            <span style={{ opacity: 0.7 }}>NEXT: {hub.nextMilestone.slice(0, 22).toUpperCase()}</span>
+          </>
+        ),
       }}
       footer={[
-        { icon: <Boxes size={14} strokeWidth={2} />, label: 'Transparente Daten' },
-        { icon: <Users size={14} strokeWidth={2} />, label: 'Echte Zusammenarbeit' },
-        { icon: <Cpu size={14} strokeWidth={2} />,   label: 'Intelligente Prozesse' },
-        { icon: <Target size={14} strokeWidth={2} />, label: 'Gemeinsamer Erfolg' },
+        { icon: <Gauge size={14} strokeWidth={2} />, label: `WIP ${metrics.footer.wip}` },
+        { icon: <Check size={14} strokeWidth={2} />, label: `Heute ${metrics.footer.closedToday}` },
+        { icon: <AlertTriangle size={14} strokeWidth={2} />, label: `Eskal. ${metrics.footer.escalations}` },
+        { icon: <Clock size={14} strokeWidth={2} />, label: `Ø ${metrics.footer.medianLeadH ? Math.round(metrics.footer.medianLeadH) + 'h' : '—'}` },
       ]}
     />
   );
@@ -1740,7 +1937,7 @@ function ShapeTriangle({
 
 /* ---------- LINE (1:1 port of flow_infografik.html) ---------- */
 function ShapeLine({
-  depts, hover, setHover, onDeptClick, activeDeptId,
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics, etaForDept,
 }: {
   depts: ShapeDept[];
   hover: number | null;
@@ -1748,6 +1945,8 @@ function ShapeLine({
   accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
   onDeptClick?: (id: string) => void;
   activeDeptId?: string | null;
+  metrics: ShapeMetrics;
+  etaForDept?: (id: string | null) => number | undefined;
 }) {
   const N = depts.length;
   // distribute nodes evenly between 8% and 92% horizontally
@@ -1760,6 +1959,19 @@ function ShapeLine({
       : { outer: '#2f9dff', inner: '#7cc4ff' };
     return { d, xPct, ...accent };
   });
+
+  // current position marker (Ist) = first dept with open tasks
+  const currentIdx = depts.findIndex((d) => {
+    const m = metrics.perDept.get(d.id);
+    return m && m.open > 0;
+  });
+  const SVG_X0 = 80, SVG_X1 = 1720;
+  const istX = currentIdx >= 0
+    ? SVG_X0 + ((SVG_X1 - SVG_X0) * (N === 1 ? 0.5 : currentIdx / Math.max(1, N - 1)))
+    : null;
+  const hub = metrics.hub;
+  const headLeft = (depts[0]?.name ?? 'START').toUpperCase();
+  const headRight = (depts[depts.length - 1]?.name ?? 'ZIEL').toUpperCase();
 
   return (
     <div className="flow-scene">
@@ -1787,58 +1999,85 @@ function ShapeLine({
         {Array.from({ length: 14 }).map((_, k) => (
           <circle key={k} cx={150 + k * 120} cy={470} r={3} fill="#dffaff"/>
         ))}
+
+        {/* Soll/Ist marker — wo der Vorgang aktuell steht */}
+        {istX !== null && (
+          <g>
+            <line x1={istX} y1={420} x2={istX} y2={520} stroke="#ffe066" strokeWidth={3} opacity="0.9" />
+            <circle cx={istX} cy={420} r={8} fill="#ffe066" opacity="0.85" />
+            <text x={istX} y={408} textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={14} fontWeight={700} fill="#ffe066" letterSpacing={1.4}>IST</text>
+          </g>
+        )}
+
         <circle cx="850" cy="470" r="120" fill="url(#flBurst)" opacity="0.5"/>
         <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#3ad6ff" strokeWidth="10" filter="url(#flGlowS)" opacity="0.6"/>
         <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#bdeeff" strokeWidth="2.6"/>
         <circle cx="850" cy="470" r="64" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="1.4"/>
-        <g transform="translate(850,470) scale(3.1) translate(-12,-12)" fill="none" stroke="#f2fbff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2 21 7v10l-9 5-9-5V7z"/>
-          <path d="M3 7l9 5 9-5"/>
-          <path d="M12 12v10"/>
-        </g>
+        <text x="850" y="463" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={20} fontWeight={800} letterSpacing={1.5} fill="#eafdff">{hub.progressPct}%</text>
+        <text x="850" y="486" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={10} fontWeight={600} letterSpacing={2} fill="#7fe3ff">FORTSCHRITT</text>
 
-        <text x="560" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eaf3ff">SALES</text>
-        <text x="560" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">KUNDEN VERSTEHEN.</text>
-        <text x="560" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">LÖSUNGEN SCHAFFEN.</text>
-        <text x="1245" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eafff0">LOGISTIK</text>
-        <text x="1245" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">LIEFERN. VERBINDEN.</text>
-        <text x="1245" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">WERT SCHAFFEN.</text>
+        <text x="560" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eaf3ff">{headLeft.slice(0,10)}</text>
+        <text x="560" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">START DER PIPELINE.</text>
+        <text x="560" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">{N} ABTEILUNGEN.</text>
+        <text x="1245" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eafff0">{headRight.slice(0,10)}</text>
+        <text x="1245" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">ZIEL DER PIPELINE.</text>
+        <text x="1245" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">{hub.progressPct}% ERREICHT.</text>
 
-        <text x="850" y="650" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">EINE LINIE.</text>
-        <text x="850" y="688" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">EIN ZIEL.</text>
-        <text x="850" y="722" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="2" fill="#3ad6ff">NAHTLOS. EFFIZIENT. ZUKUNFT.</text>
+        <text x="850" y="650" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">{hub.caseNo}</text>
+        {hub.deadlineLabel !== '—' && (
+          <text x="850" y="688" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="28" fontWeight={800} letterSpacing="2"
+            fill={hub.deadlineState === 'crit' ? '#ff8090' : hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff'}>
+            DEADLINE {hub.deadlineLabel}
+          </text>
+        )}
+        <text x="850" y="722" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={600} letterSpacing="2" fill="#3ad6ff">
+          NEXT: {hub.nextMilestone.slice(0, 36).toUpperCase()}
+        </text>
 
         <path d="M340 774 h1120 l34 26 l-34 26 h-1120 l-34 -26 z" fill="rgba(6,12,26,0.6)" stroke="rgba(120,170,255,0.3)" strokeWidth="1.5"/>
-        <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">ECHTZEIT-DATEN</text>
-        <text x="900" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">VERNETZTE SYSTEME</text>
-        <text x="1300" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">KI &amp; AUTOMATISIERUNG</text>
+        <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">WIP {metrics.footer.wip}</text>
+        <text x="900" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">HEUTE GESCHLOSSEN {metrics.footer.closedToday}</text>
+        <text x="1300" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill={metrics.footer.escalations > 0 ? '#ff8090' : '#d7e7ff'}>ESKALATIONEN {metrics.footer.escalations}</text>
       </svg>
 
       <div className="flow-nodes" aria-hidden="false">
         {nodes.map(({ d, xPct, outer, inner }, i) => {
           const Icon = pickIcon(d.name);
-          const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
+          const m = metrics.perDept.get(d.id);
+          const open = m?.open ?? 0;
           const isActive = activeDeptId === d.id;
+          const halo = m?.bottleneck
+            ? '0 0 0 2px rgba(255,90,100,0.9), 0 0 24px 6px rgba(255,90,100,0.5)'
+            : m && (m.sla === 'warn' || m.sla === 'crit')
+              ? `0 0 0 1.5px ${m.slaColor}, 0 0 18px 4px ${m.slaColor.replace(/,[\d.]+\)$/, ',0.45)')}`
+              : undefined;
           return (
             <button
               key={d.id}
               type="button"
-              className={cn('flow-oct', hover === i && 'is-hover', isActive && 'is-active')}
-              style={{ left: `${xPct}%`, ['--ac' as any]: outer, ['--ai' as any]: inner } as React.CSSProperties}
+              className={cn('flow-oct', hover === i && 'is-hover', isActive && 'is-active', m?.pulse && 'cockpit-pulse')}
+              style={{
+                left: `${xPct}%`,
+                ['--ac' as any]: outer,
+                ['--ai' as any]: inner,
+                ...(halo ? { boxShadow: halo, borderRadius: 8 } : {}),
+              } as React.CSSProperties}
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
               onFocus={() => setHover(i)}
               onBlur={() => setHover(null)}
               onClick={() => onDeptClick?.(d.id)}
+              title={etaForDept ? `Ø ${etaForDept(d.id) ? Math.round(etaForDept(d.id)!) + 'h' : '—'}` : undefined}
             >
               <div className="flow-oct__shape">
                 <div className="flow-oct__ring" />
                 <div className="flow-oct__inner"><Icon size={20} strokeWidth={1.8} /></div>
-                <span className="flow-oct__pill">{open}/{d.tasks.length}</span>
+                <span className="flow-oct__pill">{m?.progressPct ?? 0}%</span>
               </div>
               <div className="flow-oct__label">
                 <span className="flow-oct__num">{String(i + 1).padStart(2, '0')}</span>
                 <span className="flow-oct__name">{d.name.toUpperCase()}</span>
+                {m?.bottleneck && <span style={{ color: '#ff8090', fontSize: 9, letterSpacing: '0.15em', marginTop: 2 }}>ENGPASS</span>}
               </div>
             </button>
           );
@@ -1847,6 +2086,7 @@ function ShapeLine({
     </div>
   );
 }
+
 
 
 
