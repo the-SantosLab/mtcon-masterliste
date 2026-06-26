@@ -1498,7 +1498,7 @@ function PipelineShape({
       const done = total - open.length;
       const inProgress = open.filter((t) => t.status === 'in_progress').length;
       const oldestH = open.reduce((m, t) => Math.max(m, hoursSince(t.created_at)), 0);
-      let sla: ShapeMetrics['perDept'] extends Map<any, infer V> ? V['sla'] : never =
+      const sla: 'idle' | 'live' | 'ok' | 'warn' | 'crit' =
         open.length === 0 ? 'idle'
         : oldestH >= SLA_CRIT_H ? 'crit'
         : oldestH >= SLA_WARN_H ? 'warn'
