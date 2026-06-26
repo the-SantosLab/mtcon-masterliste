@@ -163,6 +163,9 @@ export default function CrmOfferDetail() {
     const url = `${location.origin}/p/offer/${token}`;
     await navigator.clipboard.writeText(url);
     toast.success('Freigabe-Link kopiert (30 Tage gültig)');
+  };
+
+
 
   const newVersion = async () => {
     if (!id) return;
