@@ -250,6 +250,9 @@ export default function Cockpit() {
                 })}
               </div>
             )}
+          </section>
+
+
 
 
           {/* LIFECYCLE PIPELINE */}
