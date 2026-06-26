@@ -719,157 +719,6 @@ export default function Cockpit() {
           </div>
 
 
-          {/* MAIN GRID: Departments + Activity Ticker */}
-          <section className="grid gap-8 lg:grid-cols-[1fr_320px]">
-            {/* LEFT — DEPARTMENTS */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                <h2 className="text-[11px] tracking-[0.38em] text-white/55 uppercase">Departments</h2>
-                <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-              </div>
-
-              {loading ? (
-                <div className="text-sm text-white/50 text-center py-10">// initialisiere Telemetrie …</div>
-              ) : (
-                <div className="grid gap-x-12 gap-y-8 grid-cols-1 sm:grid-cols-2 pl-7">
-                  {departments.map((d, i) => {
-                    const s = deptStats[d.id] ?? { open: 0, inProgress: 0, done: 0, avgAgeH: 0, criticalCount: 0, oldestH: 0 };
-                    const active = selectedDept === d.id;
-                    const isBottleneck = bottleneckDeptId === d.id;
-                    const accent = accentFor(i);
-                    const Icon = DEPT_ICONS[i % DEPT_ICONS.length];
-                    const isSelectedInRow =
-                      selectedDeptIdx !== -1 && Math.floor(selectedDeptIdx / 2) === Math.floor(i / 2);
-                    const renderPanelAfterDesktop =
-                      isSelectedInRow && (i % 2 === 1 || i === departments.length - 1);
-                    const renderPanelAfterMobile = selectedDept === d.id;
-                    const meterPct = Math.min(100, Math.round((s.oldestH / maxOldest) * 100));
-                    return (
-                      <React.Fragment key={d.id}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDept(active ? null : d.id)}
-                          className={cn(
-                            'cockpit-node cockpit-hud group',
-                            active && 'cockpit-node--active',
-                            isBottleneck && 'cockpit-node--bottleneck'
-                          )}
-                          style={{
-                            // @ts-ignore
-                            '--accent': `hsl(${accent.hue})`,
-                            '--accent-glow': accent.glow,
-                          } as React.CSSProperties}
-                        >
-                          <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
-                          <div className="cockpit-node__badge">
-                            <Icon className="h-7 w-7" strokeWidth={1.6} />
-                          </div>
-
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
-                              <div className="cockpit-node__name" data-text={d.name}>{d.name}</div>
-                            </div>
-                            {s.open > 0 && (
-                              <span className={cn('cockpit-sla', slaClass(s.avgAgeH))} title="Durchschnittsalter offener Aufgaben">
-                                <Gauge className="h-3 w-3" /> Ø {slaLabel(s.avgAgeH)}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="cockpit-node__bullets">
-                            <div className="cockpit-node__bullet">
-                              <span className="cockpit-node__bullet-icon" />
-                              <span><span className="cockpit-node__bullet-value">{s.open}</span> offene Vorgänge</span>
-                            </div>
-                            <div className="cockpit-node__bullet">
-                              <span className="cockpit-node__bullet-icon" />
-                              <span><span className="cockpit-node__bullet-value">{s.inProgress}</span> in Bearbeitung</span>
-                            </div>
-                            <div className="cockpit-node__bullet">
-                              <span className="cockpit-node__bullet-icon" />
-                              <span><span className="cockpit-node__bullet-value">{s.criticalCount}</span> SLA-kritisch</span>
-                            </div>
-                          </div>
-
-                          <div className="cockpit-node__meter" title={`Ältester Vorgang: ${slaLabel(s.oldestH)}`}>
-                            <span style={{ width: `${meterPct}%` }} />
-                          </div>
-                          {(() => {
-                            const cap = deptCapacity[d.id] || 0;
-                            const load = s.open;
-                            const pct = cap > 0 ? Math.min(150, Math.round((load / cap) * 100)) : 0;
-                            const over = cap > 0 && load > cap;
-                            return (
-                              <div className="cockpit-node__wip">
-                                <span>WIP</span>
-                                <div className={cn('cockpit-node__wip-bar', over && 'cockpit-node__wip-bar--over')}>
-                                  <span style={{ width: `${Math.min(100, pct)}%` }} />
-                                </div>
-                                <span className="cockpit-node__wip-val">
-                                  {load}{cap > 0 ? `/${cap}` : ''}
-                                </span>
-                              </div>
-                            );
-                          })()}
-
-                        </button>
-                        {selectedDept && renderPanelAfterMobile && (
-                          <div key={`panel-mobile-${d.id}-${selectedDept}`} className="sm:hidden col-span-full cockpit-panel--enter">
-                            {renderDeptPanel()}
-                          </div>
-                        )}
-                        {selectedDept && renderPanelAfterDesktop && (
-                          <div key={`panel-desktop-${d.id}-${selectedDept}`} className="hidden sm:block col-span-full cockpit-panel--enter">
-                            {renderDeptPanel()}
-                          </div>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT — ACTIVITY TICKER */}
-            <aside className="cockpit-ticker cockpit-hud self-start lg:sticky lg:top-6">
-              <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
-              <div className="cockpit-ticker__head">
-                <span className="flex items-center gap-2"><Radio className="h-3 w-3 text-emerald-400" /> Live · Aktivität</span>
-                <span className="text-white/40">{activity.length}</span>
-              </div>
-              <div className="cockpit-ticker__body">
-                {activity.length === 0 ? (
-                  <div className="text-xs text-white/40 py-10 text-center">// keine Aktivität …</div>
-                ) : (
-                  activity.map((a) => {
-                    const isNew = a.id === newestActivityId;
-                    const cNo = caseNo(a.case_id);
-                    const who = a.actor_id ? profiles[a.actor_id]?.display_name ?? '—' : 'System';
-                    return (
-                      <button
-                        key={a.id}
-                        type="button"
-                        onClick={() => a.case_id && navigate(`/cases/${a.case_id}`)}
-                        className={cn('cockpit-ticker__row w-full text-left', isNew && 'cockpit-ticker__row--new')}
-                      >
-                        <span className="cockpit-ticker__time">{fmtAgo(a.created_at)}</span>
-                        <span className="truncate">
-                          <span className="font-mono text-xs text-cyan-300/90">{cNo}</span>
-                          <span className="text-white/45"> · </span>
-                          <span className="text-white/80">{a.message || a.field || a.action}</span>
-                          <span className="text-white/35"> · {who}</span>
-                        </span>
-                        <span className="cockpit-ticker__action">{a.action}</span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </aside>
-          </section>
-
           {/* LIFECYCLE PIPELINE */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
@@ -1071,6 +920,157 @@ export default function Cockpit() {
               </>
             )}
 
+          </section>
+
+          {/* MAIN GRID: Departments + Activity Ticker */}
+          <section className="grid gap-8 lg:grid-cols-[1fr_320px]">
+            {/* LEFT — DEPARTMENTS */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                <h2 className="text-[11px] tracking-[0.38em] text-white/55 uppercase">Departments</h2>
+                <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              </div>
+
+              {loading ? (
+                <div className="text-sm text-white/50 text-center py-10">// initialisiere Telemetrie …</div>
+              ) : (
+                <div className="grid gap-x-12 gap-y-8 grid-cols-1 sm:grid-cols-2 pl-7">
+                  {departments.map((d, i) => {
+                    const s = deptStats[d.id] ?? { open: 0, inProgress: 0, done: 0, avgAgeH: 0, criticalCount: 0, oldestH: 0 };
+                    const active = selectedDept === d.id;
+                    const isBottleneck = bottleneckDeptId === d.id;
+                    const accent = accentFor(i);
+                    const Icon = DEPT_ICONS[i % DEPT_ICONS.length];
+                    const isSelectedInRow =
+                      selectedDeptIdx !== -1 && Math.floor(selectedDeptIdx / 2) === Math.floor(i / 2);
+                    const renderPanelAfterDesktop =
+                      isSelectedInRow && (i % 2 === 1 || i === departments.length - 1);
+                    const renderPanelAfterMobile = selectedDept === d.id;
+                    const meterPct = Math.min(100, Math.round((s.oldestH / maxOldest) * 100));
+                    return (
+                      <React.Fragment key={d.id}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDept(active ? null : d.id)}
+                          className={cn(
+                            'cockpit-node cockpit-hud group',
+                            active && 'cockpit-node--active',
+                            isBottleneck && 'cockpit-node--bottleneck'
+                          )}
+                          style={{
+                            // @ts-ignore
+                            '--accent': `hsl(${accent.hue})`,
+                            '--accent-glow': accent.glow,
+                          } as React.CSSProperties}
+                        >
+                          <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
+                          <div className="cockpit-node__badge">
+                            <Icon className="h-7 w-7" strokeWidth={1.6} />
+                          </div>
+
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
+                              <div className="cockpit-node__name" data-text={d.name}>{d.name}</div>
+                            </div>
+                            {s.open > 0 && (
+                              <span className={cn('cockpit-sla', slaClass(s.avgAgeH))} title="Durchschnittsalter offener Aufgaben">
+                                <Gauge className="h-3 w-3" /> Ø {slaLabel(s.avgAgeH)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="cockpit-node__bullets">
+                            <div className="cockpit-node__bullet">
+                              <span className="cockpit-node__bullet-icon" />
+                              <span><span className="cockpit-node__bullet-value">{s.open}</span> offene Vorgänge</span>
+                            </div>
+                            <div className="cockpit-node__bullet">
+                              <span className="cockpit-node__bullet-icon" />
+                              <span><span className="cockpit-node__bullet-value">{s.inProgress}</span> in Bearbeitung</span>
+                            </div>
+                            <div className="cockpit-node__bullet">
+                              <span className="cockpit-node__bullet-icon" />
+                              <span><span className="cockpit-node__bullet-value">{s.criticalCount}</span> SLA-kritisch</span>
+                            </div>
+                          </div>
+
+                          <div className="cockpit-node__meter" title={`Ältester Vorgang: ${slaLabel(s.oldestH)}`}>
+                            <span style={{ width: `${meterPct}%` }} />
+                          </div>
+                          {(() => {
+                            const cap = deptCapacity[d.id] || 0;
+                            const load = s.open;
+                            const pct = cap > 0 ? Math.min(150, Math.round((load / cap) * 100)) : 0;
+                            const over = cap > 0 && load > cap;
+                            return (
+                              <div className="cockpit-node__wip">
+                                <span>WIP</span>
+                                <div className={cn('cockpit-node__wip-bar', over && 'cockpit-node__wip-bar--over')}>
+                                  <span style={{ width: `${Math.min(100, pct)}%` }} />
+                                </div>
+                                <span className="cockpit-node__wip-val">
+                                  {load}{cap > 0 ? `/${cap}` : ''}
+                                </span>
+                              </div>
+                            );
+                          })()}
+
+                        </button>
+                        {selectedDept && renderPanelAfterMobile && (
+                          <div key={`panel-mobile-${d.id}-${selectedDept}`} className="sm:hidden col-span-full cockpit-panel--enter">
+                            {renderDeptPanel()}
+                          </div>
+                        )}
+                        {selectedDept && renderPanelAfterDesktop && (
+                          <div key={`panel-desktop-${d.id}-${selectedDept}`} className="hidden sm:block col-span-full cockpit-panel--enter">
+                            {renderDeptPanel()}
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT — ACTIVITY TICKER */}
+            <aside className="cockpit-ticker cockpit-hud self-start lg:sticky lg:top-6">
+              <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
+              <div className="cockpit-ticker__head">
+                <span className="flex items-center gap-2"><Radio className="h-3 w-3 text-emerald-400" /> Live · Aktivität</span>
+                <span className="text-white/40">{activity.length}</span>
+              </div>
+              <div className="cockpit-ticker__body">
+                {activity.length === 0 ? (
+                  <div className="text-xs text-white/40 py-10 text-center">// keine Aktivität …</div>
+                ) : (
+                  activity.map((a) => {
+                    const isNew = a.id === newestActivityId;
+                    const cNo = caseNo(a.case_id);
+                    const who = a.actor_id ? profiles[a.actor_id]?.display_name ?? '—' : 'System';
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => a.case_id && navigate(`/cases/${a.case_id}`)}
+                        className={cn('cockpit-ticker__row w-full text-left', isNew && 'cockpit-ticker__row--new')}
+                      >
+                        <span className="cockpit-ticker__time">{fmtAgo(a.created_at)}</span>
+                        <span className="truncate">
+                          <span className="font-mono text-xs text-cyan-300/90">{cNo}</span>
+                          <span className="text-white/45"> · </span>
+                          <span className="text-white/80">{a.message || a.field || a.action}</span>
+                          <span className="text-white/35"> · {who}</span>
+                        </span>
+                        <span className="cockpit-ticker__action">{a.action}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </aside>
           </section>
 
 
