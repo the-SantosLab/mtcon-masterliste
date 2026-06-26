@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react';
+import { Users, Clock, Plane, Stethoscope, Loader2, ChevronDown, ChevronUp, TrendingUp, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
 
 interface Profile {
   id: string;
