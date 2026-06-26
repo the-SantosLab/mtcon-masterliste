@@ -113,6 +113,10 @@ export function TeamAttendanceOverview() {
       const sumAbs = (from: string, cat: string) =>
         userAbs.filter((x) => x.category === cat && x.end_date >= from && x.start_date <= today)
           .reduce((s, x) => s + (Number(x.days_count) || 0), 0);
+      // Überstunden = worked_minutes - 8h pro gearbeitetem Tag (Baseline)
+      const overtimeMin = (from: string) =>
+        userAtt.filter((x) => x.work_date >= from && x.work_date <= today && (x.worked_minutes || 0) > 0)
+          .reduce((s, x) => s + ((x.worked_minutes || 0) - 480), 0);
 
       return {
         user: u,
@@ -122,6 +126,7 @@ export function TeamAttendanceOverview() {
         week: sumMin(wkFrom),
         month: sumMin(mFrom),
         year: sumMin(yFrom),
+        overtimeYear: overtimeMin(yFrom),
         vacYear: sumAbs(yFrom, 'vacation'),
         sickYear: sumAbs(yFrom, 'sick'),
         present: !!(todayAtt?.start_time && !todayAtt?.end_time),
@@ -129,6 +134,7 @@ export function TeamAttendanceOverview() {
       };
     });
   }, [users, att, abs, today, wkFrom, mFrom, yFrom]);
+
 
   const filtered = rows.filter((r) => {
     if (filter === 'present') return r.present;
