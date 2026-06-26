@@ -1527,159 +1527,117 @@ function ShapeSquare({
   );
 }
 
-/* ---------- TRIANGLE (3 rounded neon panels forming outer triangle) ---------- */
-type Pt = { x: number; y: number };
-
-function roundedPolygonPath(pts: Pt[], r: number): string {
-  const n = pts.length;
-  let d = '';
-  for (let i = 0; i < n; i++) {
-    const prev = pts[(i - 1 + n) % n];
-    const cur = pts[i];
-    const next = pts[(i + 1) % n];
-    const v1 = { x: prev.x - cur.x, y: prev.y - cur.y };
-    const v2 = { x: next.x - cur.x, y: next.y - cur.y };
-    const l1 = Math.hypot(v1.x, v1.y) || 1;
-    const l2 = Math.hypot(v2.x, v2.y) || 1;
-    const rr = Math.min(r, l1 / 2.2, l2 / 2.2);
-    const p1 = { x: cur.x + (v1.x / l1) * rr, y: cur.y + (v1.y / l1) * rr };
-    const p2 = { x: cur.x + (v2.x / l2) * rr, y: cur.y + (v2.y / l2) * rr };
-    d += i === 0 ? `M ${p1.x} ${p1.y} ` : `L ${p1.x} ${p1.y} `;
-    d += `Q ${cur.x} ${cur.y} ${p2.x} ${p2.y} `;
-  }
-  return d + 'Z';
-}
+/* ---------- TRIANGLE (1:1 port of triangle_infografik.html) ---------- */
+const TRI_WEDGE = [
+  { key: 'top', rot: 0,   color: '#ff9a3c', glow: '#ffb066', glowRgba: '255,154,60', ringClass: 'ring-sales',       contentClass: 'sales-content' },
+  { key: 'br',  rot: 120, color: '#5be042', glow: '#8bff5a', glowRgba: '91,224,66',  ringClass: 'ring-beschaffung', contentClass: 'beschaffung-content' },
+  { key: 'bl',  rot: 240, color: '#3aa0ff', glow: '#7cc4ff', glowRgba: '58,160,255', ringClass: 'ring-logistik',    contentClass: 'logistik-content' },
+] as const;
 
 function ShapeTriangle({
-  depts, hover, setHover, accentFor,
+  depts, hover, setHover,
 }: { depts: ShapeDept[]; hover: number | null; setHover: (n: number | null) => void; accentFor: (i: number) => typeof SHAPE_ACCENTS[number] }) {
-  // outer triangle vertices in viewBox 1000x1000
-  const V = { A: { x: 500, y: 90 }, B: { x: 935, y: 880 }, C: { x: 65, y: 880 } };
-  const M = {
-    AB: { x: (V.A.x + V.B.x) / 2, y: (V.A.y + V.B.y) / 2 },
-    BC: { x: (V.B.x + V.C.x) / 2, y: (V.B.y + V.C.y) / 2 },
-    CA: { x: (V.C.x + V.A.x) / 2, y: (V.C.y + V.A.y) / 2 },
-  };
-  const Cn: Pt = { x: 500, y: (V.A.y + V.B.y + V.C.y) / 3 };
-  const inset = (p: Pt, amt = 30): Pt => {
-    const dx = p.x - Cn.x, dy = p.y - Cn.y;
-    const l = Math.hypot(dx, dy) || 1;
-    return { x: p.x + (dx / l) * amt, y: p.y + (dy / l) * amt };
-  };
-
-  // each sub-panel: outer apex first, then two inner mid-points (clockwise)
-  const subs: Array<{ key: 'top' | 'br' | 'bl'; pts: Pt[]; apex: Pt }> = [
-    { key: 'top', apex: V.A, pts: [V.A, inset(M.AB), inset(M.CA)] },
-    { key: 'br',  apex: V.B, pts: [V.B, inset(M.BC), inset(M.AB)] },
-    { key: 'bl',  apex: V.C, pts: [V.C, inset(M.CA), inset(M.BC)] },
-  ];
+  const wedgePath = "M500,55 L745,345 L700,405 L560,405 L500,470 L440,405 L300,405 L255,345 Z";
 
   return (
-    <div className="cs-tri">
-      <svg viewBox="0 0 1000 1000" className="cs-tri__svg" preserveAspectRatio="xMidYMid meet">
+    <div className="tri-scene">
+      <div className="tri-grid-overlay" />
+
+      <svg className="tri-shapes" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
         <defs>
-          {subs.map((s, i) => {
-            const a = accentFor(i);
-            return (
-              <radialGradient key={s.key} id={`tri-fill-${i}`} cx="50%" cy="55%" r="75%">
-                <stop offset="0%"   stopColor={`hsl(${a.hue} 90% 55%)`} stopOpacity="0.22" />
-                <stop offset="65%"  stopColor={`hsl(${a.hue} 90% 40%)`} stopOpacity="0.08" />
-                <stop offset="100%" stopColor={`hsl(${a.hue} 90% 30%)`} stopOpacity="0.02" />
-              </radialGradient>
-            );
-          })}
-          <filter id="triGlowSoft" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="8" />
+          <filter id="triGlowSoft" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="10" />
+          </filter>
+          <filter id="triGlowHex" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" />
           </filter>
         </defs>
 
-        {subs.map((s, i) => {
-          const a = accentFor(i);
-          const d = roundedPolygonPath(s.pts, 36);
+        {TRI_WEDGE.map((w, i) => {
           const isHover = hover === i;
-          const dim = hover !== null && !isHover ? 0.45 : 1;
+          const dim = hover !== null && !isHover ? 0.55 : 1;
           return (
-            <g key={s.key} opacity={dim}>
-              {/* outer soft glow */}
-              <path d={d} fill="none" stroke={a.light} strokeWidth={isHover ? 14 : 10} opacity="0.55" filter="url(#triGlowSoft)" />
-              {/* main panel */}
+            <g key={w.key} transform={`rotate(${w.rot} 500 500)`} opacity={dim}>
+              <path d={wedgePath} fill={`rgba(${w.glowRgba},0.06)`} stroke={w.color} strokeWidth={isHover ? 18 : 14} filter="url(#triGlowSoft)" opacity="0.55" />
               <path
-                d={d}
-                fill={`url(#tri-fill-${i})`}
-                stroke={a.light}
+                d={wedgePath}
+                fill={`rgba(${w.glowRgba},0.05)`}
+                stroke={w.glow}
                 strokeWidth={isHover ? 4 : 3}
-                strokeLinejoin="round"
-                style={{ cursor: 'pointer', pointerEvents: 'auto', filter: `drop-shadow(0 0 6px ${a.glow})` }}
+                style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
               />
-              {/* inner thin highlight */}
-              <path d={d} fill="none" stroke={`hsl(${a.hue} 100% 80%)`} strokeWidth="1" opacity="0.45" strokeLinejoin="round" pointerEvents="none" />
             </g>
           );
         })}
+
+        {/* seam arrows */}
+        <g fill="#cfe6ff" opacity="0.8">
+          <polygon points="618,400 642,392 642,416" transform="rotate(35 630 405)" />
+          <polygon points="618,400 642,392 642,416" transform="rotate(155 630 405)" />
+          <polygon points="618,400 642,392 642,416" transform="rotate(275 630 405)" />
+        </g>
+
+        {/* center hexagon */}
+        <path d="M500,365 L612,432 L612,567 L500,635 L388,567 L388,432 Z"
+              fill="rgba(8,14,32,0.92)" stroke="#3ad6ff" strokeWidth="6" filter="url(#triGlowHex)" opacity="0.9" />
+        <path d="M500,365 L612,432 L612,567 L500,635 L388,567 L388,432 Z"
+              fill="none" stroke="#9fe9ff" strokeWidth="1.5" />
       </svg>
 
-      {/* Icon circles at outer apex */}
-      {subs.map((s, i) => {
-        const a = accentFor(i);
-        const Icon = pickIcon(depts[i].name);
-        return (
-          <div
-            key={`ico-${s.key}`}
-            className={cn('cs-trip__icon', `cs-trip__icon--${s.key}`, hover === i && 'is-hover')}
-            style={{
-              left: `${(s.apex.x / 1000) * 100}%`,
-              top: `${(s.apex.y / 1000) * 100}%`,
-              ['--ac' as any]: a.light,
-              ['--gl' as any]: a.glow,
-            }}
-          >
-            <Icon size={24} strokeWidth={1.9} />
-          </div>
-        );
-      })}
-
-      {/* Content overlays positioned inside each panel */}
-      {subs.map((s, i) => {
-        const d = depts[i];
-        const a = accentFor(i);
-        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
-        return (
-          <div
-            key={`ov-${s.key}`}
-            className={cn('cs-trip-overlay', `cs-trip-overlay--${s.key}`, hover === i && 'is-hover')}
-            style={{ ['--ac' as any]: a.light, ['--gl' as any]: a.glow }}
-          >
-            <div className="cs-trip__head">
-              <span className="cs-trip__num">{String(i + 1).padStart(2, '0')}</span>
-              <span className="cs-trip__name">{d.name.toUpperCase()}</span>
-            </div>
-            <ul className="cs-trip__list">
-              {d.tasks.filter((tk) => !tk.completed).slice(0, 3).map((tk) => (
-                <li key={tk.id}><span className="cs-quad__bullet" /> {tk.title}</li>
-              ))}
-              {d.tasks.filter((tk) => !tk.completed).length === 0 && <li className="opacity-60">Keine offenen Aufgaben</li>}
-            </ul>
-            <div className="cs-trip__count">{open}/{d.tasks.length}</div>
-          </div>
-        );
-      })}
-
-      {/* Central medallion */}
-      <div className="cs-center cs-center--tri" aria-hidden="true">
-        <div className="cs-center__ring cs-center__ring--outer" />
-        <div className="cs-center__ring cs-center__ring--inner" />
-        <div className="cs-center__title">NAHTLOS<br/>VERBUNDEN</div>
-        <div className="cs-center__sub">EIN PROZESS · EIN ZIEL<br/>GEMEINSAMER ERFOLG</div>
+      {/* Apex icon rings (Sales / Beschaffung / Logistik) */}
+      <div className={cn('tri-ring tri-ring-sales', hover === 0 && 'is-hover')}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffb066" strokeWidth="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M16 6h5v5" /></svg>
+      </div>
+      <div className={cn('tri-ring tri-ring-beschaffung', hover === 1 && 'is-hover')}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#8bff5a" strokeWidth="2"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H6" /></svg>
+      </div>
+      <div className={cn('tri-ring tri-ring-logistik', hover === 2 && 'is-hover')}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7cc4ff" strokeWidth="2"><rect x="1" y="9" width="13" height="8" rx="1" /><path d="M14 12h4l3 3v2h-7z" /><circle cx="6" cy="19" r="1.6" /><circle cx="17.5" cy="19" r="1.6" /></svg>
       </div>
 
-      {/* Feature bar at bottom */}
-      <div className="cs-feature-bar">
-        <span><Boxes size={13} strokeWidth={1.8} /> TRANSPARENTE DATEN</span>
-        <span><Users size={13} strokeWidth={1.8} /> ECHTE ZUSAMMENARBEIT</span>
-        <span><Cpu size={13} strokeWidth={1.8} /> INTELLIGENTE PROZESSE</span>
-        <span><Target size={13} strokeWidth={1.8} /> GEMEINSAMER ERFOLG</span>
+      {/* Content blocks (live data from depts) */}
+      {TRI_WEDGE.map((w, i) => {
+        const d = depts[i];
+        if (!d) return null;
+        const open = d.tasks.filter((t) => !t.completed && t.status !== 'done');
+        const numClass = i === 0 ? 'orange' : i === 1 ? 'green' : 'blue';
+        return (
+          <div key={w.key} className={cn('tri-content', `tri-${w.contentClass}`)}>
+            <p className={cn('tri-num', `tri-num--${numClass}`)}>{String(i + 1).padStart(2, '0')}</p>
+            <p className="tri-title">{d.name.toUpperCase()}</p>
+            <ul className={cn('tri-bullets', `tri-bullets--${numClass}`)}>
+              {open.slice(0, 3).map((tk) => (
+                <li key={tk.id}>
+                  <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+                  <span className="truncate">{tk.title}</span>
+                </li>
+              ))}
+              {open.length === 0 && (
+                <li><svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg><span className="opacity-60">Keine offenen Aufgaben</span></li>
+              )}
+            </ul>
+            <div className="tri-count">{open.length}/{d.tasks.length}</div>
+          </div>
+        );
+      })}
+
+      {/* Center hexagon text */}
+      <div className="tri-hex-text">
+        <p className="tri-hex-label">NAHTLOS<br />VERBUNDEN</p>
+        <p className="tri-hex-sub">EIN PROZESS.<br />EIN ZIEL.<br />GEMEINSAMER ERFOLG.</p>
+      </div>
+
+      {/* Footer bar */}
+      <div className="tri-footer-bar">
+        <div className="tri-footer-item"><Boxes size={14} strokeWidth={2} />Transparente Daten</div>
+        <div className="tri-footer-divider" />
+        <div className="tri-footer-item"><Users size={14} strokeWidth={2} />Echte Zusammenarbeit</div>
+        <div className="tri-footer-divider" />
+        <div className="tri-footer-item"><Cpu size={14} strokeWidth={2} />Intelligente Prozesse</div>
+        <div className="tri-footer-divider" />
+        <div className="tri-footer-item"><Target size={14} strokeWidth={2} />Gemeinsamer Erfolg</div>
       </div>
     </div>
   );
