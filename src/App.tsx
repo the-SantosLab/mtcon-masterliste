@@ -13,6 +13,7 @@ import { storeAuthRedirect } from "@/lib/authRedirect";
 import { isSessionPolicyExemptEmail } from "@/lib/authExemptions";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
+import Cockpit from "./pages/Cockpit";
 import CasesList from "./pages/CasesList";
 import CasesKanban from "./pages/CasesKanban";
 import CaseDetail from "./pages/CaseDetail";
@@ -183,6 +184,7 @@ function AuthenticatedApp() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/mfa-challenge" element={<MfaChallenge />} />
         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/cockpit" element={<ProtectedRoute><Cockpit /></ProtectedRoute>} />
         <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
         <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
         <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
