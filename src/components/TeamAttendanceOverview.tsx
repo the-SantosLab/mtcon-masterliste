@@ -256,16 +256,21 @@ export function TeamAttendanceOverview() {
               </thead>
               <tbody className="divide-y divide-border">
                 {visible.map((r) => (
-                  <tr key={r.user.id} className="hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={r.user.id}
+                    className="hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => setSelected(r.user)}
+                  >
                     <td className="px-4 py-2">
-                      <Link to={`/profile`} className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
                         <UserAvatar user={r.user as any} size="md" />
                         <div className="min-w-0">
                           <div className="text-xs text-foreground truncate">{r.user.display_name}</div>
                           <div className="text-[10px] font-mono text-muted-foreground">{r.user.short_code}</div>
                         </div>
-                      </Link>
+                      </div>
                     </td>
+
                     <td className="px-3 py-2">
                       <span className="inline-flex items-center gap-1.5">
                         <span className={cn('h-2 w-2 rounded-full', r.status.dot, r.present && 'animate-pulse')} />
