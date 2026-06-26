@@ -98,14 +98,17 @@ export default function CrmMicrosoft365() {
   };
 
   return (
-    <div className="container max-w-3xl py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Microsoft 365 Integration</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Zugangsdaten für die App-Registrierung in Microsoft Entra (Azure AD). Wird vom Edge-Function-Worker für
-          Mail- und Kalender-Sync per Graph API verwendet (Client-Credentials-Flow).
-        </p>
-      </div>
+    <CrmLayout>
+      <h1 className="text-xl font-semibold text-foreground mb-1">Einstellungen</h1>
+      <CrmSettingsTabs />
+      <div className="max-w-3xl space-y-6">
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Microsoft 365 Integration</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Zugangsdaten für die App-Registrierung in Microsoft Entra (Azure AD). Wird vom Edge-Function-Worker für
+            Mail- und Kalender-Sync per Graph API verwendet (Client-Credentials-Flow).
+          </p>
+        </div>
 
       <Alert>
         <Info className="h-4 w-4" />
