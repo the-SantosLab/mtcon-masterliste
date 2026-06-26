@@ -172,6 +172,7 @@ const crmItems = [
   { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
   { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
  { href: '/crm/settings/routing', label: 'Auto-Routing', icon: Workflow },
+ { href: '/crm/settings/webformulare', label: 'Webformulare', icon: Globe },
  { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
 ];
 
