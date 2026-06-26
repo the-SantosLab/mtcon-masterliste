@@ -1843,7 +1843,7 @@ const TRI_WEDGE = [
 ] as const;
 
 function ShapeTriangle({
-  depts, hover, setHover, onDeptClick, activeDeptId,
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics,
 }: {
   depts: ShapeDept[];
   hover: number | null;
@@ -1851,6 +1851,7 @@ function ShapeTriangle({
   accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
   onDeptClick?: (deptId: string) => void;
   activeDeptId?: string | null;
+  metrics: ShapeMetrics;
 }) {
   const TRI_STYLE = [
     { outer: '#ff9d33', inner: '#ffc06a', glowRgba: '255,157,51', apexClass: 'tri-ring-sales',       contentClass: 'sales-content',       numClass: 'orange' },
@@ -1866,11 +1867,15 @@ function ShapeTriangle({
 
   const wings = TRI_STYLE.map((s, i) => {
     const d = depts[i];
-    const open = d ? d.tasks.filter((t) => !t.completed && t.status !== 'done') : [];
+    const m = d ? metrics.perDept.get(d.id) : undefined;
+    const open = d ? riskSort(d.tasks.filter((t) => !t.completed && t.status !== 'done')) : [];
     const bullets = open.slice(0, 3).map((tk) => (
       <li key={tk.id}>
         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-        <span className="truncate">{tk.title}</span>
+        <span className="truncate">
+          {tk.status === 'in_progress' && <span style={{ color: '#7fe3ff' }}>▸ </span>}
+          {tk.title}
+        </span>
       </li>
     ));
     return {
@@ -1885,11 +1890,19 @@ function ShapeTriangle({
       numClass: s.numClass,
       icon: APEX_ICONS[i],
       bullets,
-      countLabel: d ? `${open.length}/${d.tasks.length}` : undefined,
+      countLabel: d ? `${m?.progressPct ?? 0}% · ${m?.open ?? 0}/${d.tasks.length}` : undefined,
+      slaColor: m && (m.sla === 'warn' || m.sla === 'crit') ? m.slaColor : undefined,
+      bottleneck: m?.bottleneck,
+      pulse: m?.pulse,
     } satisfies TriangleWing;
   }) as [TriangleWing, TriangleWing, TriangleWing];
 
   const activeIndex = activeDeptId ? depts.findIndex((d) => d.id === activeDeptId) : -1;
+
+  const hub = metrics.hub;
+  const deadlineColor =
+    hub.deadlineState === 'crit' ? '#ff8090' :
+    hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff';
 
   return (
     <PipelineTriangle
@@ -1902,14 +1915,20 @@ function ShapeTriangle({
         if (d && onDeptClick) onDeptClick(d.id);
       }}
       center={{
-        title: <>NAHTLOS<br />VERBUNDEN</>,
-        sub: <>EIN PROZESS.<br />EIN ZIEL.<br />GEMEINSAMER ERFOLG.</>,
+        title: <span style={{ fontSize: '0.85em' }}>{hub.caseNo}</span>,
+        sub: (
+          <>
+            <span style={{ color: '#7fe3ff', fontWeight: 700 }}>{hub.progressPct}% FORTSCHRITT</span><br />
+            {hub.deadlineLabel !== '—' && (<><span style={{ color: deadlineColor }}>DEADLINE {hub.deadlineLabel}</span><br /></>)}
+            <span style={{ opacity: 0.7 }}>NEXT: {hub.nextMilestone.slice(0, 22).toUpperCase()}</span>
+          </>
+        ),
       }}
       footer={[
-        { icon: <Boxes size={14} strokeWidth={2} />, label: 'Transparente Daten' },
-        { icon: <Users size={14} strokeWidth={2} />, label: 'Echte Zusammenarbeit' },
-        { icon: <Cpu size={14} strokeWidth={2} />,   label: 'Intelligente Prozesse' },
-        { icon: <Target size={14} strokeWidth={2} />, label: 'Gemeinsamer Erfolg' },
+        { icon: <Gauge size={14} strokeWidth={2} />, label: `WIP ${metrics.footer.wip}` },
+        { icon: <Check size={14} strokeWidth={2} />, label: `Heute ${metrics.footer.closedToday}` },
+        { icon: <AlertTriangle size={14} strokeWidth={2} />, label: `Eskal. ${metrics.footer.escalations}` },
+        { icon: <Clock size={14} strokeWidth={2} />, label: `Ø ${metrics.footer.medianLeadH ? Math.round(metrics.footer.medianLeadH) + 'h' : '—'}` },
       ]}
     />
   );
@@ -1918,7 +1937,7 @@ function ShapeTriangle({
 
 /* ---------- LINE (1:1 port of flow_infografik.html) ---------- */
 function ShapeLine({
-  depts, hover, setHover, onDeptClick, activeDeptId,
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics, etaForDept,
 }: {
   depts: ShapeDept[];
   hover: number | null;
@@ -1926,6 +1945,8 @@ function ShapeLine({
   accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
   onDeptClick?: (id: string) => void;
   activeDeptId?: string | null;
+  metrics: ShapeMetrics;
+  etaForDept?: (id: string | null) => number | undefined;
 }) {
   const N = depts.length;
   // distribute nodes evenly between 8% and 92% horizontally
@@ -1938,6 +1959,19 @@ function ShapeLine({
       : { outer: '#2f9dff', inner: '#7cc4ff' };
     return { d, xPct, ...accent };
   });
+
+  // current position marker (Ist) = first dept with open tasks
+  const currentIdx = depts.findIndex((d) => {
+    const m = metrics.perDept.get(d.id);
+    return m && m.open > 0;
+  });
+  const SVG_X0 = 80, SVG_X1 = 1720;
+  const istX = currentIdx >= 0
+    ? SVG_X0 + ((SVG_X1 - SVG_X0) * (N === 1 ? 0.5 : currentIdx / Math.max(1, N - 1)))
+    : null;
+  const hub = metrics.hub;
+  const headLeft = (depts[0]?.name ?? 'START').toUpperCase();
+  const headRight = (depts[depts.length - 1]?.name ?? 'ZIEL').toUpperCase();
 
   return (
     <div className="flow-scene">
@@ -1965,58 +1999,85 @@ function ShapeLine({
         {Array.from({ length: 14 }).map((_, k) => (
           <circle key={k} cx={150 + k * 120} cy={470} r={3} fill="#dffaff"/>
         ))}
+
+        {/* Soll/Ist marker — wo der Vorgang aktuell steht */}
+        {istX !== null && (
+          <g>
+            <line x1={istX} y1={420} x2={istX} y2={520} stroke="#ffe066" strokeWidth={3} opacity="0.9" />
+            <circle cx={istX} cy={420} r={8} fill="#ffe066" opacity="0.85" />
+            <text x={istX} y={408} textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={14} fontWeight={700} fill="#ffe066" letterSpacing={1.4}>IST</text>
+          </g>
+        )}
+
         <circle cx="850" cy="470" r="120" fill="url(#flBurst)" opacity="0.5"/>
         <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#3ad6ff" strokeWidth="10" filter="url(#flGlowS)" opacity="0.6"/>
         <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#bdeeff" strokeWidth="2.6"/>
         <circle cx="850" cy="470" r="64" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="1.4"/>
-        <g transform="translate(850,470) scale(3.1) translate(-12,-12)" fill="none" stroke="#f2fbff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2 21 7v10l-9 5-9-5V7z"/>
-          <path d="M3 7l9 5 9-5"/>
-          <path d="M12 12v10"/>
-        </g>
+        <text x="850" y="463" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={20} fontWeight={800} letterSpacing={1.5} fill="#eafdff">{hub.progressPct}%</text>
+        <text x="850" y="486" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={10} fontWeight={600} letterSpacing={2} fill="#7fe3ff">FORTSCHRITT</text>
 
-        <text x="560" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eaf3ff">SALES</text>
-        <text x="560" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">KUNDEN VERSTEHEN.</text>
-        <text x="560" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">LÖSUNGEN SCHAFFEN.</text>
-        <text x="1245" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eafff0">LOGISTIK</text>
-        <text x="1245" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">LIEFERN. VERBINDEN.</text>
-        <text x="1245" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">WERT SCHAFFEN.</text>
+        <text x="560" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eaf3ff">{headLeft.slice(0,10)}</text>
+        <text x="560" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">START DER PIPELINE.</text>
+        <text x="560" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">{N} ABTEILUNGEN.</text>
+        <text x="1245" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eafff0">{headRight.slice(0,10)}</text>
+        <text x="1245" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">ZIEL DER PIPELINE.</text>
+        <text x="1245" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">{hub.progressPct}% ERREICHT.</text>
 
-        <text x="850" y="650" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">EINE LINIE.</text>
-        <text x="850" y="688" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">EIN ZIEL.</text>
-        <text x="850" y="722" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="2" fill="#3ad6ff">NAHTLOS. EFFIZIENT. ZUKUNFT.</text>
+        <text x="850" y="650" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">{hub.caseNo}</text>
+        {hub.deadlineLabel !== '—' && (
+          <text x="850" y="688" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="28" fontWeight={800} letterSpacing="2"
+            fill={hub.deadlineState === 'crit' ? '#ff8090' : hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff'}>
+            DEADLINE {hub.deadlineLabel}
+          </text>
+        )}
+        <text x="850" y="722" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={600} letterSpacing="2" fill="#3ad6ff">
+          NEXT: {hub.nextMilestone.slice(0, 36).toUpperCase()}
+        </text>
 
         <path d="M340 774 h1120 l34 26 l-34 26 h-1120 l-34 -26 z" fill="rgba(6,12,26,0.6)" stroke="rgba(120,170,255,0.3)" strokeWidth="1.5"/>
-        <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">ECHTZEIT-DATEN</text>
-        <text x="900" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">VERNETZTE SYSTEME</text>
-        <text x="1300" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">KI &amp; AUTOMATISIERUNG</text>
+        <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">WIP {metrics.footer.wip}</text>
+        <text x="900" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">HEUTE GESCHLOSSEN {metrics.footer.closedToday}</text>
+        <text x="1300" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill={metrics.footer.escalations > 0 ? '#ff8090' : '#d7e7ff'}>ESKALATIONEN {metrics.footer.escalations}</text>
       </svg>
 
       <div className="flow-nodes" aria-hidden="false">
         {nodes.map(({ d, xPct, outer, inner }, i) => {
           const Icon = pickIcon(d.name);
-          const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
+          const m = metrics.perDept.get(d.id);
+          const open = m?.open ?? 0;
           const isActive = activeDeptId === d.id;
+          const halo = m?.bottleneck
+            ? '0 0 0 2px rgba(255,90,100,0.9), 0 0 24px 6px rgba(255,90,100,0.5)'
+            : m && (m.sla === 'warn' || m.sla === 'crit')
+              ? `0 0 0 1.5px ${m.slaColor}, 0 0 18px 4px ${m.slaColor.replace(/,[\d.]+\)$/, ',0.45)')}`
+              : undefined;
           return (
             <button
               key={d.id}
               type="button"
-              className={cn('flow-oct', hover === i && 'is-hover', isActive && 'is-active')}
-              style={{ left: `${xPct}%`, ['--ac' as any]: outer, ['--ai' as any]: inner } as React.CSSProperties}
+              className={cn('flow-oct', hover === i && 'is-hover', isActive && 'is-active', m?.pulse && 'cockpit-pulse')}
+              style={{
+                left: `${xPct}%`,
+                ['--ac' as any]: outer,
+                ['--ai' as any]: inner,
+                ...(halo ? { boxShadow: halo, borderRadius: 8 } : {}),
+              } as React.CSSProperties}
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
               onFocus={() => setHover(i)}
               onBlur={() => setHover(null)}
               onClick={() => onDeptClick?.(d.id)}
+              title={etaForDept ? `Ø ${etaForDept(d.id) ? Math.round(etaForDept(d.id)!) + 'h' : '—'}` : undefined}
             >
               <div className="flow-oct__shape">
                 <div className="flow-oct__ring" />
                 <div className="flow-oct__inner"><Icon size={20} strokeWidth={1.8} /></div>
-                <span className="flow-oct__pill">{open}/{d.tasks.length}</span>
+                <span className="flow-oct__pill">{m?.progressPct ?? 0}%</span>
               </div>
               <div className="flow-oct__label">
                 <span className="flow-oct__num">{String(i + 1).padStart(2, '0')}</span>
                 <span className="flow-oct__name">{d.name.toUpperCase()}</span>
+                {m?.bottleneck && <span style={{ color: '#ff8090', fontSize: 9, letterSpacing: '0.15em', marginTop: 2 }}>ENGPASS</span>}
               </div>
             </button>
           );
@@ -2025,6 +2086,7 @@ function ShapeLine({
     </div>
   );
 }
+
 
 
 
