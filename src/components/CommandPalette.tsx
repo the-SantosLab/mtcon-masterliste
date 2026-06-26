@@ -11,12 +11,13 @@ import {
 
 interface Result {
   id: string;
-  type: 'project' | 'case' | 'user' | 'action';
+  type: 'project' | 'case' | 'user' | 'action' | 'company' | 'deal' | 'contact';
   title: string;
   sub: string;
   href: string;
   icon?: React.ElementType;
 }
+
 
 interface Props {
   open: boolean;
