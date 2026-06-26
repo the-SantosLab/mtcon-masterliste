@@ -1401,30 +1401,21 @@ aside[data-sidebar-density="comfortable"] nav a svg {
     0 0 30px -6px var(--accent-glow),
     inset 0 0 22px -10px var(--accent-glow);
 }
-/* Cockpit detail-panel expand/collapse via react-transition-group */
-.cockpitPanel-enter {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
+/* Cockpit detail-panel mount animation */
+@keyframes cockpitPanelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scaleY(0.985);
+    transform-origin: top center;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    transform-origin: top center;
+  }
 }
-.cockpitPanel-enter-active {
-  grid-template-rows: 1fr;
-  opacity: 1;
-  transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
-}
-.cockpitPanel-exit {
-  display: grid;
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-.cockpitPanel-exit-active {
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
-}
-.cockpitPanel-inner {
-  overflow: hidden;
-  min-height: 0;
+.cockpit-panel--enter {
+  animation: cockpitPanelEnter 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 .cockpit-subpanel {
   padding: 16px 18px; border-radius: 14px;
