@@ -1132,6 +1132,9 @@ function PipelineLane({
   heatLevel,
   caseLabel,
   extraDrawer,
+  etaForDept,
+  personLayer,
+  userName,
 }: {
   tasks: Task[];
   accentBaseHue: number;
@@ -1141,8 +1144,13 @@ function PipelineLane({
   heatLevel: (a: string | null, b: string | null) => number;
   caseLabel: string | null;
   extraDrawer?: React.ReactNode;
+  etaForDept?: (id: string | null) => number | undefined;
+  personLayer?: boolean;
+  userName?: (id: string | null) => string;
 }) {
   const currentIdx = tasks.findIndex((t) => !t.completed && t.status !== 'done');
+  const fmtH = (h?: number) => (h == null || !isFinite(h) ? null : h < 24 ? `${Math.round(h)}h` : `${(h / 24).toFixed(1)}T`);
+  const initials = (n?: string) => (n ? n.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() : '?');
   return (
     <div className="cockpit-panel cockpit-hud">
       <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
@@ -1169,6 +1177,7 @@ function PipelineLane({
                 const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
                 const nextHue = accentBaseHue - ((i + 1) / Math.max(1, tasks.length - 1)) * 60;
                 const heat = i < tasks.length - 1 ? heatLevel(t.department_id, tasks[i + 1].department_id) : 0;
+                const eta = etaForDept ? fmtH(etaForDept(t.department_id)) : null;
                 return (
                   <li key={t.id} className="flex items-start">
                     <button
@@ -1185,11 +1194,24 @@ function PipelineLane({
                         {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
                       </div>
                       <div className="cockpit-step__label">
-                        <div className="cockpit-step__label-status">
-                          {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
+                        <div className="cockpit-step__label-status flex items-center justify-center gap-1">
+                          <span>{done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}</span>
+                          {eta && !done && (
+                            <span className="inline-flex items-center gap-0.5 px-1 rounded bg-white/10 text-[9px] text-cyan-300/90" title="Prognose: Median historischer Bearbeitungsdauer">
+                              <TrendingUp className="h-2.5 w-2.5" />{eta}
+                            </span>
+                          )}
                         </div>
                         <div className="cockpit-step__label-title" data-text={t.title}>{t.title}</div>
                         <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
+                        {personLayer && t.assigned_to && userName && (
+                          <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/10 text-[9px] text-white/75">
+                            <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-cyan-500/30 text-[8px] font-semibold text-cyan-100">
+                              {initials(userName(t.assigned_to))}
+                            </span>
+                            {userName(t.assigned_to)}
+                          </div>
+                        )}
                       </div>
                     </button>
                     {i < tasks.length - 1 && (
@@ -1227,6 +1249,9 @@ function CompareLane({
   heatLevel,
   accentBaseHue,
   caseLabel,
+  etaForDept,
+  personLayer,
+  userName,
 }: {
   caseId: string;
   tasks: Task[];
@@ -1234,6 +1259,9 @@ function CompareLane({
   heatLevel: (a: string | null, b: string | null) => number;
   accentBaseHue: number;
   caseLabel: string;
+  etaForDept?: (id: string | null) => number | undefined;
+  personLayer?: boolean;
+  userName?: (id: string | null) => string;
 }) {
   const scoped = useMemo(
     () => tasks.filter((t) => t.case_id === caseId).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
@@ -1248,7 +1276,11 @@ function CompareLane({
       deptName={deptName}
       heatLevel={heatLevel}
       caseLabel={caseLabel}
+      etaForDept={etaForDept}
+      personLayer={personLayer}
+      userName={userName}
     />
   );
 }
+
 
