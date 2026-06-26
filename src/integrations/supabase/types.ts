@@ -2262,6 +2262,53 @@ export type Database = {
           },
         ]
       }
+      crm_consent_log: {
+        Row: {
+          action: string
+          consent_type: string
+          contact_id: string | null
+          email: string
+          id: string
+          ip_address: string | null
+          notes: string | null
+          occurred_at: string
+          source: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          consent_type: string
+          contact_id?: string | null
+          email: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          occurred_at?: string
+          source?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          consent_type?: string
+          contact_id?: string | null
+          email?: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          occurred_at?: string
+          source?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_consent_log_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_email_tracking: {
         Row: {
           activity_id: string | null
@@ -2531,6 +2578,57 @@ export type Database = {
           is_unsubscribed?: boolean
           reason?: string | null
           unsubscribed_at?: string
+        }
+        Relationships: []
+      }
+      crm_web_form_endpoints: {
+        Row: {
+          allowed_origins: string[] | null
+          created_at: string
+          created_by: string | null
+          default_owner_id: string | null
+          default_source: string | null
+          description: string | null
+          honeypot_field: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notify_user_ids: string[] | null
+          redirect_url: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_origins?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          default_owner_id?: string | null
+          default_source?: string | null
+          description?: string | null
+          honeypot_field?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notify_user_ids?: string[] | null
+          redirect_url?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_origins?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          default_owner_id?: string | null
+          default_source?: string | null
+          description?: string | null
+          honeypot_field?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notify_user_ids?: string[] | null
+          redirect_url?: string | null
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5966,6 +6064,53 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_events: {
+        Row: {
+          actor_email: string | null
+          actor_name: string | null
+          comment: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          occurred_at: string
+          offer_id: string
+          signature_data: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          actor_email?: string | null
+          actor_name?: string | null
+          comment?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          occurred_at?: string
+          offer_id: string
+          signature_data?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          actor_email?: string | null
+          actor_name?: string | null
+          comment?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          occurred_at?: string
+          offer_id?: string
+          signature_data?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_events_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offer_items: {
         Row: {
           art_nr: string | null
@@ -6003,6 +6148,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "offer_items_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_share_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          offer_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          offer_id: string
+          revoked_at?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          offer_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_share_tokens_offer_id_fkey"
             columns: ["offer_id"]
             isOneToOne: false
             referencedRelation: "offers"

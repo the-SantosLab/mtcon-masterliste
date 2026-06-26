@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, FileDown } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, FileDown, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { generateOfferPdf } from '@/lib/crm-pdf';
@@ -151,6 +151,22 @@ export default function CrmOfferDetail() {
     doc.save(`${offer.offer_no}_v${offer.version}.pdf`);
   };
 
+  const createShareLink = async () => {
+    if (!id) return;
+    const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+    const expires = new Date(); expires.setDate(expires.getDate() + 30);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase.from('offer_share_tokens').insert({
+      offer_id: id, token, expires_at: expires.toISOString(), created_by: u.user?.id,
+    });
+    if (error) { toast.error(error.message); return; }
+    const url = `${location.origin}/p/offer/${token}`;
+    await navigator.clipboard.writeText(url);
+    toast.success('Freigabe-Link kopiert (30 Tage gültig)');
+  };
+
+
+
   const newVersion = async () => {
     if (!id) return;
     setSaving(true);
@@ -198,6 +214,7 @@ export default function CrmOfferDetail() {
             {STATUS_LABEL[offer.status]}
           </span>
           <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={exportPdf}><FileDown className="h-3.5 w-3.5" /> PDF</Button>
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={createShareLink}><Link2 className="h-3.5 w-3.5" /> Freigabe-Link</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" className="h-8 text-xs gap-1">Aktionen <ChevronDown className="h-3 w-3" /></Button>

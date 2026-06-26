@@ -108,6 +108,8 @@ import CrmLeadScoring from "./pages/crm/CrmLeadScoring";
 import CrmRoles from "./pages/crm/CrmRoles";
 import CrmAccess from "./pages/crm/CrmAccess";
 import CrmNoAccess from "./pages/crm/CrmNoAccess";
+import CrmWebForms from "./pages/crm/CrmWebForms";
+import PublicOffer from "./pages/public/PublicOffer";
 import { useCrmAccess } from "./hooks/useCrmAccess";
 
 const queryClient = new QueryClient();
@@ -269,6 +271,10 @@ function AuthenticatedApp() {
         <Route path="/crm/forecast" element={<CrmProtectedRoute><CrmForecast /></CrmProtectedRoute>} />
         <Route path="/crm/settings/ziele" element={<CrmProtectedRoute><CrmSalesGoals /></CrmProtectedRoute>} />
         <Route path="/crm/settings/scoring" element={<CrmProtectedRoute><CrmLeadScoring /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/webformulare" element={<CrmProtectedRoute><CrmWebForms /></CrmProtectedRoute>} />
+        <Route path="/p/offer/:token" element={<PublicOffer />} />
+
+
 
         <Route path="*" element={<NotFound />} />
       </Routes>
