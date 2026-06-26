@@ -72,8 +72,9 @@ export default function CrmContacts() {
     setRows(data ?? []); setCompanies(c ?? []); setLoading(false);
   };
 
-  const openNew = () => { setEditing(null); setForm({ first_name: '', last_name: '', email: '', phone: '', position: '', company_id: '' }); setOpen(true); };
-  const openEdit = (r: any) => { setEditing(r); setForm({ first_name: r.first_name, last_name: r.last_name, email: r.email ?? '', phone: r.phone ?? '', position: r.position ?? '', company_id: r.company_id ?? '' }); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ first_name: '', last_name: '', salutation: '', email: '', phone: '', mobile: '', position: '', company_id: '', linkedin_url: '', is_decision_maker: false, email_opt_in: false }); setOpen(true); };
+  const openEdit = (r: any) => { setEditing(r); setForm({ first_name: r.first_name, last_name: r.last_name, salutation: r.salutation ?? '', email: r.email ?? '', phone: r.phone ?? '', mobile: r.mobile ?? '', position: r.position ?? '', company_id: r.company_id ?? '', linkedin_url: r.linkedin_url ?? '', is_decision_maker: !!r.is_decision_maker, email_opt_in: !!r.email_opt_in }); setOpen(true); };
+
 
   const save = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) { toast.error('Vor- und Nachname erforderlich'); return; }
