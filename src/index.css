@@ -1849,3 +1849,81 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   border-bottom: 1px solid rgba(125,200,255,0.18);
 }
 .cockpit-cmd-dialog [cmdk-item][data-disabled="true"] { opacity: 0.4; }
+
+/* ====== Pipeline Shape (Triangle / Square / Line) ====== */
+.cockpit-shape-wrap { padding: 18px 18px 22px; }
+.cockpit-shape__center-title {
+  fill: rgba(255,255,255,0.92);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.cockpit-shape__center-sub {
+  fill: rgba(255,255,255,0.5);
+  font-size: 10px;
+  letter-spacing: 3px;
+  font-family: ui-monospace, monospace;
+}
+.cockpit-shape__node-num {
+  font-family: ui-monospace, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.cockpit-shape__node-name {
+  fill: rgba(255,255,255,0.85);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.4px;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.cockpit-shape__node-count {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+}
+.cockpit-shape__tip {
+  position: absolute;
+  z-index: 5;
+  min-width: 260px;
+  max-width: 320px;
+  padding: 10px 12px;
+  background: rgba(8, 14, 26, 0.94);
+  border: 1px solid var(--accent, rgba(125,200,255,0.5));
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.4),
+    0 12px 40px rgba(0,0,0,0.55),
+    0 0 24px color-mix(in srgb, var(--accent, #5cd8ff) 35%, transparent);
+  backdrop-filter: blur(14px);
+  color: rgba(255,255,255,0.9);
+  pointer-events: none;
+  animation: cockpit-tip-in .14s ease-out;
+}
+@keyframes cockpit-tip-in {
+  from { opacity: 0; transform: translate(-50%, calc(var(--ty, 70px) - 4px)); }
+  to   { opacity: 1; }
+}
+.cockpit-shape__tip-head {
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 8px; margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px;
+  color: var(--accent, #fff);
+}
+.cockpit-shape__dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.cockpit-shape__dot--live {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.7);
+  animation: cockpit-pulse 1.4s ease-in-out infinite;
+}
+@keyframes cockpit-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
