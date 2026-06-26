@@ -673,9 +673,9 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
             </SelectContent>
           </Select>
 
-          {(period !== 'year' || absFilter !== 'all') && (
+          {(period !== 'year' || absFilter !== 'all' || drill) && (
             <div className="ml-auto text-[10px] text-muted-foreground">
-              {days.length} {days.length === 1 ? 'Tag' : 'Tage'} · {periodLabel}
+              {visibleDays.length} {visibleDays.length === 1 ? 'Tag' : 'Tage'} · {drill ? drill.label : periodLabel}
               {absFilter !== 'all' && ` · ${absenceOptions.find((o) => o.value === absFilter)?.label}`}
             </div>
           )}
