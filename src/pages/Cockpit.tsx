@@ -998,8 +998,41 @@ export default function Cockpit() {
                 heatLevel={heatLevel}
                 accentBaseHue={[40, 280, 340, 160][idx % 4]}
                 caseLabel={caseNo(cid)}
+                etaForDept={etaForDept}
+                personLayer={personLayer}
+                userName={userName}
               />
             ))}
+
+            {/* Pinned cases — always-visible lanes */}
+            {pinnedIds.filter((pid) => pid !== selectedCaseId && !compareIds.includes(pid)).length > 0 && (
+              <>
+                <div className="flex items-center gap-3 pt-2">
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300/30 to-transparent" />
+                  <h3 className="text-[10px] tracking-[0.38em] text-amber-300/80 uppercase flex items-center gap-1.5">
+                    <Pin className="h-3 w-3" /> Angepinnte Vorgänge
+                  </h3>
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300/30 to-transparent" />
+                </div>
+                {pinnedIds
+                  .filter((pid) => pid !== selectedCaseId && !compareIds.includes(pid))
+                  .map((pid, idx) => (
+                    <CompareLane
+                      key={`pin-${pid}`}
+                      caseId={pid}
+                      tasks={tasks}
+                      deptName={deptName}
+                      heatLevel={heatLevel}
+                      accentBaseHue={[32, 200, 142, 270, 340][idx % 5]}
+                      caseLabel={caseNo(pid)}
+                      etaForDept={etaForDept}
+                      personLayer={personLayer}
+                      userName={userName}
+                    />
+                  ))}
+              </>
+            )}
+
           </section>
 
 
