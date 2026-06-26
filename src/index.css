@@ -2074,61 +2074,76 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   width: 100%; height: 100%;
   pointer-events: none;
 }
-.cs-trip-hit {
-  position: absolute;
-  cursor: pointer;
-  transition: filter .18s ease;
-  pointer-events: auto;
-}
-.cs-trip-hit.is-hover { filter: drop-shadow(0 0 18px var(--gl)); }
-
+/* icon circles at the three outer apexes */
 .cs-trip__icon {
   position: absolute;
-  width: 56px; height: 56px; border-radius: 50%;
-  background: rgba(6,10,20,0.95);
+  width: 60px; height: 60px; border-radius: 9999px;
+  background: rgba(6,10,20,0.96);
   border: 2px solid var(--ac);
   display: grid; place-items: center;
   color: var(--ac);
-  box-shadow: 0 0 18px var(--gl), 0 0 36px var(--gl);
-  z-index: 3;
+  box-shadow: 0 0 18px var(--gl), 0 0 38px var(--gl), inset 0 0 14px rgba(0,0,0,0.6);
+  z-index: 4;
   pointer-events: none;
+  transition: transform .25s ease, box-shadow .25s ease;
 }
-/* icon at the outer apex of each sub-triangle */
-.cs-trip-hit--top .cs-trip__icon { top: -8px;    left: 50%; transform: translateX(-50%); }
-.cs-trip-hit--bl  .cs-trip__icon { bottom: -8px; left: -8px; }
-.cs-trip-hit--br  .cs-trip__icon { bottom: -8px; right: -8px; }
+.cs-trip__icon--top { transform: translate(-50%, -55%); }
+.cs-trip__icon--bl  { transform: translate(-45%, -45%); }
+.cs-trip__icon--br  { transform: translate(-55%, -45%); }
+.cs-trip__icon.is-hover { box-shadow: 0 0 26px var(--gl), 0 0 60px var(--gl), inset 0 0 14px rgba(0,0,0,0.6); }
 
-.cs-trip__content {
+/* content overlays sit inside each panel */
+.cs-trip-overlay {
   position: absolute;
   color: rgba(255,255,255,0.92);
   pointer-events: none;
-  padding: 8px;
+  padding: 10px 14px;
+  z-index: 3;
 }
-/* place content inside each sub-triangle, away from apex */
-.cs-trip-hit--top .cs-trip__content { left: 16%; right: 16%; top: 38%; bottom: 4%; text-align: left; }
-.cs-trip-hit--bl  .cs-trip__content { left: 18%; right: 4%;  top: 12%; bottom: 30%; }
-.cs-trip-hit--br  .cs-trip__content { left: 4%;  right: 18%; top: 12%; bottom: 30%; }
+.cs-trip-overlay--top { left: 32%; right: 8%; top: 22%; max-width: 52%; text-align: left; }
+.cs-trip-overlay--bl  { left: 7%;  right: auto; bottom: 14%; max-width: 36%; text-align: left; }
+.cs-trip-overlay--br  { right: 7%; left: auto;  bottom: 14%; max-width: 36%; text-align: left; }
 
-.cs-trip__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.cs-trip__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
 .cs-trip__num {
-  font-family: ui-monospace, monospace; font-size: 20px; font-weight: 700;
+  font-family: ui-monospace, monospace; font-size: 26px; font-weight: 700;
   color: var(--ac); letter-spacing: 1px;
-  text-shadow: 0 0 12px var(--gl);
+  text-shadow: 0 0 14px var(--gl);
 }
 .cs-trip__name {
-  font-size: 12px; font-weight: 600; letter-spacing: 2.5px;
-  color: rgba(255,255,255,0.92);
+  font-size: 13px; font-weight: 600; letter-spacing: 3px;
+  color: rgba(255,255,255,0.95);
 }
 .cs-trip__list {
-  display: flex; flex-direction: column; gap: 5px;
-  font-size: 10.5px; color: rgba(255,255,255,0.78); line-height: 1.3;
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 11px; color: rgba(255,255,255,0.82); line-height: 1.35;
 }
-.cs-trip__list li { display: flex; align-items: flex-start; gap: 6px; }
+.cs-trip__list li { display: flex; align-items: flex-start; gap: 7px; }
 .cs-trip__count {
-  margin-top: 6px;
+  margin-top: 8px;
   font-family: ui-monospace, monospace; font-size: 10px;
   color: var(--ac); opacity: 0.85; letter-spacing: 1px;
 }
+
+/* feature bar (bottom rail) */
+.cs-feature-bar {
+  position: relative;
+  margin-top: 14px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-around;
+  gap: 14px 24px;
+  padding: 12px 22px;
+  border-radius: 14px;
+  border: 1px solid hsl(195 100% 62% / 0.35);
+  background: linear-gradient(180deg, rgba(8,14,28,0.7), rgba(4,8,18,0.85));
+  box-shadow: 0 0 24px rgba(80,210,255,0.18), inset 0 0 18px rgba(80,210,255,0.08);
+}
+.cs-feature-bar > span {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 500; letter-spacing: 2.2px;
+  color: rgba(220,240,255,0.85);
+  text-transform: uppercase;
+}
+.cs-feature-bar > span > svg { color: hsl(195 100% 70%); filter: drop-shadow(0 0 6px rgba(80,210,255,0.5)); }
 
 
 /* ----- LINE (horizontal pipeline of octagons) ----- */
