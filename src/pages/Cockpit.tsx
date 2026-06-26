@@ -250,7 +250,8 @@ export default function Cockpit() {
                     isSelectedInRow && (i % 2 === 1 || i === departments.length - 1);
                   const renderPanelAfterMobile = selectedDept === d.id;
                   return (
-                    <>
+                    <React.Fragment key={d.id}>
+
                       <button
                         key={d.id}
                         type="button"
