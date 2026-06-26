@@ -137,18 +137,38 @@ export default function Cockpit() {
     return () => window.clearTimeout(t);
   }, []);
 
-  // Command-K shortcut
+  // Command-K shortcut & global hotkeys (1-9 dept, c compare, e export, r refresh, ? help)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPickerMode('select');
         setPickerOpen(true);
+        return;
       }
+      if (inField || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (/^[1-9]$/.test(e.key)) {
+        const idx = parseInt(e.key, 10) - 1;
+        setDepartments((deps) => {
+          if (deps[idx]) setSelectedDept((cur) => (cur === deps[idx].id ? null : deps[idx].id));
+          return deps;
+        });
+        return;
+      }
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); setHelpOpen(true); }
+      if (e.key.toLowerCase() === 'c') { setPickerMode('compare'); setPickerOpen(true); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // Persist preferences
+  useEffect(() => { localStorage.setItem('cockpit:pinned', JSON.stringify(pinnedIds)); }, [pinnedIds]);
+  useEffect(() => { localStorage.setItem('cockpit:personLayer', personLayer ? '1' : '0'); }, [personLayer]);
+  useEffect(() => { localStorage.setItem('cockpit:views', JSON.stringify(savedViews)); }, [savedViews]);
+
 
 
   useEffect(() => {
