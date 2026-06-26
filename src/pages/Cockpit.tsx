@@ -516,6 +516,7 @@ export default function Cockpit() {
                 <th className="py-2 pr-3 font-normal">Aufgabe</th>
                 <th className="py-2 pr-3 font-normal">SLA</th>
                 <th className="py-2 pr-3 font-normal">Status</th>
+                <th className="py-2 pr-3 font-normal w-8"></th>
               </tr>
             </thead>
             <tbody>
@@ -541,6 +542,18 @@ export default function Cockpit() {
                     <span className={cn('cockpit-status', task.status === 'in_progress' ? 'cockpit-status--active' : 'cockpit-status--open')}>
                       {task.status === 'in_progress' ? 'in Arbeit' : 'offen'}
                     </span>
+                  </td>
+                  <td className="py-2.5 pr-1 text-right">
+                    {c && (
+                      <button
+                        type="button"
+                        onClick={() => togglePin(c.id)}
+                        title={isPinned(c.id) ? 'Pin entfernen' : 'Vorgang anpinnen'}
+                        className={cn('p-1 rounded hover:bg-white/10 transition-colors', isPinned(c.id) ? 'text-amber-300' : 'text-white/40')}
+                      >
+                        {isPinned(c.id) ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
