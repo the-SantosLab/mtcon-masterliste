@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +12,7 @@ import {
   Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles,
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
   Search, GitCompare, X, MessageSquare, Paperclip,
+  Pin, PinOff, Download, Eye, EyeOff, Keyboard, Save, TrendingUp,
 } from 'lucide-react';
 
 
