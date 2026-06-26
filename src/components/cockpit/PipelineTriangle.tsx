@@ -285,7 +285,7 @@ export function PipelineTriangle({
       ))}
 
       {/* Zentrums-Text */}
-      {center && (
+      {center && !centerData && (
         <div className="tri-hex-text">
           {center.title && <p className="tri-hex-label">{center.title}</p>}
           {center.sub && <p className="tri-hex-sub">{center.sub}</p>}
