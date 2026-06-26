@@ -1401,19 +1401,28 @@ aside[data-sidebar-density="comfortable"] nav a svg {
     0 0 30px -6px var(--accent-glow),
     inset 0 0 22px -10px var(--accent-glow);
 }
-.cockpit-expand {
+/* Cockpit detail-panel expand/collapse via react-transition-group */
+.cockpitPanel-enter {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition:
-    grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.35s ease;
 }
-.cockpit-expand--open {
+.cockpitPanel-enter-active {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+}
+.cockpitPanel-exit {
+  display: grid;
   grid-template-rows: 1fr;
   opacity: 1;
 }
-.cockpit-expand-inner {
+.cockpitPanel-exit-active {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+}
+.cockpitPanel-inner {
   overflow: hidden;
   min-height: 0;
 }
