@@ -208,6 +208,15 @@ export default function CrmCompanies() {
         </div>
       </div>
 
+      <div className="mb-3">
+        <SavedViewsBar
+          scope="companies"
+          currentFilters={{ tab, q }}
+          onApply={(f) => { if (f.tab) setTab(f.tab); setQ(f.q ?? ''); }}
+        />
+      </div>
+
+
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : (
