@@ -140,7 +140,7 @@ export default function Cockpit() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [deptRes, taskRes, caseRes, profRes, actRes] = await Promise.all([
+      const [deptRes, taskRes, caseRes, profRes, actRes, dmRes] = await Promise.all([
         supabase.from('departments').select('id,name').eq('is_active', true).order('sort_order'),
         supabase
           .from('case_tasks')
@@ -158,7 +158,9 @@ export default function Cockpit() {
           .select('id,case_id,action,field,old_value,new_value,message,actor_id,created_at')
           .order('created_at', { ascending: false })
           .limit(40),
+        supabase.from('department_members').select('department_id'),
       ]);
+
       if (cancelled) return;
       setDepartments((deptRes.data as Dept[]) || []);
       setTasks(((taskRes.data as any[]) || []) as Task[]);
