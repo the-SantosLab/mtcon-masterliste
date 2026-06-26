@@ -254,6 +254,26 @@ export default function Cockpit() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
+  // Realtime: cases (Zahlen & Statusanzeigen leben mit)
+  useEffect(() => {
+    const ch = supabase
+      .channel('cockpit-cases')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, (payload: any) => {
+        setCases((prev) => {
+          if (payload.eventType === 'DELETE') return prev.filter((c) => c.id !== payload.old.id);
+          const row = payload.new as CaseRow;
+          if (row && (row as any).deleted) return prev.filter((c) => c.id !== row.id);
+          const idx = prev.findIndex((c) => c.id === row.id);
+          if (idx === -1) return [row, ...prev];
+          const next = [...prev];
+          next[idx] = { ...next[idx], ...row };
+          return next;
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
   // SLA alerts: toast on every new task that crosses critical age while open
   useEffect(() => {
     const seen = alertedTaskIdsRef.current;
