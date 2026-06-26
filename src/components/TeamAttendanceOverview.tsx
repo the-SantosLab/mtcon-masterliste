@@ -676,29 +676,13 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
         </DialogHeader>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border border-b border-border">
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Arbeitszeit</div>
-            <div className="text-sm font-semibold tabular-nums">{(totals.worked / 60).toFixed(1)}h</div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Überstunden</div>
-            <div className={cn('text-sm font-semibold tabular-nums', totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive')}>
-              {totals.overtime >= 0 ? '+' : ''}{(totals.overtime / 60).toFixed(1)}h
-            </div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Urlaubstage</div>
-            <div className="text-sm font-semibold tabular-nums text-sky-400">{totals.vacation}</div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Krankheitstage</div>
-            <div className="text-sm font-semibold tabular-nums text-amber-400">{totals.sick}</div>
-          </div>
-          <div className="bg-card px-3 py-2">
-            <div className="text-[9px] uppercase tracking-wide text-muted-foreground">Sonstige</div>
-            <div className="text-sm font-semibold tabular-nums text-violet-400">{totals.other}</div>
-          </div>
+          <KpiCard label="Arbeitszeit" value={`${(totals.worked / 60).toFixed(1)}h`} compare={compareRange ? `${(totalsCompare.worked / 60).toFixed(1)}h` : null} delta={compareRange ? (totals.worked - totalsCompare.worked) / 60 : null} unit="h" />
+          <KpiCard label="Überstunden" value={`${totals.overtime >= 0 ? '+' : ''}${(totals.overtime / 60).toFixed(1)}h`} valueTone={totals.overtime >= 0 ? 'text-emerald-400' : 'text-destructive'} compare={compareRange ? `${totalsCompare.overtime >= 0 ? '+' : ''}${(totalsCompare.overtime / 60).toFixed(1)}h` : null} delta={compareRange ? (totals.overtime - totalsCompare.overtime) / 60 : null} unit="h" />
+          <KpiCard label="Urlaubstage" value={String(totals.vacation)} valueTone="text-sky-400" compare={compareRange ? String(totalsCompare.vacation) : null} delta={compareRange ? totals.vacation - totalsCompare.vacation : null} unit="d" />
+          <KpiCard label="Krankheitstage" value={String(totals.sick)} valueTone="text-amber-400" compare={compareRange ? String(totalsCompare.sick) : null} delta={compareRange ? totals.sick - totalsCompare.sick : null} unit="d" />
+          <KpiCard label="Sonstige" value={String(totals.other)} valueTone="text-violet-400" compare={compareRange ? String(totalsCompare.other) : null} delta={compareRange ? totals.other - totalsCompare.other : null} unit="d" />
         </div>
+
 
         <div className="px-5 py-3 border-b border-border bg-muted/20 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
