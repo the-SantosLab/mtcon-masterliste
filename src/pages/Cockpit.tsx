@@ -444,6 +444,48 @@ export default function Cockpit() {
 
   const totalActive = filteredTasks.length;
 
+  const togglePin = (id: string) => {
+    setPinnedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 5) { toast.error('Maximal 5 angepinnte Vorgänge'); return prev; }
+      return [...prev, id];
+    });
+  };
+  const isPinned = (id: string) => pinnedIds.includes(id);
+
+  const exportCsv = () => {
+    const rows = [['case_no', 'project_name', 'department', 'task', 'status', 'age_h', 'assignee']];
+    for (const t of filteredTasks) {
+      const c = cases.find((x) => x.id === t.case_id);
+      rows.push([
+        c?.case_no ?? '', c?.project_name ?? '', deptName(t.department_id), t.title,
+        t.status, Math.round(hoursSince(t.created_at)).toString(), userName(t.assigned_to),
+      ]);
+    }
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `cockpit-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${filteredTasks.length} Aufgaben exportiert`);
+  };
+
+  const saveCurrentView = () => {
+    const name = window.prompt('Name der Cockpit-Ansicht');
+    if (!name) return;
+    setSavedViews((prev) => [...prev.filter((v) => v.name !== name), { name, timeframe, onlyCritical, myOnly, pinnedIds }]);
+    toast.success(`Ansicht „${name}" gespeichert`);
+  };
+  const applyView = (name: string) => {
+    const v = savedViews.find((x) => x.name === name);
+    if (!v) return;
+    setTimeframe(v.timeframe); setOnlyCritical(v.onlyCritical); setMyOnly(v.myOnly); setPinnedIds(v.pinnedIds || []);
+    toast.success(`Ansicht „${name}" geladen`);
+  };
+  const deleteView = (name: string) => setSavedViews((prev) => prev.filter((v) => v.name !== name));
+
+
   // -------- Render --------
   const renderDeptPanel = () => (
     <div
