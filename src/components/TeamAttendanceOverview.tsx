@@ -52,6 +52,8 @@ export function TeamAttendanceOverview() {
   const [abs, setAbs] = useState<Abs[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [filter, setFilter] = useState<'all' | 'present' | 'absent'>('all');
+  const [selected, setSelected] = useState<Profile | null>(null);
+
 
   const load = async () => {
     const from = startOfYear();
