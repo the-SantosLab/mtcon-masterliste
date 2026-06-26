@@ -744,6 +744,16 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                   Filter: {drill.label} ✕
                 </button>
               )}
+              <Select value={comparePreset} onValueChange={(v) => setComparePreset(v as any)}>
+                <SelectTrigger className="h-7 w-[140px] text-[11px] bg-card">
+                  <SelectValue placeholder="Vergleich" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="off">Kein Vergleich</SelectItem>
+                  <SelectItem value="prev_year">vs Vorjahr</SelectItem>
+                  <SelectItem value="prev_period">vs Vorperiode</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={bucketChoice} onValueChange={(v) => setBucketChoice(v as any)}>
                 <SelectTrigger className="h-7 w-[110px] text-[11px] bg-card">
                   <SelectValue />
@@ -757,6 +767,7 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
               </Select>
             </div>
           </div>
+
           <div className="h-[180px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} onClick={handleBarClick}>
