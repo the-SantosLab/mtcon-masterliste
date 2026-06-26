@@ -492,6 +492,51 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
   const open = !!user;
   const periodLabel = period === 'year' ? 'Gesamtjahr' : period.startsWith('Q') ? period : monthNames[parseInt(period.slice(1)) - 1];
 
+  const { chartData, bucketMode } = useMemo(() => {
+    // Bucket monthly for year/quarter; daily for month
+    const mode: 'month' | 'day' = period === 'year' || period.startsWith('Q') ? 'month' : 'day';
+    type Bucket = { key: string; label: string; overtime: number; vacation: number; sick: number; other: number };
+    const buckets = new Map<string, Bucket>();
+    const ensure = (key: string, label: string) => {
+      if (!buckets.has(key)) buckets.set(key, { key, label, overtime: 0, vacation: 0, sick: 0, other: 0 });
+      return buckets.get(key)!;
+    };
+
+    // Seed buckets so the X-axis is continuous
+    if (mode === 'month') {
+      const months = period === 'year' ? [0,1,2,3,4,5,6,7,8,9,10,11]
+        : period === 'Q1' ? [0,1,2] : period === 'Q2' ? [3,4,5] : period === 'Q3' ? [6,7,8] : [9,10,11];
+      for (const m of months) ensure(`${currentYear}-${String(m+1).padStart(2,'0')}`, monthNames[m].slice(0,3));
+    }
+
+    for (const d of days) {
+      let key: string, label: string;
+      if (mode === 'month') {
+        key = d.date.slice(0, 7);
+        label = monthNames[parseInt(d.date.slice(5, 7), 10) - 1].slice(0, 3);
+      } else {
+        key = d.date;
+        label = d.date.slice(8, 10);
+      }
+      const b = ensure(key, label);
+      if (d.att?.worked_minutes) b.overtime += (d.att.worked_minutes - 480) / 60;
+      const seen = new Set<string>();
+      for (const a of d.absences) {
+        const k = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        if (a.category === 'vacation') b.vacation += 1;
+        else if (a.category === 'sick') b.sick += 1;
+        else b.other += 1;
+      }
+    }
+    const data = Array.from(buckets.values())
+      .sort((a, b) => (a.key < b.key ? -1 : 1))
+      .map((b) => ({ ...b, overtime: Math.round(b.overtime * 10) / 10 }));
+    return { chartData: data, bucketMode: mode };
+  }, [days, period, currentYear]);
+
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-3xl p-0 gap-0 max-h-[85vh] overflow-hidden flex flex-col">
