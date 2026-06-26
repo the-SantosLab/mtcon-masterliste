@@ -549,17 +549,9 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
     const autoMode: 'month' | 'day' = period === 'year' || period.startsWith('Q') ? 'month' : 'day';
     const mode: 'day' | 'week' | 'month' = bucketChoice === 'auto' ? autoMode : bucketChoice;
     type Bucket = { key: string; label: string; from: string; to: string; overtime: number; vacation: number; sick: number; other: number };
-    const buckets = new Map<string, Bucket>();
-    const ensure = (key: string, label: string, from: string, to: string) => {
-      if (!buckets.has(key)) buckets.set(key, { key, label, from, to, overtime: 0, vacation: 0, sick: 0, other: 0 });
-      return buckets.get(key)!;
-    };
 
-    const { from: pFrom, to: pTo } = resolvePeriod(period, currentYear, today);
-    const fromD = new Date(pFrom + 'T00:00:00');
-    const toD = new Date(pTo + 'T00:00:00');
-
-    const isoWeek = (d: Date): { year: number; week: number; monday: Date; sunday: Date } => {
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const isoWeek = (d: Date) => {
       const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
       const dayNum = (date.getUTCDay() + 6) % 7;
       date.setUTCDate(date.getUTCDate() - dayNum + 3);
@@ -571,62 +563,86 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
       sunday.setDate(monday.getDate() + 6);
       return { year: date.getUTCFullYear(), week, monday, sunday };
     };
-    const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-    // Seed continuous buckets across the period
-    if (mode === 'month') {
-      const cur = new Date(fromD.getFullYear(), fromD.getMonth(), 1);
-      while (cur <= toD) {
-        const y = cur.getFullYear(); const m = cur.getMonth();
-        const key = `${y}-${String(m + 1).padStart(2, '0')}`;
-        const last = new Date(y, m + 1, 0);
-        ensure(key, monthNames[m].slice(0, 3), `${key}-01`, iso(last));
-        cur.setMonth(cur.getMonth() + 1);
+    const buildBuckets = (rangeFrom: string, rangeTo: string, sourceDays: DayRow[]): Bucket[] => {
+      const buckets = new Map<string, Bucket>();
+      const ensure = (key: string, label: string, from: string, to: string) => {
+        if (!buckets.has(key)) buckets.set(key, { key, label, from, to, overtime: 0, vacation: 0, sick: 0, other: 0 });
+        return buckets.get(key)!;
+      };
+      const fromD = new Date(rangeFrom + 'T00:00:00');
+      const toD = new Date(rangeTo + 'T00:00:00');
+      if (mode === 'month') {
+        const cur = new Date(fromD.getFullYear(), fromD.getMonth(), 1);
+        while (cur <= toD) {
+          const y = cur.getFullYear(); const m = cur.getMonth();
+          const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+          const last = new Date(y, m + 1, 0);
+          ensure(key, monthNames[m].slice(0, 3), `${key}-01`, iso(last));
+          cur.setMonth(cur.getMonth() + 1);
+        }
+      } else if (mode === 'week') {
+        const w0 = isoWeek(fromD);
+        const cur = new Date(w0.monday);
+        while (cur <= toD) {
+          const w = isoWeek(cur);
+          const key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
+          ensure(key, `KW${w.week}`, iso(w.monday), iso(w.sunday));
+          cur.setDate(cur.getDate() + 7);
+        }
+      } else {
+        const cur = new Date(fromD);
+        while (cur <= toD) {
+          const key = iso(cur);
+          ensure(key, `${String(cur.getDate()).padStart(2, '0')}.${String(cur.getMonth() + 1).padStart(2, '0')}`, key, key);
+          cur.setDate(cur.getDate() + 1);
+        }
       }
-    } else if (mode === 'week') {
-      const w0 = isoWeek(fromD);
-      const cur = new Date(w0.monday);
-      while (cur <= toD) {
-        const w = isoWeek(cur);
-        const key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
-        ensure(key, `KW${w.week}`, iso(w.monday), iso(w.sunday));
-        cur.setDate(cur.getDate() + 7);
+      for (const d of sourceDays) {
+        const dDate = new Date(d.date + 'T00:00:00');
+        let key: string;
+        if (mode === 'month') key = d.date.slice(0, 7);
+        else if (mode === 'week') {
+          const w = isoWeek(dDate);
+          key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
+        } else key = d.date;
+        const b = buckets.get(key);
+        if (!b) continue;
+        if (d.att?.worked_minutes) b.overtime += (d.att.worked_minutes - 480) / 60;
+        const seen = new Set<string>();
+        for (const a of d.absences) {
+          const k = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+          if (seen.has(k)) continue;
+          seen.add(k);
+          if (a.category === 'vacation') b.vacation += 1;
+          else if (a.category === 'sick') b.sick += 1;
+          else b.other += 1;
+        }
       }
-    } else {
-      const cur = new Date(fromD);
-      while (cur <= toD) {
-        const key = iso(cur);
-        ensure(key, `${String(cur.getDate()).padStart(2, '0')}.${String(cur.getMonth() + 1).padStart(2, '0')}`, key, key);
-        cur.setDate(cur.getDate() + 1);
-      }
-    }
+      return Array.from(buckets.values()).sort((a, b) => (a.key < b.key ? -1 : 1));
+    };
 
-    for (const d of days) {
-      const dDate = new Date(d.date + 'T00:00:00');
-      let key: string;
-      if (mode === 'month') key = d.date.slice(0, 7);
-      else if (mode === 'week') {
-        const w = isoWeek(dDate);
-        key = `${w.year}-W${String(w.week).padStart(2, '0')}`;
-      } else key = d.date;
-      const b = buckets.get(key);
-      if (!b) continue;
-      if (d.att?.worked_minutes) b.overtime += (d.att.worked_minutes - 480) / 60;
-      const seen = new Set<string>();
-      for (const a of d.absences) {
-        const k = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
-        if (seen.has(k)) continue;
-        seen.add(k);
-        if (a.category === 'vacation') b.vacation += 1;
-        else if (a.category === 'sick') b.sick += 1;
-        else b.other += 1;
-      }
-    }
-    const data = Array.from(buckets.values())
-      .sort((a, b) => (a.key < b.key ? -1 : 1))
-      .map((b) => ({ ...b, overtime: Math.round(b.overtime * 10) / 10 }));
-    return { chartData: data, bucketMode: mode };
-  }, [days, period, currentYear, bucketChoice, today]);
+    const primary = buildBuckets(primaryRange.from, primaryRange.to, days);
+    const compare = compareRange ? buildBuckets(compareRange.from, compareRange.to, daysCompare) : [];
+
+    // Align positionally by index so X-axis stays in primary's domain
+    const merged = primary.map((p, i) => {
+      const c = compare[i];
+      return {
+        ...p,
+        overtime: Math.round(p.overtime * 10) / 10,
+        c_overtime: c ? Math.round(c.overtime * 10) / 10 : null,
+        c_vacation: c?.vacation ?? null,
+        c_sick: c?.sick ?? null,
+        c_other: c?.other ?? null,
+        c_label: c?.label ?? null,
+        c_from: c?.from ?? null,
+        c_to: c?.to ?? null,
+      };
+    });
+    return { chartData: merged, bucketMode: mode };
+  }, [days, daysCompare, primaryRange, compareRange, period, bucketChoice]);
+
 
   const visibleDays = useMemo(() => {
     if (!drill) return days;
