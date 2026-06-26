@@ -295,7 +295,8 @@ export default function Cockpit() {
                           {renderDeptPanel()}
                         </div>
                       )}
-                    </>
+                    </React.Fragment>
+
                   );
                 })}
               </div>
