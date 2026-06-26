@@ -1549,3 +1549,178 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .cockpit-featurebar__item:last-child { border-right: none; }
 .cockpit-featurebar__item svg { color: rgba(140,200,255,0.85); }
 
+/* ---------- Scanlines + CRT flicker overlay ---------- */
+.cockpit-scanlines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.018) 0px,
+    rgba(255,255,255,0.018) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.7;
+  animation: cockpitFlicker 6s steps(40) infinite;
+}
+@keyframes cockpitFlicker {
+  0%, 100% { opacity: 0.62; }
+  47% { opacity: 0.62; }
+  48% { opacity: 0.42; }
+  49% { opacity: 0.7; }
+  50% { opacity: 0.55; }
+}
+
+/* ---------- HUD bracket corners ---------- */
+.cockpit-hud {
+  position: relative;
+}
+.cockpit-hud::before,
+.cockpit-hud::after,
+.cockpit-hud > .cockpit-hud__br,
+.cockpit-hud > .cockpit-hud__bl {
+  content: ""; position: absolute; width: 14px; height: 14px;
+  border-color: var(--accent, hsl(195 100% 60%));
+  opacity: 0.85;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px var(--accent-glow, rgba(60,200,255,0.55)));
+}
+.cockpit-hud::before { top: -6px; left: -6px;  border-top: 2px solid; border-left: 2px solid; }
+.cockpit-hud::after  { top: -6px; right: -6px; border-top: 2px solid; border-right: 2px solid; }
+.cockpit-hud > .cockpit-hud__bl { bottom: -6px; left: -6px;  border-bottom: 2px solid; border-left: 2px solid; }
+.cockpit-hud > .cockpit-hud__br { bottom: -6px; right: -6px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* ---------- SLA / bottleneck badges ---------- */
+.cockpit-sla {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid currentColor;
+  background: rgba(255,255,255,0.02);
+}
+.cockpit-sla--ok    { color: #6ee7b7; }
+.cockpit-sla--warn  { color: #fcd34d; }
+.cockpit-sla--crit  { color: #fb7185; box-shadow: 0 0 14px -2px rgba(251,113,133,0.55); }
+
+.cockpit-node--bottleneck {
+  animation: cockpitBottleneck 2.2s ease-in-out infinite;
+}
+@keyframes cockpitBottleneck {
+  0%, 100% { box-shadow: 0 0 0 1.5px var(--accent), 0 0 32px -2px var(--accent-glow), inset 0 0 22px -8px var(--accent-glow); }
+  50%      { box-shadow: 0 0 0 2px var(--accent),   0 0 64px 4px var(--accent-glow),  inset 0 0 30px -4px var(--accent-glow); }
+}
+.cockpit-node__meter {
+  position: relative; height: 3px; border-radius: 2px;
+  background: rgba(255,255,255,0.07);
+  margin-top: 12px; overflow: hidden;
+}
+.cockpit-node__meter > span {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 30%, #fff));
+  box-shadow: 0 0 8px var(--accent-glow);
+  transition: width .4s ease;
+}
+
+/* ---------- Activity ticker (Bloomberg-style side rail) ---------- */
+.cockpit-ticker {
+  --accent: hsl(195 100% 60%);
+  --accent-glow: rgba(60,200,255,0.4);
+  position: relative;
+  border: 1px solid rgba(140,180,255,0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(6,10,24,0.7), rgba(6,10,24,0.55));
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 24px -10px rgba(120,180,255,0.25);
+  overflow: hidden;
+}
+.cockpit-ticker__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid rgba(140,180,255,0.12);
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(220,235,255,0.65);
+}
+.cockpit-ticker__body {
+  max-height: 360px; overflow-y: auto;
+  padding: 6px 0;
+}
+.cockpit-ticker__row {
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 10px;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 11.5px;
+  color: rgba(225,235,255,0.82);
+  border-left: 2px solid transparent;
+  transition: background .2s ease, border-color .2s ease;
+}
+.cockpit-ticker__row:hover { background: rgba(120,180,255,0.05); border-left-color: var(--accent); }
+.cockpit-ticker__row--new {
+  animation: cockpitTickerIn 600ms ease-out;
+  border-left-color: var(--accent);
+}
+@keyframes cockpitTickerIn {
+  from { opacity: 0; transform: translateX(-8px); background: color-mix(in oklab, var(--accent) 18%, transparent); }
+  to   { opacity: 1; transform: translateX(0);    background: transparent; }
+}
+.cockpit-ticker__time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px; color: rgba(180,210,255,0.55);
+}
+.cockpit-ticker__action {
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); white-space: nowrap;
+}
+
+/* ---------- Animated SVG flow particles between pipeline nodes ---------- */
+.cockpit-flow {
+  position: absolute; inset: 0; pointer-events: none;
+  z-index: 0;
+}
+.cockpit-flow path {
+  fill: none;
+  stroke: rgba(140,200,255,0.18);
+  stroke-width: 1.2;
+}
+.cockpit-flow path.lit {
+  stroke: url(#cockpitFlowGradient);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(80,220,255,0.7));
+}
+.cockpit-flow circle.particle {
+  fill: #b8f0ff;
+  filter: drop-shadow(0 0 6px rgba(120,230,255,0.9));
+}
+
+/* ---------- Filter bar ---------- */
+.cockpit-filterbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid rgba(140,180,255,0.16);
+  background: rgba(6,10,24,0.55);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+}
+.cockpit-filterbar__label {
+  font-size: 9.5px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(220,235,255,0.45);
+}
+.cockpit-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  border: 1px solid rgba(140,180,255,0.2);
+  color: rgba(220,235,255,0.75);
+  background: rgba(255,255,255,0.025);
+  cursor: pointer;
+  transition: all .18s ease;
+}
+.cockpit-toggle:hover { color: #fff; border-color: rgba(140,200,255,0.5); }
+.cockpit-toggle--on {
+  color: #fff;
+  border-color: var(--accent, hsl(195 100% 60%));
+  background: color-mix(in oklab, var(--accent, hsl(195 100% 60%)) 18%, transparent);
+  box-shadow: 0 0 18px -4px var(--accent-glow, rgba(60,200,255,0.6));
+}
+
+
