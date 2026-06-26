@@ -420,7 +420,13 @@ function matchesAbsenceFilter(a: Abs, filter: string) {
 function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
   const [period, setPeriod] = useState('year');
   const [absFilter, setAbsFilter] = useState('all');
+  const [bucketChoice, setBucketChoice] = useState<'auto' | 'day' | 'week' | 'month'>('auto');
+  const [drill, setDrill] = useState<{ from: string; to: string; label: string } | null>(null);
   const currentYear = parseInt(yearFrom.slice(0, 4), 10);
+
+  // Reset drill when filters change
+  useEffect(() => { setDrill(null); }, [period, absFilter, bucketChoice, user?.id]);
+
 
   const { days, totals } = useMemo(() => {
     if (!user) return { days: [] as DayRow[], totals: { worked: 0, overtime: 0, vacation: 0, sick: 0, other: 0 } };
