@@ -870,3 +870,33 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
   );
 }
 
+
+interface KpiCardProps {
+  label: string;
+  value: string;
+  valueTone?: string;
+  compare?: string | null;
+  delta?: number | null;
+  unit?: 'h' | 'd';
+}
+
+function KpiCard({ label, value, valueTone, compare, delta, unit }: KpiCardProps) {
+  const hasCompare = compare !== null && compare !== undefined;
+  const deltaSign = (delta ?? 0) > 0 ? '+' : '';
+  const deltaTone = (delta ?? 0) === 0
+    ? 'text-muted-foreground'
+    : (delta ?? 0) > 0 ? 'text-emerald-400' : 'text-destructive';
+  const deltaStr = delta == null ? '' : unit === 'h' ? `${deltaSign}${delta.toFixed(1)}h` : `${deltaSign}${delta}d`;
+  return (
+    <div className="bg-card px-3 py-2">
+      <div className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={cn('text-sm font-semibold tabular-nums', valueTone)}>{value}</div>
+      {hasCompare && (
+        <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+          <span className="text-muted-foreground tabular-nums">vs {compare}</span>
+          <span className={cn('tabular-nums font-medium', deltaTone)}>{deltaStr}</span>
+        </div>
+      )}
+    </div>
+  );
+}
