@@ -58,6 +58,7 @@ const DEFAULT_WEDGE_PATH =
 export function PipelineTriangle({
   wings,
   center,
+  centerData,
   footer,
   hoverIndex = null,
   onHoverChange,
@@ -69,6 +70,10 @@ export function PipelineTriangle({
   className,
 }: PipelineTriangleProps) {
   const setHover = (i: number | null) => onHoverChange?.(i);
+
+  const deadlineFill =
+    centerData?.deadlineState === 'crit' ? '#ff8090' :
+    centerData?.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff';
 
   return (
     <div className={cn('tri-scene', className)}>
