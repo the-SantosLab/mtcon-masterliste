@@ -927,6 +927,9 @@ export default function Cockpit() {
               deptName={deptName}
               heatLevel={heatLevel}
               caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
+              etaForDept={etaForDept}
+              personLayer={personLayer}
+              userName={userName}
               extraDrawer={
                 selectedNodeId
                   ? (() => {
