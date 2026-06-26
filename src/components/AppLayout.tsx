@@ -126,6 +126,7 @@ const mslItems = [
   { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
   { href: '/projects', label: 'Projekte / Vorgänge +', icon: FolderKanban },
   { href: '/notes', label: 'Notizen', icon: StickyNote },
+  { href: '/cockpit', label: 'Cockpit (Beta)', icon: LayoutDashboard },
 ];
 
 const navItems: { href: string; label: string; icon: any }[] = [];
