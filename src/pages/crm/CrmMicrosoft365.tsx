@@ -184,6 +184,7 @@ export default function CrmMicrosoft365() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </CrmLayout>
   );
 }
