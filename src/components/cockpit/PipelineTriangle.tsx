@@ -27,9 +27,20 @@ export type TriangleWing = {
   pulse?: boolean;              // adds live pulse animation
 };
 
+export type TriangleCenterData = {
+  caseNo?: string;
+  progressPct?: number;
+  deadlineLabel?: string;            // e.g. "in 13d" or "—"
+  deadlineState?: 'none' | 'ok' | 'warn' | 'crit';
+  nextMilestone?: string;
+};
+
 export type PipelineTriangleProps = {
   wings: [TriangleWing, TriangleWing, TriangleWing];
+  /** Legacy HTML-overlay center (kept for back-compat). Prefer `centerData`. */
   center?: { title?: ReactNode; sub?: ReactNode };
+  /** Structured data rendered as SVG <text> at the exact circle center (reliable). */
+  centerData?: TriangleCenterData;
   footer?: Array<{ icon: ReactNode; label: string }>;
   hoverIndex?: number | null;
   onHoverChange?: (i: number | null) => void;
