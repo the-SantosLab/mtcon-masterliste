@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
+import { TagPicker } from '@/components/crm/TagPicker';
+
 
 let _missingCompany = 0;
 
