@@ -782,23 +782,42 @@ function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: Deta
                     borderRadius: 6,
                     fontSize: 11,
                   }}
-                  formatter={(value: any, name: string) => {
-                    if (name === 'Überstunden') return [`${Number(value) >= 0 ? '+' : ''}${value}h`, name];
+                  formatter={(value: any, name: string, item: any) => {
+                    if (value == null) return ['–', name];
+                    const isHours = name === 'Überstunden' || name === `Überstunden (${compareRange?.label ?? ''})`;
+                    if (isHours) return [`${Number(value) >= 0 ? '+' : ''}${value}h`, name];
                     return [`${value} Tage`, name];
+                  }}
+                  labelFormatter={(label, payload) => {
+                    const p = payload?.[0]?.payload;
+                    if (compareRange && p?.c_label) return `${label} · vs ${p.c_label}`;
+                    return label as string;
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
                 <Bar yAxisId="right" dataKey="vacation" name="Urlaub" stackId="abs" fill="hsl(199 89% 60%)" radius={[2, 2, 0, 0]} cursor="pointer" />
                 <Bar yAxisId="right" dataKey="sick" name="Krank" stackId="abs" fill="hsl(38 92% 60%)" radius={[2, 2, 0, 0]} cursor="pointer" />
                 <Bar yAxisId="right" dataKey="other" name="Sonstige" stackId="abs" fill="hsl(262 70% 65%)" radius={[2, 2, 0, 0]} cursor="pointer" />
+                {compareRange && (
+                  <>
+                    <Bar yAxisId="right" dataKey="c_vacation" name={`Urlaub (${compareRange.label})`} stackId="absC" fill="hsl(199 89% 60% / 0.35)" radius={[2, 2, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="c_sick" name={`Krank (${compareRange.label})`} stackId="absC" fill="hsl(38 92% 60% / 0.35)" radius={[2, 2, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="c_other" name={`Sonstige (${compareRange.label})`} stackId="absC" fill="hsl(262 70% 65% / 0.35)" radius={[2, 2, 0, 0]} />
+                  </>
+                )}
                 <Line yAxisId="left" type="monotone" dataKey="overtime" name="Überstunden" stroke="hsl(160 70% 50%)" strokeWidth={2} dot={{ r: 2, cursor: 'pointer' }} activeDot={{ r: 4, cursor: 'pointer' }} />
+                {compareRange && (
+                  <Line yAxisId="left" type="monotone" dataKey="c_overtime" name={`Überstunden (${compareRange.label})`} stroke="hsl(160 70% 50%)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} />
+                )}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-1 text-[9px] text-muted-foreground text-center">
             Tipp: Auf einen Balken/Punkt klicken, um die Tabelle auf diesen Zeitraum zu filtern.
+            {compareRange && ` · Vergleich: ${compareRange.from} bis ${compareRange.to}`}
           </div>
         </div>
+
 
 
         <div className="overflow-y-auto flex-1">
