@@ -13,6 +13,7 @@ import {
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
   Search, GitCompare, X, MessageSquare, Paperclip,
   Pin, PinOff, Download, Eye, EyeOff, Keyboard, Save, TrendingUp,
+  Headphones, ShoppingCart,
 } from 'lucide-react';
 
 
