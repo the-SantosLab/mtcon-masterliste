@@ -181,6 +181,51 @@ export function TeamAttendanceOverview() {
         </div>
       </div>
 
+      {!loading && rows.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border-b border-border">
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <TrendingUp className="h-3 w-3" /> Überstunden {currentYear}
+            </div>
+            <div className={cn(
+              'text-lg font-semibold tabular-nums mt-1',
+              totalOvertimeYear >= 0 ? 'text-emerald-400' : 'text-destructive',
+            )}>
+              {totalOvertimeYear >= 0 ? '+' : ''}{(totalOvertimeYear / 60).toFixed(1)}h
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt (Basis 8h/Tag)</div>
+          </div>
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <Stethoscope className="h-3 w-3" /> Krankheitstage {currentYear}
+            </div>
+            <div className="text-lg font-semibold tabular-nums mt-1 text-amber-400">
+              {totalSickYear.toFixed(1)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt</div>
+          </div>
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <Plane className="h-3 w-3" /> Urlaubstage {currentYear}
+            </div>
+            <div className="text-lg font-semibold tabular-nums mt-1 text-sky-400">
+              {totalVacYear.toFixed(1)}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt</div>
+          </div>
+          <div className="bg-card px-4 py-3">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <Clock className="h-3 w-3" /> Arbeitszeit {currentYear}
+            </div>
+            <div className="text-lg font-semibold tabular-nums mt-1 text-foreground">
+              {(totalWorkedYear / 60).toFixed(0)}h
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Team gesamt</div>
+          </div>
+        </div>
+      )}
+
+
       {loading ? (
         <div className="p-8 flex items-center justify-center">
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
