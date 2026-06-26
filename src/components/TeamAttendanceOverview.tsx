@@ -276,6 +276,13 @@ export function TeamAttendanceOverview() {
                     <td className="px-3 py-2 text-right tabular-nums">{fmtHours(r.week)}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{fmtHours(r.month)}</td>
                     <td className="px-3 py-2 text-right tabular-nums font-medium">{fmtHours(r.year)}</td>
+                    <td className={cn(
+                      'px-3 py-2 text-right tabular-nums font-medium',
+                      r.overtimeYear >= 0 ? 'text-emerald-400' : 'text-destructive',
+                    )}>
+                      {r.overtimeYear >= 0 ? '+' : ''}{(r.overtimeYear / 60).toFixed(1)}h
+                    </td>
+
                     <td className="px-3 py-2 text-right tabular-nums text-sky-400">
                       <span className="inline-flex items-center gap-1"><Plane className="h-2.5 w-2.5" />{r.vacYear.toFixed(1)}</span>
                     </td>
