@@ -1914,15 +1914,12 @@ function ShapeTriangle({
         const d = depts[i];
         if (d && onDeptClick) onDeptClick(d.id);
       }}
-      center={{
-        title: <span style={{ fontSize: '0.85em' }}>{hub.caseNo}</span>,
-        sub: (
-          <>
-            <span style={{ color: '#7fe3ff', fontWeight: 700 }}>{hub.progressPct}% FORTSCHRITT</span><br />
-            {hub.deadlineLabel !== '—' && (<><span style={{ color: deadlineColor }}>DEADLINE {hub.deadlineLabel}</span><br /></>)}
-            <span style={{ opacity: 0.7 }}>NEXT: {hub.nextMilestone.slice(0, 22).toUpperCase()}</span>
-          </>
-        ),
+      centerData={{
+        caseNo: hub.caseNo,
+        progressPct: hub.progressPct,
+        deadlineLabel: hub.deadlineLabel,
+        deadlineState: hub.deadlineState,
+        nextMilestone: hub.nextMilestone,
       }}
       footer={[
         { icon: <Gauge size={14} strokeWidth={2} />, label: `WIP ${metrics.footer.wip}` },
