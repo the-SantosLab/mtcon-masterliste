@@ -1723,4 +1723,151 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   box-shadow: 0 0 18px -4px var(--accent-glow, rgba(60,200,255,0.6));
 }
 
+/* ---------- WIP / capacity bar on dept nodes ---------- */
+.cockpit-node__wip {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(220,235,255,0.55);
+}
+.cockpit-node__wip-bar {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(140,180,255,0.12);
+  overflow: hidden; position: relative;
+}
+.cockpit-node__wip-bar > span {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 30%, #fff));
+  box-shadow: 0 0 8px var(--accent-glow);
+  transition: width .4s ease;
+}
+.cockpit-node__wip-bar--over > span {
+  background: linear-gradient(90deg, hsl(0 90% 60%), hsl(20 100% 65%));
+  box-shadow: 0 0 10px rgba(251,113,133,0.7);
+}
+.cockpit-node__wip-val { font-variant-numeric: tabular-nums; color: #fff; font-weight: 600; }
 
+/* ---------- Pipeline-Heatmap connector thickness ---------- */
+.cockpit-connector[data-heat="1"] { height: 1.5px; opacity: 0.4; }
+.cockpit-connector[data-heat="2"] { height: 2.5px; opacity: 0.65; }
+.cockpit-connector[data-heat="3"] { height: 3.5px; opacity: 0.85; }
+.cockpit-connector[data-heat="4"] { height: 5px;   opacity: 1;
+  box-shadow: 0 0 14px rgba(140,210,255,0.7); }
+
+/* ---------- Glitch hover on dept names ---------- */
+.cockpit-node__name {
+  position: relative;
+}
+.cockpit-node:hover .cockpit-node__name::before,
+.cockpit-node:hover .cockpit-node__name::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0; width: 100%;
+  pointer-events: none;
+}
+.cockpit-node:hover .cockpit-node__name::before {
+  color: #ff3da5; transform: translate(1px, 0); mix-blend-mode: screen;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  animation: cockpitGlitchA .6s steps(2) 1;
+}
+.cockpit-node:hover .cockpit-node__name::after {
+  color: #2dd4ff; transform: translate(-1px, 0); mix-blend-mode: screen;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  animation: cockpitGlitchB .6s steps(2) 1;
+}
+@keyframes cockpitGlitchA {
+  0% { transform: translate(0,0); } 20% { transform: translate(2px,-1px); }
+  40% { transform: translate(-1px,0); } 60% { transform: translate(1px,1px); }
+  100% { transform: translate(0,0); }
+}
+@keyframes cockpitGlitchB {
+  0% { transform: translate(0,0); } 20% { transform: translate(-2px,1px); }
+  40% { transform: translate(1px,0); } 60% { transform: translate(-1px,-1px); }
+  100% { transform: translate(0,0); }
+}
+
+/* ---------- Radar sweep in header ---------- */
+.cockpit-radar {
+  position: relative; width: 56px; height: 56px; border-radius: 999px;
+  border: 1px solid rgba(140,200,255,0.4);
+  box-shadow: inset 0 0 14px -4px rgba(60,200,255,0.4), 0 0 14px -4px rgba(60,200,255,0.3);
+  background:
+    radial-gradient(circle, transparent 38%, rgba(140,200,255,0.08) 39%, transparent 40%),
+    radial-gradient(circle, transparent 58%, rgba(140,200,255,0.08) 59%, transparent 60%);
+  overflow: hidden;
+}
+.cockpit-radar::before {
+  content: ""; position: absolute; inset: 0;
+  background: conic-gradient(from 0deg, rgba(80,220,255,0.55), transparent 60%);
+  animation: cockpitRadarSweep 3.6s linear infinite;
+}
+.cockpit-radar::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px;
+  border-radius: 999px; background: #7ee8ff;
+  box-shadow: 0 0 8px #7ee8ff; transform: translate(-50%,-50%);
+}
+@keyframes cockpitRadarSweep { to { transform: rotate(360deg); } }
+
+/* ---------- Boot sequence ---------- */
+.cockpit-boot {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, #04081a 0%, #01020a 80%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #7ee8ff;
+  animation: cockpitBootFade .6s ease-out .9s forwards;
+}
+@keyframes cockpitBootFade { to { opacity: 0; pointer-events: none; visibility: hidden; } }
+.cockpit-boot__lines { font-size: 11px; letter-spacing: 0.18em; line-height: 1.9; opacity: 0.85; }
+.cockpit-boot__line { opacity: 0; animation: cockpitBootLine .25s ease forwards; }
+.cockpit-boot__line:nth-child(1) { animation-delay: 0.00s; }
+.cockpit-boot__line:nth-child(2) { animation-delay: 0.18s; }
+.cockpit-boot__line:nth-child(3) { animation-delay: 0.36s; }
+.cockpit-boot__line:nth-child(4) { animation-delay: 0.54s; }
+.cockpit-boot__line:nth-child(5) { animation-delay: 0.72s; color: #6ee7b7; }
+@keyframes cockpitBootLine { from { opacity: 0; transform: translateY(4px); } to { opacity: 0.95; transform: translateY(0); } }
+
+/* ---------- Compare pipelines ---------- */
+.cockpit-compare-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  border: 1px solid var(--accent, rgba(140,180,255,0.3));
+  color: var(--accent, #b8d8ff);
+  background: color-mix(in oklab, var(--accent, hsl(195 100% 60%)) 12%, transparent);
+}
+.cockpit-compare-pill__close {
+  margin-left: 2px; opacity: 0.6; cursor: pointer;
+}
+.cockpit-compare-pill__close:hover { opacity: 1; }
+
+/* ---------- Mini-drawer for step detail ---------- */
+.cockpit-drawer-section {
+  border-top: 1px solid rgba(140,180,255,0.12);
+  padding-top: 12px; margin-top: 12px;
+}
+.cockpit-drawer-section h4 {
+  font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+  color: rgba(220,235,255,0.5); margin-bottom: 8px;
+}
+.cockpit-chat-msg {
+  display: grid; grid-template-columns: 80px 1fr auto; gap: 10px;
+  font-size: 12px; padding: 6px 0; align-items: start;
+}
+.cockpit-chat-msg__author { color: #b8d8ff; font-weight: 600; }
+.cockpit-chat-msg__body { color: rgba(225,235,255,0.85); white-space: pre-wrap; overflow-wrap: anywhere; }
+.cockpit-chat-msg__time { color: rgba(180,210,255,0.45); font-family: ui-monospace, monospace; font-size: 10px; }
+
+
+.cockpit-lane-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-bottom: 8px; padding: 4px 10px;
+  font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+  border: 1px solid rgba(125,200,255,0.25);
+  border-radius: 999px; background: rgba(8,18,32,0.5);
+}
+.cockpit-cmd-dialog [cmdk-input] {
+  background: transparent; color: #e6f4ff; padding: 14px 16px;
+  border-bottom: 1px solid rgba(125,200,255,0.18);
+}
+.cockpit-cmd-dialog [cmdk-item][data-disabled="true"] { opacity: 0.4; }

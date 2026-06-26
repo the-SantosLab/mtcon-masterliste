@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import {
   Check, Clock, CircleDot, Activity, Layers, Boxes, Cpu, Zap, Truck, Wrench,
   Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles,
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
+  Search, GitCompare, X, MessageSquare, Paperclip,
 } from 'lucide-react';
+
 
 type Dept = { id: string; name: string };
 type Task = {
@@ -87,9 +91,19 @@ export default function Cockpit() {
   const [newestActivityId, setNewestActivityId] = useState<string | null>(null);
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]); // multi-case compare
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deptCapacity, setDeptCapacity] = useState<Record<string, number>>({});
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'select' | 'compare'>('select');
+  const [bootDone, setBootDone] = useState(false);
+
+  // Mini-drawer data per node (lazy)
+  const [drawerChat, setDrawerChat] = useState<Array<{ id: string; author_id: string | null; body: string; created_at: string }>>([]);
+  const [drawerAttachments, setDrawerAttachments] = useState<number>(0);
+  const [drawerLoading, setDrawerLoading] = useState(false);
 
   // Filters
   const [timeframe, setTimeframe] = useState<TimeframeId>('7d');
@@ -103,10 +117,30 @@ export default function Cockpit() {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
   }, []);
 
+  // Boot sequence — hide after a short delay
+  useEffect(() => {
+    const t = window.setTimeout(() => setBootDone(true), 1700);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // Command-K shortcut
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPickerMode('select');
+        setPickerOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [deptRes, taskRes, caseRes, profRes, actRes] = await Promise.all([
+      const [deptRes, taskRes, caseRes, profRes, actRes, dmRes] = await Promise.all([
         supabase.from('departments').select('id,name').eq('is_active', true).order('sort_order'),
         supabase
           .from('case_tasks')
@@ -124,7 +158,9 @@ export default function Cockpit() {
           .select('id,case_id,action,field,old_value,new_value,message,actor_id,created_at')
           .order('created_at', { ascending: false })
           .limit(40),
+        supabase.from('department_members').select('department_id'),
       ]);
+
       if (cancelled) return;
       setDepartments((deptRes.data as Dept[]) || []);
       setTasks(((taskRes.data as any[]) || []) as Task[]);
@@ -133,6 +169,12 @@ export default function Cockpit() {
       ((profRes.data as Profile[]) || []).forEach((p) => (map[p.id] = p));
       setProfiles(map);
       setActivity(((actRes.data as any[]) || []) as ActivityRow[]);
+      const cap: Record<string, number> = {};
+      ((dmRes.data as Array<{ department_id: string }>) || []).forEach((r) => {
+        if (r.department_id) cap[r.department_id] = (cap[r.department_id] || 0) + 1;
+      });
+      setDeptCapacity(cap);
+
       if (!selectedCaseId && caseRes.data && caseRes.data.length) {
         setSelectedCaseId((caseRes.data[0] as any).id);
       }
@@ -233,6 +275,65 @@ export default function Cockpit() {
     for (const d of departments) if (deptStats[d.id]?.oldestH > m) m = deptStats[d.id].oldestH;
     return m || 1;
   }, [departments, deptStats]);
+
+  // Pipeline-Heatmap: historische Übergangsfrequenz zwischen aufeinanderfolgenden Dept-Paaren
+  const heatmap = useMemo(() => {
+    const byCase = new Map<string, Task[]>();
+    for (const t of tasks) {
+      (byCase.get(t.case_id) ?? byCase.set(t.case_id, []).get(t.case_id)!).push(t);
+    }
+    const pairCount = new Map<string, number>();
+    for (const arr of byCase.values()) {
+      arr.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      for (let i = 0; i < arr.length - 1; i++) {
+        const a = arr[i].department_id, b = arr[i + 1].department_id;
+        if (!a || !b || a === b) continue;
+        const key = `${a}->${b}`;
+        pairCount.set(key, (pairCount.get(key) || 0) + 1);
+      }
+    }
+    return pairCount;
+  }, [tasks]);
+  const heatLevel = (a: string | null, b: string | null) => {
+    if (!a || !b) return 0;
+    const c = heatmap.get(`${a}->${b}`) || 0;
+    if (c >= 12) return 4;
+    if (c >= 6) return 3;
+    if (c >= 2) return 2;
+    if (c >= 1) return 1;
+    return 0;
+  };
+
+  // Lade Chat-Preview + Anhänge-Anzahl beim Öffnen eines Pipeline-Knotens
+  useEffect(() => {
+    if (!selectedNodeId || !selectedCaseId) {
+      setDrawerChat([]); setDrawerAttachments(0); return;
+    }
+    let cancelled = false;
+    setDrawerLoading(true);
+    (async () => {
+      const [chatRes, attRes] = await Promise.all([
+        supabase
+          .from('case_chat_messages')
+          .select('id,author_id,body,created_at')
+          .eq('case_id', selectedCaseId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('case_chat_attachments')
+          .select('id', { count: 'exact', head: true })
+          .eq('case_id', selectedCaseId),
+      ]);
+      if (cancelled) return;
+      setDrawerChat(((chatRes.data as any[]) || []).reverse());
+      setDrawerAttachments(attRes.count ?? 0);
+      setDrawerLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedNodeId, selectedCaseId]);
+
+
 
   const deptOpenTasks = useMemo(() => {
     if (!selectedDept) return [];
@@ -364,6 +465,8 @@ export default function Cockpit() {
                 </div>
               )}
               <div className="cockpit-chip cockpit-chip--beta">BETA</div>
+              <div className="cockpit-radar" aria-hidden><span /></div>
+
             </div>
           </header>
 
@@ -468,7 +571,7 @@ export default function Cockpit() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
-                              <div className="cockpit-node__name">{d.name}</div>
+                              <div className="cockpit-node__name" data-text={d.name}>{d.name}</div>
                             </div>
                             {s.open > 0 && (
                               <span className={cn('cockpit-sla', slaClass(s.avgAgeH))} title="Durchschnittsalter offener Aufgaben">
@@ -495,6 +598,24 @@ export default function Cockpit() {
                           <div className="cockpit-node__meter" title={`Ältester Vorgang: ${slaLabel(s.oldestH)}`}>
                             <span style={{ width: `${meterPct}%` }} />
                           </div>
+                          {(() => {
+                            const cap = deptCapacity[d.id] || 0;
+                            const load = s.open;
+                            const pct = cap > 0 ? Math.min(150, Math.round((load / cap) * 100)) : 0;
+                            const over = cap > 0 && load > cap;
+                            return (
+                              <div className="cockpit-node__wip">
+                                <span>WIP</span>
+                                <div className={cn('cockpit-node__wip-bar', over && 'cockpit-node__wip-bar--over')}>
+                                  <span style={{ width: `${Math.min(100, pct)}%` }} />
+                                </div>
+                                <span className="cockpit-node__wip-val">
+                                  {load}{cap > 0 ? `/${cap}` : ''}
+                                </span>
+                              </div>
+                            );
+                          })()}
+
                         </button>
                         {selectedDept && renderPanelAfterMobile && (
                           <div key={`panel-mobile-${d.id}-${selectedDept}`} className="sm:hidden col-span-full cockpit-panel--enter">
@@ -563,104 +684,145 @@ export default function Cockpit() {
               <div className="text-xs text-white/55 tracking-wide">
                 EINE LINIE · EIN ZIEL — Nahtlos vernetzte Prozesse von Sales bis Lieferung.
               </div>
-              <div className="w-[380px] max-w-full">
-                <Select value={selectedCaseId ?? undefined} onValueChange={(v) => { setSelectedCaseId(v); setSelectedNodeId(null); }}>
-                  <SelectTrigger className="cockpit-select">
-                    <SelectValue placeholder="Vorgang wählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cases.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        <span className="font-mono text-xs mr-2">{c.case_no ?? '—'}</span>
-                        <span className="truncate">{c.project_name ?? '—'}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => { setPickerMode('select'); setPickerOpen(true); }}
+                  className="cockpit-toggle"
+                  style={{
+                    // @ts-ignore
+                    '--accent': 'hsl(195 100% 60%)',
+                    '--accent-glow': 'rgba(60,200,255,0.6)',
+                  } as React.CSSProperties}
+                >
+                  <Search className="h-3 w-3" /> Vorgang suchen
+                  <span className="font-mono text-[9px] opacity-60 ml-1">⌘K</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPickerMode('compare'); setPickerOpen(true); }}
+                  className={cn('cockpit-toggle', compareIds.length > 0 && 'cockpit-toggle--on')}
+                  style={{
+                    // @ts-ignore
+                    '--accent': 'hsl(270 90% 70%)',
+                    '--accent-glow': 'rgba(170,120,255,0.6)',
+                  } as React.CSSProperties}
+                >
+                  <GitCompare className="h-3 w-3" /> Vergleichen
+                  {compareIds.length > 0 && <span className="font-mono text-[10px]">+{compareIds.length}</span>}
+                </button>
               </div>
             </div>
 
-            <div className="cockpit-panel cockpit-hud">
-              <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
-              {selectedCaseTasks.length === 0 ? (
-                <div className="text-sm text-white/50 py-10 text-center">Keine Aufgaben für diesen Vorgang.</div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto pb-4 relative" ref={pipelineWrapRef}>
-                    <PipelineFlow count={selectedCaseTasks.length} currentIdx={currentIdx} />
-                    <ol className="cockpit-pipeline relative" style={{ zIndex: 1 }}>
-                      {selectedCaseTasks.map((t, i) => {
-                        const done = t.completed || t.status === 'done';
-                        const current = !done && i === currentIdx;
-                        const upcoming = !done && !current;
-                        const active = selectedNodeId === t.id;
-                        const progress = selectedCaseTasks.length > 1 ? i / (selectedCaseTasks.length - 1) : 0;
-                        const hue = 200 - progress * 60;
-                        const accentHsl = `${hue} 90% 58%`;
-                        const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
-                        const nextHue = 200 - ((i + 1) / Math.max(1, selectedCaseTasks.length - 1)) * 60;
-                        return (
-                          <li key={t.id} className="flex items-start">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedNodeId(active ? null : t.id)}
-                              className={cn('cockpit-step', active && 'cockpit-step--active', upcoming && 'cockpit-step--upcoming')}
-                              style={{
-                                // @ts-ignore
-                                '--accent': `hsl(${accentHsl})`,
-                                '--accent-glow': accentGlow,
-                              } as React.CSSProperties}
-                            >
-                              <div className="cockpit-step__hex">
-                                {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
-                              </div>
-                              <div className="cockpit-step__label">
-                                <div className="cockpit-step__label-status">
-                                  {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
-                                </div>
-                                <div className="cockpit-step__label-title">{t.title}</div>
-                                <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
-                              </div>
-                            </button>
-                            {i < selectedCaseTasks.length - 1 && (
-                              <div
-                                className={cn('cockpit-connector', (done || selectedCaseTasks[i + 1].completed || selectedCaseTasks[i + 1].status === 'done') && 'cockpit-connector--lit')}
-                                style={{
-                                  // @ts-ignore
-                                  '--from': `hsl(${accentHsl})`,
-                                  '--to': `hsl(${nextHue} 90% 58%)`,
-                                } as React.CSSProperties}
-                              />
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  </div>
+            {compareIds.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="cockpit-filterbar__label">Vergleich</span>
+                {[selectedCaseId, ...compareIds].filter(Boolean).map((cid, idx) => {
+                  const accent = accentFor(idx + 1);
+                  return (
+                    <span
+                      key={cid as string}
+                      className="cockpit-compare-pill"
+                      style={{
+                        // @ts-ignore
+                        '--accent': `hsl(${accent.hue})`,
+                      } as React.CSSProperties}
+                    >
+                      {caseNo(cid as string)}
+                      {idx > 0 && (
+                        <X
+                          className="h-3 w-3 cockpit-compare-pill__close"
+                          onClick={() => setCompareIds((prev) => prev.filter((x) => x !== cid))}
+                        />
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
-                  {selectedNodeId && (() => {
-                    const t = selectedCaseTasks.find((x) => x.id === selectedNodeId);
-                    if (!t) return null;
-                    const done = t.completed || t.status === 'done';
-                    return (
-                      <div className="mt-4 cockpit-subpanel">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <Field label="Abteilung" value={deptName(t.department_id)} />
-                          <Field label="Zugewiesen" value={userName(t.assigned_to)} />
-                          <Field label="Status" value={done ? 'erledigt' : t.status === 'in_progress' ? 'in Arbeit' : 'offen'} />
-                          <Field label="Abgeschlossen am" value={t.completed_at ? new Date(t.completed_at).toLocaleString('de-DE') : t.status === 'in_progress' ? 'in Arbeit' : 'noch nicht gestartet'} />
-                          <div className="sm:col-span-2">
-                            <div className="cockpit-field__label">Beschreibung</div>
-                            <div className="whitespace-pre-wrap text-sm text-white/80">{t.description || '—'}</div>
+            {/* Primary pipeline */}
+            <PipelineLane
+              key={selectedCaseId ?? 'none'}
+              tasks={selectedCaseTasks}
+              accentBaseHue={200}
+              selectedNodeId={selectedNodeId}
+              onSelectNode={(id) => setSelectedNodeId(id)}
+              deptName={deptName}
+              heatLevel={heatLevel}
+              caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
+              extraDrawer={
+                selectedNodeId
+                  ? (() => {
+                      const t = selectedCaseTasks.find((x) => x.id === selectedNodeId);
+                      if (!t) return null;
+                      const done = t.completed || t.status === 'done';
+                      return (
+                        <div className="mt-4 cockpit-subpanel">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <Field label="Abteilung" value={deptName(t.department_id)} />
+                            <Field label="Zugewiesen" value={userName(t.assigned_to)} />
+                            <Field label="Status" value={done ? 'erledigt' : t.status === 'in_progress' ? 'in Arbeit' : 'offen'} />
+                            <Field label="Abgeschlossen am" value={t.completed_at ? new Date(t.completed_at).toLocaleString('de-DE') : t.status === 'in_progress' ? 'in Arbeit' : 'noch nicht gestartet'} />
+                            <div className="sm:col-span-2">
+                              <div className="cockpit-field__label">Beschreibung</div>
+                              <div className="whitespace-pre-wrap text-sm text-white/80">{t.description || '—'}</div>
+                            </div>
+                          </div>
+
+                          <div className="cockpit-drawer-section">
+                            <h4 className="flex items-center gap-2">
+                              <MessageSquare className="h-3 w-3" /> Chat-Vorschau
+                              <span className="ml-auto flex items-center gap-1 text-[10px] text-white/45 normal-case tracking-normal">
+                                <Paperclip className="h-3 w-3" /> {drawerAttachments} Anhänge
+                              </span>
+                            </h4>
+                            {drawerLoading ? (
+                              <div className="text-xs text-white/45">// lade …</div>
+                            ) : drawerChat.length === 0 ? (
+                              <div className="text-xs text-white/45">Keine Nachrichten zu diesem Vorgang.</div>
+                            ) : (
+                              <div>
+                                {drawerChat.map((m) => (
+                                  <div key={m.id} className="cockpit-chat-msg">
+                                    <span className="cockpit-chat-msg__author">{userName(m.author_id)}</span>
+                                    <span className="cockpit-chat-msg__body">{m.body}</span>
+                                    <span className="cockpit-chat-msg__time">{fmtAgo(m.created_at)}</span>
+                                  </div>
+                                ))}
+                                {selectedCaseId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => navigate(`/cases/${selectedCaseId}`)}
+                                    className="mt-2 text-[10px] uppercase tracking-[0.22em] text-cyan-300 hover:underline"
+                                  >
+                                    → kompletten Vorgang öffnen
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
-                </>
-              )}
-            </div>
+                      );
+                    })()
+                  : null
+              }
+            />
+
+            {/* Compare lanes */}
+            {compareIds.map((cid, idx) => (
+              <CompareLane
+                key={cid}
+                caseId={cid}
+                tasks={tasks}
+                deptName={deptName}
+                heatLevel={heatLevel}
+                accentBaseHue={[40, 280, 340, 160][idx % 4]}
+                caseLabel={caseNo(cid)}
+              />
+            ))}
           </section>
+
 
           {/* FEATURE BAR */}
           <div className="cockpit-featurebar">
@@ -669,10 +831,61 @@ export default function Cockpit() {
             <div className="cockpit-featurebar__item"><Brain className="h-3.5 w-3.5" /> Intelligente Prozesse</div>
             <div className="cockpit-featurebar__item"><Target className="h-3.5 w-3.5" /> Gemeinsamer Erfolg</div>
           </div>
+
+          {/* COMMAND PALETTE */}
+          <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+            <DialogContent className="cockpit-cmd-dialog p-0 max-w-xl bg-[#0b1322] border border-cyan-400/30">
+              <Command className="bg-transparent text-white">
+                <CommandInput
+                  placeholder={pickerMode === 'compare' ? 'Vorgang zum Vergleich hinzufügen…' : 'Vorgang suchen (Nr. oder Projekt)…'}
+                  className="text-sm"
+                />
+                <CommandList className="max-h-[360px]">
+                  <CommandEmpty>Keine Treffer.</CommandEmpty>
+                  <CommandGroup heading={pickerMode === 'compare' ? 'Vergleichen' : 'Vorgänge'}>
+                    {cases.map((c) => {
+                      const disabled =
+                        pickerMode === 'compare' &&
+                        (c.id === selectedCaseId || compareIds.includes(c.id));
+                      return (
+                        <CommandItem
+                          key={c.id}
+                          value={`${c.case_no ?? ''} ${c.project_name ?? ''}`}
+                          disabled={disabled}
+                          onSelect={() => {
+                            if (pickerMode === 'compare') {
+                              if (!disabled) setCompareIds((prev) => [...prev, c.id].slice(0, 3));
+                            } else {
+                              setSelectedCaseId(c.id);
+                              setSelectedNodeId(null);
+                            }
+                            setPickerOpen(false);
+                          }}
+                          className="text-white/85 aria-selected:bg-cyan-500/10"
+                        >
+                          <span className="font-mono text-xs text-cyan-300 mr-3">{c.case_no ?? '—'}</span>
+                          <span className="truncate">{c.project_name ?? '—'}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </DialogContent>
+          </Dialog>
         </div>
+
+        {!bootDone && (
+          <div className="cockpit-boot" aria-hidden>
+            <div className="cockpit-boot__line">// COCKPIT v1.0 — initialisiere subsysteme</div>
+            <div className="cockpit-boot__line">// telemetrie · netzwerk · pipeline … <span className="text-emerald-300">OK</span></div>
+            <div className="cockpit-boot__line">// engage.</div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
+
 }
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -729,3 +942,134 @@ function PipelineFlow({ count, currentIdx }: { count: number; currentIdx: number
     </svg>
   );
 }
+
+/** Renders a single horizontal pipeline (used for primary + compare lanes). */
+function PipelineLane({
+  tasks,
+  accentBaseHue,
+  selectedNodeId,
+  onSelectNode,
+  deptName,
+  heatLevel,
+  caseLabel,
+  extraDrawer,
+}: {
+  tasks: Task[];
+  accentBaseHue: number;
+  selectedNodeId: string | null;
+  onSelectNode: (id: string) => void;
+  deptName: (id: string | null) => string;
+  heatLevel: (a: string | null, b: string | null) => number;
+  caseLabel: string | null;
+  extraDrawer?: React.ReactNode;
+}) {
+  const currentIdx = tasks.findIndex((t) => !t.completed && t.status !== 'done');
+  return (
+    <div className="cockpit-panel cockpit-hud">
+      <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
+      {caseLabel && (
+        <div className="cockpit-lane-label">
+          <span className="font-mono text-cyan-300">{caseLabel}</span>
+        </div>
+      )}
+      {tasks.length === 0 ? (
+        <div className="text-sm text-white/50 py-10 text-center">Keine Aufgaben für diesen Vorgang.</div>
+      ) : (
+        <>
+          <div className="overflow-x-auto pb-4 relative">
+            <PipelineFlow count={tasks.length} currentIdx={currentIdx} />
+            <ol className="cockpit-pipeline relative" style={{ zIndex: 1 }}>
+              {tasks.map((t, i) => {
+                const done = t.completed || t.status === 'done';
+                const current = !done && i === currentIdx;
+                const upcoming = !done && !current;
+                const active = selectedNodeId === t.id;
+                const progress = tasks.length > 1 ? i / (tasks.length - 1) : 0;
+                const hue = accentBaseHue - progress * 60;
+                const accentHsl = `${hue} 90% 58%`;
+                const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
+                const nextHue = accentBaseHue - ((i + 1) / Math.max(1, tasks.length - 1)) * 60;
+                const heat = i < tasks.length - 1 ? heatLevel(t.department_id, tasks[i + 1].department_id) : 0;
+                return (
+                  <li key={t.id} className="flex items-start">
+                    <button
+                      type="button"
+                      onClick={() => onSelectNode(t.id)}
+                      className={cn('cockpit-step', active && 'cockpit-step--active', upcoming && 'cockpit-step--upcoming')}
+                      style={{
+                        // @ts-ignore
+                        '--accent': `hsl(${accentHsl})`,
+                        '--accent-glow': accentGlow,
+                      } as React.CSSProperties}
+                    >
+                      <div className="cockpit-step__hex">
+                        {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
+                      </div>
+                      <div className="cockpit-step__label">
+                        <div className="cockpit-step__label-status">
+                          {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
+                        </div>
+                        <div className="cockpit-step__label-title" data-text={t.title}>{t.title}</div>
+                        <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
+                      </div>
+                    </button>
+                    {i < tasks.length - 1 && (
+                      <div
+                        className={cn(
+                          'cockpit-connector',
+                          (done || tasks[i + 1].completed || tasks[i + 1].status === 'done') && 'cockpit-connector--lit'
+                        )}
+                        data-heat={heat || undefined}
+                        style={{
+                          // @ts-ignore
+                          '--from': `hsl(${accentHsl})`,
+                          '--to': `hsl(${nextHue} 90% 58%)`,
+                        } as React.CSSProperties}
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+
+          {extraDrawer}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Read-only compare lane: scopes tasks to a single case and renders a PipelineLane. */
+function CompareLane({
+  caseId,
+  tasks,
+  deptName,
+  heatLevel,
+  accentBaseHue,
+  caseLabel,
+}: {
+  caseId: string;
+  tasks: Task[];
+  deptName: (id: string | null) => string;
+  heatLevel: (a: string | null, b: string | null) => number;
+  accentBaseHue: number;
+  caseLabel: string;
+}) {
+  const scoped = useMemo(
+    () => tasks.filter((t) => t.case_id === caseId).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+    [tasks, caseId]
+  );
+  return (
+    <PipelineLane
+      tasks={scoped}
+      accentBaseHue={accentBaseHue}
+      selectedNodeId={null}
+      onSelectNode={() => {}}
+      deptName={deptName}
+      heatLevel={heatLevel}
+      caseLabel={caseLabel}
+    />
+  );
+}
+
