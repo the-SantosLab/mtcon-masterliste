@@ -15,6 +15,7 @@ import {
   Pin, PinOff, Download, Eye, EyeOff, Keyboard, Save, TrendingUp,
   Headphones, ShoppingCart,
 } from 'lucide-react';
+import { PipelineTriangle, type TriangleWing } from '@/components/cockpit/PipelineTriangle';
 
 
 type Dept = { id: string; name: string };
