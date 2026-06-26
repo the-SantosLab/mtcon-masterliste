@@ -1537,7 +1537,13 @@ const TRI_WEDGE = [
 function ShapeTriangle({
   depts, hover, setHover,
 }: { depts: ShapeDept[]; hover: number | null; setHover: (n: number | null) => void; accentFor: (i: number) => typeof SHAPE_ACCENTS[number] }) {
-  const wedgePath = "M500,55 L745,345 L700,405 L560,405 L500,470 L440,405 L300,405 L255,345 Z";
+  const wedgePath = "M315,475 L500,150 L685,475 L617,515 A135,135 0 0 1 383,515 Z";
+  // Sales = top (rot 0), Beschaffung = bottom-right (rot 120), Logistik = bottom-left (rot 240)
+  const wedges = [
+    { key: 'sales',       rot: 0,   outer: '#ff9d33', inner: '#ffc06a', glow: '255,157,51' },
+    { key: 'beschaffung', rot: 120, outer: '#62e23a', inner: '#9bff63', glow: '98,226,58'  },
+    { key: 'logistik',    rot: 240, outer: '#2f9dff', inner: '#7cc4ff', glow: '47,157,255' },
+  ];
 
   return (
     <div className="tri-scene">
@@ -1545,25 +1551,26 @@ function ShapeTriangle({
 
       <svg className="tri-shapes" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">
         <defs>
-          <filter id="triGlowSoft" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="10" />
+          <filter id="triGlowSoft" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="9" />
           </filter>
-          <filter id="triGlowHex" x="-60%" y="-60%" width="220%" height="220%">
+          <filter id="triGlowHex" x="-70%" y="-70%" width="240%" height="240%">
             <feGaussianBlur stdDeviation="6" />
           </filter>
         </defs>
 
-        {TRI_WEDGE.map((w, i) => {
+        {wedges.map((w, i) => {
           const isHover = hover === i;
           const dim = hover !== null && !isHover ? 0.55 : 1;
           return (
-            <g key={w.key} transform={`rotate(${w.rot} 500 500)`} opacity={dim}>
-              <path d={wedgePath} fill={`rgba(${w.glowRgba},0.06)`} stroke={w.color} strokeWidth={isHover ? 18 : 14} filter="url(#triGlowSoft)" opacity="0.55" />
+            <g key={w.key} transform={`rotate(${w.rot} 500 583)`} opacity={dim}>
+              <path d={wedgePath} fill={`rgba(${w.glow},0.07)`} stroke={w.outer} strokeWidth={isHover ? 16 : 13} filter="url(#triGlowSoft)" opacity="0.6" />
               <path
                 d={wedgePath}
-                fill={`rgba(${w.glowRgba},0.05)`}
-                stroke={w.glow}
-                strokeWidth={isHover ? 4 : 3}
+                fill={`rgba(${w.glow},0.05)`}
+                stroke={w.inner}
+                strokeWidth={isHover ? 4.5 : 3.5}
+                strokeLinejoin="round"
                 style={{ cursor: 'pointer', pointerEvents: 'auto' }}
                 onMouseEnter={() => setHover(i)}
                 onMouseLeave={() => setHover(null)}
@@ -1572,26 +1579,32 @@ function ShapeTriangle({
           );
         })}
 
-        {/* seam arrows */}
-        <g fill="#cfe6ff" opacity="0.8">
-          <polygon points="618,400 642,392 642,416" transform="rotate(35 630 405)" />
-          <polygon points="618,400 642,392 642,416" transform="rotate(155 630 405)" />
-          <polygon points="618,400 642,392 642,416" transform="rotate(275 630 405)" />
+        {/* dark seams to create the gaps */}
+        <g stroke="#04050d" strokeWidth="11" strokeLinecap="round">
+          <line x1="617" y1="515" x2="685" y2="475" />
+          <line x1="383" y1="515" x2="315" y2="475" />
+          <line x1="500" y1="718" x2="500" y2="800" />
         </g>
 
-        {/* center hexagon */}
-        <path d="M500,365 L612,432 L612,567 L500,635 L388,567 L388,432 Z"
-              fill="rgba(8,14,32,0.92)" stroke="#3ad6ff" strokeWidth="6" filter="url(#triGlowHex)" opacity="0.9" />
-        <path d="M500,365 L612,432 L612,567 L500,635 L388,567 L388,432 Z"
-              fill="none" stroke="#9fe9ff" strokeWidth="1.5" />
+        {/* rotational flow chevrons in the seams */}
+        <g fill="none" stroke="#dfeeff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" opacity="0.85">
+          <g transform="translate(660,486) rotate(55)"><path d="M-12,-12 L4,0 L-12,12 M2,-12 L18,0 L2,12" /></g>
+          <g transform="translate(500,762) rotate(180)"><path d="M-12,-12 L4,0 L-12,12 M2,-12 L18,0 L2,12" /></g>
+          <g transform="translate(340,486) rotate(235)"><path d="M-12,-12 L4,0 L-12,12 M2,-12 L18,0 L2,12" /></g>
+        </g>
+
+        {/* center circle */}
+        <circle cx="500" cy="583" r="135" fill="rgba(7,12,28,0.92)" stroke="#3ad6ff" strokeWidth="5.5" filter="url(#triGlowHex)" opacity="0.9" />
+        <circle cx="500" cy="583" r="135" fill="none" stroke="#9fe9ff" strokeWidth="1.4" />
+        <circle cx="500" cy="583" r="118" fill="none" stroke="rgba(120,210,255,0.18)" strokeWidth="1" />
       </svg>
 
       {/* Apex icon rings (Sales / Beschaffung / Logistik) */}
       <div className={cn('tri-ring tri-ring-sales', hover === 0 && 'is-hover')}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="#ffb066" strokeWidth="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M16 6h5v5" /></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffc06a" strokeWidth="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M16 6h5v5" /></svg>
       </div>
       <div className={cn('tri-ring tri-ring-beschaffung', hover === 1 && 'is-hover')}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="#8bff5a" strokeWidth="2"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H6" /></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9bff63" strokeWidth="2"><circle cx="9" cy="20" r="1.4" /><circle cx="18" cy="20" r="1.4" /><path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H6" /></svg>
       </div>
       <div className={cn('tri-ring tri-ring-logistik', hover === 2 && 'is-hover')}>
         <svg viewBox="0 0 24 24" fill="none" stroke="#7cc4ff" strokeWidth="2"><rect x="1" y="9" width="13" height="8" rx="1" /><path d="M14 12h4l3 3v2h-7z" /><circle cx="6" cy="19" r="1.6" /><circle cx="17.5" cy="19" r="1.6" /></svg>
