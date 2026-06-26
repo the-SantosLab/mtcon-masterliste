@@ -102,6 +102,9 @@ import CrmEnrollments from "./pages/crm/CrmEnrollments";
 import CrmLeads from "./pages/crm/CrmLeads";
 import CrmCalendar from "./pages/crm/CrmCalendar";
 import CrmAnalytics from "./pages/crm/CrmAnalytics";
+import CrmForecast from "./pages/crm/CrmForecast";
+import CrmSalesGoals from "./pages/crm/CrmSalesGoals";
+import CrmLeadScoring from "./pages/crm/CrmLeadScoring";
 import CrmRoles from "./pages/crm/CrmRoles";
 import CrmAccess from "./pages/crm/CrmAccess";
 import CrmNoAccess from "./pages/crm/CrmNoAccess";
@@ -263,6 +266,9 @@ function AuthenticatedApp() {
         <Route path="/crm/outbound/leads" element={<CrmProtectedRoute><CrmLeads /></CrmProtectedRoute>} />
         <Route path="/crm/activities/calendar" element={<CrmProtectedRoute><CrmCalendar /></CrmProtectedRoute>} />
         <Route path="/crm/analytics" element={<CrmProtectedRoute><CrmAnalytics /></CrmProtectedRoute>} />
+        <Route path="/crm/forecast" element={<CrmProtectedRoute><CrmForecast /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/ziele" element={<CrmProtectedRoute><CrmSalesGoals /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/scoring" element={<CrmProtectedRoute><CrmLeadScoring /></CrmProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
