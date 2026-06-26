@@ -146,7 +146,7 @@ export default function Cockpit() {
 
   const renderDeptPanel = () => (
     <div
-      className="cockpit-panel"
+      className="cockpit-panel mt-2"
       style={{
         // @ts-ignore
         '--accent': `hsl(${selectedDeptAccent.hue})`,
