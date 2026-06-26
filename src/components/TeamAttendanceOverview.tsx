@@ -418,6 +418,80 @@ function matchesAbsenceFilter(a: Abs, filter: string) {
   return a.absence_type === filter;
 }
 
+function buildSeries(
+  userAtt: Att[],
+  userAbs: Abs[],
+  pFrom: string,
+  pTo: string,
+  absFilter: string,
+) {
+  const map = new Map<string, DayRow>();
+  const ensure = (date: string) => {
+    if (!map.has(date)) map.set(date, { date, absences: [] });
+    return map.get(date)!;
+  };
+  for (const a of userAtt) {
+    if (a.work_date < pFrom || a.work_date > pTo) continue;
+    ensure(a.work_date).att = a;
+  }
+  for (const ab of userAbs) {
+    const start = ab.start_date > pFrom ? ab.start_date : pFrom;
+    const end = ab.end_date < pTo ? ab.end_date : pTo;
+    if (start > end) continue;
+    const d = new Date(start + 'T00:00:00');
+    const endD = new Date(end + 'T00:00:00');
+    while (d <= endD) {
+      const iso = d.toISOString().slice(0, 10);
+      ensure(iso).absences.push(ab);
+      d.setDate(d.getDate() + 1);
+    }
+  }
+  const allDays = Array.from(map.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+  let worked = 0, overtime = 0, vacation = 0, sick = 0, other = 0;
+  const filteredDays: DayRow[] = [];
+  for (const d of allDays) {
+    if (d.att?.worked_minutes) {
+      worked += d.att.worked_minutes;
+      overtime += d.att.worked_minutes - 480;
+    }
+    const seen = new Set<string>();
+    let dayVac = 0, daySick = 0, dayOther = 0;
+    for (const a of d.absences) {
+      const key = `${a.start_date}|${a.end_date}|${a.category}|${a.absence_type}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (a.category === 'vacation') dayVac += 1;
+      else if (a.category === 'sick') daySick += 1;
+      else dayOther += 1;
+    }
+    const hasMatchingAbs = d.absences.some((a) => matchesAbsenceFilter(a, absFilter));
+    const include = absFilter === 'all' || hasMatchingAbs;
+    if (include) {
+      filteredDays.push(d);
+      vacation += dayVac;
+      sick += daySick;
+      other += dayOther;
+    }
+  }
+  return { days: filteredDays, totals: { worked, overtime, vacation, sick, other } };
+}
+
+function shiftIsoYear(iso: string, delta: number) {
+  return `${parseInt(iso.slice(0, 4), 10) + delta}${iso.slice(4)}`;
+}
+
+function daysBetween(a: string, b: string) {
+  return Math.round((new Date(b + 'T00:00:00').getTime() - new Date(a + 'T00:00:00').getTime()) / 86400000) + 1;
+}
+
+function addDaysIso(iso: string, n: number) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+
+
 function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
   const [period, setPeriod] = useState('year');
   const [absFilter, setAbsFilter] = useState('all');
