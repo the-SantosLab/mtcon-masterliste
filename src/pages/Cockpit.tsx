@@ -47,6 +47,7 @@ const DEPT_ICONS = [Cpu, Boxes, Truck, Wrench, Users, Building2, Briefcase, Sett
 const accentFor = (i: number) => ACCENTS[i % ACCENTS.length];
 
 export default function Cockpit() {
+  const navigate = useNavigate();
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [cases, setCases] = useState<CaseRow[]>([]);
