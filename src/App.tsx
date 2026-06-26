@@ -95,6 +95,7 @@ import CrmOffers from "./pages/crm/CrmOffers";
 import CrmOfferDetail from "./pages/crm/CrmOfferDetail";
 import CrmActivities from "./pages/crm/CrmActivities";
 import CrmSettings from "./pages/crm/CrmSettings";
+import CrmMicrosoft365 from "./pages/crm/CrmMicrosoft365";
 import CrmWiki from "./pages/crm/CrmWiki";
 import CrmOutbound from "./pages/crm/CrmOutbound";
 import CrmSequenceDetail from "./pages/crm/CrmSequenceDetail";
@@ -272,6 +273,7 @@ function AuthenticatedApp() {
         <Route path="/crm/settings/ziele" element={<CrmProtectedRoute><CrmSalesGoals /></CrmProtectedRoute>} />
         <Route path="/crm/settings/scoring" element={<CrmProtectedRoute><CrmLeadScoring /></CrmProtectedRoute>} />
         <Route path="/crm/settings/webformulare" element={<CrmProtectedRoute><CrmWebForms /></CrmProtectedRoute>} />
+        <Route path="/crm/settings/microsoft-365" element={<CrmProtectedRoute><CrmMicrosoft365 /></CrmProtectedRoute>} />
         <Route path="/p/offer/:token" element={<PublicOffer />} />
 
 
