@@ -79,7 +79,16 @@ export default function CrmContacts() {
   const save = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) { toast.error('Vor- und Nachname erforderlich'); return; }
     setSaving(true);
-    const payload = { ...form, company_id: form.company_id || null };
+    const wasOptIn = !!editing?.email_opt_in;
+    const payload: any = {
+      ...form,
+      company_id: form.company_id || null,
+      salutation: form.salutation || null,
+      mobile: form.mobile || null,
+      linkedin_url: form.linkedin_url || null,
+    };
+    if (!wasOptIn && form.email_opt_in) payload.email_opt_in_at = new Date().toISOString();
+    if (wasOptIn && !form.email_opt_in) payload.email_opt_out_at = new Date().toISOString();
     const { error } = editing
       ? await supabase.from('contacts').update(payload).eq('id', editing.id)
       : await supabase.from('contacts').insert(payload);
@@ -87,6 +96,7 @@ export default function CrmContacts() {
     if (error) { toast.error(error.message); return; }
     toast.success('Gespeichert'); setOpen(false); void load();
   };
+
 
   return (
     <CrmLayout>
