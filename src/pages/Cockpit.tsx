@@ -596,6 +596,24 @@ export default function Cockpit() {
                           <div className="cockpit-node__meter" title={`Ältester Vorgang: ${slaLabel(s.oldestH)}`}>
                             <span style={{ width: `${meterPct}%` }} />
                           </div>
+                          {(() => {
+                            const cap = deptCapacity[d.id] || 0;
+                            const load = s.open;
+                            const pct = cap > 0 ? Math.min(150, Math.round((load / cap) * 100)) : 0;
+                            const over = cap > 0 && load > cap;
+                            return (
+                              <div className="cockpit-node__wip">
+                                <span>WIP</span>
+                                <div className={cn('cockpit-node__wip-bar', over && 'cockpit-node__wip-bar--over')}>
+                                  <span style={{ width: `${Math.min(100, pct)}%` }} />
+                                </div>
+                                <span className="cockpit-node__wip-val">
+                                  {load}{cap > 0 ? `/${cap}` : ''}
+                                </span>
+                              </div>
+                            );
+                          })()}
+
                         </button>
                         {selectedDept && renderPanelAfterMobile && (
                           <div key={`panel-mobile-${d.id}-${selectedDept}`} className="sm:hidden col-span-full cockpit-panel--enter">
