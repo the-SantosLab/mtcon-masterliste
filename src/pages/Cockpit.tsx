@@ -917,7 +917,14 @@ export default function Cockpit() {
               </div>
             )}
 
-            {/* Primary pipeline */}
+            {/* Primary pipeline — shape (triangle/square) if 3-4 depts, else linear */}
+            <PipelineShape
+              tasks={selectedCaseTasks}
+              deptName={deptName}
+              caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
+              userName={userName}
+            />
+
             <PipelineLane
               key={selectedCaseId ?? 'none'}
               tasks={selectedCaseTasks}
@@ -1341,5 +1348,232 @@ function CompareLane({
     />
   );
 }
+
+
+/* ============================================================================
+ * PipelineShape — Prozess-Geometrie
+ * 3 Abteilungen → Dreieck, 4 → Quadrat, sonst → Linie (Hinweis).
+ * Hover über Abteilungs-Knoten zeigt, woran die Abteilung gerade arbeitet.
+ * ========================================================================= */
+function PipelineShape({
+  tasks,
+  deptName,
+  caseLabel,
+  userName,
+}: {
+  tasks: Task[];
+  deptName: (id: string | null) => string;
+  caseLabel: string | null;
+  userName?: (id: string | null) => string;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+
+  // unique departments in order of pipeline appearance
+  const depts = useMemo(() => {
+    const seen = new Map<string, { id: string; name: string; tasks: Task[] }>();
+    for (const t of tasks) {
+      if (!t.department_id) continue;
+      const key = t.department_id;
+      if (!seen.has(key)) seen.set(key, { id: key, name: deptName(key), tasks: [] });
+      seen.get(key)!.tasks.push(t);
+    }
+    return Array.from(seen.values());
+  }, [tasks, deptName]);
+
+  if (tasks.length === 0 || depts.length < 2) return null;
+
+  const shape: 'triangle' | 'square' | 'line' =
+    depts.length === 3 ? 'triangle' : depts.length === 4 ? 'square' : 'line';
+
+  // viewBox + vertices per shape
+  const VB_W = 900;
+  const VB_H = 560;
+  let verts: { x: number; y: number }[] = [];
+  if (shape === 'triangle') {
+    verts = [
+      { x: 450, y: 70 },   // 01 top (Sales)
+      { x: 800, y: 480 },  // 02 bottom-right (Beschaffung)
+      { x: 100, y: 480 },  // 03 bottom-left (Logistik)
+    ];
+  } else if (shape === 'square') {
+    verts = [
+      { x: 110, y: 90 },   // 01 TL
+      { x: 790, y: 90 },   // 02 TR
+      { x: 790, y: 470 },  // 03 BR
+      { x: 110, y: 470 },  // 04 BL
+    ];
+  } else {
+    // Linie — gleichmäßig verteilt
+    const N = depts.length;
+    for (let i = 0; i < N; i++) {
+      verts.push({ x: 80 + (i * (VB_W - 160)) / Math.max(1, N - 1), y: 280 });
+    }
+  }
+
+  const HUES = [32, 195, 142, 270, 340, 50];
+  const colorFor = (i: number) => HUES[i % HUES.length];
+
+  // Hover panel
+  const activeDept = hover != null ? depts[hover] : null;
+  const activeWork = activeDept
+    ? activeDept.tasks.filter((t) => !t.completed && t.status !== 'done')
+    : [];
+  const activeDone = activeDept ? activeDept.tasks.length - activeWork.length : 0;
+
+  // path between vertices (closed for triangle/square, open for line)
+  const closed = shape !== 'line';
+  const pathSegments: { from: { x: number; y: number }; to: { x: number; y: number }; hue: number }[] = [];
+  for (let i = 0; i < verts.length; i++) {
+    const next = i + 1;
+    if (next >= verts.length && !closed) break;
+    const to = verts[next % verts.length];
+    pathSegments.push({ from: verts[i], to, hue: colorFor(i) });
+  }
+
+  return (
+    <div className="cockpit-panel cockpit-hud cockpit-shape-wrap">
+      <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="cockpit-lane-label !static !mb-0">
+          <span className="font-mono text-cyan-300">{caseLabel ?? '—'}</span>
+          <span className="ml-2 text-[10px] tracking-[0.3em] uppercase text-white/55">
+            Prozess-Geometrie · {shape === 'triangle' ? 'Dreieck' : shape === 'square' ? 'Quadrat' : 'Linie'} · {depts.length} Abteilungen
+          </span>
+        </div>
+        <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 hidden sm:block">
+          Hover für Live-Status
+        </div>
+      </div>
+
+      <div className="relative w-full" style={{ aspectRatio: `${VB_W} / ${VB_H}` }}>
+        <svg
+          viewBox={`0 0 ${VB_W} ${VB_H}`}
+          className="absolute inset-0 w-full h-full"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <defs>
+            {pathSegments.map((s, i) => (
+              <linearGradient key={i} id={`shapeGrad-${i}`} x1={s.from.x} y1={s.from.y} x2={s.to.x} y2={s.to.y} gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor={`hsl(${s.hue} 95% 60%)`} />
+                <stop offset="100%" stopColor={`hsl(${colorFor((i + 1) % verts.length)} 95% 60%)`} />
+              </linearGradient>
+            ))}
+            <filter id="shapeGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+
+          {/* center label */}
+          <g opacity="0.9">
+            <circle cx={VB_W / 2} cy={VB_H / 2} r="90" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+            <circle cx={VB_W / 2} cy={VB_H / 2} r="62" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" strokeDasharray="2 4" />
+            <text x={VB_W / 2} y={VB_H / 2 - 6} textAnchor="middle" className="cockpit-shape__center-title">NAHTLOS VERBUNDEN</text>
+            <text x={VB_W / 2} y={VB_H / 2 + 16} textAnchor="middle" className="cockpit-shape__center-sub">EIN PROZESS · EIN ZIEL</text>
+            <text x={VB_W / 2} y={VB_H / 2 + 34} textAnchor="middle" className="cockpit-shape__center-sub">GEMEINSAMER ERFOLG</text>
+          </g>
+
+          {/* edges */}
+          {pathSegments.map((s, i) => {
+            // shorten endpoints so line doesn't enter the node circle
+            const r = 56;
+            const dx = s.to.x - s.from.x, dy = s.to.y - s.from.y;
+            const len = Math.hypot(dx, dy) || 1;
+            const ux = dx / len, uy = dy / len;
+            const x1 = s.from.x + ux * r, y1 = s.from.y + uy * r;
+            const x2 = s.to.x - ux * r, y2 = s.to.y - uy * r;
+            // arrow head near 'to'
+            const ah = 14;
+            const ax = x2 - ux * ah, ay = y2 - uy * ah;
+            const px = -uy, py = ux;
+            return (
+              <g key={i} filter="url(#shapeGlow)">
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={`url(#shapeGrad-${i})`} strokeWidth="3" strokeLinecap="round" />
+                <polygon
+                  points={`${x2},${y2} ${ax + px * 7},${ay + py * 7} ${ax - px * 7},${ay - py * 7}`}
+                  fill={`hsl(${colorFor((i + 1) % verts.length)} 95% 60%)`}
+                />
+              </g>
+            );
+          })}
+
+          {/* vertex nodes */}
+          {verts.map((v, i) => {
+            const hue = colorFor(i);
+            const d = depts[i];
+            const open = d.tasks.filter((t) => !t.completed && t.status !== 'done').length;
+            return (
+              <g
+                key={i}
+                onMouseEnter={() => setHover(i)}
+                onMouseLeave={() => setHover((h) => (h === i ? null : h))}
+                style={{ cursor: 'pointer' }}
+              >
+                <circle cx={v.x} cy={v.y} r="56" fill="rgba(10,18,32,0.85)" stroke={`hsl(${hue} 95% 60%)`} strokeWidth="2.5" filter="url(#shapeGlow)" />
+                <circle cx={v.x} cy={v.y} r="56" fill="none" stroke={`hsla(${hue}, 95%, 60%, 0.25)`} strokeWidth="10" />
+                <text x={v.x} y={v.y - 6} textAnchor="middle" className="cockpit-shape__node-num" fill={`hsl(${hue} 95% 70%)`}>
+                  {String(i + 1).padStart(2, '0')}
+                </text>
+                <text x={v.x} y={v.y + 14} textAnchor="middle" className="cockpit-shape__node-name">
+                  {d.name.toUpperCase().slice(0, 14)}
+                </text>
+                {/* counter pill */}
+                <g transform={`translate(${v.x + 38}, ${v.y - 50})`}>
+                  <rect x="-18" y="-10" width="36" height="20" rx="10" fill="rgba(0,0,0,0.6)" stroke={`hsla(${hue}, 95%, 60%, 0.7)`} />
+                  <text x="0" y="4" textAnchor="middle" className="cockpit-shape__node-count" fill={`hsl(${hue} 95% 75%)`}>
+                    {open}/{d.tasks.length}
+                  </text>
+                </g>
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* hover overlay panel */}
+        {activeDept && (
+          <div
+            className="cockpit-shape__tip"
+            style={{
+              left: `${(verts[hover!].x / VB_W) * 100}%`,
+              top: `${(verts[hover!].y / VB_H) * 100}%`,
+              // shift so it doesn't cover the node
+              transform: verts[hover!].y < VB_H / 2 ? 'translate(-50%, 70px)' : 'translate(-50%, calc(-100% - 70px))',
+              // @ts-ignore
+              '--accent': `hsl(${colorFor(hover!)} 95% 60%)`,
+            } as React.CSSProperties}
+          >
+            <div className="cockpit-shape__tip-head">
+              <span className="font-mono text-[10px] opacity-70">{String(hover! + 1).padStart(2, '0')}</span>
+              <span className="font-semibold tracking-wider">{activeDept.name.toUpperCase()}</span>
+              <span className="ml-auto text-[10px] opacity-70">{activeDone}/{activeDept.tasks.length} erledigt</span>
+            </div>
+            {activeWork.length === 0 ? (
+              <div className="text-xs text-white/55 py-1.5">Aktuell keine offenen Aufgaben.</div>
+            ) : (
+              <ul className="space-y-1.5">
+                {activeWork.slice(0, 5).map((t) => (
+                  <li key={t.id} className="flex items-start gap-2 text-xs">
+                    <span className={cn('cockpit-shape__dot', t.status === 'in_progress' && 'cockpit-shape__dot--live')} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white/90 truncate">{t.title}</div>
+                      <div className="text-[10px] text-white/45">
+                        {t.status === 'in_progress' ? 'in Arbeit' : 'offen'}
+                        {userName && t.assigned_to && <> · {userName(t.assigned_to)}</>}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+                {activeWork.length > 5 && (
+                  <li className="text-[10px] text-white/40">+ {activeWork.length - 5} weitere …</li>
+                )}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 
