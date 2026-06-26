@@ -27,9 +27,20 @@ export type TriangleWing = {
   pulse?: boolean;              // adds live pulse animation
 };
 
+export type TriangleCenterData = {
+  caseNo?: string;
+  progressPct?: number;
+  deadlineLabel?: string;            // e.g. "in 13d" or "—"
+  deadlineState?: 'none' | 'ok' | 'warn' | 'crit';
+  nextMilestone?: string;
+};
+
 export type PipelineTriangleProps = {
   wings: [TriangleWing, TriangleWing, TriangleWing];
+  /** Legacy HTML-overlay center (kept for back-compat). Prefer `centerData`. */
   center?: { title?: ReactNode; sub?: ReactNode };
+  /** Structured data rendered as SVG <text> at the exact circle center (reliable). */
+  centerData?: TriangleCenterData;
   footer?: Array<{ icon: ReactNode; label: string }>;
   hoverIndex?: number | null;
   onHoverChange?: (i: number | null) => void;
@@ -47,6 +58,7 @@ const DEFAULT_WEDGE_PATH =
 export function PipelineTriangle({
   wings,
   center,
+  centerData,
   footer,
   hoverIndex = null,
   onHoverChange,
@@ -58,6 +70,10 @@ export function PipelineTriangle({
   className,
 }: PipelineTriangleProps) {
   const setHover = (i: number | null) => onHoverChange?.(i);
+
+  const deadlineFill =
+    centerData?.deadlineState === 'crit' ? '#ff8090' :
+    centerData?.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff';
 
   return (
     <div className={cn('tri-scene', className)}>
@@ -120,6 +136,89 @@ export function PipelineTriangle({
         <circle cx={pivot.x} cy={pivot.y} r="135" fill="rgba(7,12,28,0.92)" stroke="#3ad6ff" strokeWidth="5.5" filter="url(#triGlowHex)" opacity="0.9" />
         <circle cx={pivot.x} cy={pivot.y} r="135" fill="none" stroke="#9fe9ff" strokeWidth="1.4" />
         <circle cx={pivot.x} cy={pivot.y} r="118" fill="none" stroke="rgba(120,210,255,0.18)" strokeWidth="1" />
+
+        {/* Zentrums-Text als SVG (skaliert pixel-perfekt mit dem Kreis) */}
+        {centerData && (() => {
+          const cx = pivot.x;
+          const cy = pivot.y;
+          const lines: Array<{ y: number; el: ReactNode }> = [];
+          let cursor = 0;
+          const push = (dy: number, el: ReactNode) => { cursor += dy; lines.push({ y: cursor, el }); };
+
+          // Vertikales Layout relativ zur Mitte. Summe ≈ 0 → optisch zentriert.
+          const hasCase = !!centerData.caseNo;
+          const hasProgress = typeof centerData.progressPct === 'number';
+          const hasDeadline = !!centerData.deadlineLabel && centerData.deadlineLabel !== '—';
+          const hasNext = !!centerData.nextMilestone;
+
+          // Startoffset so wählen, dass die Block-Höhe um 0 zentriert ist.
+          const heights = [
+            hasCase ? 34 : 0,
+            hasProgress ? 30 : 0,
+            hasDeadline ? 24 : 0,
+            hasNext ? 22 : 0,
+          ];
+          const total = heights.reduce((a, b) => a + b, 0);
+          cursor = -total / 2;
+
+          if (hasCase) {
+            cursor += 26;
+            lines.push({
+              y: cursor,
+              el: (
+                <text key="case" x={cx} y={cy + cursor} textAnchor="middle"
+                  fontFamily="Inter, ui-sans-serif, sans-serif" fontSize={30} fontWeight={800}
+                  letterSpacing={1} fill="#ffffff" style={{ textShadow: '0 0 10px rgba(120,210,255,0.55)' }}>
+                  {centerData.caseNo}
+                </text>
+              ),
+            });
+            cursor += 8;
+          }
+          if (hasProgress) {
+            cursor += 24;
+            lines.push({
+              y: cursor,
+              el: (
+                <text key="prog" x={cx} y={cy + cursor} textAnchor="middle"
+                  fontFamily="Inter, ui-sans-serif, sans-serif" fontSize={20} fontWeight={700}
+                  letterSpacing={1.5} fill="#7fe3ff">
+                  {centerData.progressPct}% FORTSCHRITT
+                </text>
+              ),
+            });
+            cursor += 6;
+          }
+          if (hasDeadline) {
+            cursor += 20;
+            lines.push({
+              y: cursor,
+              el: (
+                <text key="dl" x={cx} y={cy + cursor} textAnchor="middle"
+                  fontFamily="Inter, ui-sans-serif, sans-serif" fontSize={14} fontWeight={600}
+                  letterSpacing={1} fill={deadlineFill}>
+                  DEADLINE {centerData.deadlineLabel}
+                </text>
+              ),
+            });
+            cursor += 4;
+          }
+          if (hasNext) {
+            cursor += 18;
+            const txt = (centerData.nextMilestone || '').slice(0, 22).toUpperCase();
+            lines.push({
+              y: cursor,
+              el: (
+                <text key="nx" x={cx} y={cy + cursor} textAnchor="middle"
+                  fontFamily="Inter, ui-sans-serif, sans-serif" fontSize={11} fontWeight={500}
+                  letterSpacing={1.2} fill="#cfe0ff" opacity={0.7}>
+                  NEXT: {txt}
+                </text>
+              ),
+            });
+          }
+          return <g pointerEvents="none">{lines.map((l) => l.el)}</g>;
+        })()}
       </svg>
 
       {/* Apex-Ringe */}
@@ -186,7 +285,7 @@ export function PipelineTriangle({
       ))}
 
       {/* Zentrums-Text */}
-      {center && (
+      {center && !centerData && (
         <div className="tri-hex-text">
           {center.title && <p className="tri-hex-label">{center.title}</p>}
           {center.sub && <p className="tri-hex-sub">{center.sub}</p>}
