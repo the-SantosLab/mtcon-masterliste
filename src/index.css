@@ -1858,3 +1858,16 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .cockpit-chat-msg__body { color: rgba(225,235,255,0.85); white-space: pre-wrap; overflow-wrap: anywhere; }
 .cockpit-chat-msg__time { color: rgba(180,210,255,0.45); font-family: ui-monospace, monospace; font-size: 10px; }
 
+
+.cockpit-lane-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-bottom: 8px; padding: 4px 10px;
+  font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+  border: 1px solid rgba(125,200,255,0.25);
+  border-radius: 999px; background: rgba(8,18,32,0.5);
+}
+.cockpit-cmd-dialog [cmdk-input] {
+  background: transparent; color: #e6f4ff; padding: 14px 16px;
+  border-bottom: 1px solid rgba(125,200,255,0.18);
+}
+.cockpit-cmd-dialog [cmdk-item][data-disabled="true"] { opacity: 0.4; }
