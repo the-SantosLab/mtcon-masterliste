@@ -1085,6 +1085,32 @@ export default function Cockpit() {
               </Command>
             </DialogContent>
           </Dialog>
+
+          {/* HELP DIALOG */}
+          <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+            <DialogContent className="bg-[#0b1322] border border-cyan-400/30 text-white max-w-md">
+              <h3 className="text-sm tracking-[0.3em] uppercase text-cyan-300 mb-3 flex items-center gap-2">
+                <Keyboard className="h-4 w-4" /> Shortcuts
+              </h3>
+              <div className="space-y-2 text-xs text-white/85">
+                {[
+                  ['⌘/Ctrl + K', 'Vorgang suchen'],
+                  ['1 – 9', 'Abteilung umschalten'],
+                  ['c', 'Vergleichs-Picker öffnen'],
+                  ['?', 'Diese Hilfe'],
+                ].map(([k, d]) => (
+                  <div key={k} className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                    <span className="text-white/75">{d}</span>
+                    <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/10 border border-white/15">{k}</kbd>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-white/45 mt-4">
+                Vorgänge anpinnen über das Pin-Symbol in der Abteilungs-Detail-Tabelle. Maximal 5.
+              </p>
+            </DialogContent>
+          </Dialog>
+
         </div>
 
         {!bootDone && (
