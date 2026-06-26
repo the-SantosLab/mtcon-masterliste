@@ -95,7 +95,9 @@ export default function CrmCompanyDetail() {
             {company.customer_no && <> · {company.customer_no}</>}
             {company.supplier_code && <> · {company.supplier_code}</>}
           </p>
+          <div className="mt-2"><TagPicker entityType="company" entityId={company.id} /></div>
         </div>
+
         <Button size="sm" variant="outline" onClick={() => setLookalike(true)} className="h-8 text-xs gap-1.5"><Sparkles className="h-3.5 w-3.5" />Ähnliche finden</Button>
       </div>
 
