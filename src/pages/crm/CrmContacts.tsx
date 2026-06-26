@@ -163,7 +163,18 @@ export default function CrmContacts() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? 'Kontakt bearbeiten' : 'Neuer Kontakt'}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[80px_1fr_1fr] gap-3">
+              <Field label="Anrede">
+                <Select value={form.salutation || 'none'} onValueChange={v => setForm({ ...form, salutation: v === 'none' ? '' : v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="–" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">–</SelectItem>
+                    <SelectItem value="Herr">Herr</SelectItem>
+                    <SelectItem value="Frau">Frau</SelectItem>
+                    <SelectItem value="Divers">Divers</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field label="Vorname *"><Input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} className="h-8 text-xs" /></Field>
               <Field label="Nachname *"><Input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} className="h-8 text-xs" /></Field>
             </div>
@@ -173,12 +184,31 @@ export default function CrmContacts() {
                 <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
-            <Field label="Position"><Input value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} className="h-8 text-xs" /></Field>
+            <Field label="Position / Rolle"><Input value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} className="h-8 text-xs" placeholder="z. B. Einkaufsleiter" /></Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="E-Mail"><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-8 text-xs" /></Field>
               <Field label="Telefon"><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="h-8 text-xs" /></Field>
+              <Field label="Mobil"><Input value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} className="h-8 text-xs" /></Field>
+              <Field label="LinkedIn-URL"><Input value={form.linkedin_url} onChange={e => setForm({ ...form, linkedin_url: e.target.value })} className="h-8 text-xs" placeholder="https://linkedin.com/in/…" /></Field>
             </div>
+            <div className="flex items-center gap-6 pt-1">
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={form.is_decision_maker} onCheckedChange={v => setForm({ ...form, is_decision_maker: !!v })} />
+                Entscheider
+              </label>
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox checked={form.email_opt_in} onCheckedChange={v => setForm({ ...form, email_opt_in: !!v })} />
+                E-Mail Opt-In (Marketing)
+              </label>
+            </div>
+            {editing && (
+              <div className="pt-2 border-t border-border/40">
+                <p className="text-[10px] text-muted-foreground mb-1.5 uppercase tracking-wider">Tags</p>
+                <TagPicker entityType="contact" entityId={editing.id} />
+              </div>
+            )}
           </div>
+
           <DialogFooter>
             <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setOpen(false)}>Abbrechen</Button>
             <Button onClick={save} disabled={saving} size="sm" className="h-8 text-xs">
