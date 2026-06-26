@@ -198,6 +198,7 @@ export default function CrmOfferDetail() {
             {STATUS_LABEL[offer.status]}
           </span>
           <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={exportPdf}><FileDown className="h-3.5 w-3.5" /> PDF</Button>
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={createShareLink}><Link2 className="h-3.5 w-3.5" /> Freigabe-Link</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" className="h-8 text-xs gap-1">Aktionen <ChevronDown className="h-3 w-3" /></Button>
