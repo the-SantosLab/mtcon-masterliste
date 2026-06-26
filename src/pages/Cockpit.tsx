@@ -177,7 +177,18 @@ export default function Cockpit() {
             <tbody>
               {deptOpenTasks.map(({ task, case: c }) => (
                 <tr key={task.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
-                  <td className="py-2.5 pr-3 font-mono text-xs text-white/70">{c?.case_no ?? '—'}</td>
+                  <td className="py-2.5 pr-3 font-mono text-xs text-white/70">
+                    {c ? (
+                      <button
+                        onClick={() => navigate(`/cases/${c.id}`)}
+                        className="hover:text-cyan-300 hover:underline transition-colors cursor-pointer text-left"
+                      >
+                        {c.case_no}
+                      </button>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td className="py-2.5 pr-3 truncate max-w-[420px] text-white/85">{task.title}</td>
                   <td className="py-2.5 pr-3">
                     <span className={cn('cockpit-status', task.status === 'in_progress' ? 'cockpit-status--active' : 'cockpit-status--open')}>
