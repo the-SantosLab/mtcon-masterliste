@@ -917,7 +917,14 @@ export default function Cockpit() {
               </div>
             )}
 
-            {/* Primary pipeline */}
+            {/* Primary pipeline — shape (triangle/square) if 3-4 depts, else linear */}
+            <PipelineShape
+              tasks={selectedCaseTasks}
+              deptName={deptName}
+              caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
+              userName={userName}
+            />
+
             <PipelineLane
               key={selectedCaseId ?? 'none'}
               tasks={selectedCaseTasks}
