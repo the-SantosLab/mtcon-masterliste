@@ -105,6 +105,7 @@ export default function CrmLeads() {
             <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground tracking-wider">
               <tr>
                 <th className="text-left p-2">Unternehmen</th>
+                <th className="text-right p-2 w-16">Score</th>
                 <th className="text-left p-2">Land</th>
                 <th className="text-left p-2">Branche</th>
                 <th className="text-left p-2">Ansprechpartner</th>
@@ -117,6 +118,16 @@ export default function CrmLeads() {
               {filtered.map(r => (
                 <tr key={r.id} onClick={() => setSelected(r)} className="border-t border-border/40 cursor-pointer hover:bg-card/40">
                   <td className="p-2 text-foreground font-medium">{r.company_name}</td>
+                  <td className="p-2 text-right">
+                    <span className={cn(
+                      'inline-flex items-center justify-center min-w-[2rem] px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums',
+                      (r.score ?? 0) >= 50 ? 'bg-emerald-500/15 text-emerald-400'
+                        : (r.score ?? 0) >= 20 ? 'bg-amber-500/15 text-amber-400'
+                        : (r.score ?? 0) > 0 ? 'bg-blue-500/15 text-blue-400'
+                        : (r.score ?? 0) < 0 ? 'bg-destructive/15 text-destructive'
+                        : 'bg-muted text-muted-foreground',
+                    )}>{r.score ?? 0}</span>
+                  </td>
                   <td className="p-2 text-muted-foreground">{r.country ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">{r.industry ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">{r.contact_name ?? '—'}</td>

@@ -91,11 +91,14 @@ export default function CrmDashboard() {
   return (
     <CrmLayout>
       <div className="crm-surface">
-        <div className="crm-hero mb-6 flex items-center justify-between">
+        <div className="crm-hero mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">CRM-Dashboard</h1>
             <p className="text-xs text-muted-foreground mt-1">Pipeline, Forecast und tägliche Aktivitäten auf einen Blick.</p>
           </div>
+          <Link to="/crm/forecast" className="text-xs px-3 py-1.5 rounded-md border border-border/60 hover:bg-card/60 transition-colors flex items-center gap-1.5">
+            <TrendingUp className="h-3.5 w-3.5" /> Forecast & Pipeline-Analytics
+          </Link>
         </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
