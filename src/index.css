@@ -2246,20 +2246,22 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 
 /* center caption */
 .tri-hex-text {
-  position: absolute; left: 50%; top: 48%;
+  position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  width: 26%; text-align: center;
+  width: 22%; max-width: 220px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
   z-index: 4; pointer-events: none;
 }
 .tri-hex-label {
-  font-size: clamp(12px, 2vw, 20px);
+  font-size: clamp(9px, 1.15vw, 13px);
   font-weight: 800; letter-spacing: 0.5px;
-  color: #fff; line-height: 1.2; margin: 0 0 8px;
-  text-shadow: 0 0 12px rgba(120,210,255,0.55);
+  color: #fff; line-height: 1.15; margin: 0 0 4px;
+  text-shadow: 0 0 10px rgba(120,210,255,0.55);
+  white-space: nowrap;
 }
 .tri-hex-sub {
-  font-size: clamp(7px, 1.05vw, 11px);
-  color: #3ad6ff; line-height: 1.55; letter-spacing: 0.5px; margin: 0;
+  font-size: clamp(6px, 0.78vw, 9px);
+  color: #3ad6ff; line-height: 1.4; letter-spacing: 0.4px; margin: 0;
 }
 
 /* footer pill bar */
