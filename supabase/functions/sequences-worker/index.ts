@@ -56,16 +56,55 @@ Deno.serve(async (req) => {
             auto_generated: true,
           });
         } else if (next.type === 'email') {
-          // Record as queued email activity. Actual send requires email infra wiring.
-          await sb.from('crm_activities').insert({
+          // Insert activity first so we can link the tracking row
+          const { data: act } = await sb.from('crm_activities').insert({
             type: 'email',
             subject: next.subject ?? '(Sequenz-E-Mail)',
             body: next.body ?? null,
             contact_id: contact.id,
             company_id: contact.company_id,
             auto_generated: true,
-          });
-          result = 'email_queued';
+          }).select('id').single();
+
+          if (!contact.email) {
+            result = 'email_skipped_no_address';
+          } else {
+            // Check unsubscribe
+            const { data: unsub } = await sb.from('crm_unsubscribes')
+              .select('is_unsubscribed').eq('contact_id', contact.id).maybeSingle();
+            if (unsub?.is_unsubscribed) {
+              result = 'email_skipped_unsubscribed';
+            } else {
+              // Simple {{first_name}} / {{last_name}} variable interpolation
+              const interpolate = (s: string | null | undefined) => (s ?? '')
+                .replaceAll('{{first_name}}', contact.first_name ?? '')
+                .replaceAll('{{last_name}}', contact.last_name ?? '')
+                .replaceAll('{{email}}', contact.email ?? '');
+              const subject = interpolate(next.subject ?? '(Sequenz-E-Mail)');
+              const body = interpolate(next.body ?? '');
+
+              const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/crm-send-email`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${SERVICE_KEY}`,
+                  'apikey': SERVICE_KEY,
+                },
+                body: JSON.stringify({
+                  to: contact.email,
+                  subject,
+                  body,
+                  contact_id: contact.id,
+                  enrollment_id: en.id,
+                  step_number: en.current_step ?? 0,
+                  activity_id: act?.id ?? null,
+                }),
+              });
+              const json = await sendRes.json().catch(() => ({}));
+              result = sendRes.ok && json?.success ? 'email_sent' : `email_failed:${json?.error ?? sendRes.status}`;
+            }
+          }
+
         } else {
           await sb.from('crm_activities').insert({
             type: 'note',
