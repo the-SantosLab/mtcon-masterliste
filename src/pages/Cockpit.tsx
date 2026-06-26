@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +12,7 @@ import {
   Users, Building2, Briefcase, Settings2, ShieldCheck, Sparkles,
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
   Search, GitCompare, X, MessageSquare, Paperclip,
+  Pin, PinOff, Download, Eye, EyeOff, Keyboard, Save, TrendingUp,
 } from 'lucide-react';
 
 
@@ -110,6 +112,18 @@ export default function Cockpit() {
   const [onlyCritical, setOnlyCritical] = useState(false);
   const [myOnly, setMyOnly] = useState(false);
 
+  // Extended functional features
+  const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('cockpit:pinned') || '[]'); } catch { return []; }
+  });
+  const [personLayer, setPersonLayer] = useState<boolean>(() => localStorage.getItem('cockpit:personLayer') === '1');
+  const [savedViews, setSavedViews] = useState<Array<{ name: string; timeframe: TimeframeId; onlyCritical: boolean; myOnly: boolean; pinnedIds: string[] }>>(() => {
+    try { return JSON.parse(localStorage.getItem('cockpit:views') || '[]'); } catch { return []; }
+  });
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [simAdd, setSimAdd] = useState<Record<string, number>>({}); // dept_id → extra capacity
+  const alertedTaskIdsRef = useRef<Set<string>>(new Set());
+
   // Pipeline SVG flow refs
   const pipelineWrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -123,18 +137,38 @@ export default function Cockpit() {
     return () => window.clearTimeout(t);
   }, []);
 
-  // Command-K shortcut
+  // Command-K shortcut & global hotkeys (1-9 dept, c compare, e export, r refresh, ? help)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPickerMode('select');
         setPickerOpen(true);
+        return;
       }
+      if (inField || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (/^[1-9]$/.test(e.key)) {
+        const idx = parseInt(e.key, 10) - 1;
+        setDepartments((deps) => {
+          if (deps[idx]) setSelectedDept((cur) => (cur === deps[idx].id ? null : deps[idx].id));
+          return deps;
+        });
+        return;
+      }
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); setHelpOpen(true); }
+      if (e.key.toLowerCase() === 'c') { setPickerMode('compare'); setPickerOpen(true); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // Persist preferences
+  useEffect(() => { localStorage.setItem('cockpit:pinned', JSON.stringify(pinnedIds)); }, [pinnedIds]);
+  useEffect(() => { localStorage.setItem('cockpit:personLayer', personLayer ? '1' : '0'); }, [personLayer]);
+  useEffect(() => { localStorage.setItem('cockpit:views', JSON.stringify(savedViews)); }, [savedViews]);
+
 
 
   useEffect(() => {
@@ -218,7 +252,19 @@ export default function Cockpit() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  // ---------- Filter logic ----------
+  // SLA alerts: toast on every new task that crosses critical age while open
+  useEffect(() => {
+    const seen = alertedTaskIdsRef.current;
+    for (const t of tasks) {
+      if (t.completed || t.status === 'done') continue;
+      if (hoursSince(t.created_at) < SLA_CRIT_H) continue;
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      const cNo = cases.find((c) => c.id === t.case_id)?.case_no ?? '—';
+      toast.warning(`SLA kritisch · ${cNo}`, { description: t.title, duration: 6000 });
+    }
+  }, [tasks, cases]);
+
   const timeframeMs = TIMEFRAMES.find((t) => t.id === timeframe)!.ms;
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
@@ -304,6 +350,37 @@ export default function Cockpit() {
     return 0;
   };
 
+  // Prognose-ETA pro Abteilung — Median der historischen Bearbeitungsdauer abgeschlossener Aufgaben (in Stunden)
+  const etaByDept = useMemo(() => {
+    const buckets: Record<string, number[]> = {};
+    for (const t of tasks) {
+      if (!t.department_id) continue;
+      if (!t.completed_at) continue;
+      const h = (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000;
+      if (!isFinite(h) || h <= 0) continue;
+      (buckets[t.department_id] ??= []).push(h);
+    }
+    const out: Record<string, number> = {};
+    for (const k of Object.keys(buckets)) {
+      const a = buckets[k].sort((x, y) => x - y);
+      out[k] = a[Math.floor(a.length / 2)];
+    }
+    return out;
+  }, [tasks]);
+  const etaForDept = (id: string | null) => (id ? etaByDept[id] : undefined);
+
+  // Phase-Dauer pro Vorgang (für Compare Δ)
+  const phaseDurations = useMemo(() => {
+    const out: Record<string, Record<string, number>> = {};
+    for (const t of tasks) {
+      if (!t.department_id || !t.completed_at) continue;
+      const h = (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 3_600_000;
+      (out[t.case_id] ??= {});
+      out[t.case_id][t.department_id] = h;
+    }
+    return out;
+  }, [tasks]);
+
   // Lade Chat-Preview + Anhänge-Anzahl beim Öffnen eines Pipeline-Knotens
   useEffect(() => {
     if (!selectedNodeId || !selectedCaseId) {
@@ -367,6 +444,48 @@ export default function Cockpit() {
 
   const totalActive = filteredTasks.length;
 
+  const togglePin = (id: string) => {
+    setPinnedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 5) { toast.error('Maximal 5 angepinnte Vorgänge'); return prev; }
+      return [...prev, id];
+    });
+  };
+  const isPinned = (id: string) => pinnedIds.includes(id);
+
+  const exportCsv = () => {
+    const rows = [['case_no', 'project_name', 'department', 'task', 'status', 'age_h', 'assignee']];
+    for (const t of filteredTasks) {
+      const c = cases.find((x) => x.id === t.case_id);
+      rows.push([
+        c?.case_no ?? '', c?.project_name ?? '', deptName(t.department_id), t.title,
+        t.status, Math.round(hoursSince(t.created_at)).toString(), userName(t.assigned_to),
+      ]);
+    }
+    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `cockpit-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${filteredTasks.length} Aufgaben exportiert`);
+  };
+
+  const saveCurrentView = () => {
+    const name = window.prompt('Name der Cockpit-Ansicht');
+    if (!name) return;
+    setSavedViews((prev) => [...prev.filter((v) => v.name !== name), { name, timeframe, onlyCritical, myOnly, pinnedIds }]);
+    toast.success(`Ansicht „${name}" gespeichert`);
+  };
+  const applyView = (name: string) => {
+    const v = savedViews.find((x) => x.name === name);
+    if (!v) return;
+    setTimeframe(v.timeframe); setOnlyCritical(v.onlyCritical); setMyOnly(v.myOnly); setPinnedIds(v.pinnedIds || []);
+    toast.success(`Ansicht „${name}" geladen`);
+  };
+  const deleteView = (name: string) => setSavedViews((prev) => prev.filter((v) => v.name !== name));
+
+
   // -------- Render --------
   const renderDeptPanel = () => (
     <div
@@ -397,6 +516,7 @@ export default function Cockpit() {
                 <th className="py-2 pr-3 font-normal">Aufgabe</th>
                 <th className="py-2 pr-3 font-normal">SLA</th>
                 <th className="py-2 pr-3 font-normal">Status</th>
+                <th className="py-2 pr-3 font-normal w-8"></th>
               </tr>
             </thead>
             <tbody>
@@ -422,6 +542,18 @@ export default function Cockpit() {
                     <span className={cn('cockpit-status', task.status === 'in_progress' ? 'cockpit-status--active' : 'cockpit-status--open')}>
                       {task.status === 'in_progress' ? 'in Arbeit' : 'offen'}
                     </span>
+                  </td>
+                  <td className="py-2.5 pr-1 text-right">
+                    {c && (
+                      <button
+                        type="button"
+                        onClick={() => togglePin(c.id)}
+                        title={isPinned(c.id) ? 'Pin entfernen' : 'Vorgang anpinnen'}
+                        className={cn('p-1 rounded hover:bg-white/10 transition-colors', isPinned(c.id) ? 'text-amber-300' : 'text-white/40')}
+                      >
+                        {isPinned(c.id) ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -518,6 +650,52 @@ export default function Cockpit() {
               SLA-Schwellen · Warn {SLA_WARN_H}h · Krit {SLA_CRIT_H}h
             </span>
           </div>
+
+          {/* TOOLBAR: Aktionen */}
+          <div className="cockpit-filterbar">
+            <span className="cockpit-filterbar__label flex items-center gap-1.5"><Settings2 className="h-3 w-3" /> Tools</span>
+            <button
+              type="button"
+              onClick={() => setPersonLayer((v) => !v)}
+              className={cn('cockpit-toggle', personLayer && 'cockpit-toggle--on')}
+              style={{ ['--accent' as any]: 'hsl(215 100% 62%)', ['--accent-glow' as any]: 'rgba(80,150,255,0.55)' } as React.CSSProperties}
+            >
+              {personLayer ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />} Personen-Layer
+            </button>
+            <button type="button" onClick={exportCsv} className="cockpit-toggle"
+              style={{ ['--accent' as any]: 'hsl(142 80% 52%)', ['--accent-glow' as any]: 'rgba(70,230,140,0.55)' } as React.CSSProperties}>
+              <Download className="h-3 w-3" /> CSV Export
+            </button>
+            <button type="button" onClick={saveCurrentView} className="cockpit-toggle"
+              style={{ ['--accent' as any]: 'hsl(270 90% 70%)', ['--accent-glow' as any]: 'rgba(170,120,255,0.55)' } as React.CSSProperties}>
+              <Save className="h-3 w-3" /> Ansicht speichern
+            </button>
+            {savedViews.length > 0 && (
+              <Select onValueChange={applyView}>
+                <SelectTrigger className="h-7 w-[170px] bg-white/[0.04] border-white/15 text-[11px] text-white/80">
+                  <SelectValue placeholder="Gespeicherte Ansicht…" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0b1322] border-white/15 text-white/85">
+                  {savedViews.map((v) => (
+                    <SelectItem key={v.name} value={v.name} className="text-xs">
+                      <span className="flex items-center justify-between gap-2 w-full">
+                        <span>{v.name}</span>
+                        <X className="h-3 w-3 opacity-50 hover:opacity-100" onClick={(e) => { e.stopPropagation(); deleteView(v.name); }} />
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <button type="button" onClick={() => setHelpOpen(true)} className="cockpit-toggle ml-auto"
+              style={{ ['--accent' as any]: 'hsl(195 100% 60%)', ['--accent-glow' as any]: 'rgba(60,200,255,0.55)' } as React.CSSProperties}>
+              <Keyboard className="h-3 w-3" /> Shortcuts <span className="font-mono opacity-60 ml-1">?</span>
+            </button>
+            {pinnedIds.length > 0 && (
+              <span className="cockpit-chip"><Pin className="h-3 w-3" /> {pinnedIds.length} angepinnt</span>
+            )}
+          </div>
+
 
           {/* MAIN GRID: Departments + Activity Ticker */}
           <section className="grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -749,6 +927,9 @@ export default function Cockpit() {
               deptName={deptName}
               heatLevel={heatLevel}
               caseLabel={selectedCaseId ? caseNo(selectedCaseId) : null}
+              etaForDept={etaForDept}
+              personLayer={personLayer}
+              userName={userName}
               extraDrawer={
                 selectedNodeId
                   ? (() => {
@@ -817,8 +998,41 @@ export default function Cockpit() {
                 heatLevel={heatLevel}
                 accentBaseHue={[40, 280, 340, 160][idx % 4]}
                 caseLabel={caseNo(cid)}
+                etaForDept={etaForDept}
+                personLayer={personLayer}
+                userName={userName}
               />
             ))}
+
+            {/* Pinned cases — always-visible lanes */}
+            {pinnedIds.filter((pid) => pid !== selectedCaseId && !compareIds.includes(pid)).length > 0 && (
+              <>
+                <div className="flex items-center gap-3 pt-2">
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300/30 to-transparent" />
+                  <h3 className="text-[10px] tracking-[0.38em] text-amber-300/80 uppercase flex items-center gap-1.5">
+                    <Pin className="h-3 w-3" /> Angepinnte Vorgänge
+                  </h3>
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300/30 to-transparent" />
+                </div>
+                {pinnedIds
+                  .filter((pid) => pid !== selectedCaseId && !compareIds.includes(pid))
+                  .map((pid, idx) => (
+                    <CompareLane
+                      key={`pin-${pid}`}
+                      caseId={pid}
+                      tasks={tasks}
+                      deptName={deptName}
+                      heatLevel={heatLevel}
+                      accentBaseHue={[32, 200, 142, 270, 340][idx % 5]}
+                      caseLabel={caseNo(pid)}
+                      etaForDept={etaForDept}
+                      personLayer={personLayer}
+                      userName={userName}
+                    />
+                  ))}
+              </>
+            )}
+
           </section>
 
 
@@ -871,6 +1085,32 @@ export default function Cockpit() {
               </Command>
             </DialogContent>
           </Dialog>
+
+          {/* HELP DIALOG */}
+          <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+            <DialogContent className="bg-[#0b1322] border border-cyan-400/30 text-white max-w-md">
+              <h3 className="text-sm tracking-[0.3em] uppercase text-cyan-300 mb-3 flex items-center gap-2">
+                <Keyboard className="h-4 w-4" /> Shortcuts
+              </h3>
+              <div className="space-y-2 text-xs text-white/85">
+                {[
+                  ['⌘/Ctrl + K', 'Vorgang suchen'],
+                  ['1 – 9', 'Abteilung umschalten'],
+                  ['c', 'Vergleichs-Picker öffnen'],
+                  ['?', 'Diese Hilfe'],
+                ].map(([k, d]) => (
+                  <div key={k} className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                    <span className="text-white/75">{d}</span>
+                    <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white/10 border border-white/15">{k}</kbd>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-white/45 mt-4">
+                Vorgänge anpinnen über das Pin-Symbol in der Abteilungs-Detail-Tabelle. Maximal 5.
+              </p>
+            </DialogContent>
+          </Dialog>
+
         </div>
 
         {!bootDone && (
@@ -951,6 +1191,9 @@ function PipelineLane({
   heatLevel,
   caseLabel,
   extraDrawer,
+  etaForDept,
+  personLayer,
+  userName,
 }: {
   tasks: Task[];
   accentBaseHue: number;
@@ -960,8 +1203,13 @@ function PipelineLane({
   heatLevel: (a: string | null, b: string | null) => number;
   caseLabel: string | null;
   extraDrawer?: React.ReactNode;
+  etaForDept?: (id: string | null) => number | undefined;
+  personLayer?: boolean;
+  userName?: (id: string | null) => string;
 }) {
   const currentIdx = tasks.findIndex((t) => !t.completed && t.status !== 'done');
+  const fmtH = (h?: number) => (h == null || !isFinite(h) ? null : h < 24 ? `${Math.round(h)}h` : `${(h / 24).toFixed(1)}T`);
+  const initials = (n?: string) => (n ? n.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() : '?');
   return (
     <div className="cockpit-panel cockpit-hud">
       <span className="cockpit-hud__bl" /><span className="cockpit-hud__br" />
@@ -988,6 +1236,7 @@ function PipelineLane({
                 const accentGlow = `hsla(${hue}, 90%, 58%, 0.55)`;
                 const nextHue = accentBaseHue - ((i + 1) / Math.max(1, tasks.length - 1)) * 60;
                 const heat = i < tasks.length - 1 ? heatLevel(t.department_id, tasks[i + 1].department_id) : 0;
+                const eta = etaForDept ? fmtH(etaForDept(t.department_id)) : null;
                 return (
                   <li key={t.id} className="flex items-start">
                     <button
@@ -1004,11 +1253,24 @@ function PipelineLane({
                         {done ? <Check className="h-6 w-6" strokeWidth={2.2} /> : current ? <Clock className="h-5 w-5" /> : <span className="text-[11px] font-mono">{String(i + 1).padStart(2, '0')}</span>}
                       </div>
                       <div className="cockpit-step__label">
-                        <div className="cockpit-step__label-status">
-                          {done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}
+                        <div className="cockpit-step__label-status flex items-center justify-center gap-1">
+                          <span>{done ? 'erledigt' : current ? 'aktuell' : 'ausstehend'}</span>
+                          {eta && !done && (
+                            <span className="inline-flex items-center gap-0.5 px-1 rounded bg-white/10 text-[9px] text-cyan-300/90" title="Prognose: Median historischer Bearbeitungsdauer">
+                              <TrendingUp className="h-2.5 w-2.5" />{eta}
+                            </span>
+                          )}
                         </div>
                         <div className="cockpit-step__label-title" data-text={t.title}>{t.title}</div>
                         <div className="cockpit-step__label-dept">{deptName(t.department_id)}</div>
+                        {personLayer && t.assigned_to && userName && (
+                          <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/10 text-[9px] text-white/75">
+                            <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-cyan-500/30 text-[8px] font-semibold text-cyan-100">
+                              {initials(userName(t.assigned_to))}
+                            </span>
+                            {userName(t.assigned_to)}
+                          </div>
+                        )}
                       </div>
                     </button>
                     {i < tasks.length - 1 && (
@@ -1046,6 +1308,9 @@ function CompareLane({
   heatLevel,
   accentBaseHue,
   caseLabel,
+  etaForDept,
+  personLayer,
+  userName,
 }: {
   caseId: string;
   tasks: Task[];
@@ -1053,6 +1318,9 @@ function CompareLane({
   heatLevel: (a: string | null, b: string | null) => number;
   accentBaseHue: number;
   caseLabel: string;
+  etaForDept?: (id: string | null) => number | undefined;
+  personLayer?: boolean;
+  userName?: (id: string | null) => string;
 }) {
   const scoped = useMemo(
     () => tasks.filter((t) => t.case_id === caseId).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
@@ -1067,7 +1335,11 @@ function CompareLane({
       deptName={deptName}
       heatLevel={heatLevel}
       caseLabel={caseLabel}
+      etaForDept={etaForDept}
+      personLayer={personLayer}
+      userName={userName}
     />
   );
 }
+
 
