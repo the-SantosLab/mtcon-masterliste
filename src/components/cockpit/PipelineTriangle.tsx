@@ -22,6 +22,9 @@ export type TriangleWing = {
   icon: ReactNode;              // <svg> für Apex-Ring
   bullets: ReactNode[];         // <li> Inhalte
   countLabel?: string;          // "3/7"
+  slaColor?: string;            // override (rgba) for live SLA tint
+  bottleneck?: boolean;         // adds red halo
+  pulse?: boolean;              // adds live pulse animation
 };
 
 export type PipelineTriangleProps = {
@@ -120,25 +123,45 @@ export function PipelineTriangle({
       </svg>
 
       {/* Apex-Ringe */}
-      {wings.map((w, i) => (
-        <button
-          key={w.id}
-          type="button"
-          aria-label={w.title}
-          className={cn(
-            'tri-ring',
-            w.apexClass,
-            hoverIndex === i && 'is-hover',
-            activeIndex === i && 'is-active',
-          )}
-          onMouseEnter={() => setHover(i)}
-          onMouseLeave={() => setHover(null)}
-          onClick={() => onWingClick?.(w, i)}
-          style={{ cursor: onWingClick ? 'pointer' : 'default' }}
-        >
-          {w.icon}
-        </button>
-      ))}
+      {wings.map((w, i) => {
+        const haloShadow = w.bottleneck
+          ? '0 0 0 2px rgba(255,90,100,0.9), 0 0 34px 10px rgba(255,90,100,0.5)'
+          : w.slaColor
+            ? `0 0 0 1.5px ${w.slaColor}, 0 0 28px 8px ${w.slaColor.replace(/,[\d.]+\)$/, ',0.45)')}`
+            : undefined;
+        return (
+          <button
+            key={w.id}
+            type="button"
+            aria-label={w.title}
+            className={cn(
+              'tri-ring',
+              w.apexClass,
+              hoverIndex === i && 'is-hover',
+              activeIndex === i && 'is-active',
+              w.pulse && 'cockpit-pulse',
+            )}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => onWingClick?.(w, i)}
+            style={{ cursor: onWingClick ? 'pointer' : 'default', ...(haloShadow ? { boxShadow: haloShadow } : {}) }}
+          >
+            {w.icon}
+            {w.bottleneck && (
+              <span
+                aria-hidden="true"
+                style={{
+                  position: 'absolute', top: -10, right: -10,
+                  fontSize: 8, letterSpacing: '0.15em', fontWeight: 700,
+                  padding: '2px 5px', borderRadius: 4,
+                  background: 'rgba(255,60,80,0.92)', color: '#fff',
+                  textShadow: '0 0 4px rgba(0,0,0,0.5)',
+                }}
+              >ENGPASS</span>
+            )}
+          </button>
+        );
+      })}
 
       {/* Content-Blöcke */}
       {wings.map((w, i) => (
