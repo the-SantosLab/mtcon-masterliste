@@ -190,93 +190,67 @@ export default function Cockpit() {
                   const active = selectedDept === d.id;
                   const accent = accentFor(i);
                   const Icon = DEPT_ICONS[i % DEPT_ICONS.length];
+                  // Determine if the inline panel should be rendered after this card.
+                  // On 2-col layouts we render at the end of the row (odd index when 0-based: i%2===1),
+                  // or on the selected card if it's the last one. On 1-col layouts we always render
+                  // directly after the selected card. We use sm: breakpoint via CSS class toggles.
+                  const isSelectedInRow =
+                    selectedDeptIdx !== -1 &&
+                    (Math.floor(selectedDeptIdx / 2) === Math.floor(i / 2));
+                  const renderPanelAfterDesktop =
+                    isSelectedInRow && (i % 2 === 1 || i === departments.length - 1);
+                  const renderPanelAfterMobile = selectedDept === d.id;
                   return (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => setSelectedDept(active ? null : d.id)}
-                      className={cn('cockpit-node group', active && 'cockpit-node--active')}
-                      style={{
-                        // @ts-ignore
-                        '--accent': `hsl(${accent.hue})`,
-                        '--accent-glow': accent.glow,
-                      } as React.CSSProperties}
-                    >
-                      <div className="cockpit-node__badge">
-                        <Icon className="h-7 w-7" strokeWidth={1.6} />
-                      </div>
+                    <>
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setSelectedDept(active ? null : d.id)}
+                        className={cn('cockpit-node group', active && 'cockpit-node--active')}
+                        style={{
+                          // @ts-ignore
+                          '--accent': `hsl(${accent.hue})`,
+                          '--accent-glow': accent.glow,
+                        } as React.CSSProperties}
+                      >
+                        <div className="cockpit-node__badge">
+                          <Icon className="h-7 w-7" strokeWidth={1.6} />
+                        </div>
 
-                      <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
-                      <div className="cockpit-node__name">{d.name}</div>
+                        <div className="cockpit-node__index">{String(i + 1).padStart(2, '0')}</div>
+                        <div className="cockpit-node__name">{d.name}</div>
 
-                      <div className="cockpit-node__bullets">
-                        <div className="cockpit-node__bullet">
-                          <span className="cockpit-node__bullet-icon" />
-                          <span><span className="cockpit-node__bullet-value">{s.open}</span> offene Vorgänge</span>
+                        <div className="cockpit-node__bullets">
+                          <div className="cockpit-node__bullet">
+                            <span className="cockpit-node__bullet-icon" />
+                            <span><span className="cockpit-node__bullet-value">{s.open}</span> offene Vorgänge</span>
+                          </div>
+                          <div className="cockpit-node__bullet">
+                            <span className="cockpit-node__bullet-icon" />
+                            <span><span className="cockpit-node__bullet-value">{s.inProgress}</span> in Bearbeitung</span>
+                          </div>
+                          <div className="cockpit-node__bullet">
+                            <span className="cockpit-node__bullet-icon" />
+                            <span><span className="cockpit-node__bullet-value">{s.done}</span> erledigt</span>
+                          </div>
                         </div>
-                        <div className="cockpit-node__bullet">
-                          <span className="cockpit-node__bullet-icon" />
-                          <span><span className="cockpit-node__bullet-value">{s.inProgress}</span> in Bearbeitung</span>
+                      </button>
+                      {selectedDept && renderPanelAfterMobile && (
+                        <div key={`panel-mobile-${d.id}`} className="sm:hidden col-span-full">
+                          {renderDeptPanel()}
                         </div>
-                        <div className="cockpit-node__bullet">
-                          <span className="cockpit-node__bullet-icon" />
-                          <span><span className="cockpit-node__bullet-value">{s.done}</span> erledigt</span>
+                      )}
+                      {selectedDept && renderPanelAfterDesktop && (
+                        <div key={`panel-desktop-${d.id}`} className="hidden sm:block col-span-full">
+                          {renderDeptPanel()}
                         </div>
-                      </div>
-                    </button>
+                      )}
+                    </>
                   );
                 })}
               </div>
             )}
 
-            {selectedDept && (
-              <div
-                className="cockpit-panel mt-6"
-                style={{
-                  // @ts-ignore
-                  '--accent': `hsl(${selectedDeptAccent.hue})`,
-                  '--accent-glow': selectedDeptAccent.glow,
-                } as React.CSSProperties}
-              >
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                  <div className="flex items-center gap-3">
-                    <span className="cockpit-node__bullet-icon" />
-                    <div className="text-[11px] tracking-[0.3em] uppercase text-white/55">offene Aufgaben</div>
-                    <div className="text-sm text-white/90 font-medium">{deptName(selectedDept)}</div>
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.28em] text-white/40">Top 10 · neueste</div>
-                </div>
-                {deptOpenTasks.length === 0 ? (
-                  <div className="text-sm text-white/50 py-8 text-center">Keine offenen Aufgaben.</div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-[10px] uppercase tracking-[0.22em] text-white/45 border-b border-white/10">
-                          <th className="py-2 pr-3 font-normal">Vorgang</th>
-                          <th className="py-2 pr-3 font-normal">Aufgabe</th>
-                          <th className="py-2 pr-3 font-normal">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {deptOpenTasks.map(({ task, case: c }) => (
-                          <tr key={task.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
-                            <td className="py-2.5 pr-3 font-mono text-xs text-white/70">{c?.case_no ?? '—'}</td>
-                            <td className="py-2.5 pr-3 truncate max-w-[420px] text-white/85">{task.title}</td>
-                            <td className="py-2.5 pr-3">
-                              <span className={cn('cockpit-status', task.status === 'in_progress' ? 'cockpit-status--active' : 'cockpit-status--open')}>
-                                {task.status === 'in_progress' ? 'in Arbeit' : 'offen'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
 
           {/* LIFECYCLE PIPELINE */}
           <section className="space-y-6">
