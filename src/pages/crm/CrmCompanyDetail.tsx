@@ -18,7 +18,9 @@ import { IssosDeliveriesTab } from '@/components/IssosDeliveriesTab';
 import { IssosOffersTab } from '@/components/IssosOffersTab';
 import { IssosOrdersTab } from '@/components/IssosOrdersTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { TagPicker } from '@/components/crm/TagPicker';
 import { toast } from 'sonner';
+
 
 const ROLE_LABEL: Record<string, string> = { lead: 'Lead', customer: 'Kunde', supplier: 'Lieferant', both: 'Kunde + Lieferant' };
 const ROLE_COLOR: Record<string, string> = {
