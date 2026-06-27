@@ -1933,14 +1933,20 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .cockpit-shape__tip--docked {
   position: absolute;
   left: 50%;
-  bottom: 22%;
   transform: translateX(-50%);
   margin-top: 0;
-  width: min(360px, 42%);
+  width: min(360px, 46%);
   max-width: 420px;
   pointer-events: none;
   animation: cockpit-tip-fade .18s ease-out;
+  z-index: 6;
 }
+/* Dreieck: oberhalb der Mitte, innerhalb der Form */
+.cockpit-shape__tip--triangle { top: 14%; }
+/* Quadrat: knapp unter der Oberkante, innerhalb der Form */
+.cockpit-shape__tip--square   { top: 12%; }
+/* Linie: deutlich oberhalb der Knotenreihe, mittig im Headerbereich der Form */
+.cockpit-shape__tip--line     { top: 6%; width: min(420px, 38%); }
 @keyframes cockpit-tip-fade {
   from { opacity: 0; transform: translate(-50%, 6px);}
   to   { opacity: 1; transform: translate(-50%, 0);}

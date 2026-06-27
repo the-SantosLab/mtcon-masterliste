@@ -1594,74 +1594,78 @@ function PipelineShape({
         </div>
       </div>
 
-      {shape === 'square' && (
-        <ShapeSquare
-          depts={depts}
-          hover={hover}
-          setHover={setHover}
-          accentFor={accentFor}
-          onDeptClick={onDeptClick}
-          activeDeptId={activeDeptId ?? null}
-          metrics={metrics}
-        />
-      )}
-      {shape === 'triangle' && (
-        <ShapeTriangle
-          depts={depts}
-          hover={hover}
-          setHover={setHover}
-          accentFor={accentFor}
-          onDeptClick={onDeptClick}
-          activeDeptId={activeDeptId ?? null}
-          metrics={metrics}
-        />
-      )}
-      {shape === 'line' && (
-        <ShapeLine
-          depts={depts}
-          hover={hover}
-          setHover={setHover}
-          accentFor={accentFor}
-          onDeptClick={onDeptClick}
-          activeDeptId={activeDeptId ?? null}
-          metrics={metrics}
-          etaForDept={etaForDept}
-        />
-      )}
+      <div className="cockpit-shape-inner" style={{ position: 'relative' }}>
+        {shape === 'square' && (
+          <ShapeSquare
+            depts={depts}
+            hover={hover}
+            setHover={setHover}
+            accentFor={accentFor}
+            onDeptClick={onDeptClick}
+            activeDeptId={activeDeptId ?? null}
+            metrics={metrics}
+          />
+        )}
+        {shape === 'triangle' && (
+          <ShapeTriangle
+            depts={depts}
+            hover={hover}
+            setHover={setHover}
+            accentFor={accentFor}
+            onDeptClick={onDeptClick}
+            activeDeptId={activeDeptId ?? null}
+            metrics={metrics}
+          />
+        )}
+        {shape === 'line' && (
+          <ShapeLine
+            depts={depts}
+            hover={hover}
+            setHover={setHover}
+            accentFor={accentFor}
+            onDeptClick={onDeptClick}
+            activeDeptId={activeDeptId ?? null}
+            metrics={metrics}
+            etaForDept={etaForDept}
+          />
+        )}
 
-
-      {/* hover tooltip — rendered below the shape */}
-      {activeDept && (
-        <div
-          className="cockpit-shape__tip cockpit-shape__tip--docked"
-          style={{ ['--accent' as any]: accentFor(hover!).light }}
-        >
-          <div className="cockpit-shape__tip-head">
-            <span className="font-mono text-[10px] opacity-70">{String(hover! + 1).padStart(2, '0')}</span>
-            <span className="font-semibold tracking-wider">{activeDept.name.toUpperCase()}</span>
-            <span className="ml-auto text-[10px] opacity-70">{activeDone}/{activeDept.tasks.length} erledigt</span>
-          </div>
-          {activeWork.length === 0 ? (
-            <div className="text-xs text-white/55 py-1.5">Aktuell keine offenen Aufgaben.</div>
-          ) : (
-            <ul className="space-y-1.5">
-              {activeWork.slice(0, 5).map((t) => (
-                <li key={t.id} className="flex items-start gap-2 text-xs">
-                  <span className={cn('cockpit-shape__dot', t.status === 'in_progress' && 'cockpit-shape__dot--live')} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white/90 truncate">{t.title}</div>
-                    <div className="text-[10px] text-white/45">
-                      {t.status === 'in_progress' ? 'in Arbeit' : 'offen'}
-                      {userName && t.assigned_to && <> · {userName(t.assigned_to)}</>}
+        {/* hover tooltip — gedockt innerhalb der Form */}
+        {activeDept && (
+          <div
+            className={cn(
+              'cockpit-shape__tip cockpit-shape__tip--docked',
+              `cockpit-shape__tip--${shape}`,
+            )}
+            style={{ ['--accent' as any]: accentFor(hover!).light }}
+          >
+            <div className="cockpit-shape__tip-head">
+              <span className="font-mono text-[10px] opacity-70">{String(hover! + 1).padStart(2, '0')}</span>
+              <span className="font-semibold tracking-wider">{activeDept.name.toUpperCase()}</span>
+              <span className="ml-auto text-[10px] opacity-70">{activeDone}/{activeDept.tasks.length} erledigt</span>
+            </div>
+            {activeWork.length === 0 ? (
+              <div className="text-xs text-white/55 py-1.5">Aktuell keine offenen Aufgaben.</div>
+            ) : (
+              <ul className="space-y-1.5">
+                {activeWork.slice(0, 5).map((t) => (
+                  <li key={t.id} className="flex items-start gap-2 text-xs">
+                    <span className={cn('cockpit-shape__dot', t.status === 'in_progress' && 'cockpit-shape__dot--live')} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white/90 truncate">{t.title}</div>
+                      <div className="text-[10px] text-white/45">
+                        {t.status === 'in_progress' ? 'in Arbeit' : 'offen'}
+                        {userName && t.assigned_to && <> · {userName(t.assigned_to)}</>}
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-              {activeWork.length > 5 && <li className="text-[10px] text-white/40">+ {activeWork.length - 5} weitere …</li>}
-            </ul>
-          )}
-        </div>
-      )}
+                  </li>
+                ))}
+                {activeWork.length > 5 && <li className="text-[10px] text-white/40">+ {activeWork.length - 5} weitere …</li>}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
