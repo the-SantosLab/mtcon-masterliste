@@ -2339,6 +2339,36 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   position: absolute; inset: 0; pointer-events: none;
 }
 
+.flow-center {
+  position: absolute; left: 50%; top: 53.4%;
+  transform: translate(-50%, -50%);
+  width: 14%; aspect-ratio: 1 / 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(5,10,24,0.97) 60%, rgba(5,10,24,0) 80%);
+  text-align: center; z-index: 8; pointer-events: none;
+  padding: 0 1%;
+}
+.flow-center__pct {
+  font-size: clamp(13px, 1.6vw, 22px); font-weight: 800;
+  color: #eafdff; letter-spacing: 1.2px; line-height: 1.1;
+  text-shadow: 0 0 12px rgba(120,210,255,0.55);
+  margin: 0;
+}
+.flow-center__lbl {
+  font-size: clamp(6px, 0.7vw, 10px); color: #7fe3ff;
+  letter-spacing: 2px; font-weight: 700; margin: 2px 0 0;
+}
+.flow-center__case {
+  font-size: clamp(8px, 0.85vw, 12px); color: #f0f6ff;
+  font-weight: 700; letter-spacing: 1px; margin: 6px 0 0;
+  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.flow-center__dl {
+  font-size: clamp(6px, 0.65vw, 9px); font-weight: 700;
+  letter-spacing: 1.2px; margin: 3px 0 0;
+}
+
 .flow-oct {
   position: absolute;
   top: 53.4%;
