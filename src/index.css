@@ -2267,9 +2267,11 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .tri-hex-text {
   position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
-  width: 22%; max-width: 220px; text-align: center;
+  width: 24%; aspect-ratio: 1 / 1; max-width: 240px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 5; pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(6,10,24,0.96) 55%, rgba(6,10,24,0) 78%);
+  text-align: center; z-index: 5; pointer-events: none;
 }
 .tri-hex-label {
   font-size: clamp(9px, 1.15vw, 13px);
