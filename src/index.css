@@ -2264,7 +2264,7 @@ aside[data-sidebar-density="comfortable"] nav a svg {
   transform: translate(-50%, -50%);
   width: 22%; max-width: 220px; text-align: center;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  z-index: 4; pointer-events: none;
+  z-index: 5; pointer-events: none;
 }
 .tri-hex-label {
   font-size: clamp(9px, 1.15vw, 13px);
