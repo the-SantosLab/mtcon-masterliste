@@ -2014,9 +2014,6 @@ function ShapeLine({
         <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#3ad6ff" strokeWidth="10" filter="url(#flGlowS)" opacity="0.6"/>
         <circle cx="850" cy="470" r="78" fill="rgba(5,10,24,0.95)" stroke="#bdeeff" strokeWidth="2.6"/>
         <circle cx="850" cy="470" r="64" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="1.4"/>
-        <text x="850" y="463" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={20} fontWeight={800} letterSpacing={1.5} fill="#eafdff">{hub.progressPct}%</text>
-        <text x="850" y="486" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize={10} fontWeight={600} letterSpacing={2} fill="#7fe3ff">FORTSCHRITT</text>
-
         <text x="560" y="195" fontFamily="Inter,sans-serif" fontSize="52" fontWeight={800} letterSpacing="3" fill="#eaf3ff">{headLeft.slice(0,10)}</text>
         <text x="560" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">START DER PIPELINE.</text>
         <text x="560" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#aacbe6">{N} ABTEILUNGEN.</text>
@@ -2024,16 +2021,6 @@ function ShapeLine({
         <text x="1245" y="228" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">ZIEL DER PIPELINE.</text>
         <text x="1245" y="252" fontFamily="Inter,sans-serif" fontSize="19" fontWeight={600} letterSpacing="1.5" fill="#b3e6c2">{hub.progressPct}% ERREICHT.</text>
 
-        <text x="850" y="650" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="34" fontWeight={800} letterSpacing="2" fill="#f0f6ff">{hub.caseNo}</text>
-        {hub.deadlineLabel !== '—' && (
-          <text x="850" y="688" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="28" fontWeight={800} letterSpacing="2"
-            fill={hub.deadlineState === 'crit' ? '#ff8090' : hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff'}>
-            DEADLINE {hub.deadlineLabel}
-          </text>
-        )}
-        <text x="850" y="722" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={600} letterSpacing="2" fill="#3ad6ff">
-          NEXT: {hub.nextMilestone.slice(0, 36).toUpperCase()}
-        </text>
 
         <path d="M340 774 h1120 l34 26 l-34 26 h-1120 l-34 -26 z" fill="rgba(6,12,26,0.6)" stroke="rgba(120,170,255,0.3)" strokeWidth="1.5"/>
         <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">WIP {metrics.footer.wip}</text>
@@ -2083,6 +2070,25 @@ function ShapeLine({
             </button>
           );
         })}
+      </div>
+
+      {/* KPI-Hub overlay — sits above SVG and nodes, masks any underlying content, never blocks pointer events */}
+      <div className="flow-center" aria-hidden="true">
+        <p className="flow-center__pct">{hub.progressPct}%</p>
+        <p className="flow-center__lbl">FORTSCHRITT</p>
+        {hub.caseNo && <p className="flow-center__case">{hub.caseNo}</p>}
+        {hub.deadlineLabel !== '—' && (
+          <p
+            className="flow-center__dl"
+            style={{
+              color:
+                hub.deadlineState === 'crit' ? '#ff8090' :
+                hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff',
+            }}
+          >
+            DEADLINE {hub.deadlineLabel}
+          </p>
+        )}
       </div>
     </div>
   );
