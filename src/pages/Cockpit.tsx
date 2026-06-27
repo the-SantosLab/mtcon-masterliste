@@ -2071,6 +2071,25 @@ function ShapeLine({
           );
         })}
       </div>
+
+      {/* KPI-Hub overlay — sits above SVG and nodes, masks any underlying content, never blocks pointer events */}
+      <div className="flow-center" aria-hidden="true">
+        <p className="flow-center__pct">{hub.progressPct}%</p>
+        <p className="flow-center__lbl">FORTSCHRITT</p>
+        {hub.caseNo && <p className="flow-center__case">{hub.caseNo}</p>}
+        {hub.deadlineLabel !== '—' && (
+          <p
+            className="flow-center__dl"
+            style={{
+              color:
+                hub.deadlineState === 'crit' ? '#ff8090' :
+                hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff',
+            }}
+          >
+            DEADLINE {hub.deadlineLabel}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
