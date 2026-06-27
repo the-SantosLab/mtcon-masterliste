@@ -1933,7 +1933,7 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 .cockpit-shape__tip--docked {
   position: absolute;
   left: 50%;
-  bottom: 6%;
+  bottom: 22%;
   transform: translateX(-50%);
   margin-top: 0;
   width: min(360px, 42%);
