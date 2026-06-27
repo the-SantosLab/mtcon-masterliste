@@ -1931,12 +1931,20 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 /* ====== Pipeline Shape v2 — Quadrat / Dreieck / Linie (1:1 Referenz) ====== */
 .cockpit-shape-wrap { position: relative; }
 .cockpit-shape__tip--docked {
-  position: relative;
-  margin-top: 14px;
-  left: auto; top: auto; transform: none;
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  margin-top: 0;
+  width: min(360px, 42%);
+  max-width: 420px;
+  pointer-events: none;
   animation: cockpit-tip-fade .18s ease-out;
 }
-@keyframes cockpit-tip-fade { from { opacity: 0; transform: translateY(-4px);} to { opacity: 1; transform: none;} }
+@keyframes cockpit-tip-fade {
+  from { opacity: 0; transform: translate(-50%, 6px);}
+  to   { opacity: 1; transform: translate(-50%, 0);}
+}
 
 /* ----- shared center medallion ----- */
 .cs-center {
