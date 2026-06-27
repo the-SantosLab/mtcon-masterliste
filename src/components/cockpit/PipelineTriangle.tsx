@@ -221,6 +221,81 @@ export function PipelineTriangle({
         })()}
       </svg>
 
+      {/* HTML-Overlay: Zentrum (oberhalb tri-content z-index:4) */}
+      {centerData && (
+        <div
+          style={{
+            position: 'absolute',
+            left: `${pivot.x / 10}%`,
+            top: `${pivot.y / 10}%`,
+            transform: 'translate(-50%, -50%)',
+            zIndex: 5,
+            width: '27%',
+            aspectRatio: '1 / 1',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at center, rgba(7,12,28,0.95) 55%, rgba(7,12,28,0) 75%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            pointerEvents: 'none',
+            gap: 2,
+          }}
+        >
+          {centerData.caseNo && (
+            <span style={{
+              fontFamily: 'Inter, ui-sans-serif, sans-serif',
+              fontSize: 'clamp(11px, 1.3vw, 16px)',
+              fontWeight: 800,
+              letterSpacing: 1,
+              color: '#ffffff',
+              textShadow: '0 0 10px rgba(120,210,255,0.55)',
+              lineHeight: 1.15,
+            }}>
+              {centerData.caseNo}
+            </span>
+          )}
+          {typeof centerData.progressPct === 'number' && (
+            <span style={{
+              fontFamily: 'Inter, ui-sans-serif, sans-serif',
+              fontSize: 'clamp(10px, 1.1vw, 14px)',
+              fontWeight: 700,
+              letterSpacing: 1.5,
+              color: '#7fe3ff',
+              lineHeight: 1.2,
+            }}>
+              {centerData.progressPct}% FORTSCHRITT
+            </span>
+          )}
+          {centerData.deadlineLabel && centerData.deadlineLabel !== '—' && (
+            <span style={{
+              fontFamily: 'Inter, ui-sans-serif, sans-serif',
+              fontSize: 'clamp(8px, 0.9vw, 11px)',
+              fontWeight: 600,
+              letterSpacing: 1,
+              color: centerData.deadlineState === 'crit' ? '#ff8090' : centerData.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff',
+              lineHeight: 1.2,
+            }}>
+              DEADLINE {centerData.deadlineLabel}
+            </span>
+          )}
+          {centerData.nextMilestone && (
+            <span style={{
+              fontFamily: 'Inter, ui-sans-serif, sans-serif',
+              fontSize: 'clamp(7px, 0.75vw, 9px)',
+              fontWeight: 500,
+              letterSpacing: 1.2,
+              color: '#cfe0ff',
+              opacity: 0.7,
+              lineHeight: 1.2,
+            }}>
+              NEXT: {centerData.nextMilestone.slice(0, 22).toUpperCase()}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Apex-Ringe */}
       {wings.map((w, i) => {
         const haloShadow = w.bottleneck
