@@ -545,6 +545,129 @@ ${emailBody || "(empty)"}`;
     console.error("draft attachment persistence failed", e);
   }
 
+  // ===== Block 2: Auto-Ablage + CRM-Activity =================================
+  // Bei eingehenden Mails versuchen wir, automatisch:
+  //  a) die Absender-Firma via Domain in `companies` zu finden,
+  //  b) eine CRM-Activity (type=email) anzulegen,
+  //  c) PDF/Office/Bild-Anhänge als Dokumente in `documents` abzulegen und mit
+  //     der Firma zu verknüpfen. Fehlschläge sind nicht fatal.
+  try {
+    const draftId = inserted.id as string;
+    const domain = (fromEmail.split("@")[1] || "").trim().toLowerCase();
+    const genericDomains = new Set([
+      "gmail.com","googlemail.com","outlook.com","hotmail.com","live.com",
+      "yahoo.com","gmx.de","gmx.net","web.de","t-online.de","icloud.com","me.com","aol.com",
+    ]);
+
+    let companyId: string | null = null;
+    if (domain && !genericDomains.has(domain)) {
+      const { data: comp } = await admin
+        .from("companies")
+        .select("id")
+        .or(`email.ilike.%@${domain},website.ilike.%${domain}%`)
+        .limit(1)
+        .maybeSingle();
+      if (comp?.id) companyId = comp.id as string;
+    }
+
+    if (companyId) {
+      await admin.from("crm_activities").insert({
+        company_id: companyId,
+        type: "email",
+        subject: subject.slice(0, 250),
+        body: (emailBody || "").slice(0, 4000),
+        owner_id: createdBy,
+        completed_at: new Date().toISOString(),
+        auto_generated: true,
+      });
+
+      if (createdBy) {
+        const { data: attRows } = await admin
+          .from("mtiq_draft_attachments")
+          .select("id,file_name,mime_type,size_bytes,storage_path,source")
+          .eq("draft_id", draftId)
+          .eq("source", "email_attachment");
+
+        const allowed = /pdf|word|excel|spreadsheet|presentation|image\/(png|jpeg|jpg|webp)|officedocument/i;
+        for (const att of (attRows ?? [])) {
+          try {
+            const mime = String(att.mime_type || "");
+            if (!allowed.test(mime) && !/\.(pdf|docx?|xlsx?|pptx?|png|jpe?g|webp)$/i.test(att.file_name)) continue;
+
+            const { data: blob, error: dlErr } = await admin.storage
+              .from("mtiq-draft-attachments")
+              .download(att.storage_path);
+            if (dlErr || !blob) { console.error("auto-file dl failed", dlErr); continue; }
+            const buf = new Uint8Array(await blob.arrayBuffer());
+
+            const docId = crypto.randomUUID();
+            const safe = String(att.file_name).replace(/[^a-zA-Z0-9._-]/g, "_");
+            const path = `${docId}/v1-${Date.now()}-${safe}`;
+            const { error: upErr } = await admin.storage
+              .from("documents")
+              .upload(path, buf, { contentType: mime || "application/octet-stream", upsert: false });
+            if (upErr) { console.error("auto-file upload failed", upErr); continue; }
+
+            const title = String(att.file_name).replace(/\.[a-z0-9]{1,5}$/i, "").slice(0, 250);
+            const { error: docErr } = await admin.from("documents").insert({
+              id: docId,
+              title,
+              file_name: att.file_name,
+              mime_type: mime,
+              size_bytes: att.size_bytes ?? buf.byteLength,
+              storage_path: path,
+              current_version: 1,
+              owner_id: createdBy,
+            });
+            if (docErr) { console.error("auto-file doc insert failed", docErr); continue; }
+
+            await admin.from("document_versions").insert({
+              document_id: docId,
+              version_no: 1,
+              storage_path: path,
+              file_name: att.file_name,
+              mime_type: mime,
+              size_bytes: att.size_bytes ?? buf.byteLength,
+              uploaded_by: createdBy,
+              change_note: `Auto-Ablage aus MTIQ-Eingang: ${subject}`.slice(0, 500),
+            });
+
+            await admin.from("document_links").insert({
+              document_id: docId,
+              entity_type: "company",
+              entity_id: companyId,
+              role: "email_attachment",
+              linked_by: createdBy,
+            });
+
+            await admin.from("document_intake_log").insert({
+              mtiq_draft_id: draftId,
+              attachment_id: att.id,
+              document_id: docId,
+              action: "new_document",
+              new_version_no: 1,
+              change_note: "Auto-Ablage (Block 2)",
+              created_by: createdBy,
+              signals: { auto: true, company_id: companyId, from: fromEmail },
+            });
+          } catch (e) {
+            console.error("auto-file per-attachment error", e);
+          }
+        }
+      }
+
+      await admin
+        .from("mtiq_drafts")
+        .update({ suggested_company_id: companyId })
+        .eq("id", draftId)
+        .is("suggested_company_id", null);
+    }
+  } catch (e) {
+    console.error("Block 2 auto-ablage failed", e);
+  }
+
+
+
   // ===== Route inference + document version proposals =====================
   // Look up the freshly inserted attachments for this draft and propose
   // whether each one is a new version of an existing document.
