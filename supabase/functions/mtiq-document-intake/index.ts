@@ -202,6 +202,7 @@ Deno.serve(async (req) => {
     const CLASSES = ["Versicherung", "Lieferschein", "Anfrage", "Bestellung", "Sonstiges"];
     const ROUTES = ["dokument_ablegen", "vorgang_anlegen", "beides", "unklar"];
     const PRIORITIES = ["Niedrig", "Mittel", "Hoch", "Kritisch"];
+    const SHAPES = ["point", "line", "triangle", "square"];
 
     const doc_classification = CLASSES.includes(parsed?.doc_classification) ? parsed.doc_classification : "Sonstiges";
     const routing_suggestion = ROUTES.includes(parsed?.routing_suggestion) ? parsed.routing_suggestion : "unklar";
@@ -209,6 +210,7 @@ Deno.serve(async (req) => {
     const due_date = parsed?.due_date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.due_date) ? parsed.due_date : null;
     const title = String(parsed?.title ?? "").slice(0, 500) || (hint ? hint.slice(0, 200) : file.name || "Scan");
     const description = String(parsed?.description ?? "") || hint || "";
+    const process_shape = SHAPES.includes(parsed?.process_shape) ? parsed.process_shape : null;
 
     const tasks = Array.isArray(parsed?.tasks)
       ? parsed.tasks.slice(0, 8).map((t: any) => ({
@@ -223,10 +225,34 @@ Deno.serve(async (req) => {
     const extracted_fields = (parsed?.extracted_fields && typeof parsed.extracted_fields === "object")
       ? parsed.extracted_fields : {};
 
+    // Customer-Resolve via Domain → companies
+    let suggested_company_id: string | null = null;
+    let customer_kind: "neukunde" | "bestandskunde" | "interessent" | "kunde" | null = null;
+    const domain = String(extracted_fields?.absender_domain ?? "").trim().toLowerCase();
+    if (domain) {
+      try {
+        const { data: comp } = await admin
+          .from("companies")
+          .select("id, kind")
+          .or(`email.ilike.%@${domain},website.ilike.%${domain}%`)
+          .limit(1)
+          .maybeSingle();
+        if (comp) {
+          suggested_company_id = comp.id;
+          customer_kind = (comp as any).kind === "interessent" ? "interessent" : "bestandskunde";
+        } else {
+          customer_kind = "neukunde";
+        }
+      } catch (e) {
+        console.warn("customer-resolve failed", (e as Error).message);
+      }
+    }
+
     const originalSnapshot = {
       title, description, department: parsed?.department ?? null,
       priority, due_date, tasks,
       doc_classification, routing_suggestion, extracted_fields,
+      process_shape, customer_kind, suggested_company_id,
     };
 
     // Insert draft
@@ -248,8 +274,12 @@ Deno.serve(async (req) => {
       extracted_fields,
       source_kind: "scan",
       original_snapshot: originalSnapshot,
+      process_shape,
+      customer_kind,
+      suggested_company_id,
     }).select().single();
     if (insErr) throw insErr;
+
 
     // Upload file as draft attachment
     try {
