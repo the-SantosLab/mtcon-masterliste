@@ -186,7 +186,7 @@ export default function Cockpit() {
           .is('archived_at', null),
         supabase
           .from('cases')
-          .select('id,case_no,project_name,status,created_at,due_at,client_name')
+          .select('id,case_no,project_name,status,created_at,due_at,client_name,process_shape')
           .eq('deleted', false)
           .order('created_at', { ascending: false })
           .limit(500),
