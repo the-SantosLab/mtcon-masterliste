@@ -1593,8 +1593,9 @@ function PipelineShape({
         <div className="cockpit-lane-label !static !mb-0">
           <span className="font-mono text-cyan-300">{caseLabel ?? '—'}</span>
           <span className="ml-2 text-[10px] tracking-[0.3em] uppercase text-white/55">
-            Prozess-Geometrie · {shape === 'triangle' ? 'Dreieck' : shape === 'square' ? 'Quadrat' : 'Linie'} · {depts.length} Abteilungen
+            Prozess-Geometrie · {shape === 'point' ? 'Punkt' : shape === 'triangle' ? 'Dreieck' : shape === 'square' ? 'Quadrat' : 'Linie'} · {depts.length} {depts.length === 1 ? 'Abteilung' : 'Abteilungen'}
           </span>
+
         </div>
         <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 hidden sm:block">
           Hover für Live-Status · Klick filtert
