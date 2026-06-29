@@ -994,6 +994,8 @@ export default function CaseDetail() {
             {/* Tasks checklist */}
             <CaseSubtasks caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} sequentialMode={!!(c as any).sequential_mode} dueRequired={!!(c as any).due_required} lockMode={((c as any).lock_mode === 'soft' ? 'soft' : 'hard')} />
 
+            <CaseOutputPanel caseId={c.id} canEdit={!isViewer} isAdmin={isAdmin} userId={user?.id || ''} onChanged={refresh} />
+
             {/* Anhänge */}
             <div className="rounded-md border border-border bg-card p-5 space-y-5">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Anhänge</h3>
