@@ -1569,9 +1569,16 @@ function PipelineShape({
     };
   }, [depts, tasks, allTasks, caseRow, caseLabel, bottleneckDeptId]);
 
-  if (tasks.length === 0 || depts.length < 2) return null;
-  const shape: 'triangle' | 'square' | 'line' =
-    depts.length === 3 ? 'triangle' : depts.length === 4 ? 'square' : 'line';
+  if (tasks.length === 0 || depts.length < 1) return null;
+  const shapeOverride = (caseRow as any)?.process_shape as ('point'|'line'|'triangle'|'square'|null|undefined);
+  const shape: 'point' | 'triangle' | 'square' | 'line' =
+    shapeOverride && ['point','line','triangle','square'].includes(shapeOverride)
+      ? shapeOverride
+      : depts.length === 1 ? 'point'
+      : depts.length === 3 ? 'triangle'
+      : depts.length === 4 ? 'square'
+      : 'line';
+
 
   const accentFor = (i: number) => SHAPE_ACCENTS[i % SHAPE_ACCENTS.length];
 
