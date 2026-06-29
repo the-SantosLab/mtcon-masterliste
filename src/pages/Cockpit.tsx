@@ -186,7 +186,7 @@ export default function Cockpit() {
           .is('archived_at', null),
         supabase
           .from('cases')
-          .select('id,case_no,project_name,status,created_at,due_at,client_name')
+          .select('id,case_no,project_name,status,created_at,due_at,client_name,process_shape')
           .eq('deleted', false)
           .order('created_at', { ascending: false })
           .limit(500),
@@ -1569,9 +1569,16 @@ function PipelineShape({
     };
   }, [depts, tasks, allTasks, caseRow, caseLabel, bottleneckDeptId]);
 
-  if (tasks.length === 0 || depts.length < 2) return null;
-  const shape: 'triangle' | 'square' | 'line' =
-    depts.length === 3 ? 'triangle' : depts.length === 4 ? 'square' : 'line';
+  if (tasks.length === 0 || depts.length < 1) return null;
+  const shapeOverride = (caseRow as any)?.process_shape as ('point'|'line'|'triangle'|'square'|null|undefined);
+  const shape: 'point' | 'triangle' | 'square' | 'line' =
+    shapeOverride && ['point','line','triangle','square'].includes(shapeOverride)
+      ? shapeOverride
+      : depts.length === 1 ? 'point'
+      : depts.length === 3 ? 'triangle'
+      : depts.length === 4 ? 'square'
+      : 'line';
+
 
   const accentFor = (i: number) => SHAPE_ACCENTS[i % SHAPE_ACCENTS.length];
 
@@ -1586,8 +1593,9 @@ function PipelineShape({
         <div className="cockpit-lane-label !static !mb-0">
           <span className="font-mono text-cyan-300">{caseLabel ?? '—'}</span>
           <span className="ml-2 text-[10px] tracking-[0.3em] uppercase text-white/55">
-            Prozess-Geometrie · {shape === 'triangle' ? 'Dreieck' : shape === 'square' ? 'Quadrat' : 'Linie'} · {depts.length} Abteilungen
+            Prozess-Geometrie · {shape === 'point' ? 'Punkt' : shape === 'triangle' ? 'Dreieck' : shape === 'square' ? 'Quadrat' : 'Linie'} · {depts.length} {depts.length === 1 ? 'Abteilung' : 'Abteilungen'}
           </span>
+
         </div>
         <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 hidden sm:block">
           Hover für Live-Status · Klick filtert
@@ -1595,7 +1603,19 @@ function PipelineShape({
       </div>
 
       <div className="cockpit-shape-inner" style={{ position: 'relative' }}>
+        {shape === 'point' && (
+          <ShapePoint
+            depts={depts}
+            hover={hover}
+            setHover={setHover}
+            accentFor={accentFor}
+            onDeptClick={onDeptClick}
+            activeDeptId={activeDeptId ?? null}
+            metrics={metrics}
+          />
+        )}
         {shape === 'square' && (
+
           <ShapeSquare
             depts={depts}
             hover={hover}
@@ -2097,5 +2117,93 @@ function ShapeLine({
 
 
 
+
+function ShapePoint({
+  depts, hover, setHover, onDeptClick, activeDeptId, metrics,
+}: {
+  depts: ShapeDept[];
+  hover: number | null;
+  setHover: (n: number | null) => void;
+  accentFor: (i: number) => typeof SHAPE_ACCENTS[number];
+  onDeptClick?: (id: string) => void;
+  activeDeptId?: string | null;
+  metrics: ShapeMetrics;
+}) {
+  const d = depts[0];
+  if (!d) return null;
+  const m = metrics.perDept.get(d.id);
+  const hub = metrics.hub;
+  const isActive = activeDeptId === d.id;
+  const Icon = pickIcon(d.name);
+  return (
+    <div className="flow-scene" style={{ minHeight: 360 }}>
+      <div className="flow-grid" />
+      <svg className="flow-svg" viewBox="0 0 1800 880" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="ptBurst" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#bff3ff" stopOpacity="0.9"/>
+            <stop offset="1" stopColor="#bff3ff" stopOpacity="0"/>
+          </radialGradient>
+          <filter id="ptGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="10"/></filter>
+        </defs>
+        <circle cx="900" cy="440" r="320" fill="url(#ptBurst)" opacity="0.35"/>
+        <circle cx="900" cy="440" r="200" fill="rgba(5,10,24,0.95)" stroke="#3ad6ff" strokeWidth="12" filter="url(#ptGlow)" opacity="0.55"/>
+        <circle cx="900" cy="440" r="200" fill="rgba(5,10,24,0.95)" stroke="#bdeeff" strokeWidth="3"/>
+        <circle cx="900" cy="440" r="170" fill="none" stroke="rgba(120,220,255,0.35)" strokeWidth="1.4"/>
+        <path d="M340 774 h1120 l34 26 l-34 26 h-1120 l-34 -26 z" fill="rgba(6,12,26,0.6)" stroke="rgba(120,170,255,0.3)" strokeWidth="1.5"/>
+        <text x="500" y="808" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">WIP {metrics.footer.wip}</text>
+        <text x="900" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill="#d7e7ff">HEUTE GESCHLOSSEN {metrics.footer.closedToday}</text>
+        <text x="1300" y="808" textAnchor="middle" fontFamily="Inter,sans-serif" fontSize="17" fontWeight={700} letterSpacing="1" fill={metrics.footer.escalations > 0 ? '#ff8090' : '#d7e7ff'}>ESKALATIONEN {metrics.footer.escalations}</text>
+      </svg>
+
+      <div className="flow-nodes" aria-hidden="false">
+        <button
+          type="button"
+          className={cn('flow-oct', hover === 0 && 'is-hover', isActive && 'is-active', m?.pulse && 'cockpit-pulse')}
+          style={{
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            ['--ac' as any]: '#2f9dff',
+            ['--ai' as any]: '#7cc4ff',
+          } as React.CSSProperties}
+          onMouseEnter={() => setHover(0)}
+          onMouseLeave={() => setHover(null)}
+          onFocus={() => setHover(0)}
+          onBlur={() => setHover(null)}
+          onClick={() => onDeptClick?.(d.id)}
+        >
+          <div className="flow-oct__shape">
+            <div className="flow-oct__ring" />
+            <div className="flow-oct__inner"><Icon size={22} strokeWidth={1.8} /></div>
+            <span className="flow-oct__pill">{m?.progressPct ?? 0}%</span>
+          </div>
+          <div className="flow-oct__label">
+            <span className="flow-oct__num">01</span>
+            <span className="flow-oct__name">{d.name.toUpperCase()}</span>
+          </div>
+        </button>
+      </div>
+
+      <div className="flow-center" aria-hidden="true">
+        <p className="flow-center__pct">{hub.progressPct}%</p>
+        <p className="flow-center__lbl">FORTSCHRITT</p>
+        {hub.caseNo && <p className="flow-center__case">{hub.caseNo}</p>}
+        {hub.deadlineLabel !== '—' && (
+          <p
+            className="flow-center__dl"
+            style={{
+              color:
+                hub.deadlineState === 'crit' ? '#ff8090' :
+                hub.deadlineState === 'warn' ? '#ffc06a' : '#7fe3ff',
+            }}
+          >
+            DEADLINE {hub.deadlineLabel}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 
