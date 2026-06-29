@@ -36,6 +36,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { MtiqWidget } from '@/components/mtiq/MtiqWidget';
+import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
 import { SortableNavList } from '@/components/SortableNavList';
 
 
