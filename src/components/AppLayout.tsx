@@ -629,6 +629,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </DialogContent>
       </Dialog>
       <MtiqWidget />
+      <MtiqWriter />
       <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
     </div>
   );
