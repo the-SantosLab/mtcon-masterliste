@@ -1721,6 +1721,7 @@ export type Database = {
       }
       cases: {
         Row: {
+          archived_at: string | null
           assignee_id: string | null
           case_no: string
           case_number: string | null
@@ -1749,6 +1750,8 @@ export type Database = {
           note: string | null
           planned_week: string | null
           priority_order: number
+          process_shape: string | null
+          process_template_id: string | null
           product_code: string | null
           project_article_no: string | null
           project_duration: string | null
@@ -1771,6 +1774,7 @@ export type Database = {
           watchers: string[]
         }
         Insert: {
+          archived_at?: string | null
           assignee_id?: string | null
           case_no?: string
           case_number?: string | null
@@ -1799,6 +1803,8 @@ export type Database = {
           note?: string | null
           planned_week?: string | null
           priority_order?: number
+          process_shape?: string | null
+          process_template_id?: string | null
           product_code?: string | null
           project_article_no?: string | null
           project_duration?: string | null
@@ -1821,6 +1827,7 @@ export type Database = {
           watchers?: string[]
         }
         Update: {
+          archived_at?: string | null
           assignee_id?: string | null
           case_no?: string
           case_number?: string | null
@@ -1849,6 +1856,8 @@ export type Database = {
           note?: string | null
           planned_week?: string | null
           priority_order?: number
+          process_shape?: string | null
+          process_template_id?: string | null
           product_code?: string | null
           project_article_no?: string | null
           project_duration?: string | null
@@ -1911,6 +1920,13 @@ export type Database = {
             columns: ["last_changed_by"]
             isOneToOne: false
             referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_process_template_id_fkey"
+            columns: ["process_template_id"]
+            isOneToOne: false
+            referencedRelation: "process_templates"
             referencedColumns: ["id"]
           },
           {
@@ -5625,6 +5641,7 @@ export type Database = {
           attachment_match_proposals: Json
           created_at: string
           created_by: string | null
+          customer_kind: string | null
           doc_classification: string | null
           draft_assignee_id: string | null
           draft_client_name: string | null
@@ -5653,6 +5670,7 @@ export type Database = {
           mtiq_reasoning: string | null
           original_snapshot: Json | null
           possible_duplicate_of: string | null
+          process_shape: string | null
           recommended_reason: string | null
           route: string
           route_confirmed_at: string | null
@@ -5664,6 +5682,7 @@ export type Database = {
           source_email_subject: string | null
           source_kind: string | null
           status: string
+          suggested_company_id: string | null
           vorgang_id: string | null
         }
         Insert: {
@@ -5672,6 +5691,7 @@ export type Database = {
           attachment_match_proposals?: Json
           created_at?: string
           created_by?: string | null
+          customer_kind?: string | null
           doc_classification?: string | null
           draft_assignee_id?: string | null
           draft_client_name?: string | null
@@ -5700,6 +5720,7 @@ export type Database = {
           mtiq_reasoning?: string | null
           original_snapshot?: Json | null
           possible_duplicate_of?: string | null
+          process_shape?: string | null
           recommended_reason?: string | null
           route?: string
           route_confirmed_at?: string | null
@@ -5711,6 +5732,7 @@ export type Database = {
           source_email_subject?: string | null
           source_kind?: string | null
           status?: string
+          suggested_company_id?: string | null
           vorgang_id?: string | null
         }
         Update: {
@@ -5719,6 +5741,7 @@ export type Database = {
           attachment_match_proposals?: Json
           created_at?: string
           created_by?: string | null
+          customer_kind?: string | null
           doc_classification?: string | null
           draft_assignee_id?: string | null
           draft_client_name?: string | null
@@ -5747,6 +5770,7 @@ export type Database = {
           mtiq_reasoning?: string | null
           original_snapshot?: Json | null
           possible_duplicate_of?: string | null
+          process_shape?: string | null
           recommended_reason?: string | null
           route?: string
           route_confirmed_at?: string | null
@@ -5758,6 +5782,7 @@ export type Database = {
           source_email_subject?: string | null
           source_kind?: string | null
           status?: string
+          suggested_company_id?: string | null
           vorgang_id?: string | null
         }
         Relationships: [
@@ -6865,6 +6890,42 @@ export type Database = {
           name?: string
           valid_from?: string | null
           valid_to?: string | null
+        }
+        Relationships: []
+      }
+      process_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          departments: string[]
+          description: string | null
+          id: string
+          name: string
+          shape: string
+          steps: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          departments?: string[]
+          description?: string | null
+          id?: string
+          name: string
+          shape: string
+          steps?: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          departments?: string[]
+          description?: string | null
+          id?: string
+          name?: string
+          shape?: string
+          steps?: Json
+          updated_at?: string
         }
         Relationships: []
       }
