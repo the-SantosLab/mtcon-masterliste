@@ -43,12 +43,22 @@ Routing-Vorschlag (routing_suggestion):
 - "beides"           : Wenn das Dokument abgelegt UND ein Vorgang angelegt werden soll (z. B. Lieferschein → Wareneingang + Ablage).
 - "unklar"           : Wenn nicht eindeutig.
 
-MtCon Abteilungen: Vertrieb, Einkauf, Lager, Technik, Konstruktion, Verwaltung, Geschäftsführung.
+Prozessform (process_shape) — nur wenn ein Vorgang anzulegen ist:
+- "point"   : 1 Abteilung erledigt alles (z. B. einfache Anfrage Vertrieb).
+- "line"    : N Abteilungen sequenziell (z. B. Bestand-Bestellung: Vertrieb → Lager → Versand).
+- "triangle": 3 Abteilungen (typisch Bestandsprodukt-Verkauf: Vertrieb/Einkauf/Produktion).
+- "square"  : 4 Abteilungen (typisch Sonderfertigung: Vertrieb/Einkauf/Produktion/Versand).
+- null      : nicht zutreffend / nur Ablage.
+
+Kundenkennung (extracted_fields.absender_domain): Wenn eine E-Mail-Adresse oder Firmendomain erkennbar ist, gib die Domain (z. B. "muster.de") zurück.
+
+MtCon Abteilungen: Vertrieb, Einkauf, Lager, Technik, Konstruktion, Verwaltung, Geschäftsführung, Produktion, Versand.
 
 Gib AUSSCHLIESSLICH valides JSON exakt in dieser Struktur zurück:
 {
   "doc_classification": "Versicherung|Lieferschein|Anfrage|Bestellung|Sonstiges",
   "routing_suggestion": "dokument_ablegen|vorgang_anlegen|beides|unklar",
+  "process_shape": "point|line|triangle|square|null",
   "title": "kurzer aussagekräftiger Titel",
   "description": "neutrale Zusammenfassung (3-6 Sätze)",
   "department": "primär zuständige Abteilung",
@@ -56,6 +66,7 @@ Gib AUSSCHLIESSLICH valides JSON exakt in dieser Struktur zurück:
   "due_date": "YYYY-MM-DD oder null",
   "extracted_fields": {
     "absender": "Firma/Person oder null",
+    "absender_domain": "domain.tld oder null",
     "dokumentnummer": "z.B. Lieferschein-/Bestell-/Polizzennr. oder null",
     "datum": "YYYY-MM-DD oder null",
     "betrag": "Betrag inkl. Währung oder null",
@@ -70,10 +81,11 @@ Gib AUSSCHLIESSLICH valides JSON exakt in dieser Struktur zurück:
 
 Regeln:
 - Alle Texte auf Deutsch.
-- Wenn unsicher → "Sonstiges" + "unklar".
-- Bei "dokument_ablegen": maximal 1-2 Tasks oder leeres Array.
-- Bei "vorgang_anlegen" / "beides": bis zu 6 konkrete Tasks.
+- Wenn unsicher → "Sonstiges" + "unklar" + process_shape:null.
+- Bei "dokument_ablegen": maximal 1-2 Tasks oder leeres Array, process_shape:null.
+- Bei "vorgang_anlegen" / "beides": process_shape passend setzen, bis zu 6 konkrete Tasks.
 - Keine Floskeln, keine Emojis, sachlich.`;
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
