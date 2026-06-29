@@ -1728,12 +1728,15 @@ export type Database = {
       cases: {
         Row: {
           archived_at: string | null
+          archived_by: string | null
           assignee_id: string | null
           case_no: string
           case_number: string | null
           client_name: string | null
           closed_at: string | null
           closed_by: string | null
+          closure_outputs: Json
+          closure_summary: string | null
           completed_at: string | null
           created_at: string
           created_by: string | null
@@ -1781,12 +1784,15 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          archived_by?: string | null
           assignee_id?: string | null
           case_no?: string
           case_number?: string | null
           client_name?: string | null
           closed_at?: string | null
           closed_by?: string | null
+          closure_outputs?: Json
+          closure_summary?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -1834,12 +1840,15 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          archived_by?: string | null
           assignee_id?: string | null
           case_no?: string
           case_number?: string | null
           client_name?: string | null
           closed_at?: string | null
           closed_by?: string | null
+          closure_outputs?: Json
+          closure_summary?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
