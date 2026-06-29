@@ -97,6 +97,27 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Load process_template by shape if no case_template was bound to the draft.
+    // Process templates carry the symbolic flow (point/line/triangle/square) + step list.
+    let processTemplateId: string | null = null;
+    const processShape: string | null = (draft as any).process_shape ?? null;
+    let processSteps: any[] = [];
+    if (!templateTasks.length && processShape) {
+      const { data: ptpl } = await client
+        .from("process_templates")
+        .select("id, steps, departments")
+        .eq("shape", processShape)
+        .eq("active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (ptpl) {
+        processTemplateId = ptpl.id;
+        processSteps = Array.isArray(ptpl.steps) ? ptpl.steps : [];
+      }
+    }
+
+
     // Create case
     const { data: newCase, error: cErr } = await client
       .from("cases")
