@@ -175,15 +175,18 @@ Deno.serve(async (req) => {
             .limit(1);
           if (dm && dm[0]) task_dept_id = dm[0].id;
         }
-        const outs = Array.isArray(s.required_outputs) ? s.required_outputs.join(", ") : null;
+        const outs: string[] = Array.isArray(s.required_outputs)
+          ? s.required_outputs.map((x: any) => String(x)).filter(Boolean)
+          : [];
         return {
           case_id: newCase.id,
           title: String(s.title ?? `Schritt ${idx + 1}`).slice(0, 500),
-          description: outs ? `Pflicht-Output: ${outs}` : null,
+          description: outs.length ? `Pflicht-Output: ${outs.join(", ")}` : null,
           department_id: task_dept_id,
           status: "open",
           sort_order: idx,
           created_by: user.id,
+          required_outputs: outs,
         };
       }));
     } else {
