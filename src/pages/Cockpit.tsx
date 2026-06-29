@@ -1603,7 +1603,19 @@ function PipelineShape({
       </div>
 
       <div className="cockpit-shape-inner" style={{ position: 'relative' }}>
+        {shape === 'point' && (
+          <ShapePoint
+            depts={depts}
+            hover={hover}
+            setHover={setHover}
+            accentFor={accentFor}
+            onDeptClick={onDeptClick}
+            activeDeptId={activeDeptId ?? null}
+            metrics={metrics}
+          />
+        )}
         {shape === 'square' && (
+
           <ShapeSquare
             depts={depts}
             hover={hover}
