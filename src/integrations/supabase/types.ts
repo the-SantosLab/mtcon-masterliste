@@ -1512,12 +1512,14 @@ export type Database = {
           completed: boolean
           completed_at: string | null
           completed_by: string | null
+          completed_outputs: Json
           created_at: string
           created_by: string | null
           department_id: string | null
           description: string | null
           due_at: string | null
           id: string
+          required_outputs: Json
           sort_order: number
           status: string
           title: string
@@ -1531,12 +1533,14 @@ export type Database = {
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
+          completed_outputs?: Json
           created_at?: string
           created_by?: string | null
           department_id?: string | null
           description?: string | null
           due_at?: string | null
           id?: string
+          required_outputs?: Json
           sort_order?: number
           status?: string
           title: string
@@ -1550,12 +1554,14 @@ export type Database = {
           completed?: boolean
           completed_at?: string | null
           completed_by?: string | null
+          completed_outputs?: Json
           created_at?: string
           created_by?: string | null
           department_id?: string | null
           description?: string | null
           due_at?: string | null
           id?: string
+          required_outputs?: Json
           sort_order?: number
           status?: string
           title?: string
