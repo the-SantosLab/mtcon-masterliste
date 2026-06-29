@@ -127,7 +127,7 @@ export function CaseOutputPanel({ caseId, canEdit, isAdmin, userId, onChanged }:
       last_changed_at: now,
     }).eq('id', caseId);
     setBusy(false);
-    if (error) { toastError(error, 'case'); return; }
+    if (error) { toastError(error, 'case_update'); return; }
     await supabase.from('case_activity').insert({ case_id: caseId, action: 'STATUS_CHANGE', field: 'status', old_value: caseRow.status, new_value: 'abgeschlossen', actor_id: userId });
     toast.success('Vorgang abgeschlossen');
     onChanged?.();
@@ -146,7 +146,7 @@ export function CaseOutputPanel({ caseId, canEdit, isAdmin, userId, onChanged }:
       last_changed_at: now,
     }).eq('id', caseId);
     setBusy(false);
-    if (error) { toastError(error, 'case'); return; }
+    if (error) { toastError(error, 'case_update'); return; }
     await supabase.from('case_activity').insert({ case_id: caseId, action: 'STATUS_CHANGE', field: 'status', old_value: caseRow.status, new_value: 'archiv', actor_id: userId });
     toast.success('Vorgang archiviert');
     onChanged?.();
@@ -165,7 +165,7 @@ export function CaseOutputPanel({ caseId, canEdit, isAdmin, userId, onChanged }:
       last_changed_at: now,
     }).eq('id', caseId);
     setBusy(false);
-    if (error) { toastError(error, 'case'); return; }
+    if (error) { toastError(error, 'case_update'); return; }
     await supabase.from('case_activity').insert({ case_id: caseId, action: 'STATUS_CHANGE', field: 'status', old_value: 'archiv', new_value: 'abgeschlossen', actor_id: userId });
     toast.success('Aus Archiv geholt');
     onChanged?.();
