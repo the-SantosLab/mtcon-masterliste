@@ -283,16 +283,27 @@ export default function Cockpit() {
   }, []);
 
 
-  // SLA alerts: toast on every new task that crosses critical age while open
+  // SLA alerts: toast only for NEW tasks that cross critical age after mount.
+  // On first load we just seed the "seen" set so the user isn't flooded with
+  // dozens of toasts for historic tasks (which also blocked navigation).
+  const slaSeededRef = useRef(false);
   useEffect(() => {
     const seen = alertedTaskIdsRef.current;
+    if (!slaSeededRef.current) {
+      for (const t of tasks) seen.add(t.id);
+      slaSeededRef.current = true;
+      return;
+    }
+    let emitted = 0;
     for (const t of tasks) {
-      if (t.completed || t.status === 'done') continue;
-      if (hoursSince(t.created_at) < SLA_CRIT_H) continue;
       if (seen.has(t.id)) continue;
       seen.add(t.id);
+      if (t.completed || t.status === 'done') continue;
+      if (hoursSince(t.created_at) < SLA_CRIT_H) continue;
+      if (emitted >= 3) continue; // hard cap per update burst
       const cNo = cases.find((c) => c.id === t.case_id)?.case_no ?? '—';
-      toast.warning(`SLA kritisch · ${cNo}`, { description: t.title, duration: 6000 });
+      toast.warning(`SLA kritisch · ${cNo}`, { description: t.title, duration: 4000 });
+      emitted += 1;
     }
   }, [tasks, cases]);
 
