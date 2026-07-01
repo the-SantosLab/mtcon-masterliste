@@ -119,7 +119,21 @@ const queryClient = new QueryClient();
 
 function RouteFallback() {
   return (
-    <div className="p-6 space-y-4">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className="p-6 space-y-4 animate-in fade-in duration-200"
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-5 w-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-foreground">Seite wird geladen…</span>
+          <span className="text-xs text-muted-foreground">
+            Inhalte werden vorbereitet. Einen Moment bitte.
+          </span>
+        </div>
+      </div>
       <Skeleton className="h-8 w-64" />
       <Skeleton className="h-4 w-96" />
       <div className="grid gap-3 mt-6">
@@ -127,6 +141,7 @@ function RouteFallback() {
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-32 w-full" />
       </div>
+      <span className="sr-only">Seite wird geladen</span>
     </div>
   );
 }
