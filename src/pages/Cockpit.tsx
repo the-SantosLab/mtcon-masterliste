@@ -1224,11 +1224,7 @@ function PipelineFlow({ count, currentIdx }: { count: number; currentIdx: number
       </defs>
       <path d={d} />
       {dLit && <path d={dLit} className="lit" />}
-      {dLit && (
-        <circle r="3.5" className="particle">
-          <animateMotion dur="3.2s" repeatCount="indefinite" path={dLit} rotate="auto" />
-        </circle>
-      )}
+
     </svg>
   );
 }
