@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { qToast } from '@/lib/toastQueue';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -294,16 +295,19 @@ export default function Cockpit() {
       slaSeededRef.current = true;
       return;
     }
-    let emitted = 0;
     for (const t of tasks) {
       if (seen.has(t.id)) continue;
       seen.add(t.id);
       if (t.completed || t.status === 'done') continue;
       if (hoursSince(t.created_at) < SLA_CRIT_H) continue;
-      if (emitted >= 3) continue; // hard cap per update burst
       const cNo = cases.find((c) => c.id === t.case_id)?.case_no ?? '—';
-      toast.warning(`SLA kritisch · ${cNo}`, { description: t.title, duration: 4000 });
-      emitted += 1;
+      // Global queue handles hard cap, rate limit and dedup across the session.
+      qToast.warning(`SLA kritisch · ${cNo}`, {
+        description: t.title,
+        duration: 4000,
+        dedupKey: `sla:${t.id}`,
+        dedupTtlMs: 30 * 60_000,
+      });
     }
   }, [tasks, cases]);
 
