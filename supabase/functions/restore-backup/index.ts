@@ -13,6 +13,10 @@ const RESTORE_ORDER = [
   'cases','case_tasks','case_activity',
   'portal_customers','support_tickets','ticket_messages',
   'response_templates','notifications',
+  'documents','document_versions','document_links','document_types',
+  'case_chat_attachments','case_note_attachments','case_email_attachments',
+  'inbox_documents','insurance_documents','issos_documents','order_documents',
+  'mtiq_draft_attachments','drawings','drawing_versions',
 ];
 
 Deno.serve(async (req) => {
@@ -41,6 +45,8 @@ Deno.serve(async (req) => {
   let body: any;
   try { body = await req.json(); } catch { return json({ error: 'Invalid body' }, 400); }
   const backupId = body?.backup_id;
+  const skipFiles = body?.skip_files === true;
+  const wipeBuckets = body?.wipe_buckets !== false; // default: leere Ziel-Buckets vor Restore
   if (!backupId) return json({ error: 'backup_id required' }, 400);
 
   try {
@@ -56,7 +62,6 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({}),
     });
-    // Note: cron path produces trigger=schedule; mark via direct insert if we want pre_restore label
     await preRes.text();
 
     // Download the backup file
@@ -64,22 +69,21 @@ Deno.serve(async (req) => {
     if (dErr || !file) throw new Error('Backup-Datei kann nicht geladen werden');
     const text = await file.text();
     const payload = JSON.parse(text);
-    const data = payload.data as Record<string, any[]>;
+    const data = (payload.data ?? {}) as Record<string, any[]>;
+    const storage = payload.storage as
+      | { root: string; buckets: string[]; files: Record<string, { path: string; size: number; dest: string }[]> }
+      | undefined;
 
-    // Wipe in reverse order, then insert in forward order
+    // 1) DB wipe (reverse) + restore (forward)
     for (const t of [...RESTORE_ORDER].reverse()) {
       const { error } = await admin.from(t).delete().not('id', 'is', null);
-      if (error && !/no rows|0 rows/i.test(error.message)) {
-        // counters has no id col? it does. continue otherwise
-        console.warn(`wipe ${t}:`, error.message);
-      }
+      if (error) console.warn(`wipe ${t}:`, error.message);
     }
 
     let inserted = 0;
     for (const t of RESTORE_ORDER) {
       const rows = data[t];
       if (!rows || rows.length === 0) continue;
-      // Insert in chunks to avoid payload limits
       const chunk = 500;
       for (let i = 0; i < rows.length; i += chunk) {
         const slice = rows.slice(i, i + chunk);
@@ -89,7 +93,87 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json({ ok: true, inserted });
+    // 2) Dateien wiederherstellen
+    let filesRestored = 0;
+    let filesFailed = 0;
+    let bytesRestored = 0;
+    const failedSamples: string[] = [];
+
+    if (!skipFiles && storage?.files && storage?.root) {
+      for (const [bucket, entries] of Object.entries(storage.files)) {
+        if (!entries || entries.length === 0) continue;
+
+        // Optional: Ziel-Bucket leeren, damit gelöschte Dateien nicht "wieder auferstehen".
+        if (wipeBuckets) {
+          try {
+            const toDelete: string[] = [];
+            const stack: string[] = [''];
+            while (stack.length) {
+              const cur = stack.pop()!;
+              let offset = 0;
+              const limit = 1000;
+              while (true) {
+                const { data: list, error: lErr } = await admin.storage.from(bucket).list(cur, {
+                  limit, offset, sortBy: { column: 'name', order: 'asc' },
+                });
+                if (lErr) { console.warn(`wipe list ${bucket}/${cur}: ${lErr.message}`); break; }
+                if (!list || list.length === 0) break;
+                for (const it of list) {
+                  const full = cur ? `${cur}/${it.name}` : it.name;
+                  if (it.id === null || !it.metadata) stack.push(full);
+                  else toDelete.push(full);
+                }
+                if (list.length < limit) break;
+                offset += limit;
+              }
+            }
+            for (let i = 0; i < toDelete.length; i += 500) {
+              const slice = toDelete.slice(i, i + 500);
+              const { error: rmErr } = await admin.storage.from(bucket).remove(slice);
+              if (rmErr) console.warn(`wipe remove ${bucket}: ${rmErr.message}`);
+            }
+          } catch (e: any) {
+            console.warn(`wipe bucket ${bucket}: ${e?.message}`);
+          }
+        }
+
+        // Parallel-Kopie aus backups/<dest> zurück in <bucket>/<path>
+        const concurrency = 6;
+        let idx = 0;
+        const worker = async () => {
+          while (idx < entries.length) {
+            const my = idx++;
+            const it = entries[my];
+            try {
+              const { data: blob, error: dlErr } = await admin.storage.from('backups').download(it.dest);
+              if (dlErr || !blob) throw new Error(dlErr?.message || 'download failed');
+              const buf = new Uint8Array(await blob.arrayBuffer());
+              const { error: upErr } = await admin.storage.from(bucket).upload(it.path, buf, {
+                contentType: (blob as any).type || 'application/octet-stream',
+                upsert: true,
+              });
+              if (upErr) throw upErr;
+              filesRestored++;
+              bytesRestored += buf.byteLength;
+            } catch (e: any) {
+              filesFailed++;
+              if (failedSamples.length < 10) failedSamples.push(`${bucket}/${it.path}: ${e?.message}`);
+            }
+          }
+        };
+        await Promise.all(Array.from({ length: concurrency }, () => worker()));
+      }
+    }
+
+    return json({
+      ok: true,
+      inserted,
+      files_restored: filesRestored,
+      files_failed: filesFailed,
+      bytes_restored: bytesRestored,
+      failed_samples: failedSamples,
+      manifest_version: payload.version ?? 1,
+    });
   } catch (err: any) {
     console.error('restore-backup error', err);
     return json({ error: err?.message || 'Restore failed' }, 500);
