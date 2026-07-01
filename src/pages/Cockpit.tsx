@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppLayout } from '@/components/AppLayout';
@@ -227,14 +227,16 @@ export default function Cockpit() {
     const ch = supabase
       .channel('cockpit-tasks')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, (payload: any) => {
-        setTasks((prev) => {
-          if (payload.eventType === 'DELETE') return prev.filter((t) => t.id !== payload.old.id);
-          const row = payload.new as Task;
-          const idx = prev.findIndex((t) => t.id === row.id);
-          if (idx === -1) return [...prev, row];
-          const next = [...prev];
-          next[idx] = row;
-          return next;
+        startTransition(() => {
+          setTasks((prev) => {
+            if (payload.eventType === 'DELETE') return prev.filter((t) => t.id !== payload.old.id);
+            const row = payload.new as Task;
+            const idx = prev.findIndex((t) => t.id === row.id);
+            if (idx === -1) return [...prev, row];
+            const next = prev.slice();
+            next[idx] = row;
+            return next;
+          });
         });
       })
       .subscribe();
@@ -247,8 +249,10 @@ export default function Cockpit() {
       .channel('cockpit-activity')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_activity' }, (payload: any) => {
         const row = payload.new as ActivityRow;
-        setActivity((prev) => [row, ...prev].slice(0, 40));
-        setNewestActivityId(row.id);
+        startTransition(() => {
+          setActivity((prev) => [row, ...prev].slice(0, 40));
+          setNewestActivityId(row.id);
+        });
         // clear "new" highlight after the animation
         window.setTimeout(() => setNewestActivityId((cur) => (cur === row.id ? null : cur)), 1200);
       })
@@ -261,20 +265,23 @@ export default function Cockpit() {
     const ch = supabase
       .channel('cockpit-cases')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cases' }, (payload: any) => {
-        setCases((prev) => {
-          if (payload.eventType === 'DELETE') return prev.filter((c) => c.id !== payload.old.id);
-          const row = payload.new as CaseRow;
-          if (row && (row as any).deleted) return prev.filter((c) => c.id !== row.id);
-          const idx = prev.findIndex((c) => c.id === row.id);
-          if (idx === -1) return [row, ...prev];
-          const next = [...prev];
-          next[idx] = { ...next[idx], ...row };
-          return next;
+        startTransition(() => {
+          setCases((prev) => {
+            if (payload.eventType === 'DELETE') return prev.filter((c) => c.id !== payload.old.id);
+            const row = payload.new as CaseRow;
+            if (row && (row as any).deleted) return prev.filter((c) => c.id !== row.id);
+            const idx = prev.findIndex((c) => c.id === row.id);
+            if (idx === -1) return [row, ...prev];
+            const next = prev.slice();
+            next[idx] = { ...next[idx], ...row };
+            return next;
+          });
         });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
+
 
   // SLA alerts: toast on every new task that crosses critical age while open
   useEffect(() => {
@@ -1217,11 +1224,7 @@ function PipelineFlow({ count, currentIdx }: { count: number; currentIdx: number
       </defs>
       <path d={d} />
       {dLit && <path d={dLit} className="lit" />}
-      {dLit && (
-        <circle r="3.5" className="particle">
-          <animateMotion dur="3.2s" repeatCount="indefinite" path={dLit} rotate="auto" />
-        </circle>
-      )}
+
     </svg>
   );
 }

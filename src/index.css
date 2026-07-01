@@ -1262,11 +1262,19 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 }
 .cockpit-aurora {
   position: absolute; pointer-events: none; z-index: 0;
-  filter: blur(90px); opacity: 0.4; border-radius: 999px;
+  filter: blur(60px); opacity: 0.35; border-radius: 999px;
+  transform: translateZ(0); will-change: opacity;
 }
-.cockpit-aurora-1 { width: 520px; height: 520px; top: -160px; left: -120px;  background: radial-gradient(circle, rgba(255,150,40,0.45), transparent 60%); }
-.cockpit-aurora-2 { width: 620px; height: 620px; top: 20%; right: -200px;    background: radial-gradient(circle, rgba(60,200,255,0.45), transparent 60%); }
-.cockpit-aurora-3 { width: 700px; height: 480px; bottom: -200px; left: 20%;  background: radial-gradient(circle, rgba(80,255,160,0.32), transparent 60%); }
+.cockpit-aurora-1 { width: 460px; height: 460px; top: -160px; left: -120px;  background: radial-gradient(circle, rgba(255,150,40,0.40), transparent 60%); }
+.cockpit-aurora-2 { width: 520px; height: 520px; top: 20%; right: -200px;    background: radial-gradient(circle, rgba(60,200,255,0.40), transparent 60%); }
+.cockpit-aurora-3 { width: 580px; height: 420px; bottom: -200px; left: 20%;  background: radial-gradient(circle, rgba(80,255,160,0.28), transparent 60%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cockpit-pulse, .cockpit-panel--enter, .cockpit-flow .particle { animation: none !important; }
+}
+/* Isolate cockpit paint from the rest of the app to prevent full-page repaints on realtime updates */
+.cockpit-shell { contain: layout paint style; }
+
 
 .cockpit-title {
   font-size: clamp(1.75rem, 3vw, 2.5rem);
