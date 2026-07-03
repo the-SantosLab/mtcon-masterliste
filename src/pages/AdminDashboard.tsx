@@ -118,10 +118,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // Redirect non-admins
+  // Redirect users without any admin or lead role
   useEffect(() => {
-    if (!isAdmin) navigate('/', { replace: true });
-  }, [isAdmin, navigate]);
+    if (leadLoading) return;
+    if (!isAdmin && !isLead) navigate('/', { replace: true });
+  }, [isAdmin, isLead, leadLoading, navigate]);
+
 
   const fetchData = async () => {
     const [casesRes, projectsRes, usersRes] = await Promise.all([
