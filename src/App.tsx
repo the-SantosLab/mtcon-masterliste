@@ -29,7 +29,7 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMasterData = lazy(() => import("./pages/AdminMasterData"));
 const AdminArticles = lazy(() => import("./pages/AdminArticles"));
 const AdminInventory = lazy(() => import("./pages/AdminInventory"));
-const AdminStorageLocations = lazy(() => import("./pages/AdminStorageLocations"));
+
 const AdminPurchasing = lazy(() => import("./pages/AdminPurchasing"));
 const AdminDisposition = lazy(() => import("./pages/AdminDisposition"));
 const AdminLots = lazy(() => import("./pages/AdminLots"));
