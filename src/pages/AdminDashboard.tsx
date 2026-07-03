@@ -272,11 +272,12 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer */}
-        <MasterControlPanel />
+        {/* Master-Control-Panel — nur Admins sehen die Echtzeit-Präsenz aller Nutzer */}
+        {!leadOnly && <MasterControlPanel />}
 
-        {/* Team-Zeiten & Abwesenheiten aus Personio – live pro Mitarbeitendem */}
-        <TeamAttendanceOverview />
+        {/* Team-Zeiten & Abwesenheiten aus Personio – Leads sehen nur ihre Abteilungen */}
+        <TeamAttendanceOverview restrictDepartmentIds={leadOnly ? ledIds : undefined} />
+
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
