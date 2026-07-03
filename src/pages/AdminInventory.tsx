@@ -11,7 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
-import { Plus, Trash2, AlertTriangle, Package, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Repeat, Undo2, Link as LinkIcon } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Package, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Repeat, Undo2, Link as LinkIcon, MapPin } from 'lucide-react';
+import { StorageLocationsPanel } from './AdminStorageLocations';
+
 import { toast } from 'sonner';
 
 type Warehouse = { id: string; code: string; name: string; address: string | null; is_default: boolean };
