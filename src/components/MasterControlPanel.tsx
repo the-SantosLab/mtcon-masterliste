@@ -414,6 +414,31 @@ export function MasterControlPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {personioTarget && (
+        personioLoading ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+            <div className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Personio-Daten werden geladen…
+            </div>
+          </div>
+        ) : (
+          <EmployeeDetailDialog
+            user={{
+              id: personioTarget.id,
+              display_name: personioTarget.display_name ?? '',
+              short_code: personioTarget.short_code ?? '',
+              avatar_url: personioTarget.avatar_url ?? null,
+              department_id: null,
+            }}
+            onClose={() => setPersonioTarget(null)}
+            att={personioAtt}
+            abs={personioAbs}
+            yearFrom={`${new Date().getFullYear()}-01-01`}
+            today={new Date().toISOString().slice(0, 10)}
+          />
+        )
+      )}
     </section>
   );
 }
