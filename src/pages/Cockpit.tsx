@@ -14,7 +14,7 @@ import {
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
   Search, GitCompare, X, MessageSquare, Paperclip,
   Pin, PinOff, Download, Eye, EyeOff, Keyboard, Save, TrendingUp,
-  Headphones, ShoppingCart,
+  Headphones, ShoppingCart, Sun, Moon,
 } from 'lucide-react';
 import { PipelineTriangle, type TriangleWing } from '@/components/cockpit/PipelineTriangle';
 
@@ -126,6 +126,8 @@ export default function Cockpit() {
     try { return JSON.parse(localStorage.getItem('cockpit:views') || '[]'); } catch { return []; }
   });
   const [helpOpen, setHelpOpen] = useState(false);
+  const [lightMode, setLightMode] = useState<boolean>(() => localStorage.getItem('cockpit:lightMode') === '1');
+  useEffect(() => { localStorage.setItem('cockpit:lightMode', lightMode ? '1' : '0'); }, [lightMode]);
   const [simAdd, setSimAdd] = useState<Record<string, number>>({}); // dept_id → extra capacity
   const alertedTaskIdsRef = useRef<Set<string>>(new Set());
 
@@ -612,7 +614,7 @@ export default function Cockpit() {
 
   return (
     <AppLayout>
-      <div className="cockpit-shell relative min-h-[calc(100vh-1rem)] overflow-hidden">
+      <div className={cn('cockpit-shell relative min-h-[calc(100vh-1rem)] overflow-hidden', lightMode && 'cockpit-light')}>
         <div aria-hidden className="cockpit-grid" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-1" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-2" />
@@ -642,6 +644,17 @@ export default function Cockpit() {
                   <AlertTriangle className="h-3 w-3" /> Bottleneck: {deptName(bottleneckDeptId)}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => setLightMode((v) => !v)}
+                className="cockpit-chip hover:brightness-125 transition"
+                title={lightMode ? 'Dunkelmodus aktivieren' : 'Hellmodus aktivieren'}
+                aria-label="Cockpit Hell/Dunkel umschalten"
+              >
+                {lightMode
+                  ? <><Moon className="h-3 w-3" /> Dunkel</>
+                  : <><Sun className="h-3 w-3" /> Hell</>}
+              </button>
               <div className="cockpit-chip cockpit-chip--beta">BETA</div>
             </div>
           </header>
