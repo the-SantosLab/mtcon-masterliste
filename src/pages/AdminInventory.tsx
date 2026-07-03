@@ -104,12 +104,15 @@ export default function AdminInventory() {
             <TabsTrigger value="movements" className="text-xs">Bewegungen</TabsTrigger>
             <TabsTrigger value="reservations" className="text-xs">Reservierungen</TabsTrigger>
             <TabsTrigger value="warehouses" className="text-xs">Lager</TabsTrigger>
+            <TabsTrigger value="locations" className="text-xs">Lagerplätze</TabsTrigger>
           </TabsList>
           <TabsContent value="stock"><StockTab canWrite={canWrite} /></TabsContent>
           <TabsContent value="movements"><MovementsTab canWrite={canWrite} isAdmin={!!isAdmin} /></TabsContent>
           <TabsContent value="reservations"><ReservationsTab canWrite={canWrite} /></TabsContent>
           <TabsContent value="warehouses"><WarehousesTab isAdmin={!!isAdmin} /></TabsContent>
+          <TabsContent value="locations"><StorageLocationsPanel /></TabsContent>
         </Tabs>
+
       </div>
     </AppLayout>
   );
