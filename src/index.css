@@ -1339,6 +1339,54 @@ html:not(.dark) .cockpit-select {
   color: #0b1322 !important;
 }
 
+/* Remap white text/bg utilities used throughout Cockpit for light mode readability */
+html:not(.dark) .cockpit-shell [class*="text-white"] { color: rgba(11,19,34,0.85) !important; }
+html:not(.dark) .cockpit-shell .text-white\/90,
+html:not(.dark) .cockpit-shell .text-white\/85,
+html:not(.dark) .cockpit-shell .text-white\/80 { color: rgba(11,19,34,0.92) !important; }
+html:not(.dark) .cockpit-shell .text-white\/75,
+html:not(.dark) .cockpit-shell .text-white\/70 { color: rgba(11,19,34,0.82) !important; }
+html:not(.dark) .cockpit-shell .text-white\/55,
+html:not(.dark) .cockpit-shell .text-white\/50,
+html:not(.dark) .cockpit-shell .text-white\/45,
+html:not(.dark) .cockpit-shell .text-white\/40,
+html:not(.dark) .cockpit-shell .text-white\/35 { color: rgba(11,19,34,0.6) !important; }
+
+/* Background utilities: white-on-white is invisible → tint with dark alpha */
+html:not(.dark) .cockpit-shell [class*="bg-white"] {
+  background-color: rgba(15,30,60,0.06) !important;
+}
+html:not(.dark) .cockpit-shell .hover\:bg-white\/10:hover {
+  background-color: rgba(15,30,60,0.1) !important;
+}
+html:not(.dark) .cockpit-shell [class*="border-white"] {
+  border-color: rgba(15,30,60,0.15) !important;
+}
+
+/* Dialog / command palette overrides (dark #0b1322 background inline) */
+html:not(.dark) .cockpit-cmd-dialog,
+html:not(.dark) .cockpit-shell .bg-\[\#0b1322\] {
+  background-color: #ffffff !important;
+  color: #0b1322 !important;
+}
+html:not(.dark) .cockpit-cmd-dialog * { color: inherit; }
+
+/* Kbd chips inside cockpit */
+html:not(.dark) .cockpit-shell kbd {
+  background: rgba(15,30,60,0.08) !important;
+  border-color: rgba(15,30,60,0.18) !important;
+  color: #0b1322 !important;
+}
+
+/* Accent tinted text stays legible (cyan/amber) but darken very light ones */
+html:not(.dark) .cockpit-shell .text-cyan-100 { color: #0e7490 !important; }
+html:not(.dark) .cockpit-shell .text-cyan-300\/90,
+html:not(.dark) .cockpit-shell .text-cyan-300 { color: #0891b2 !important; }
+html:not(.dark) .cockpit-shell .text-amber-300\/80,
+html:not(.dark) .cockpit-shell .text-amber-300 { color: #b45309 !important; }
+
+
+
 
 
 
