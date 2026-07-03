@@ -50,6 +50,17 @@ const TYPE_VARIANT: Record<LocationType, 'default' | 'secondary' | 'destructive'
 };
 
 export default function AdminStorageLocations() {
+  return (
+    <AppLayout>
+      <div className="p-6">
+        <StorageLocationsPanel />
+      </div>
+    </AppLayout>
+  );
+}
+
+export function StorageLocationsPanel() {
+
   const { user } = useAuth();
   const [rows, setRows] = useState<StorageLocation[]>([]);
   const [loading, setLoading] = useState(true);
