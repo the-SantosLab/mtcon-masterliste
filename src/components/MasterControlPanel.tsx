@@ -88,6 +88,36 @@ export function MasterControlPanel() {
   const [query, setQuery] = useState('');
   const [logoutTarget, setLogoutTarget] = useState<Entry | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [personioTarget, setPersonioTarget] = useState<ProfileRow | null>(null);
+  const [personioAtt, setPersonioAtt] = useState<any[]>([]);
+  const [personioAbs, setPersonioAbs] = useState<any[]>([]);
+  const [personioLoading, setPersonioLoading] = useState(false);
+  const personioLoadedRef = useRef(false);
+
+  const openPersonio = async (profile: ProfileRow) => {
+    setPersonioTarget(profile);
+    if (personioLoadedRef.current) return;
+    setPersonioLoading(true);
+    try {
+      const from = `${new Date().getFullYear() - 1}-01-01`;
+      const to = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const [a, ab] = await Promise.all([
+        supabase.from('personio_attendances')
+          .select('user_id, work_date, start_time, end_time, worked_minutes')
+          .gte('work_date', from).lte('work_date', to),
+        supabase.from('personio_absences')
+          .select('user_id, category, absence_type, start_date, end_date, days_count')
+          .gte('end_date', from).lte('start_date', to),
+      ]);
+      setPersonioAtt(a.data ?? []);
+      setPersonioAbs(ab.data ?? []);
+      personioLoadedRef.current = true;
+    } catch (e) {
+      toast({ title: 'Fehler', description: 'Personio-Daten konnten nicht geladen werden.', variant: 'destructive' });
+    } finally {
+      setPersonioLoading(false);
+    }
+  };
 
   const handleForceLogout = async () => {
     if (!logoutTarget) return;
