@@ -1275,6 +1275,71 @@ aside[data-sidebar-density="comfortable"] nav a svg {
 /* Isolate cockpit paint from the rest of the app to prevent full-page repaints on realtime updates */
 .cockpit-shell { contain: layout paint style; }
 
+/* ---- Cockpit Light Mode (follows global theme via html:not(.dark)) ---- */
+html:not(.dark) .cockpit-shell {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(120,160,230,0.28), transparent 70%),
+    radial-gradient(ellipse 100% 80% at 50% -10%, #eaf0ff 0%, #f5f7ff 55%, #ffffff 100%);
+  color: #0b1322;
+}
+html:not(.dark) .cockpit-grid {
+  background-image:
+    linear-gradient(rgba(30,60,140,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,60,140,0.08) 1px, transparent 1px);
+}
+html:not(.dark) .cockpit-aurora { opacity: 0.22; }
+html:not(.dark) .cockpit-title {
+  color: #0b1322;
+  text-shadow: 0 0 24px rgba(80,130,220,0.25);
+}
+html:not(.dark) .cockpit-chip {
+  color: rgba(20,40,90,0.75);
+  background: rgba(255,255,255,0.7);
+  border-color: rgba(60,100,180,0.25);
+}
+html:not(.dark) .cockpit-chip--beta {
+  color: #a35a00;
+  border-color: rgba(220,140,40,0.55);
+  background: rgba(255,190,90,0.25);
+}
+html:not(.dark) .cockpit-node {
+  background:
+    linear-gradient(160deg, color-mix(in oklab, var(--accent) 14%, transparent), transparent 55%),
+    rgba(255,255,255,0.82);
+}
+html:not(.dark) .cockpit-node__badge {
+  background: radial-gradient(circle at 30% 30%, color-mix(in oklab, var(--accent) 30%, #ffffff), #ffffff 78%);
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,0.95),
+    0 0 22px -2px var(--accent-glow),
+    inset 0 0 14px -4px var(--accent-glow);
+}
+html:not(.dark) .cockpit-node__name { color: #0b1322; }
+html:not(.dark) .cockpit-node__bullet { color: rgba(15,30,60,0.75); }
+html:not(.dark) .cockpit-node__bullet-value { color: #0b1322; }
+html:not(.dark) .cockpit-node__wip-val { color: #0b1322; }
+html:not(.dark) .cockpit-panel {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--accent) 8%, transparent), transparent 60%),
+    rgba(255,255,255,0.88);
+}
+html:not(.dark) .cockpit-subpanel {
+  background: rgba(255,255,255,0.7);
+  border-color: rgba(60,100,180,0.2);
+}
+html:not(.dark) .cockpit-field__label { color: rgba(20,40,90,0.55); }
+html:not(.dark) .cockpit-status {
+  color: rgba(20,40,90,0.8);
+  background: rgba(255,255,255,0.7);
+  border-color: rgba(60,100,180,0.25);
+}
+html:not(.dark) .cockpit-select {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: rgba(60,100,180,0.3) !important;
+  color: #0b1322 !important;
+}
+
+
 
 
 
