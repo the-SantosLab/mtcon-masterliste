@@ -217,8 +217,9 @@ export default function AdminDashboard() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />Admin Dashboard
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />{leadOnly ? 'Abteilungs Dashboard' : 'Admin Dashboard'}
             </h1>
+
             <p className="text-xs text-muted-foreground mt-0.5">
               Echtzeit-Übersicht · Aktualisiert {lastRefresh.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
