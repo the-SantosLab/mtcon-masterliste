@@ -164,7 +164,9 @@ export default function AdminDashboard() {
     return projects.filter(p => parseISO(p.created_at) >= startDate);
   }, [projects, startDate]);
 
-  if (!isAdmin) return null;
+  if (!isAdmin && !isLead) return null;
+  const leadOnly = !isAdmin && isLead;
+
 
   const activeStatuses = ['nicht_begonnen', 'in_planung', 'in_arbeit', 'in_verzug'];
   const activeCases = filteredCases.filter(c => activeStatuses.includes(c.status));
