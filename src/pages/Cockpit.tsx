@@ -644,6 +644,17 @@ export default function Cockpit() {
                   <AlertTriangle className="h-3 w-3" /> Bottleneck: {deptName(bottleneckDeptId)}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => setLightMode((v) => !v)}
+                className="cockpit-chip hover:brightness-125 transition"
+                title={lightMode ? 'Dunkelmodus aktivieren' : 'Hellmodus aktivieren'}
+                aria-label="Cockpit Hell/Dunkel umschalten"
+              >
+                {lightMode
+                  ? <><Moon className="h-3 w-3" /> Dunkel</>
+                  : <><Sun className="h-3 w-3" /> Hell</>}
+              </button>
               <div className="cockpit-chip cockpit-chip--beta">BETA</div>
             </div>
           </header>
