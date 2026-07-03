@@ -416,7 +416,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {adminOpen && (
                 <SortableNavList
                   storageKey="mtcon.sidebar.order.admin"
-                  items={adminItems.filter(i => isAdmin ? (!(i as any).masterOnly || isMaster) : i.href === '/admin/departments')}
+                  items={adminItems.filter(i => isAdmin ? (!(i as any).masterOnly || isMaster) : (i.href === '/admin/departments' || i.href === '/admin/dashboard'))}
                   linkClass={linkClass}
                   onItemClick={() => setOpen(false)}
                   itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
