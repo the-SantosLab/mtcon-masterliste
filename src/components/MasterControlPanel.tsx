@@ -322,11 +322,12 @@ export function MasterControlPanel() {
               return (
                 <li
                   key={e.profile.id}
+                  onClick={() => openPersonio(e.profile)}
                   className={cn(
-                    'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/50 bg-card/60',
+                    'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/50 bg-card/60 cursor-pointer',
                     'hover:bg-muted/30 hover:border-border transition-colors',
                   )}
-                  title={e.presence?.current_path ? `Aktuell: ${e.presence.current_path}` : undefined}
+                  title="Personio-Drilldown öffnen"
                 >
                   <div className={cn('relative rounded-full ring-2 shrink-0', meta.ring)}>
                     <UserAvatar
@@ -359,10 +360,18 @@ export function MasterControlPanel() {
                   <span className={cn('text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded shrink-0', meta.bg, meta.text)}>
                     {meta.short}
                   </span>
+                  <button
+                    type="button"
+                    onClick={(ev) => { ev.stopPropagation(); openPersonio(e.profile); }}
+                    title="Personio-Drilldown"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 shrink-0"
+                  >
+                    <BarChart3 className="h-3 w-3" />
+                  </button>
                   {e.bucket !== 'offline' && e.profile.id !== currentUser?.id && (
                     <button
                       type="button"
-                      onClick={() => setLogoutTarget(e)}
+                      onClick={(ev) => { ev.stopPropagation(); setLogoutTarget(e); }}
                       title="Nutzer ausloggen"
                       className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                     >
