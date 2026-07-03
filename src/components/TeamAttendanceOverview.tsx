@@ -110,7 +110,7 @@ export function TeamAttendanceOverview({ restrictDepartmentIds }: { restrictDepa
       .on('postgres_changes', { event: '*', schema: 'public', table: 'personio_absences' }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+  }, [restrictKey]);
 
   const today = todayStr();
   const wkFrom = startOfWeek();
