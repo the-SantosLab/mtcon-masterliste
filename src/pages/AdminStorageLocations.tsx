@@ -464,7 +464,8 @@ export function StorageLocationsPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AppLayout>
+    </>
+
   );
 }
 
