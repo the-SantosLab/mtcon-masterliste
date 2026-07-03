@@ -614,7 +614,7 @@ export default function Cockpit() {
 
   return (
     <AppLayout>
-      <div className="cockpit-shell relative min-h-[calc(100vh-1rem)] overflow-hidden">
+      <div className={cn('cockpit-shell relative min-h-[calc(100vh-1rem)] overflow-hidden', lightMode && 'cockpit-light')}>
         <div aria-hidden className="cockpit-grid" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-1" />
         <div aria-hidden className="cockpit-aurora cockpit-aurora-2" />
