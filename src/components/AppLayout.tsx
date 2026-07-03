@@ -181,7 +181,7 @@ const crmItems = [
 
 const erpItems = [
   { href: '/admin/inventory', label: 'Lager', icon: Package },
-  { href: '/admin/storage-locations', label: 'Lagerplätze', icon: MapPin },
+  
   { href: '/admin/disposition', label: 'Disposition', icon: Activity },
   { href: '/admin/lots', label: 'Chargen', icon: Package },
   { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock },

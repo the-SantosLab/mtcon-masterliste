@@ -50,6 +50,17 @@ const TYPE_VARIANT: Record<LocationType, 'default' | 'secondary' | 'destructive'
 };
 
 export default function AdminStorageLocations() {
+  return (
+    <AppLayout>
+      <div className="p-6">
+        <StorageLocationsPanel />
+      </div>
+    </AppLayout>
+  );
+}
+
+export function StorageLocationsPanel() {
+
   const { user } = useAuth();
   const [rows, setRows] = useState<StorageLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -256,8 +267,9 @@ export default function AdminStorageLocations() {
   };
 
   return (
-    <AppLayout>
-      <div className="p-6 space-y-6">
+    <>
+      <div className="space-y-6">
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold flex items-center gap-2">
@@ -452,7 +464,8 @@ export default function AdminStorageLocations() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AppLayout>
+    </>
+
   );
 }
 
