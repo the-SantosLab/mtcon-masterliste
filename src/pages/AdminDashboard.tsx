@@ -81,9 +81,13 @@ function KPITile({
   return href ? <Link to={href}>{inner}</Link> : inner;
 }
 
+import { useLedDepartments } from '@/hooks/useDeptLead';
+
 export default function AdminDashboard() {
   const { isAdmin, user } = useAuth();
+  const { ledIds, isLead, loading: leadLoading } = useLedDepartments();
   const navigate = useNavigate();
+
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [userCount, setUserCount] = useState(0);
