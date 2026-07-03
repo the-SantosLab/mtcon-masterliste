@@ -267,8 +267,9 @@ export function StorageLocationsPanel() {
   };
 
   return (
-    <AppLayout>
-      <div className="p-6 space-y-6">
+    <>
+      <div className="space-y-6">
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold flex items-center gap-2">
