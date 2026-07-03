@@ -14,7 +14,7 @@ import {
   Database, Network, Brain, Target, Radio, AlertTriangle, Gauge, Filter,
   Search, GitCompare, X, MessageSquare, Paperclip,
   Pin, PinOff, Download, Eye, EyeOff, Keyboard, Save, TrendingUp,
-  Headphones, ShoppingCart,
+  Headphones, ShoppingCart, Sun, Moon,
 } from 'lucide-react';
 import { PipelineTriangle, type TriangleWing } from '@/components/cockpit/PipelineTriangle';
 
