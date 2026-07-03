@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Activity, Circle, LogOut, MoonStar, PowerOff, Radio, Search, Loader2 } from 'lucide-react';
+import { Activity, Circle, LogOut, MoonStar, PowerOff, Radio, Search, Loader2, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,6 +10,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { EmployeeDetailDialog } from '@/components/TeamAttendanceOverview';
 
 // Schwellen
 const ACTIVE_MS = 2 * 60 * 1000;     // < 2 Min seit letzter Interaktion = aktiv
@@ -87,6 +88,36 @@ export function MasterControlPanel() {
   const [query, setQuery] = useState('');
   const [logoutTarget, setLogoutTarget] = useState<Entry | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [personioTarget, setPersonioTarget] = useState<ProfileRow | null>(null);
+  const [personioAtt, setPersonioAtt] = useState<any[]>([]);
+  const [personioAbs, setPersonioAbs] = useState<any[]>([]);
+  const [personioLoading, setPersonioLoading] = useState(false);
+  const personioLoadedRef = useRef(false);
+
+  const openPersonio = async (profile: ProfileRow) => {
+    setPersonioTarget(profile);
+    if (personioLoadedRef.current) return;
+    setPersonioLoading(true);
+    try {
+      const from = `${new Date().getFullYear() - 1}-01-01`;
+      const to = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const [a, ab] = await Promise.all([
+        supabase.from('personio_attendances')
+          .select('user_id, work_date, start_time, end_time, worked_minutes')
+          .gte('work_date', from).lte('work_date', to),
+        supabase.from('personio_absences')
+          .select('user_id, category, absence_type, start_date, end_date, days_count')
+          .gte('end_date', from).lte('start_date', to),
+      ]);
+      setPersonioAtt(a.data ?? []);
+      setPersonioAbs(ab.data ?? []);
+      personioLoadedRef.current = true;
+    } catch (e) {
+      toast({ title: 'Fehler', description: 'Personio-Daten konnten nicht geladen werden.', variant: 'destructive' });
+    } finally {
+      setPersonioLoading(false);
+    }
+  };
 
   const handleForceLogout = async () => {
     if (!logoutTarget) return;
@@ -291,11 +322,12 @@ export function MasterControlPanel() {
               return (
                 <li
                   key={e.profile.id}
+                  onClick={() => openPersonio(e.profile)}
                   className={cn(
-                    'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/50 bg-card/60',
+                    'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/50 bg-card/60 cursor-pointer',
                     'hover:bg-muted/30 hover:border-border transition-colors',
                   )}
-                  title={e.presence?.current_path ? `Aktuell: ${e.presence.current_path}` : undefined}
+                  title="Personio-Drilldown öffnen"
                 >
                   <div className={cn('relative rounded-full ring-2 shrink-0', meta.ring)}>
                     <UserAvatar
@@ -328,10 +360,18 @@ export function MasterControlPanel() {
                   <span className={cn('text-[9px] uppercase tracking-wider font-medium px-1.5 py-0.5 rounded shrink-0', meta.bg, meta.text)}>
                     {meta.short}
                   </span>
+                  <button
+                    type="button"
+                    onClick={(ev) => { ev.stopPropagation(); openPersonio(e.profile); }}
+                    title="Personio-Drilldown"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/40 shrink-0"
+                  >
+                    <BarChart3 className="h-3 w-3" />
+                  </button>
                   {e.bucket !== 'offline' && e.profile.id !== currentUser?.id && (
                     <button
                       type="button"
-                      onClick={() => setLogoutTarget(e)}
+                      onClick={(ev) => { ev.stopPropagation(); setLogoutTarget(e); }}
                       title="Nutzer ausloggen"
                       className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                     >
@@ -374,6 +414,31 @@ export function MasterControlPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {personioTarget && (
+        personioLoading ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm">
+            <div className="flex items-center gap-2 rounded-md border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Personio-Daten werden geladen…
+            </div>
+          </div>
+        ) : (
+          <EmployeeDetailDialog
+            user={{
+              id: personioTarget.id,
+              display_name: personioTarget.display_name ?? '',
+              short_code: personioTarget.short_code ?? '',
+              avatar_url: personioTarget.avatar_url ?? null,
+              department_id: null,
+            }}
+            onClose={() => setPersonioTarget(null)}
+            att={personioAtt}
+            abs={personioAbs}
+            yearFrom={`${new Date().getFullYear()}-01-01`}
+            today={new Date().toISOString().slice(0, 10)}
+          />
+        )
+      )}
     </section>
   );
 }
