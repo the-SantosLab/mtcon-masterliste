@@ -126,8 +126,6 @@ export default function Cockpit() {
     try { return JSON.parse(localStorage.getItem('cockpit:views') || '[]'); } catch { return []; }
   });
   const [helpOpen, setHelpOpen] = useState(false);
-  const [lightMode, setLightMode] = useState<boolean>(() => localStorage.getItem('cockpit:lightMode') === '1');
-  useEffect(() => { localStorage.setItem('cockpit:lightMode', lightMode ? '1' : '0'); }, [lightMode]);
   const [simAdd, setSimAdd] = useState<Record<string, number>>({}); // dept_id → extra capacity
   const alertedTaskIdsRef = useRef<Set<string>>(new Set());
 
