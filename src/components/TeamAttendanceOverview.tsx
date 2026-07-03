@@ -64,7 +64,7 @@ const startOfMonth = () => {
 };
 const startOfYear = () => `${new Date().getFullYear()}-01-01`;
 
-export function TeamAttendanceOverview() {
+export function TeamAttendanceOverview({ restrictDepartmentIds }: { restrictDepartmentIds?: string[] } = {}) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<Profile[]>([]);
   const [att, setAtt] = useState<Att[]>([]);
@@ -73,16 +73,21 @@ export function TeamAttendanceOverview() {
   const [filter, setFilter] = useState<'all' | 'present' | 'absent'>('all');
   const [selected, setSelected] = useState<Profile | null>(null);
 
+  const restrictKey = restrictDepartmentIds ? [...restrictDepartmentIds].sort().join(',') : '';
 
   const load = async () => {
     // Load current + previous year to enable year-over-year comparison in detail dialog
     const from = `${new Date().getFullYear() - 1}-01-01`;
     const to = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    let uq = supabase.from('users_profile')
+      .select('id, display_name, short_code, avatar_url, department_id')
+      .eq('active', true)
+      .order('display_name');
+    if (restrictDepartmentIds && restrictDepartmentIds.length > 0) {
+      uq = uq.in('department_id', restrictDepartmentIds);
+    }
     const [u, a, ab] = await Promise.all([
-      supabase.from('users_profile')
-        .select('id, display_name, short_code, avatar_url, department_id')
-        .eq('active', true)
-        .order('display_name'),
+      uq,
       supabase.from('personio_attendances')
         .select('user_id, work_date, start_time, end_time, worked_minutes')
         .gte('work_date', from).lte('work_date', to),
@@ -96,6 +101,7 @@ export function TeamAttendanceOverview() {
     setLoading(false);
   };
 
+
   useEffect(() => {
     load();
     const ch = supabase
@@ -104,7 +110,7 @@ export function TeamAttendanceOverview() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'personio_absences' }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+  }, [restrictKey]);
 
   const today = todayStr();
   const wkFrom = startOfWeek();

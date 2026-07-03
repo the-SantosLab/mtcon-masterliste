@@ -81,9 +81,13 @@ function KPITile({
   return href ? <Link to={href}>{inner}</Link> : inner;
 }
 
+import { useLedDepartments } from '@/hooks/useDeptLead';
+
 export default function AdminDashboard() {
   const { isAdmin, user } = useAuth();
+  const { ledIds, isLead, loading: leadLoading } = useLedDepartments();
   const navigate = useNavigate();
+
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [userCount, setUserCount] = useState(0);
@@ -114,10 +118,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // Redirect non-admins
+  // Redirect users without any admin or lead role
   useEffect(() => {
-    if (!isAdmin) navigate('/', { replace: true });
-  }, [isAdmin, navigate]);
+    if (leadLoading) return;
+    if (!isAdmin && !isLead) navigate('/', { replace: true });
+  }, [isAdmin, isLead, leadLoading, navigate]);
+
 
   const fetchData = async () => {
     const [casesRes, projectsRes, usersRes] = await Promise.all([
@@ -158,7 +164,9 @@ export default function AdminDashboard() {
     return projects.filter(p => parseISO(p.created_at) >= startDate);
   }, [projects, startDate]);
 
-  if (!isAdmin) return null;
+  if (!isAdmin && !isLead) return null;
+  const leadOnly = !isAdmin && isLead;
+
 
   const activeStatuses = ['nicht_begonnen', 'in_planung', 'in_arbeit', 'in_verzug'];
   const activeCases = filteredCases.filter(c => activeStatuses.includes(c.status));
@@ -209,8 +217,9 @@ export default function AdminDashboard() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />Admin Dashboard
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />{leadOnly ? 'Abteilungs Dashboard' : 'Admin Dashboard'}
             </h1>
+
             <p className="text-xs text-muted-foreground mt-0.5">
               Echtzeit-Übersicht · Aktualisiert {lastRefresh.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
@@ -263,11 +272,12 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Master-Control-Panel — Echtzeit-Präsenz aller Nutzer */}
-        <MasterControlPanel />
+        {/* Master-Control-Panel — nur Admins sehen die Echtzeit-Präsenz aller Nutzer */}
+        {!leadOnly && <MasterControlPanel />}
 
-        {/* Team-Zeiten & Abwesenheiten aus Personio – live pro Mitarbeitendem */}
-        <TeamAttendanceOverview />
+        {/* Team-Zeiten & Abwesenheiten aus Personio – Leads sehen nur ihre Abteilungen */}
+        <TeamAttendanceOverview restrictDepartmentIds={leadOnly ? ledIds : undefined} />
+
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
