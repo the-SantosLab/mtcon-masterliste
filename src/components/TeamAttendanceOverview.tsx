@@ -492,7 +492,7 @@ function addDaysIso(iso: string, n: number) {
 
 
 
-function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
+export function EmployeeDetailDialog({ user, onClose, att, abs, yearFrom, today }: DetailProps) {
   const [period, setPeriod] = useState('year');
   const [absFilter, setAbsFilter] = useState('all');
   const [bucketChoice, setBucketChoice] = useState<'auto' | 'day' | 'week' | 'month'>('auto');
