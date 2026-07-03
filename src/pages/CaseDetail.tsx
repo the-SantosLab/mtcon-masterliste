@@ -960,10 +960,20 @@ export default function CaseDetail() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-[13px] text-muted-foreground">
-                    Aktuell: <span className="text-foreground font-medium">
-                      {c.project ? `${c.project.project_number || ''} ${c.project.name}`.trim() : 'Keines'}
-                    </span>
+                    Aktuell:{' '}
+                    {c.project ? (
+                      <Link
+                        to={`/projects/${c.project.id}/files`}
+                        className="text-foreground font-medium hover:text-primary hover:underline underline-offset-2"
+                        title="Zum Projekt wechseln"
+                      >
+                        {`${c.project.project_number || ''} ${c.project.name}`.trim()}
+                      </Link>
+                    ) : (
+                      <span className="text-foreground font-medium">Keines</span>
+                    )}
                   </div>
+
                   <Select value={c.project_id || '_none'} onValueChange={changeProject}>
                     <SelectTrigger className="w-[280px] h-8 text-xs"><SelectValue placeholder="Projekt wählen" /></SelectTrigger>
                     <SelectContent>
