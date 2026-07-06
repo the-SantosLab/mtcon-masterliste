@@ -25,7 +25,7 @@ export function MtiqPanel({ open, onClose }: Props) {
   const theme = preferences.theme;
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
-  const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
+  const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'ask');
   const [activeTabletId, setActiveTabletId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [expanded, setExpanded] = useState<boolean>(() => {
