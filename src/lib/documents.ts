@@ -88,6 +88,17 @@ export async function uploadDocument(opts: {
   tags?: string[];
   ownerId: string;
 }): Promise<UploadResult> {
+  // Session frisch prüfen — auth.uid() muss serverseitig gültig sein, sonst
+  // scheitert die RLS-Prüfung `owner_id = auth.uid()` mit „new row violates row-level security policy".
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const authedId = authData?.user?.id;
+  if (authErr || !authedId) {
+    throw new Error('Sitzung abgelaufen. Bitte neu anmelden und erneut versuchen.');
+  }
+  // Client-übergebene ownerId ignorieren und die tatsächliche auth.uid() verwenden,
+  // damit RLS-Insert nicht an einer veralteten user.id im Frontend scheitert.
+  const ownerId = authedId;
+
   const checksum = await sha256(opts.file);
   const existing = await findDocumentByChecksum(checksum);
   if (existing) return { document: existing, alreadyExisted: true };
@@ -106,11 +117,17 @@ export async function uploadDocument(opts: {
       category: opts.category || null,
       current_version: 1,
       tags: opts.tags || [],
-      owner_id: opts.ownerId,
+      owner_id: ownerId,
     })
     .select('*')
     .single();
-  if (docErr || !doc) throw new Error(docErr?.message || 'Dokument konnte nicht angelegt werden');
+  if (docErr || !doc) {
+    const msg = docErr?.message || '';
+    if (/row-level security/i.test(msg)) {
+      throw new Error('Berechtigung fehlt: Deine Sitzung ist möglicherweise abgelaufen. Bitte neu anmelden und erneut versuchen.');
+    }
+    throw new Error(msg || 'Dokument konnte nicht angelegt werden');
+  }
 
   const path = buildStoragePath(doc.id, 1, opts.file.name);
   const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, opts.file, {
@@ -131,7 +148,7 @@ export async function uploadDocument(opts: {
     mime_type: opts.file.type || null,
     size_bytes: opts.file.size,
     checksum_sha256: checksum,
-    uploaded_by: opts.ownerId,
+    uploaded_by: ownerId,
   });
 
   return { document: { ...(doc as any), storage_path: path }, alreadyExisted: false };
