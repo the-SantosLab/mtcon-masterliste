@@ -15,6 +15,7 @@ export interface PerfEvent {
 
 const BUFFER_SIZE = 300;
 let buffer: PerfEvent[] = [];
+let snapshot: PerfEvent[] = [];
 let seq = 0;
 const listeners = new Set<() => void>();
 let installed = false;
@@ -23,6 +24,7 @@ function push(ev: Omit<PerfEvent, 'id' | 'ts'>) {
   const e: PerfEvent = { id: ++seq, ts: Date.now(), ...ev };
   buffer.push(e);
   if (buffer.length > BUFFER_SIZE) buffer = buffer.slice(-BUFFER_SIZE);
+  snapshot = buffer.slice().reverse();
   listeners.forEach(l => { try { l(); } catch { /* noop */ } });
 }
 
