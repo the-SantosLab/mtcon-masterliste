@@ -62,6 +62,7 @@ const AdminPriceManagement = lazy(() => import("./pages/AdminPriceManagement"));
 const AdminAiArticleFromPdf = lazy(() => import("./pages/AdminAiArticleFromPdf"));
 const AdminSalesRouting = lazy(() => import("./pages/AdminSalesRouting"));
 const AdminContainerAccess = lazy(() => import("./pages/AdminContainerAccess"));
+const AdminDuplicateScan = lazy(() => import("./pages/AdminDuplicateScan"));
 const Documentation = lazy(() => import("./pages/Documentation"));
 const Documents = lazy(() => import("./pages/Documents"));
 const DocumentDetail = lazy(() => import("./pages/DocumentDetail"));
