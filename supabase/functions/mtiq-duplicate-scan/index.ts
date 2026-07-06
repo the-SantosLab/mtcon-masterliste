@@ -11,6 +11,7 @@ type CaseRow = {
   id: string; case_no: string | null; project_name: string | null; client_name: string | null;
   customer_no: string | null; project_id: string | null; department_id: string | null;
   status: string; note: string | null; created_at: string;
+  created_by: string | null; assignee_id: string | null;
 };
 
 function tokenize(s: string | null): Set<string> {
@@ -39,13 +40,21 @@ Deno.serve(async (req) => {
     const maxCases = Math.min(Number(body.limit ?? 400), 800);
     const minSim = Number(body.min_similarity ?? 0.35);
 
-    const { data: rows, error } = await client
+    // Admin-Check: nur Admins sehen alle Vorgänge, sonst nur eigene (created_by oder assignee_id)
+    const { data: roleRow } = await client.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+    const isAdmin = !!roleRow;
+
+    let query = client
       .from("cases")
-      .select("id, case_no, project_name, client_name, customer_no, project_id, department_id, status, note, created_at")
+      .select("id, case_no, project_name, client_name, customer_no, project_id, department_id, status, note, created_at, created_by, assignee_id")
       .eq("deleted", false)
       .not("status", "in", "(abgeschlossen,archiv,verworfen)")
       .order("created_at", { ascending: false })
       .limit(maxCases);
+    if (!isAdmin) {
+      query = query.or(`created_by.eq.${user.id},assignee_id.eq.${user.id}`);
+    }
+    const { data: rows, error } = await query;
     if (error) throw error;
     const cases = (rows ?? []) as CaseRow[];
 
