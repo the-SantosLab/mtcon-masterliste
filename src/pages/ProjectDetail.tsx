@@ -610,10 +610,10 @@ export default function ProjectDetail() {
                             </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono whitespace-nowrap')}>
-                              <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
+                              <Link to={`/cases/${c.id}`} state={backToState} className="text-primary hover:underline">{c.case_no}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-foreground')}>
-                              <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
+                              <Link to={`/cases/${c.id}`} state={backToState} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
                             <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
