@@ -9,19 +9,22 @@ import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
 import { MtiqTablet } from './MtiqTablet';
 import { MtiqAsk } from './MtiqAsk';
+import { MtiqDuplicateScan } from './MtiqDuplicateScan';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
 
-type Mode = 'ask' | 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
+type Mode = 'ask' | 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet' | 'dupes';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
   const { preferences } = usePreferences();
+  const { isAdmin } = useAuth();
   const theme = preferences.theme;
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
@@ -92,9 +95,10 @@ export function MtiqPanel({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const tabs: [Mode, string][] = vorgangId
+  const baseTabs: [Mode, string][] = vorgangId
     ? [['current', 'Vorgang'], ['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']]
     : [['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']];
+  const tabs: [Mode, string][] = isAdmin ? [...baseTabs, ['dupes', 'Duplikate']] : baseTabs;
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
@@ -199,6 +203,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
         {mode === 'ask' && <MtiqAsk />}
+        {mode === 'dupes' && isAdmin && <MtiqDuplicateScan />}
       </div>
 
 
