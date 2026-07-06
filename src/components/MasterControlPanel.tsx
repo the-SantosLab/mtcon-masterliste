@@ -224,7 +224,10 @@ export function MasterControlPanel() {
             <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          <h2 className="text-sm font-medium text-foreground">Master-Control-Panel</h2>
+          <div className="flex flex-col">
+            <h2 className="text-sm font-medium text-foreground">Master-Control-Panel</h2>
+            <span className="text-[10px] text-muted-foreground/80">Browser-Sitzung · unabhängig von Personio-Anwesenheit</span>
+          </div>
           <span className="hidden sm:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
             <Radio className="h-3 w-3" /> Live
           </span>
