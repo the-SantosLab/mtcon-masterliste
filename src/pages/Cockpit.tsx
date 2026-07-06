@@ -96,8 +96,12 @@ export default function Cockpit() {
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [newestActivityId, setNewestActivityId] = useState<string | null>(null);
-  const [selectedDept, setSelectedDept] = useState<string | null>(null);
-  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [selectedDept, setSelectedDept] = useState<string | null>(() => {
+    try { return localStorage.getItem('cockpit:selectedDept') || null; } catch { return null; }
+  });
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(() => {
+    try { return localStorage.getItem('cockpit:selectedCaseId') || null; } catch { return null; }
+  });
   const [compareIds, setCompareIds] = useState<string[]>([]); // multi-case compare
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,9 +117,15 @@ export default function Cockpit() {
   const [drawerLoading, setDrawerLoading] = useState(false);
 
   // Filters
-  const [timeframe, setTimeframe] = useState<TimeframeId>('7d');
-  const [onlyCritical, setOnlyCritical] = useState(false);
-  const [myOnly, setMyOnly] = useState(false);
+  const [timeframe, setTimeframe] = useState<TimeframeId>(() => {
+    try { return (localStorage.getItem('cockpit:timeframe') as TimeframeId) || '7d'; } catch { return '7d'; }
+  });
+  const [onlyCritical, setOnlyCritical] = useState<boolean>(() => {
+    try { return localStorage.getItem('cockpit:onlyCritical') === '1'; } catch { return false; }
+  });
+  const [myOnly, setMyOnly] = useState<boolean>(() => {
+    try { return localStorage.getItem('cockpit:myOnly') === '1'; } catch { return false; }
+  });
 
   // Extended functional features
   const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
@@ -173,6 +183,17 @@ export default function Cockpit() {
   useEffect(() => { localStorage.setItem('cockpit:pinned', JSON.stringify(pinnedIds)); }, [pinnedIds]);
   useEffect(() => { localStorage.setItem('cockpit:personLayer', personLayer ? '1' : '0'); }, [personLayer]);
   useEffect(() => { localStorage.setItem('cockpit:views', JSON.stringify(savedViews)); }, [savedViews]);
+  useEffect(() => { localStorage.setItem('cockpit:timeframe', timeframe); }, [timeframe]);
+  useEffect(() => { localStorage.setItem('cockpit:onlyCritical', onlyCritical ? '1' : '0'); }, [onlyCritical]);
+  useEffect(() => { localStorage.setItem('cockpit:myOnly', myOnly ? '1' : '0'); }, [myOnly]);
+  useEffect(() => {
+    if (selectedDept) localStorage.setItem('cockpit:selectedDept', selectedDept);
+    else localStorage.removeItem('cockpit:selectedDept');
+  }, [selectedDept]);
+  useEffect(() => {
+    if (selectedCaseId) localStorage.setItem('cockpit:selectedCaseId', selectedCaseId);
+    else localStorage.removeItem('cockpit:selectedCaseId');
+  }, [selectedCaseId]);
 
 
 
