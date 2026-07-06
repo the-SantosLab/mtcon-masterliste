@@ -8,6 +8,7 @@ import { MtiqDraftsTab } from './MtiqDraftsTab';
 import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
 import { MtiqTablet } from './MtiqTablet';
+import { MtiqAsk } from './MtiqAsk';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
 
@@ -16,7 +17,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
+type Mode = 'ask' | 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
@@ -24,7 +25,7 @@ export function MtiqPanel({ open, onClose }: Props) {
   const theme = preferences.theme;
   const m = location.pathname.match(/^\/cases\/([a-zA-Z0-9-]+)$/);
   const vorgangId = m && m[1] !== 'kanban' ? m[1] : null;
-  const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'list');
+  const [mode, setMode] = useState<Mode>(vorgangId ? 'current' : 'ask');
   const [activeTabletId, setActiveTabletId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [expanded, setExpanded] = useState<boolean>(() => {
@@ -70,7 +71,7 @@ export function MtiqPanel({ open, onClose }: Props) {
   };
 
   useEffect(() => {
-    setMode(vorgangId ? 'current' : 'list');
+    setMode(vorgangId ? 'current' : 'ask');
   }, [vorgangId]);
 
   useEffect(() => {
@@ -92,8 +93,8 @@ export function MtiqPanel({ open, onClose }: Props) {
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Vorgang'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']]
-    : [['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']];
+    ? [['current', 'Vorgang'], ['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']]
+    : [['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
@@ -107,7 +108,9 @@ export function MtiqPanel({ open, onClose }: Props) {
             ? '· Prozess-Tablet'
             : mode === 'drafts'
               ? '· offene Entwürfe'
-              : '· alle Vorgänge';
+              : mode === 'ask'
+                ? '· freie Fragen'
+                : '· alle Vorgänge';
 
 
   return (
@@ -195,6 +198,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
+        {mode === 'ask' && <MtiqAsk />}
       </div>
 
 

@@ -153,6 +153,7 @@ const adminItems = [
   { href: '/admin/document-types', label: 'Dokumenttypen', icon: FileText },
   { href: '/admin/action-rules', label: 'Aktions-Regeln', icon: Workflow },
   { href: '/admin/inbox-stats', label: 'Inbox-Statistik', icon: LayoutDashboard },
+  { href: '/admin/duplicate-scan', label: 'MTIQ Duplikat-Scan', icon: Sparkles },
   { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
   { href: '/admin/container-access', label: 'Container-Zugriff', icon: Lock },
   { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
