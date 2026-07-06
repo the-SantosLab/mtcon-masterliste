@@ -60,6 +60,9 @@ type CaseWithRels = Tables<'cases'> & {
 
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const backTo = (location.state as { backTo?: string } | null)?.backTo ?? '/cases';
+  const backLabel = backTo.startsWith('/projects/') ? 'Zurück zum Projekt' : 'Zurück zur Liste';
   const { user, isAdmin, isViewer, profile } = useAuth();
   const { preferences } = usePreferences();
   const compactCls = preferences.compactTables ? 'lov-compact-region' : '';
