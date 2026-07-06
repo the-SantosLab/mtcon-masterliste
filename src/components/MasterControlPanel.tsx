@@ -54,7 +54,7 @@ const BUCKET_META: Record<Bucket, {
 }> = {
   active:  { label: 'Aktiv arbeitend',   short: 'Aktiv',   icon: Activity,  dot: 'bg-emerald-500',          text: 'text-emerald-500',         ring: 'ring-emerald-500/40',   bg: 'bg-emerald-500/10',          bar: 'bg-emerald-500' },
   online:  { label: 'Eingeloggt',        short: 'Online',  icon: Circle,    dot: 'bg-sky-500',              text: 'text-sky-500',             ring: 'ring-sky-500/30',       bg: 'bg-sky-500/10',              bar: 'bg-sky-500' },
-  idle:    { label: 'Inaktiv',           short: 'Inaktiv', icon: MoonStar,  dot: 'bg-amber-500',            text: 'text-amber-500',           ring: 'ring-amber-500/30',     bg: 'bg-amber-500/10',            bar: 'bg-amber-500' },
+  idle:    { label: 'Sitzung ohne Interaktion', short: 'Idle',    icon: MoonStar,  dot: 'bg-amber-500',            text: 'text-amber-500',           ring: 'ring-amber-500/30',     bg: 'bg-amber-500/10',            bar: 'bg-amber-500' },
   offline: { label: 'Ausgeloggt',        short: 'Offline', icon: PowerOff,  dot: 'bg-muted-foreground/50',  text: 'text-muted-foreground',    ring: 'ring-border',           bg: 'bg-muted/40',                bar: 'bg-muted-foreground/40' },
 };
 
@@ -211,7 +211,7 @@ export function MasterControlPanel() {
     { key: 'all',     label: 'Alle',     count: profiles.length },
     { key: 'active',  label: 'Aktiv',    count: counts.active,  dot: BUCKET_META.active.bar },
     { key: 'online',  label: 'Online',   count: counts.online,  dot: BUCKET_META.online.bar },
-    { key: 'idle',    label: 'Inaktiv',  count: counts.idle,    dot: BUCKET_META.idle.bar },
+    { key: 'idle',    label: 'Idle',     count: counts.idle,    dot: BUCKET_META.idle.bar },
     { key: 'offline', label: 'Offline',  count: counts.offline, dot: BUCKET_META.offline.bar },
   ];
 
