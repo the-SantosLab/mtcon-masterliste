@@ -232,6 +232,7 @@ function AuthenticatedApp() {
           <Route path="/admin/document-types" element={<ProtectedRoute><AdminDocumentTypes /></ProtectedRoute>} />
           <Route path="/admin/action-rules" element={<ProtectedRoute><AdminActionRules /></ProtectedRoute>} />
           <Route path="/admin/inbox-stats" element={<ProtectedRoute><AdminInboxStats /></ProtectedRoute>} />
+          <Route path="/admin/duplicate-scan" element={<ProtectedRoute><AdminDuplicateScan /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
           <Route path="/support/:id" element={<ProtectedRoute><SupportTicketDetail /></ProtectedRoute>} />
           <Route path="/feedback" element={<ProtectedRoute><MyFeedback /></ProtectedRoute>} />
