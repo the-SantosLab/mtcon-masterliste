@@ -15,6 +15,7 @@ export interface PerfEvent {
 
 const BUFFER_SIZE = 300;
 let buffer: PerfEvent[] = [];
+let snapshot: PerfEvent[] = [];
 let seq = 0;
 const listeners = new Set<() => void>();
 let installed = false;
@@ -23,6 +24,7 @@ function push(ev: Omit<PerfEvent, 'id' | 'ts'>) {
   const e: PerfEvent = { id: ++seq, ts: Date.now(), ...ev };
   buffer.push(e);
   if (buffer.length > BUFFER_SIZE) buffer = buffer.slice(-BUFFER_SIZE);
+  snapshot = buffer.slice().reverse();
   listeners.forEach(l => { try { l(); } catch { /* noop */ } });
 }
 
@@ -70,7 +72,7 @@ export const perf = {
     if (duration < 16) return; // nur „langsame" Commits > 16ms
     push({ kind: 'render', label: id, duration, detail: phase });
   },
-  list(): PerfEvent[] { return buffer.slice().reverse(); },
-  clear() { buffer = []; listeners.forEach(l => l()); },
+  list(): PerfEvent[] { return snapshot; },
+  clear() { buffer = []; snapshot = []; listeners.forEach(l => l()); },
   subscribe(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; },
 };
