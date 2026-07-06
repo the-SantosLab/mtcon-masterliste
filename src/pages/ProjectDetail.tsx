@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -244,11 +244,31 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
-  const [caseSearch, setCaseSearch] = useState('');
-  const [caseStatusFilter, setCaseStatusFilter] = useState<string>('all');
-  const [caseAssigneeFilter, setCaseAssigneeFilter] = useState<string>('all');
-  const [caseSort, setCaseSort] = useState<SortState<PdCaseSortKey>>({ column: 'due_at', direction: 'asc' });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [caseSearch, setCaseSearch] = useState(searchParams.get('q') ?? '');
+  const [caseStatusFilter, setCaseStatusFilter] = useState<string>(searchParams.get('status') ?? 'all');
+  const [caseAssigneeFilter, setCaseAssigneeFilter] = useState<string>(searchParams.get('assignee') ?? 'all');
+  const [caseSort, setCaseSort] = useState<SortState<PdCaseSortKey>>(() => {
+    const col = (searchParams.get('sort') as PdCaseSortKey) || 'due_at';
+    const dir = (searchParams.get('dir') as 'asc' | 'desc') || 'asc';
+    return { column: col, direction: dir };
+  });
   const handleCaseSort = (col: PdCaseSortKey) => setCaseSort(prev => nextSort(prev, col));
+
+  // Persist filters in URL so back-navigation from a case restores them
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    caseSearch ? params.set('q', caseSearch) : params.delete('q');
+    caseStatusFilter !== 'all' ? params.set('status', caseStatusFilter) : params.delete('status');
+    caseAssigneeFilter !== 'all' ? params.set('assignee', caseAssigneeFilter) : params.delete('assignee');
+    caseSort.column !== 'due_at' ? params.set('sort', caseSort.column) : params.delete('sort');
+    caseSort.direction !== 'asc' ? params.set('dir', caseSort.direction) : params.delete('dir');
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseSearch, caseStatusFilter, caseAssigneeFilter, caseSort]);
+
+  const backToState = { backTo: `${location.pathname}${location.search}` };
 
   const loadProject = async () => {
     if (!id) return;
@@ -590,10 +610,10 @@ export default function ProjectDetail() {
                             </td>
                             <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono whitespace-nowrap')}>
-                              <Link to={`/cases/${c.id}`} className="text-primary hover:underline">{c.case_no}</Link>
+                              <Link to={`/cases/${c.id}`} state={backToState} className="text-primary hover:underline">{c.case_no}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-foreground')}>
-                              <Link to={`/cases/${c.id}`} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
+                              <Link to={`/cases/${c.id}`} state={backToState} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
                             <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>

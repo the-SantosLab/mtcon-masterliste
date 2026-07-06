@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
@@ -60,6 +60,9 @@ type CaseWithRels = Tables<'cases'> & {
 
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const backTo = (location.state as { backTo?: string } | null)?.backTo ?? '/cases';
+  const backLabel = backTo.startsWith('/projects/') ? 'Zurück zum Projekt' : 'Zurück zur Liste';
   const { user, isAdmin, isViewer, profile } = useAuth();
   const { preferences } = usePreferences();
   const compactCls = preferences.compactTables ? 'lov-compact-region' : '';
@@ -486,8 +489,8 @@ export default function CaseDetail() {
   return (
     <AppLayout>
       <div className={cn('space-y-5 max-w-5xl', compactCls)}>
-        <Link to="/cases" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5" />Zurück zur Liste
+        <Link to={backTo} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-3.5 w-3.5" />{backLabel}
         </Link>
 
         <div className="flex flex-wrap items-start justify-between gap-4">
