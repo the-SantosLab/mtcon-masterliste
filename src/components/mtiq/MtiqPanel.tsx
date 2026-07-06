@@ -108,7 +108,9 @@ export function MtiqPanel({ open, onClose }: Props) {
             ? '· Prozess-Tablet'
             : mode === 'drafts'
               ? '· offene Entwürfe'
-              : '· alle Vorgänge';
+              : mode === 'ask'
+                ? '· freie Fragen'
+                : '· alle Vorgänge';
 
 
   return (
