@@ -8,6 +8,7 @@ import { MtiqDraftsTab } from './MtiqDraftsTab';
 import { MtiqScanUpload } from './MtiqScanUpload';
 import { MtiqCardScan } from './MtiqCardScan';
 import { MtiqTablet } from './MtiqTablet';
+import { MtiqAsk } from './MtiqAsk';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
 
@@ -16,7 +17,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
+type Mode = 'ask' | 'current' | 'list' | 'drafts' | 'new' | 'scan' | 'card' | 'tablet';
 
 export function MtiqPanel({ open, onClose }: Props) {
   const location = useLocation();
