@@ -71,7 +71,7 @@ export function MtiqPanel({ open, onClose }: Props) {
   };
 
   useEffect(() => {
-    setMode(vorgangId ? 'current' : 'list');
+    setMode(vorgangId ? 'current' : 'ask');
   }, [vorgangId]);
 
   useEffect(() => {
