@@ -244,11 +244,31 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
-  const [caseSearch, setCaseSearch] = useState('');
-  const [caseStatusFilter, setCaseStatusFilter] = useState<string>('all');
-  const [caseAssigneeFilter, setCaseAssigneeFilter] = useState<string>('all');
-  const [caseSort, setCaseSort] = useState<SortState<PdCaseSortKey>>({ column: 'due_at', direction: 'asc' });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [caseSearch, setCaseSearch] = useState(searchParams.get('q') ?? '');
+  const [caseStatusFilter, setCaseStatusFilter] = useState<string>(searchParams.get('status') ?? 'all');
+  const [caseAssigneeFilter, setCaseAssigneeFilter] = useState<string>(searchParams.get('assignee') ?? 'all');
+  const [caseSort, setCaseSort] = useState<SortState<PdCaseSortKey>>(() => {
+    const col = (searchParams.get('sort') as PdCaseSortKey) || 'due_at';
+    const dir = (searchParams.get('dir') as 'asc' | 'desc') || 'asc';
+    return { column: col, direction: dir };
+  });
   const handleCaseSort = (col: PdCaseSortKey) => setCaseSort(prev => nextSort(prev, col));
+
+  // Persist filters in URL so back-navigation from a case restores them
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    caseSearch ? params.set('q', caseSearch) : params.delete('q');
+    caseStatusFilter !== 'all' ? params.set('status', caseStatusFilter) : params.delete('status');
+    caseAssigneeFilter !== 'all' ? params.set('assignee', caseAssigneeFilter) : params.delete('assignee');
+    caseSort.column !== 'due_at' ? params.set('sort', caseSort.column) : params.delete('sort');
+    caseSort.direction !== 'asc' ? params.set('dir', caseSort.direction) : params.delete('dir');
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseSearch, caseStatusFilter, caseAssigneeFilter, caseSort]);
+
+  const backToState = { backTo: `${location.pathname}${location.search}` };
 
   const loadProject = async () => {
     if (!id) return;
