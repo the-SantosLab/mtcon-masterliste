@@ -95,10 +95,9 @@ export function MtiqPanel({ open, onClose }: Props) {
 
   if (!open) return null;
 
-  const baseTabs: [Mode, string][] = vorgangId
-    ? [['current', 'Vorgang'], ['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']]
-    : [['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte']];
-  const tabs: [Mode, string][] = isAdmin ? [...baseTabs, ['dupes', 'Duplikate']] : baseTabs;
+  const tabs: [Mode, string][] = vorgangId
+    ? [['current', 'Vorgang'], ['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte'], ['dupes', 'Duplikate']]
+    : [['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte'], ['dupes', 'Duplikate']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
@@ -203,7 +202,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
         {mode === 'ask' && <MtiqAsk />}
-        {mode === 'dupes' && isAdmin && <MtiqDuplicateScan />}
+        {mode === 'dupes' && <MtiqDuplicateScan />}
       </div>
 
 
