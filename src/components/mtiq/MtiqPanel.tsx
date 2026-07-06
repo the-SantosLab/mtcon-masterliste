@@ -198,6 +198,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         {mode === 'drafts' && <MtiqDraftsTab onClose={onClose} />}
         {mode === 'current' && vorgangId && <MtiqVorgang vorgangId={vorgangId} onClose={onClose} />}
         {mode === 'list' && <MtiqOverview onClose={onClose} />}
+        {mode === 'ask' && <MtiqAsk />}
       </div>
 
 
