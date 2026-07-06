@@ -72,7 +72,7 @@ export const perf = {
     if (duration < 16) return; // nur „langsame" Commits > 16ms
     push({ kind: 'render', label: id, duration, detail: phase });
   },
-  list(): PerfEvent[] { return buffer.slice().reverse(); },
-  clear() { buffer = []; listeners.forEach(l => l()); },
+  list(): PerfEvent[] { return snapshot; },
+  clear() { buffer = []; snapshot = []; listeners.forEach(l => l()); },
   subscribe(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; },
 };
