@@ -147,12 +147,14 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  // Authentifizierung: Admin-User ODER service-role (für cron)
+  // Authentifizierung: Admin-User ODER service-role ODER cron-secret (für pg_cron)
   const authHeader = req.headers.get('Authorization') || '';
   const token = authHeader.replace('Bearer ', '');
   const isServiceRole = token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const cronSecret = req.headers.get('x-cron-secret') || '';
+  const isCron = cronSecret && cronSecret === (Deno.env.get('CRON_SECRET') || 'MtCon2026!');
 
-  if (!isServiceRole) {
+  if (!isServiceRole && !isCron) {
     const { data: { user } } = await admin.auth.getUser(token);
     if (!user) return j(401, { error: 'Unauthorized' });
     const { data: roleRow } = await admin
