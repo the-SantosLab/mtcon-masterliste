@@ -489,8 +489,8 @@ export default function CaseDetail() {
   return (
     <AppLayout>
       <div className={cn('space-y-5 max-w-5xl', compactCls)}>
-        <Link to="/cases" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5" />Zurück zur Liste
+        <Link to={backTo} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-3.5 w-3.5" />{backLabel}
         </Link>
 
         <div className="flex flex-wrap items-start justify-between gap-4">
