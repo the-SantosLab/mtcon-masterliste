@@ -168,7 +168,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         </button>
       </div>
 
-      <div className="px-3 pt-2 pb-1 flex gap-1" style={{ borderBottom: '1px solid #1a1a1a' }}>
+      <div className="px-3 pt-2 pb-1 flex gap-1 flex-wrap" style={{ borderBottom: '1px solid #1a1a1a' }}>
         {tabs.map(([k, label]) => (
           <button
             key={k}
