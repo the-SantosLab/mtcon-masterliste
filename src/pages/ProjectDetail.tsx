@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
