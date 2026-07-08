@@ -1240,17 +1240,6 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           {task.title}
                         </span>
                       )}
-                      {hasNote && (
-                        <button
-                          type="button"
-                          onClick={() => setNoteExpandedId(isNoteOpen ? null : task.id)}
-                          title={isNoteOpen ? 'Abschlussnotiz ausblenden' : 'Abschlussnotiz anzeigen'}
-                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 hover:bg-muted transition-colors"
-                        >
-                          <FileText className="h-3 w-3" />
-                          <ChevronDown className={cn('h-3 w-3 transition-transform', isNoteOpen && 'rotate-180')} />
-                        </button>
-                      )}
                       {getDeptName(task.department_id) && (
                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
                           <Building2 className="h-2.5 w-2.5" />{getDeptName(task.department_id)}
