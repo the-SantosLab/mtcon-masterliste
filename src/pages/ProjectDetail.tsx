@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { WatchersSection } from '@/components/WatchersSection';
 
 type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at' | 'urgency';
 
@@ -31,6 +32,7 @@ interface Project {
   name: string; description: string | null; status: string;
   visibility: string; created_at: string;
   department_id: string | null; owner_id: string | null; created_by: string;
+  watchers: string[] | null;
 }
 
 interface CaseRow {
@@ -241,6 +243,7 @@ export default function ProjectDetail() {
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [allProfiles, setAllProfiles] = useState<{ id: string; display_name: string; short_code: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
@@ -302,6 +305,7 @@ export default function ProjectDetail() {
       if (projRes.data) setProject(projRes.data as Project);
       setCases((casesRes.data || []) as CaseRow[]);
       const profiles = (profilesRes.data || []) as { id: string; display_name: string; short_code: string }[];
+      setAllProfiles(profiles);
       setMembers(
         ((membersRes.data || []) as { id: string; user_id: string; role: string }[]).map(m => ({
           ...m, profile: profiles.find(p => p.id === m.user_id) ?? null,
@@ -659,6 +663,17 @@ export default function ProjectDetail() {
                 </div>
               )}
             </div>
+
+            <WatchersSection
+              entityTable="projects"
+              caseId={project.id}
+              watchers={project.watchers ?? []}
+              profiles={allProfiles}
+              canEdit={canEdit}
+              onChange={loadProject}
+              title="Projekt-Watcher"
+              description="Diese Personen erhalten automatisch Zugriff auf alle mit diesem Projekt verknüpften Dokumente."
+            />
 
             <div className="rounded-md border border-border bg-card px-4 py-3">
               <p className="text-[11px] text-muted-foreground mb-1">Sichtbarkeit</p>

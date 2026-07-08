@@ -17,9 +17,12 @@ interface WatchersSectionProps {
   profiles: Profile[];
   canEdit: boolean;
   onChange: () => void;
+  entityTable?: 'cases' | 'projects';
+  title?: string;
+  description?: string;
 }
 
-export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange }: WatchersSectionProps) {
+export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange, entityTable = 'cases', title, description }: WatchersSectionProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [saving, setSaving] = useState(false);
@@ -39,9 +42,9 @@ export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange 
 
   const update = async (next: string[]) => {
     setSaving(true);
-    const { error } = await supabase.from('cases').update({ watchers: next } as any).eq('id', caseId);
+    const { error } = await supabase.from(entityTable).update({ watchers: next } as any).eq('id', caseId);
     setSaving(false);
-    if (error) { toastError(error, 'case_watcher'); return; }
+    if (error) { toastError(error, entityTable === 'projects' ? 'project_watcher' : 'case_watcher'); return; }
     onChange();
   };
 
@@ -54,9 +57,9 @@ export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange 
     <div className="rounded-md border border-border bg-card px-5 py-2">
       <div className="flex items-center gap-2 mb-1">
         <Users className="h-3.5 w-3.5 text-muted-foreground" />
-        <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Weitere Personen informieren</h3>
+        <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{title ?? 'Weitere Personen informieren'}</h3>
       </div>
-      <p className="text-[11px] text-muted-foreground mb-2">Diese Personen erhalten eine Email, wenn Aufgaben abgeschlossen werden.</p>
+      <p className="text-[11px] text-muted-foreground mb-2">{description ?? 'Diese Personen erhalten eine Email, wenn Aufgaben abgeschlossen werden.'}</p>
 
       <div className="flex flex-wrap items-center gap-2">
         {watched.length === 0 && <span className="text-[13px] text-muted-foreground">Niemand</span>}
