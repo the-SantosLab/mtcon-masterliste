@@ -30,6 +30,7 @@ const PERMISSION_HINT: Record<ErrContext, string> = {
   case_email: 'Du darfst in diesem Vorgang keine E-Mails verwalten. Bitte lasse Dich als Watcher eintragen.',
   case_attachment: 'Du darfst hier keine Anhänge hochladen oder löschen. Bitte wende Dich an den Vorgangsverantwortlichen.',
   case_watcher: 'Nur Ersteller, Bearbeiter oder Admins dürfen Watcher verwalten.',
+  project_watcher: 'Nur Projektleiter, Ersteller oder Admins dürfen Projekt-Watcher verwalten.',
   case_status: 'Nur der zugewiesene Bearbeiter, eine Führungskraft der Abteilung oder ein Admin darf den Status ändern.',
   case_assignee: 'Du darfst die Zuweisung nicht ändern. Das ist Bearbeitern, Führungskräften oder Admins vorbehalten.',
   case_update: 'Du darfst diesen Vorgang nicht bearbeiten. Bitte lasse Dich vom Vorgangsverantwortlichen als Watcher eintragen.',
