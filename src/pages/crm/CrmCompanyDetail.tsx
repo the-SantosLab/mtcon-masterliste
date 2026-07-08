@@ -132,9 +132,14 @@ export default function CrmCompanyDetail() {
               {contacts.length === 0 ? <Empty /> : (
                 <ul className="space-y-1">
                   {contacts.map(c => (
-                    <li key={c.id} className="text-xs py-1.5 border-b border-border/50 last:border-0">
-                      <p className="text-foreground">{c.first_name} {c.last_name}</p>
-                      <p className="text-[11px] text-muted-foreground">{c.email ?? c.position ?? '–'}</p>
+                    <li key={c.id} className="border-b border-border/50 last:border-0">
+                      <Link
+                        to={`/crm/contacts?edit=${c.id}`}
+                        className="block text-xs py-1.5 -mx-1 px-1 rounded hover:bg-muted/50 transition-colors group"
+                      >
+                        <p className="text-foreground group-hover:text-primary transition-colors">{c.first_name} {c.last_name}</p>
+                        <p className="text-[11px] text-muted-foreground">{c.email ?? c.position ?? '–'}</p>
+                      </Link>
                     </li>
                   ))}
                 </ul>
