@@ -664,6 +664,17 @@ export default function ProjectDetail() {
               )}
             </div>
 
+            <WatchersSection
+              entityTable="projects"
+              caseId={project.id}
+              watchers={project.watchers ?? []}
+              profiles={allProfiles}
+              canEdit={canEdit}
+              onChange={loadProject}
+              title="Projekt-Watcher"
+              description="Diese Personen erhalten automatisch Zugriff auf alle mit diesem Projekt verknüpften Dokumente."
+            />
+
             <div className="rounded-md border border-border bg-card px-4 py-3">
               <p className="text-[11px] text-muted-foreground mb-1">Sichtbarkeit</p>
               <p className="text-xs text-foreground font-medium">
