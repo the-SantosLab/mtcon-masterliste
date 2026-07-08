@@ -123,12 +123,24 @@ export function MtiqDuplicateScan() {
               })}
             </div>
 
+            {(p.a.kunde ?? '') !== (p.b.kunde ?? '') && (
+              <label className="flex items-start gap-1.5 mt-2 text-[10px] text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={!!applyCustomer[i]}
+                  onChange={e => setApplyCustomer(prev => ({ ...prev, [i]: e.target.checked }))}
+                />
+                <span>Kundendaten aus dem Quell-Vorgang beim Ziel übernehmen (Kunden weichen ab).</span>
+              </label>
+            )}
+
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              <Button size="sm" variant="default" disabled={merging === busyKey} onClick={() => doMerge(p, true)} className="h-7 text-[10px]">
+              <Button size="sm" variant="default" disabled={merging === busyKey} onClick={() => doMerge(p, i, true)} className="h-7 text-[10px]">
                 {merging === busyKey ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <GitMerge className="h-3 w-3 mr-1" />}
                 B <ArrowRight className="h-3 w-3 mx-0.5" /> A
               </Button>
-              <Button size="sm" variant="outline" disabled={!!merging} onClick={() => doMerge(p, false)} className="h-7 text-[10px]">
+              <Button size="sm" variant="outline" disabled={!!merging} onClick={() => doMerge(p, i, false)} className="h-7 text-[10px]">
                 A <ArrowRight className="h-3 w-3 mx-0.5" /> B
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setPairs(ps => (ps ?? []).filter(x => x !== p))} className="h-7 text-[10px]">
