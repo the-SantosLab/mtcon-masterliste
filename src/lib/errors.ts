@@ -10,6 +10,7 @@ export type ErrContext =
   | 'case_email'
   | 'case_attachment'
   | 'case_watcher'
+  | 'project_watcher'
   | 'case_status'
   | 'case_assignee'
   | 'case_update'
