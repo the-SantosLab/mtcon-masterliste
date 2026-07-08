@@ -40,18 +40,25 @@ export function MtiqDuplicateScan() {
     }
   };
 
-  const doMerge = async (p: Pair, targetIsA: boolean) => {
+  const doMerge = async (p: Pair, pairIndex: number, targetIsA: boolean) => {
     const source_id = targetIsA ? p.b.id : p.a.id;
     const target_id = targetIsA ? p.a.id : p.b.id;
     const src = targetIsA ? p.b : p.a;
     const tgt = targetIsA ? p.a : p.b;
-    if (!confirm(`Vorgang ${src.case_no ?? src.id} wirklich in ${tgt.case_no ?? tgt.id} zusammenführen? Notizen, Unteraufgaben und Chat werden übernommen. Der Quell-Vorgang wird verworfen.`)) return;
+    const customersDiffer = (src.kunde ?? '') !== (tgt.kunde ?? '');
+    const apply = customersDiffer && !!applyCustomer[pairIndex];
+    const customerHint = customersDiffer
+      ? apply
+        ? `\n\nKundendaten des Ziels werden überschrieben: „${tgt.kunde ?? '—'}" → „${src.kunde ?? '—'}".`
+        : `\n\nHinweis: Kunden weichen ab („${src.kunde ?? '—'}" vs. „${tgt.kunde ?? '—'}"). Die Kundendaten des Zielvorgangs bleiben unverändert.`
+      : '';
+    if (!confirm(`Vorgang ${src.case_no ?? src.id} wirklich in ${tgt.case_no ?? tgt.id} zusammenführen? Notizen, Unteraufgaben und Chat werden übernommen. Der Quell-Vorgang wird verworfen.${customerHint}`)) return;
     setMerging(`${source_id}-${target_id}`);
     try {
-      const { data, error } = await supabase.functions.invoke('mtiq-merge-cases', { body: { source_id, target_id } });
+      const { data, error } = await supabase.functions.invoke('mtiq-merge-cases', { body: { source_id, target_id, apply_customer_from_source: apply } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`Zusammengeführt: ${data?.moved?.notes ?? 0} Notizen, ${data?.moved?.tasks ?? 0} Unteraufgaben, ${data?.moved?.chat ?? 0} Chatnachrichten übernommen.`);
+      toast.success(`Zusammengeführt: ${data?.moved?.notes ?? 0} Notizen, ${data?.moved?.tasks ?? 0} Unteraufgaben, ${data?.moved?.chat ?? 0} Chatnachrichten übernommen.${data?.customer_applied ? ' Kundendaten aktualisiert.' : ''}`);
       setPairs(ps => (ps ?? []).filter(x => x !== p));
     } catch (e: any) {
       toast.error(e?.message ?? 'Zusammenführen fehlgeschlagen');
