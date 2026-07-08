@@ -17,9 +17,12 @@ interface WatchersSectionProps {
   profiles: Profile[];
   canEdit: boolean;
   onChange: () => void;
+  entityTable?: 'cases' | 'projects';
+  title?: string;
+  description?: string;
 }
 
-export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange }: WatchersSectionProps) {
+export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange, entityTable = 'cases', title, description }: WatchersSectionProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [saving, setSaving] = useState(false);
@@ -39,9 +42,9 @@ export function WatchersSection({ caseId, watchers, profiles, canEdit, onChange 
 
   const update = async (next: string[]) => {
     setSaving(true);
-    const { error } = await supabase.from('cases').update({ watchers: next } as any).eq('id', caseId);
+    const { error } = await supabase.from(entityTable).update({ watchers: next } as any).eq('id', caseId);
     setSaving(false);
-    if (error) { toastError(error, 'case_watcher'); return; }
+    if (error) { toastError(error, entityTable === 'projects' ? 'project_watcher' : 'case_watcher'); return; }
     onChange();
   };
 
