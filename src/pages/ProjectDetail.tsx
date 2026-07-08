@@ -305,6 +305,7 @@ export default function ProjectDetail() {
       if (projRes.data) setProject(projRes.data as Project);
       setCases((casesRes.data || []) as CaseRow[]);
       const profiles = (profilesRes.data || []) as { id: string; display_name: string; short_code: string }[];
+      setAllProfiles(profiles);
       setMembers(
         ((membersRes.data || []) as { id: string; user_id: string; role: string }[]).map(m => ({
           ...m, profile: profiles.find(p => p.id === m.user_id) ?? null,
