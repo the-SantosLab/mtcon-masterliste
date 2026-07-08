@@ -1280,13 +1280,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                         </button>
                       )}
                     </div>
-                    {hasNote && isNoteOpen && (
+                    {hasNote && (
                       <div className="px-3 pb-3 pt-2 border-t border-border/50">
-                        <div
-                          className="ml-4 rounded-md bg-muted/40 border border-border/40 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
-                          style={{ fontSize: '13px', lineHeight: '1.5' }}
-                        >
-                          {note}
+                        <div className="flex items-start gap-2 ml-4">
+                          <FileText className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />
+                          <div
+                            className="flex-1 rounded-md bg-muted/60 border border-border/60 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
+                            style={{ fontSize: '13px', lineHeight: '1.5' }}
+                          >
+                            {note}
+                          </div>
                         </div>
                       </div>
                     )}
