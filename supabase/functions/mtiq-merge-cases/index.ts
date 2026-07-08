@@ -18,14 +18,14 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { source_id, target_id } = await req.json();
+    const { source_id, target_id, apply_customer_from_source } = await req.json();
     if (!source_id || !target_id || source_id === target_id) {
       return new Response(JSON.stringify({ error: "source_id und target_id erforderlich (unterschiedlich)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { data: pair, error: perr } = await client
       .from("cases")
-      .select("id, case_no, project_name, status")
+      .select("id, case_no, project_name, status, customer_no, client_name")
       .in("id", [source_id, target_id]);
     if (perr || !pair || pair.length !== 2) {
       return new Response(JSON.stringify({ error: "Vorgänge nicht gefunden oder keine Berechtigung" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -59,6 +59,22 @@ Deno.serve(async (req) => {
       pinned: false,
     });
 
+    // Optional: Kundendaten vom Quell-Vorgang auf das Ziel übernehmen (wenn abweichend)
+    let customerApplied: { from: string | null; to: string | null } | null = null;
+    if (apply_customer_from_source && (src.customer_no !== tgt.customer_no || src.client_name !== tgt.client_name)) {
+      await client.from("cases").update({
+        customer_no: src.customer_no ?? tgt.customer_no,
+        client_name: src.client_name ?? tgt.client_name,
+      }).eq("id", target_id);
+      customerApplied = { from: tgt.customer_no ?? tgt.client_name, to: src.customer_no ?? src.client_name };
+      await client.from("case_notes").insert({
+        case_id: target_id,
+        author_id: user.id,
+        body: `Kundendaten beim Zusammenführen übernommen: „${tgt.customer_no ?? tgt.client_name ?? "—"}" → „${src.customer_no ?? src.client_name ?? "—"}".`,
+        pinned: false,
+      });
+    }
+
     // Quelle als verworfen markieren, Verweis in Notizfeld
     const mergeNote = `\n\n[MTIQ Merge ${new Date().toISOString().slice(0, 10)}] Zusammengeführt mit ${tgt.case_no ?? tgt.id} („${tgt.project_name ?? ""}").`;
     const { data: srcRow } = await client.from("cases").select("note").eq("id", source_id).maybeSingle();
@@ -67,7 +83,7 @@ Deno.serve(async (req) => {
       note: `${(srcRow as any)?.note ?? ""}${mergeNote}`,
     }).eq("id", source_id);
 
-    return new Response(JSON.stringify({ ok: true, moved, source: src, target: tgt }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, moved, source: src, target: tgt, customer_applied: customerApplied }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("mtiq-merge-cases error", e);
     return new Response(JSON.stringify({ error: e?.message ?? "internal" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

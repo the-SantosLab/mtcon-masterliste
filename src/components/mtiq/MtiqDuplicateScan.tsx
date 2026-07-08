@@ -22,6 +22,7 @@ export function MtiqDuplicateScan() {
   const [pairs, setPairs] = useState<Pair[] | null>(null);
   const [meta, setMeta] = useState<{ total_scanned?: number; evaluated?: number } | null>(null);
   const [merging, setMerging] = useState<string | null>(null);
+  const [applyCustomer, setApplyCustomer] = useState<Record<number, boolean>>({});
 
   const runScan = async () => {
     setLoading(true);
@@ -39,18 +40,25 @@ export function MtiqDuplicateScan() {
     }
   };
 
-  const doMerge = async (p: Pair, targetIsA: boolean) => {
+  const doMerge = async (p: Pair, pairIndex: number, targetIsA: boolean) => {
     const source_id = targetIsA ? p.b.id : p.a.id;
     const target_id = targetIsA ? p.a.id : p.b.id;
     const src = targetIsA ? p.b : p.a;
     const tgt = targetIsA ? p.a : p.b;
-    if (!confirm(`Vorgang ${src.case_no ?? src.id} wirklich in ${tgt.case_no ?? tgt.id} zusammenführen? Notizen, Unteraufgaben und Chat werden übernommen. Der Quell-Vorgang wird verworfen.`)) return;
+    const customersDiffer = (src.kunde ?? '') !== (tgt.kunde ?? '');
+    const apply = customersDiffer && !!applyCustomer[pairIndex];
+    const customerHint = customersDiffer
+      ? apply
+        ? `\n\nKundendaten des Ziels werden überschrieben: „${tgt.kunde ?? '—'}" → „${src.kunde ?? '—'}".`
+        : `\n\nHinweis: Kunden weichen ab („${src.kunde ?? '—'}" vs. „${tgt.kunde ?? '—'}"). Die Kundendaten des Zielvorgangs bleiben unverändert.`
+      : '';
+    if (!confirm(`Vorgang ${src.case_no ?? src.id} wirklich in ${tgt.case_no ?? tgt.id} zusammenführen? Notizen, Unteraufgaben und Chat werden übernommen. Der Quell-Vorgang wird verworfen.${customerHint}`)) return;
     setMerging(`${source_id}-${target_id}`);
     try {
-      const { data, error } = await supabase.functions.invoke('mtiq-merge-cases', { body: { source_id, target_id } });
+      const { data, error } = await supabase.functions.invoke('mtiq-merge-cases', { body: { source_id, target_id, apply_customer_from_source: apply } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success(`Zusammengeführt: ${data?.moved?.notes ?? 0} Notizen, ${data?.moved?.tasks ?? 0} Unteraufgaben, ${data?.moved?.chat ?? 0} Chatnachrichten übernommen.`);
+      toast.success(`Zusammengeführt: ${data?.moved?.notes ?? 0} Notizen, ${data?.moved?.tasks ?? 0} Unteraufgaben, ${data?.moved?.chat ?? 0} Chatnachrichten übernommen.${data?.customer_applied ? ' Kundendaten aktualisiert.' : ''}`);
       setPairs(ps => (ps ?? []).filter(x => x !== p));
     } catch (e: any) {
       toast.error(e?.message ?? 'Zusammenführen fehlgeschlagen');
@@ -115,12 +123,24 @@ export function MtiqDuplicateScan() {
               })}
             </div>
 
+            {(p.a.kunde ?? '') !== (p.b.kunde ?? '') && (
+              <label className="flex items-start gap-1.5 mt-2 text-[10px] text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={!!applyCustomer[i]}
+                  onChange={e => setApplyCustomer(prev => ({ ...prev, [i]: e.target.checked }))}
+                />
+                <span>Kundendaten aus dem Quell-Vorgang beim Ziel übernehmen (Kunden weichen ab).</span>
+              </label>
+            )}
+
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              <Button size="sm" variant="default" disabled={merging === busyKey} onClick={() => doMerge(p, true)} className="h-7 text-[10px]">
+              <Button size="sm" variant="default" disabled={merging === busyKey} onClick={() => doMerge(p, i, true)} className="h-7 text-[10px]">
                 {merging === busyKey ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <GitMerge className="h-3 w-3 mr-1" />}
                 B <ArrowRight className="h-3 w-3 mx-0.5" /> A
               </Button>
-              <Button size="sm" variant="outline" disabled={!!merging} onClick={() => doMerge(p, false)} className="h-7 text-[10px]">
+              <Button size="sm" variant="outline" disabled={!!merging} onClick={() => doMerge(p, i, false)} className="h-7 text-[10px]">
                 A <ArrowRight className="h-3 w-3 mx-0.5" /> B
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setPairs(ps => (ps ?? []).filter(x => x !== p))} className="h-7 text-[10px]">
