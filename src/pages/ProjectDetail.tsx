@@ -31,6 +31,7 @@ interface Project {
   name: string; description: string | null; status: string;
   visibility: string; created_at: string;
   department_id: string | null; owner_id: string | null; created_by: string;
+  watchers: string[] | null;
 }
 
 interface CaseRow {
