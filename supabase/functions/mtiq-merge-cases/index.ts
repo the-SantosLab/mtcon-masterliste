@@ -59,6 +59,22 @@ Deno.serve(async (req) => {
       pinned: false,
     });
 
+    // Optional: Kundendaten vom Quell-Vorgang auf das Ziel übernehmen (wenn abweichend)
+    let customerApplied: { from: string | null; to: string | null } | null = null;
+    if (apply_customer_from_source && (src.customer_no !== tgt.customer_no || src.client_name !== tgt.client_name)) {
+      await client.from("cases").update({
+        customer_no: src.customer_no ?? tgt.customer_no,
+        client_name: src.client_name ?? tgt.client_name,
+      }).eq("id", target_id);
+      customerApplied = { from: tgt.customer_no ?? tgt.client_name, to: src.customer_no ?? src.client_name };
+      await client.from("case_notes").insert({
+        case_id: target_id,
+        author_id: user.id,
+        body: `Kundendaten beim Zusammenführen übernommen: „${tgt.customer_no ?? tgt.client_name ?? "—"}" → „${src.customer_no ?? src.client_name ?? "—"}".`,
+        pinned: false,
+      });
+    }
+
     // Quelle als verworfen markieren, Verweis in Notizfeld
     const mergeNote = `\n\n[MTIQ Merge ${new Date().toISOString().slice(0, 10)}] Zusammengeführt mit ${tgt.case_no ?? tgt.id} („${tgt.project_name ?? ""}").`;
     const { data: srcRow } = await client.from("cases").select("note").eq("id", source_id).maybeSingle();
