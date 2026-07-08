@@ -102,8 +102,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "Du bist MTIQ. Bewerte, ob zwei Vorgänge tatsächlich denselben Sachverhalt beschreiben (Duplikat). Antworte NUR als JSON-Array. Keine Prosa." },
-          { role: "user", content: `Bewerte jedes Paar. Für jedes Paar liefere: {"index": n, "duplicate": true|false, "confidence": 0..1, "reason": "kurze Begründung", "keep": "a"|"b" (welcher als Ziel behalten werden sollte, i.d.R. der ältere/mit mehr Kontext)}. Liste offener Paare:\n${JSON.stringify(promptPairs)}` },
+          { role: "system", content: "Du bist MTIQ. Bewerte, ob zwei Vorgänge inhaltlich denselben Sachverhalt beschreiben (Duplikat). Wichtig: ein abweichender Kunde oder Auftraggeber schließt ein Duplikat NICHT aus — Sachverhalte können mit falschem Kunden erfasst worden sein. Bewerte primär Titel, Notizen und Projekt-/Produkt-Kontext. Antworte NUR als JSON-Array. Keine Prosa." },
+          { role: "user", content: `Bewerte jedes Paar. Für jedes Paar liefere: {"index": n, "duplicate": true|false, "confidence": 0..1, "reason": "kurze Begründung (bei abweichendem Kunden bitte erwähnen)", "keep": "a"|"b" (welcher als Ziel behalten werden sollte, i.d.R. der ältere/mit mehr Kontext)}. Liste offener Paare:\n${JSON.stringify(promptPairs)}` },
         ],
         response_format: { type: "json_object" },
       }),
