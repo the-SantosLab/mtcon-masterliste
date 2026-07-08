@@ -18,14 +18,14 @@ Deno.serve(async (req) => {
     const user = userData?.user;
     if (!user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { source_id, target_id } = await req.json();
+    const { source_id, target_id, apply_customer_from_source } = await req.json();
     if (!source_id || !target_id || source_id === target_id) {
       return new Response(JSON.stringify({ error: "source_id und target_id erforderlich (unterschiedlich)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { data: pair, error: perr } = await client
       .from("cases")
-      .select("id, case_no, project_name, status")
+      .select("id, case_no, project_name, status, customer_no, client_name")
       .in("id", [source_id, target_id]);
     if (perr || !pair || pair.length !== 2) {
       return new Response(JSON.stringify({ error: "Vorgänge nicht gefunden oder keine Berechtigung" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
