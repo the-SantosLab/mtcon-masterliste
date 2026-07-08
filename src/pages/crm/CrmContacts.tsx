@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,8 @@ export default function CrmContacts() {
   const [form, setForm] = useState({ first_name: '', last_name: '', salutation: '', email: '', phone: '', mobile: '', position: '', company_id: '', linkedin_url: '', is_decision_maker: false, email_opt_in: false });
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => { void load(); }, []);
   const load = async () => {
     setLoading(true);
@@ -73,6 +76,20 @@ export default function CrmContacts() {
     ]);
     setRows(data ?? []); setCompanies(c ?? []); setLoading(false);
   };
+
+  // Deep-link: /crm/contacts?edit=<id> öffnet direkt die Detailansicht
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || rows.length === 0) return;
+    const target = rows.find(r => r.id === editId);
+    if (target) {
+      openEdit(target);
+      const next = new URLSearchParams(searchParams);
+      next.delete('edit');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, searchParams]);
 
   const openNew = () => { setEditing(null); setForm({ first_name: '', last_name: '', salutation: '', email: '', phone: '', mobile: '', position: '', company_id: '', linkedin_url: '', is_decision_maker: false, email_opt_in: false }); setOpen(true); };
   const openEdit = (r: any) => { setEditing(r); setForm({ first_name: r.first_name, last_name: r.last_name, salutation: r.salutation ?? '', email: r.email ?? '', phone: r.phone ?? '', mobile: r.mobile ?? '', position: r.position ?? '', company_id: r.company_id ?? '', linkedin_url: r.linkedin_url ?? '', is_decision_maker: !!r.is_decision_maker, email_opt_in: !!r.email_opt_in }); setOpen(true); };
