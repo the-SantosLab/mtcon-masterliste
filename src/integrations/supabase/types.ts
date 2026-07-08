@@ -7225,6 +7225,7 @@ export type Database = {
           urgency_override_at: string | null
           urgency_override_by: string | null
           visibility: string
+          watchers: string[]
         }
         Insert: {
           created_at?: string
@@ -7243,6 +7244,7 @@ export type Database = {
           urgency_override_at?: string | null
           urgency_override_by?: string | null
           visibility?: string
+          watchers?: string[]
         }
         Update: {
           created_at?: string
@@ -7261,6 +7263,7 @@ export type Database = {
           urgency_override_at?: string | null
           urgency_override_by?: string | null
           visibility?: string
+          watchers?: string[]
         }
         Relationships: [
           {
@@ -8975,6 +8978,10 @@ export type Database = {
       is_private_inbox_dept: { Args: { p_dept_id: string }; Returns: boolean }
       is_project_member: {
         Args: { p_project_id: string; uid?: string }
+        Returns: boolean
+      }
+      is_project_watcher: {
+        Args: { p_project_id: string; p_uid?: string }
         Returns: boolean
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
