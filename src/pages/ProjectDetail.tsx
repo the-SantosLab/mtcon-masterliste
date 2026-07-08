@@ -243,6 +243,7 @@ export default function ProjectDetail() {
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [allProfiles, setAllProfiles] = useState<{ id: string; display_name: string; short_code: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [activityRefreshKey, setActivityRefreshKey] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
