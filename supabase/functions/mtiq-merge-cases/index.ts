@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       note: `${(srcRow as any)?.note ?? ""}${mergeNote}`,
     }).eq("id", source_id);
 
-    return new Response(JSON.stringify({ ok: true, moved, source: src, target: tgt }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ ok: true, moved, source: src, target: tgt, customer_applied: customerApplied }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("mtiq-merge-cases error", e);
     return new Response(JSON.stringify({ error: e?.message ?? "internal" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
