@@ -22,6 +22,7 @@ export function MtiqDuplicateScan() {
   const [pairs, setPairs] = useState<Pair[] | null>(null);
   const [meta, setMeta] = useState<{ total_scanned?: number; evaluated?: number } | null>(null);
   const [merging, setMerging] = useState<string | null>(null);
+  const [applyCustomer, setApplyCustomer] = useState<Record<number, boolean>>({});
 
   const runScan = async () => {
     setLoading(true);
