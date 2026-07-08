@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { WatchersSection } from '@/components/WatchersSection';
 
 type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at' | 'urgency';
 
