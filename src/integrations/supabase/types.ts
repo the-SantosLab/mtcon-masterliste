@@ -1780,6 +1780,7 @@ export type Database = {
           urgency_override_by: string | null
           version: number
           visibility: string
+          watcher_departments: string[]
           watchers: string[]
         }
         Insert: {
@@ -1836,6 +1837,7 @@ export type Database = {
           urgency_override_by?: string | null
           version?: number
           visibility?: string
+          watcher_departments?: string[]
           watchers?: string[]
         }
         Update: {
@@ -1892,6 +1894,7 @@ export type Database = {
           urgency_override_by?: string | null
           version?: number
           visibility?: string
+          watcher_departments?: string[]
           watchers?: string[]
         }
         Relationships: [
