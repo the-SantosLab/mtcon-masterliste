@@ -1069,11 +1069,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                         </div>
 
                         {hasNote && (
-                          <div className="px-3 pb-3 pt-2 border-t border-border/50">
-                            <div className="flex items-start gap-2 ml-4">
-                              <FileText className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />
+                          <div className="px-3 pb-2.5 pt-1.5 bg-[hsl(var(--status-done))]/5 border-t border-[hsl(var(--status-done))]/25">
+                            <div className="flex items-start gap-2">
+                              <div className="flex items-center gap-1 shrink-0 text-[10px] font-medium uppercase tracking-wide text-[hsl(var(--status-done))]/80 pt-0.5">
+                                <FileText className="h-3 w-3" />
+                                Abschlussnotiz
+                              </div>
                               <div
-                                className="flex-1 rounded-md bg-muted/60 border border-border/60 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
+                                className="flex-1 whitespace-pre-wrap break-words text-foreground"
                                 style={{ fontSize: '13px', lineHeight: '1.5' }}
                               >
                                 {note}
@@ -1270,11 +1273,14 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                       )}
                     </div>
                     {hasNote && (
-                      <div className="px-3 pb-3 pt-2 border-t border-border/50">
-                        <div className="flex items-start gap-2 ml-4">
-                          <FileText className="h-3 w-3 mt-1 shrink-0 text-muted-foreground" />
+                      <div className="px-3 pb-2.5 pt-1.5 bg-[hsl(var(--status-done))]/5 border-t border-[hsl(var(--status-done))]/25">
+                        <div className="flex items-start gap-2">
+                          <div className="flex items-center gap-1 shrink-0 text-[10px] font-medium uppercase tracking-wide text-[hsl(var(--status-done))]/80 pt-0.5">
+                            <FileText className="h-3 w-3" />
+                            Abschlussnotiz
+                          </div>
                           <div
-                            className="flex-1 rounded-md bg-muted/60 border border-border/60 px-3 py-2 whitespace-pre-wrap break-words text-foreground"
+                            className="flex-1 whitespace-pre-wrap break-words text-foreground"
                             style={{ fontSize: '13px', lineHeight: '1.5' }}
                           >
                             {note}
