@@ -999,7 +999,9 @@ export default function CaseDetail() {
             <WatchersSection
               caseId={c.id}
               watchers={(c.watchers as string[] | null) || []}
+              watcherDepartments={((c as any).watcher_departments as string[] | null) || []}
               profiles={profiles}
+              departments={departments}
               canEdit={canEdit && !isTerminalStatus(c.status)}
               onChange={refresh}
             />
