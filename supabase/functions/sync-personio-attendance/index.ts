@@ -226,6 +226,9 @@ Deno.serve(async (req) => {
       worked: number; brk: number; comments: string[];
     };
     const byDay = new Map<string, DayAgg>();
+    const nowMs = Date.now();
+    const todayLocal = new Date().toISOString().slice(0, 10);
+    let skippedFuture = 0;
     for (const p of periods) {
       const pid = String(p?.person?.id ?? '');
       const userId = personioIdToUser.get(pid);
@@ -234,6 +237,13 @@ Deno.serve(async (req) => {
       if (!startIso) continue;
       const endIso: string | null = p?.end?.date_time ?? null;
       const date: string = p?.attribution_date || String(startIso).slice(0, 10);
+      // Zukunfts-Perioden verwerfen: Personio erlaubt manuelle Einträge und liefert
+      // ggf. Sollzeit-Planungen für zukünftige Tage. Diese sind KEINE echten Stempelzeiten.
+      const startMs = new Date(startIso).getTime();
+      if (date > todayLocal || (Number.isFinite(startMs) && startMs > nowMs)) {
+        skippedFuture++;
+        continue;
+      }
       const key = `${pid}-${date}`;
       let agg = byDay.get(key);
       if (!agg) {
