@@ -45,7 +45,7 @@ import { NotifyToggle } from '@/components/NotifyToggle';
 import { useNotificationLog } from '@/hooks/useNotificationLog';
 import { CaseConflictDialog } from '@/components/CaseConflictDialog';
 import { BugReportDialog } from '@/components/BugReportDialog';
-import { Bug } from 'lucide-react';
+import { Bug, Printer } from 'lucide-react';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
@@ -565,6 +565,9 @@ export default function CaseDetail() {
                 <Copy className="h-3.5 w-3.5" />Duplizieren
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={() => window.open(`/print/case/${c.id}`, '_blank')} className="h-8 text-xs gap-1.5">
+              <Printer className="h-3.5 w-3.5" />Drucken
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setBugOpen(true)} className="h-8 text-xs gap-1.5">
               <Bug className="h-3.5 w-3.5" />Problem melden
             </Button>
