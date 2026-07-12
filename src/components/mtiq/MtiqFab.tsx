@@ -9,6 +9,7 @@ interface Props {
 export function MtiqFab({ onClick, open, unread }: Props) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label="MTIQ KI-Assistent"
       style={{
