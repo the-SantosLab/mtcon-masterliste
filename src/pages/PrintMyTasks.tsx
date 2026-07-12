@@ -39,7 +39,7 @@ export default function PrintMyTasks() {
     if (!user?.id) return;
     (async () => {
       const [caseRes, taskRes, deptRes] = await Promise.all([
-        supabase
+        (supabase as any)
           .from('cases')
           .select('id, case_no, project_name, status, due_at, urgency, department_id')
           .eq('assigned_to', user.id)
