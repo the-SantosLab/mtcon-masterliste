@@ -24,6 +24,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Cockpit = lazy(() => import("./pages/Cockpit"));
 const CasesList = lazy(() => import("./pages/CasesList"));
 const CasesKanban = lazy(() => import("./pages/CasesKanban"));
+const PrintMyTasks = lazy(() => import("./pages/PrintMyTasks"));
 const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMasterData = lazy(() => import("./pages/AdminMasterData"));
