@@ -53,6 +53,7 @@ export default function PrintCase() {
   const navigate = useNavigate();
   const [c, setC] = useState<CaseRow | null>(null);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [notes, setNotes] = useState<Array<{ id: string; body: string; author_id: string | null; created_at: string; pinned: boolean }>>([]);
   const [depts, setDepts] = useState<Record<string, string>>({});
   const [users, setUsers] = useState<Record<string, { display_name: string | null; short_code: string | null }>>({});
   const [loading, setLoading] = useState(true);
@@ -60,14 +61,16 @@ export default function PrintCase() {
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [caseRes, taskRes, deptRes, userRes] = await Promise.all([
+      const [caseRes, taskRes, noteRes, deptRes, userRes] = await Promise.all([
         (supabase as any).from('cases').select('*').eq('id', id).maybeSingle(),
         supabase.from('case_tasks').select('*').eq('case_id', id).is('archived_at', null).order('sort_order', { ascending: true }),
+        supabase.from('case_notes').select('id, body, author_id, created_at, pinned').eq('case_id', id).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
         supabase.from('departments').select('id, name'),
         supabase.from('users_profile').select('id, display_name, short_code'),
       ]);
       setC((caseRes.data || null) as CaseRow | null);
       setTasks((taskRes.data || []) as TaskRow[]);
+      setNotes((noteRes.data || []) as any);
       const dm: Record<string, string> = {};
       (deptRes.data || []).forEach((d: any) => { dm[d.id] = d.name; });
       setDepts(dm);
