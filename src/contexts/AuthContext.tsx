@@ -88,6 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Öffnen muss sich der Nutzer neu anmelden.
     const handlePageHide = () => {
       try {
+        // Print-Tabs (in neuem Fenster geöffnete Druckvorschauen) dürfen den
+        // geteilten localStorage NICHT löschen — sonst verliert der Original-Tab
+        // beim Schließen der Druckvorschau seine Supabase-Session.
+        if (window.location.pathname.startsWith('/print/')) return;
         // Auto-Logout deaktiviert für Dev-/Ausnahme-Accounts.
         const currentEmail = session?.user?.email
           ?? (() => { try { return JSON.parse(localStorage.getItem('sb-tfzwssplxetptxnhrxse-auth-token') || 'null')?.user?.email ?? null; } catch { return null; } })();
@@ -98,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (k && (k.startsWith('sb-') || k.startsWith('mtcon.'))) keysToRemove.push(k);
         }
         keysToRemove.forEach(k => localStorage.removeItem(k));
+        // sessionStorage bleibt tab-lokal — leeren ist ok, betrifft nur diesen Tab.
         sessionStorage.clear();
       } catch { void 0; }
     };
