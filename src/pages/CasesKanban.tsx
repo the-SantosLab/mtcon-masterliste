@@ -728,6 +728,16 @@ export default function CasesKanban() {
               )
             )}
 
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[11px] gap-1"
+              onClick={() => navigate('/print/my-tasks')}
+              title="Meine Aufgaben drucken"
+            >
+              <Printer className="h-3 w-3" />Drucken
+            </Button>
+
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
