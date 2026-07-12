@@ -194,7 +194,14 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
         ? `Bezug zu Vorgang ${caseNo}\n\n${description.trim()}`
         : description.trim();
 
-      const { data: inserted, error } = await supabase
+      // Session vor dem Insert absichern – bei abgelaufenem/refreshendem Access-Token
+      // wäre auth.uid() = NULL und die RLS-Policy würde greifen.
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        await supabase.auth.refreshSession();
+      }
+
+      const doInsert = () => supabase
         .from('support_tickets')
         .insert({
           title: title.trim(),
@@ -210,7 +217,15 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
         } as any)
         .select('id, ticket_number')
         .single();
+
+      let { data: inserted, error } = await doInsert();
+      // Bei RLS-/Auth-Fehler einmal Token refreshen und erneut versuchen
+      if (error && /row-level security|JWT|permission/i.test(error.message)) {
+        await supabase.auth.refreshSession();
+        ({ data: inserted, error } = await doInsert());
+      }
       if (error) throw error;
+
 
       const ticketId = (inserted as any).id as string;
       const ticketNo = (inserted as any).ticket_number as string;
