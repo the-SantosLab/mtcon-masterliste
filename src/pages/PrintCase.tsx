@@ -207,8 +207,23 @@ export default function PrintCase() {
 
         {c.note && (
           <div className="print-section mb-2">
-            <h2>Notiz</h2>
+            <h2>Kurznotiz</h2>
             <div className="card sub" style={{ whiteSpace: 'pre-wrap' }}>{c.note}</div>
+          </div>
+        )}
+
+        {notes.length > 0 && (
+          <div className="print-section mb-2">
+            <h2>Notizen ({notes.length})</h2>
+            {notes.map(n => (
+              <div key={n.id} className="card mb-2" style={{ pageBreakInside: 'avoid' }}>
+                <div className="sub" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2pt' }}>
+                  <span>{n.pinned ? '★ ' : ''}{userLabel(n.author_id)}</span>
+                  <span>{fmtDateTime(n.created_at)}</span>
+                </div>
+                <div style={{ whiteSpace: 'pre-wrap', fontSize: '9.5pt' }}>{n.body}</div>
+              </div>
+            ))}
           </div>
         )}
 
