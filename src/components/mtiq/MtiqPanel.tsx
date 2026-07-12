@@ -50,6 +50,19 @@ export function MtiqPanel({ open, onClose }: Props) {
     }
   }, [pos]);
 
+  // Reset stored position if it would place the panel header off-screen
+  // (e.g. persisted from a larger viewport). Prevents "panel opens but is invisible".
+  useEffect(() => {
+    if (!open || !pos) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const outOfBounds = pos.x < 0 || pos.y < 0 || pos.x > vw - 120 || pos.y > vh - 80;
+    if (outOfBounds) {
+      setPos(null);
+      try { localStorage.removeItem('mtiq-panel-pos'); } catch { /* ignore */ }
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onDragStart = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
     const width = expanded ? 920 : 480;
