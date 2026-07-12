@@ -10,6 +10,12 @@ const DEADLINE = new Date('2026-05-22T23:59:59');
 const DISMISS_KEY = 'mfa-reminder-dismissed-session';
 
 export function MfaReminderBanner() {
+  // 2FA-Enforcement projektweit deaktiviert – kein Banner mehr.
+  return null;
+}
+
+function _MfaReminderBannerDisabled() {
+
   const { session } = useAuth();
   const [needsMfa, setNeedsMfa] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
