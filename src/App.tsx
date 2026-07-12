@@ -156,23 +156,10 @@ function ProtectedRoute({ children, enforceMfa = true }: { children: React.React
 
   useEffect(() => {
     if (!session) { setMfaState('unknown'); return; }
-    if (!enforceMfa) { setMfaState('ok'); return; }
-    if (isSessionPolicyExemptEmail(session.user?.email)) { setMfaState('ok'); return; }
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (cancelled) return;
-      if (data?.nextLevel === 'aal2' && data?.currentLevel !== 'aal2') {
-        const { data: factors } = await supabase.auth.mfa.listFactors();
-        if (cancelled) return;
-        const hasVerifiedFactor = factors?.totp?.some(factor => factor.status === 'verified');
-        setMfaState(hasVerifiedFactor ? 'required' : 'ok');
-      } else {
-        setMfaState('ok');
-      }
-    })();
-    return () => { cancelled = true; };
+    // 2FA-Enforcement projektweit deaktiviert
+    setMfaState('ok');
   }, [session, enforceMfa]);
+
 
   if (loading || (session && mfaState === 'unknown')) return <div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Laden…</p></div>;
   if (!session || isCurrentTabSessionBlocked()) {
