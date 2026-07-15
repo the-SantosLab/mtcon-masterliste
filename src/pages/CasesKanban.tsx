@@ -15,7 +15,6 @@ import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Search, FolderKanban, Users, Calendar, User as UserIcon, ChevronDown, ChevronRight, Trash2, CheckSquare, X, Printer, ListTree } from 'lucide-react';
-import { useState as useReactState } from 'react';
 import { CaseSubtasksPreview } from '@/components/CaseSubtasksPreview';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
