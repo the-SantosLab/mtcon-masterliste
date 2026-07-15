@@ -46,6 +46,7 @@ interface TaskRow {
   sort_order: number | null;
   required_outputs: any;
   completed_outputs: any;
+  archived_at: string | null;
 }
 
 export default function PrintCase() {
@@ -63,7 +64,7 @@ export default function PrintCase() {
     (async () => {
       const [caseRes, taskRes, noteRes, deptRes, userRes] = await Promise.all([
         (supabase as any).from('cases').select('*').eq('id', id).maybeSingle(),
-        supabase.from('case_tasks').select('*').eq('case_id', id).is('archived_at', null).order('sort_order', { ascending: true }),
+        supabase.from('case_tasks').select('*').eq('case_id', id).order('archived_at', { ascending: true, nullsFirst: true }).order('sort_order', { ascending: true }),
         supabase.from('case_notes').select('id, body, author_id, created_at, pinned').eq('case_id', id).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
         supabase.from('departments').select('id, name'),
         supabase.from('users_profile').select('id, display_name, short_code'),
@@ -232,20 +233,24 @@ export default function PrintCase() {
           <h2>Unteraufgaben ({tasks.length})</h2>
           {tasks.length === 0 && <div className="sub">Keine Unteraufgaben.</div>}
           {tasks.map(t => (
-            <div className="task" key={t.id}>
+            <div className="task" key={t.id} style={t.archived_at ? { opacity: 0.65 } : undefined}>
               <div>
                 <span className={`check-box ${t.completed ? 'check-done' : ''}`}>
                   {t.completed && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
                 </span>
               </div>
               <div>
-                <div className={`task-title ${t.completed ? 'done' : ''}`}>{t.title}</div>
+                <div className={`task-title ${t.completed ? 'done' : ''}`}>
+                  {t.title}
+                  {t.archived_at && <span className="task-meta" style={{ marginLeft: 6, fontStyle: 'italic' }}>(archiviert)</span>}
+                </div>
                 {t.description && <div className="task-meta" style={{ whiteSpace: 'pre-wrap' }}>{t.description}</div>}
                 <div className="task-meta">
                   {depts[t.department_id || ''] ? `${depts[t.department_id!]} · ` : ''}
                   {userLabel(t.assigned_to)}
                   {t.due_at ? ` · Fällig ${fmtDate(t.due_at)}` : ''}
                   {t.completed_at ? ` · Erledigt ${fmtDate(t.completed_at)}` : ''}
+                  {t.archived_at ? ` · Archiviert ${fmtDate(t.archived_at)}` : ''}
                 </div>
               </div>
               <div className="task-meta text-right">
