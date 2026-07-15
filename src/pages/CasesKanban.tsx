@@ -14,7 +14,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Search, FolderKanban, Users, Calendar, User as UserIcon, ChevronDown, ChevronRight, Trash2, CheckSquare, X, Printer } from 'lucide-react';
+import { Search, FolderKanban, Users, Calendar, User as UserIcon, ChevronDown, ChevronRight, Trash2, CheckSquare, X, Printer, ListTree } from 'lucide-react';
+import { CaseSubtasksPreview } from '@/components/CaseSubtasksPreview';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -106,6 +107,7 @@ function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCa
 }
 
 function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable, selected, onToggleSelect, unreadCount = 0 }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; unreadCount?: number }) {
+  const [showSubtasks, setShowSubtasks] = useState(false);
   return (
     <div
       onClick={(e) => {
@@ -189,12 +191,35 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
           </span>
         )}
         {c.assignee_short_code && (
-          <span className="inline-flex items-center gap-0.5 ml-auto">
+          <span className="inline-flex items-center gap-0.5">
             <UserIcon className="h-2.5 w-2.5" />
             {c.assignee_short_code}
           </span>
         )}
+        {c.subtasks_total > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowSubtasks(v => !v); }}
+            className={cn(
+              'ml-auto inline-flex items-center gap-0.5 rounded px-1 py-0.5 border border-transparent hover:border-border hover:bg-muted/60 transition-colors',
+              showSubtasks && 'border-border bg-muted/60 text-foreground',
+            )}
+            title={showSubtasks ? 'Unteraufgaben ausblenden' : 'Unteraufgaben einblenden'}
+            aria-expanded={showSubtasks}
+          >
+            <ListTree className="h-2.5 w-2.5" />
+            {showSubtasks ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
+          </button>
+        )}
       </div>
+      {showSubtasks && c.subtasks_total > 0 && (
+        <div
+          className="mt-2 pt-2 border-t border-border/60"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <CaseSubtasksPreview caseId={c.id} variant="card" />
+        </div>
+      )}
     </div>
   );
 }
