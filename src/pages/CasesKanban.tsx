@@ -107,6 +107,7 @@ function ProjectKanbanCard({ project, onOpen, isDragging }: { project: ProjectCa
 }
 
 function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable, selected, onToggleSelect, unreadCount = 0 }: { c: CaseCard; onOpen?: () => void; isDragging?: boolean; departmentName?: string; selectable?: boolean; selected?: boolean; onToggleSelect?: () => void; unreadCount?: number }) {
+  const [showSubtasks, setShowSubtasks] = useState(false);
   return (
     <div
       onClick={(e) => {
