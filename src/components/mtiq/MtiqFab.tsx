@@ -22,7 +22,9 @@ export function MtiqFab({ onClick, open, unread }: Props) {
         background: 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)',
         boxShadow: '0 10px 30px -10px rgba(14,165,233,0.55), 0 4px 12px rgba(0,0,0,0.25)',
         zIndex: 9999,
+        pointerEvents: 'auto',
       }}
+
       className={cn(
         'flex items-center justify-center text-white text-2xl font-light transition-transform duration-150 hover:scale-105 active:scale-95',
         open && 'scale-95'
