@@ -30,6 +30,9 @@ interface CaseRow {
   created_by: string | null;
   created_at: string | null;
   closure_summary: string | null;
+  closure_outputs: any;
+  closed_at: string | null;
+  closed_by: string | null;
 }
 
 interface TaskRow {
