@@ -58,6 +58,7 @@ export default function PrintCase() {
   const [c, setC] = useState<CaseRow | null>(null);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [notes, setNotes] = useState<Array<{ id: string; body: string; author_id: string | null; created_at: string; pinned: boolean }>>([]);
+  const [completionNotes, setCompletionNotes] = useState<Record<string, string>>({});
   const [depts, setDepts] = useState<Record<string, string>>({});
   const [users, setUsers] = useState<Record<string, { display_name: string | null; short_code: string | null }>>({});
   const [loading, setLoading] = useState(true);
@@ -65,16 +66,22 @@ export default function PrintCase() {
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [caseRes, taskRes, noteRes, deptRes, userRes] = await Promise.all([
+      const [caseRes, taskRes, noteRes, deptRes, userRes, actRes] = await Promise.all([
         (supabase as any).from('cases').select('*').eq('id', id).maybeSingle(),
         supabase.from('case_tasks').select('*').eq('case_id', id).order('archived_at', { ascending: true, nullsFirst: true }).order('sort_order', { ascending: true }),
         supabase.from('case_notes').select('id, body, author_id, created_at, pinned').eq('case_id', id).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
         supabase.from('departments').select('id, name'),
         supabase.from('users_profile').select('id, display_name, short_code'),
+        supabase.from('case_activity').select('task_id, new_value, created_at').eq('case_id', id).eq('action', 'task_completed').eq('field', 'completion_note').order('created_at', { ascending: false }),
       ]);
       setC((caseRes.data || null) as CaseRow | null);
       setTasks((taskRes.data || []) as TaskRow[]);
       setNotes((noteRes.data || []) as any);
+      const cn: Record<string, string> = {};
+      (actRes.data || []).forEach((a: any) => {
+        if (a.task_id && !cn[a.task_id] && a.new_value) cn[a.task_id] = a.new_value;
+      });
+      setCompletionNotes(cn);
       const dm: Record<string, string> = {};
       (deptRes.data || []).forEach((d: any) => { dm[d.id] = d.name; });
       setDepts(dm);
@@ -84,6 +91,7 @@ export default function PrintCase() {
       setLoading(false);
     })();
   }, [id]);
+
 
   const progress = useMemo(() => {
     if (!tasks.length) return { done: 0, total: 0, pct: 0 };
