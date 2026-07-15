@@ -435,6 +435,12 @@ export default function ProjectDetail() {
                 <FolderOpen className="h-3.5 w-3.5" />Dateiablage
               </Button>
             </Link>
+            <Link to={`/print/project/${project.id}`}>
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                <Printer className="h-3.5 w-3.5" />Drucken
+              </Button>
+            </Link>
+
           </div>
         </div>
 
