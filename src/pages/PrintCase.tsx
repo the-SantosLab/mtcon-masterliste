@@ -268,8 +268,9 @@ export default function PrintCase() {
                     <span style={{ fontWeight: 600 }}>Abschlussnotiz:</span> {completionNotes[t.id]}
                   </div>
                 )}
-
+              </div>
               <div className="task-meta text-right">
+
                 {chili(t.urgency)}
                 {t.status && <div>{t.status}</div>}
               </div>
