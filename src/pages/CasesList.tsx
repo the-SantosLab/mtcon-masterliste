@@ -77,6 +77,12 @@ export default function CasesList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [projects, setProjects] = useState<{ id: string; project_number: string; name: string }[]>([]);
   const [completeId, setCompleteId] = useState<string | null>(null);
+  const [expandedSubtasks, setExpandedSubtasks] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) => setExpandedSubtasks(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const fetchCases = async () => {
     const { data } = await supabase
