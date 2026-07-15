@@ -46,6 +46,7 @@ interface TaskRow {
   sort_order: number | null;
   required_outputs: any;
   completed_outputs: any;
+  archived_at: string | null;
 }
 
 export default function PrintCase() {
