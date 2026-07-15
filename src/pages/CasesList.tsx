@@ -455,10 +455,23 @@ export default function CasesList() {
                 <tr><td colSpan={10} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Laden</td></tr>
               ) : sorted.length === 0 ? (
                 <tr><td colSpan={10} className={cn(cellCls, 'py-8 text-center text-muted-foreground')}>Keine Vorgänge gefunden</td></tr>
-              ) : sorted.map(c => (
-                <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((c as any).urgency, (c as any).status))}>
+              ) : sorted.map(c => {
+                const isExpanded = expandedSubtasks.has(c.id);
+                return (
+                <Fragment key={c.id}>
+                <tr className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((c as any).urgency, (c as any).status))}>
                   <td className={cellCls}>
                     <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleExpand(c.id); }}
+                        className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        title={isExpanded ? 'Unteraufgaben ausblenden' : 'Unteraufgaben einblenden'}
+                        aria-label={isExpanded ? 'Unteraufgaben ausblenden' : 'Unteraufgaben einblenden'}
+                        aria-expanded={isExpanded}
+                      >
+                        {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                      </button>
                       <UrgencyDot status={c.status} dueAt={c.due_at} />
                       {STATUS_LABELS[c.status]}
                     </span>
@@ -528,7 +541,19 @@ export default function CasesList() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                {isExpanded && (
+                  <tr className="bg-muted/20">
+                    <td colSpan={10} className="px-4 py-2 border-t border-border/50">
+                      <div className="pl-6">
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Unteraufgaben</div>
+                        <CaseSubtasksPreview caseId={c.id} variant="list" />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
