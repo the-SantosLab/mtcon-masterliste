@@ -264,10 +264,36 @@ export default function PrintCase() {
           ))}
         </div>
 
-        {c.closure_summary && (
+        {(c.closure_summary || (Array.isArray(c.closure_outputs) && c.closure_outputs.length > 0) || c.closed_at) && (
           <div className="print-section mb-2">
             <h2>Abschluss</h2>
-            <div className="card sub" style={{ whiteSpace: 'pre-wrap' }}>{c.closure_summary}</div>
+            {c.closed_at && (
+              <div className="sub" style={{ marginBottom: 4 }}>
+                Abgeschlossen am {fmtDateTime(c.closed_at)}{c.closed_by ? ` durch ${userLabel(c.closed_by)}` : ''}
+              </div>
+            )}
+            {c.closure_summary && (
+              <div className="card sub" style={{ whiteSpace: 'pre-wrap', marginBottom: 6 }}>{c.closure_summary}</div>
+            )}
+            {Array.isArray(c.closure_outputs) && c.closure_outputs.length > 0 && (
+              <div className="card sub">
+                <div style={{ fontWeight: 600, marginBottom: 3 }}>Ergebnisse ({c.closure_outputs.length})</div>
+                {c.closure_outputs.map((o: any, i: number) => (
+                  <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', padding: '2px 0' }}>
+                    <span className="check-box check-done"><Check className="h-2.5 w-2.5" strokeWidth={3} /></span>
+                    <div style={{ flex: 1 }}>
+                      <div>{o.label}</div>
+                      {(o.completed_at || o.completed_by) && (
+                        <div className="task-meta">
+                          {o.completed_at ? fmtDate(o.completed_at) : ''}
+                          {o.completed_by ? `${o.completed_at ? ' · ' : ''}${userLabel(o.completed_by)}` : ''}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
