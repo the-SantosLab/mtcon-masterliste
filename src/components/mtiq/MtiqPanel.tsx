@@ -149,6 +149,8 @@ export function MtiqPanel({ open, onClose }: Props) {
           ? '0 24px 60px -20px rgba(15,23,42,0.25)'
           : '0 24px 60px -20px rgba(0,0,0,0.7)',
         zIndex: 9998,
+        pointerEvents: 'auto',
+
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
