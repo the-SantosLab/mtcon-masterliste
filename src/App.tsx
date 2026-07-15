@@ -26,6 +26,8 @@ const CasesList = lazy(() => import("./pages/CasesList"));
 const CasesKanban = lazy(() => import("./pages/CasesKanban"));
 const PrintMyTasks = lazy(() => import("./pages/PrintMyTasks"));
 const PrintCase = lazy(() => import("./pages/PrintCase"));
+const PrintProject = lazy(() => import("./pages/PrintProject"));
+
 const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMasterData = lazy(() => import("./pages/AdminMasterData"));
