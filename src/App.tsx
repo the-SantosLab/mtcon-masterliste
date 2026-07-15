@@ -211,6 +211,8 @@ function AuthenticatedApp() {
           <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
           <Route path="/print/my-tasks" element={<ProtectedRoute><PrintMyTasks /></ProtectedRoute>} />
           <Route path="/print/case/:id" element={<ProtectedRoute><PrintCase /></ProtectedRoute>} />
+          <Route path="/print/project/:id" element={<ProtectedRoute><PrintProject /></ProtectedRoute>} />
+
           <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
           <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
           <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
