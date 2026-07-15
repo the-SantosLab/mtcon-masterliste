@@ -263,7 +263,12 @@ export default function PrintCase() {
                   {t.completed_at ? ` · Erledigt ${fmtDate(t.completed_at)}` : ''}
                   {t.archived_at ? ` · Archiviert ${fmtDate(t.archived_at)}` : ''}
                 </div>
-              </div>
+                {completionNotes[t.id] && (
+                  <div className="task-meta" style={{ whiteSpace: 'pre-wrap', marginTop: 3, padding: '3pt 5pt', border: '1px solid #ddd', borderRadius: 3, background: '#fafafa' }}>
+                    <span style={{ fontWeight: 600 }}>Abschlussnotiz:</span> {completionNotes[t.id]}
+                  </div>
+                )}
+
               <div className="task-meta text-right">
                 {chili(t.urgency)}
                 {t.status && <div>{t.status}</div>}
