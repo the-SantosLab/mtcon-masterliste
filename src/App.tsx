@@ -26,6 +26,8 @@ const CasesList = lazy(() => import("./pages/CasesList"));
 const CasesKanban = lazy(() => import("./pages/CasesKanban"));
 const PrintMyTasks = lazy(() => import("./pages/PrintMyTasks"));
 const PrintCase = lazy(() => import("./pages/PrintCase"));
+const PrintProject = lazy(() => import("./pages/PrintProject"));
+
 const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMasterData = lazy(() => import("./pages/AdminMasterData"));
@@ -209,6 +211,8 @@ function AuthenticatedApp() {
           <Route path="/cases/kanban" element={<ProtectedRoute><CasesKanban /></ProtectedRoute>} />
           <Route path="/print/my-tasks" element={<ProtectedRoute><PrintMyTasks /></ProtectedRoute>} />
           <Route path="/print/case/:id" element={<ProtectedRoute><PrintCase /></ProtectedRoute>} />
+          <Route path="/print/project/:id" element={<ProtectedRoute><PrintProject /></ProtectedRoute>} />
+
           <Route path="/cases/:id" element={<ProtectedRoute><CaseDetail /></ProtectedRoute>} />
           <Route path="/projects" element={<ProtectedRoute><ProjectsList /></ProtectedRoute>} />
           <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />

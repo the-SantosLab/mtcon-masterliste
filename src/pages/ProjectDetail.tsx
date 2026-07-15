@@ -15,8 +15,9 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
   CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
-  Pencil, Check, X, Clock, Activity, Plus,
+  Pencil, Check, X, Clock, Activity, Plus, Printer,
 } from 'lucide-react';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateCaseForm } from '@/components/CreateCaseForm';
 import { cn } from '@/lib/utils';
@@ -434,6 +435,12 @@ export default function ProjectDetail() {
                 <FolderOpen className="h-3.5 w-3.5" />Dateiablage
               </Button>
             </Link>
+            <Link to={`/print/project/${project.id}`}>
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                <Printer className="h-3.5 w-3.5" />Drucken
+              </Button>
+            </Link>
+
           </div>
         </div>
 
