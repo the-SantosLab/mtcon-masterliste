@@ -191,12 +191,35 @@ function CaseKanbanCardInner({ c, onOpen, isDragging, departmentName, selectable
           </span>
         )}
         {c.assignee_short_code && (
-          <span className="inline-flex items-center gap-0.5 ml-auto">
+          <span className="inline-flex items-center gap-0.5">
             <UserIcon className="h-2.5 w-2.5" />
             {c.assignee_short_code}
           </span>
         )}
+        {c.subtasks_total > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowSubtasks(v => !v); }}
+            className={cn(
+              'ml-auto inline-flex items-center gap-0.5 rounded px-1 py-0.5 border border-transparent hover:border-border hover:bg-muted/60 transition-colors',
+              showSubtasks && 'border-border bg-muted/60 text-foreground',
+            )}
+            title={showSubtasks ? 'Unteraufgaben ausblenden' : 'Unteraufgaben einblenden'}
+            aria-expanded={showSubtasks}
+          >
+            <ListTree className="h-2.5 w-2.5" />
+            {showSubtasks ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
+          </button>
+        )}
       </div>
+      {showSubtasks && c.subtasks_total > 0 && (
+        <div
+          className="mt-2 pt-2 border-t border-border/60"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <CaseSubtasksPreview caseId={c.id} variant="card" />
+        </div>
+      )}
     </div>
   );
 }
