@@ -63,7 +63,7 @@ export default function PrintCase() {
     (async () => {
       const [caseRes, taskRes, noteRes, deptRes, userRes] = await Promise.all([
         (supabase as any).from('cases').select('*').eq('id', id).maybeSingle(),
-        supabase.from('case_tasks').select('*').eq('case_id', id).is('archived_at', null).order('sort_order', { ascending: true }),
+        supabase.from('case_tasks').select('*').eq('case_id', id).order('archived_at', { ascending: true, nullsFirst: true }).order('sort_order', { ascending: true }),
         supabase.from('case_notes').select('id, body, author_id, created_at, pinned').eq('case_id', id).order('pinned', { ascending: false }).order('created_at', { ascending: false }),
         supabase.from('departments').select('id, name'),
         supabase.from('users_profile').select('id, display_name, short_code'),
