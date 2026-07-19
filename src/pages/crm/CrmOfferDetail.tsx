@@ -12,6 +12,7 @@ import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, File
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { generateOfferPdf } from '@/lib/crm-pdf';
+import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
