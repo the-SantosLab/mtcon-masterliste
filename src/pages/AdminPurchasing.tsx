@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
 import { Plus, Trash2, Package, Truck, ClipboardList, LayoutList } from 'lucide-react';
+import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { toast } from 'sonner';
 
 type Supplier = { id: string; code: string; name: string; contact_name: string | null; email: string | null; is_active: boolean };
@@ -681,6 +682,7 @@ function PODetailDialog({ po, onClose, onChanged }: { po: PO | null; onClose: ()
           {po.notes && <div className="text-sm text-muted-foreground"><span className="text-xs uppercase tracking-wide">Notizen:</span> {po.notes}</div>}
         </div>
         <DialogFooter>
+          <ErpDocPdfButton type="bestellung" id={po.id} label="Bestellung als PDF" />
           {po.status !== 'cancelled' && po.status !== 'received' && (
             <Button variant="destructive" onClick={cancelPO}>Stornieren</Button>
           )}

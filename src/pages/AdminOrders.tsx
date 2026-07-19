@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrderFulfillment } from "@/components/OrderFulfillment";
+import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { PartnerPicker } from "@/components/PartnerPicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -534,6 +535,7 @@ export default function AdminOrders() {
           )}
 
           <DialogFooter>
+            {selected && <ErpDocPdfButton type="ab" id={selected.id} label="Auftragsbestätigung" />}
             <Button variant="outline" onClick={() => setSelected(null)}>
               Abbrechen
             </Button>
