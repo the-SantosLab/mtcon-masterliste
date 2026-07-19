@@ -12,6 +12,7 @@ import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, File
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { generateOfferPdf } from '@/lib/crm-pdf';
+import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -213,7 +214,8 @@ export default function CrmOfferDetail() {
           <span className="px-2.5 py-1 rounded text-[11px] font-semibold uppercase text-white" style={{ background: STATUS_COLOR[offer.status] }}>
             {STATUS_LABEL[offer.status]}
           </span>
-          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={exportPdf}><FileDown className="h-3.5 w-3.5" /> PDF</Button>
+          <ErpDocPdfButton type="angebot" id={id!} />
+          <Button size="sm" variant="ghost" className="h-8 text-xs gap-1.5" onClick={exportPdf} title="Alte einfache Version"><FileDown className="h-3.5 w-3.5" /></Button>
           <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={createShareLink}><Link2 className="h-3.5 w-3.5" /> Freigabe-Link</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

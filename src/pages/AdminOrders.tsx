@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrderFulfillment } from "@/components/OrderFulfillment";
+import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { PartnerPicker } from "@/components/PartnerPicker";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -244,18 +245,19 @@ export default function AdminOrders() {
                   <th className="text-right p-3 font-medium">Summe</th>
                   <th className="text-left p-3 font-medium">Quelle</th>
                   <th className="text-left p-3 font-medium">Erstellt</th>
+                  <th className="p-3 w-12"></th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-6 text-center text-muted-foreground">
                       Lade…
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-6 text-center text-muted-foreground">
                       Keine Bestellungen
                     </td>
                   </tr>
@@ -286,6 +288,9 @@ export default function AdminOrders() {
                       </td>
                       <td className="p-3 text-xs text-muted-foreground">
                         {format(new Date(o.created_at), "dd.MM.yyyy HH:mm")}
+                      </td>
+                      <td className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
+                        <ErpDocPdfButton type="ab" id={o.id} iconOnly variant="ghost" />
                       </td>
                     </tr>
                   ))
@@ -534,6 +539,7 @@ export default function AdminOrders() {
           )}
 
           <DialogFooter>
+            {selected && <ErpDocPdfButton type="ab" id={selected.id} label="Auftragsbestätigung" />}
             <Button variant="outline" onClick={() => setSelected(null)}>
               Abbrechen
             </Button>

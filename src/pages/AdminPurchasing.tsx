@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
 import { Plus, Trash2, Package, Truck, ClipboardList, LayoutList } from 'lucide-react';
+import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { toast } from 'sonner';
 
 type Supplier = { id: string; code: string; name: string; contact_name: string | null; email: string | null; is_active: boolean };
@@ -120,6 +121,7 @@ export default function AdminPurchasing() {
                     <th className="text-left px-3 py-2">AB / Wunsch</th>
                     <th className="text-left px-3 py-2">Erwartet</th>
                     <th className="text-left px-3 py-2">Vorgang</th>
+                    <th className="px-3 py-2 w-12"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -143,10 +145,11 @@ export default function AdminPurchasing() {
                       <td className="px-3 py-2 text-muted-foreground">{p.confirmed_delivery_date ?? '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground">{p.expected_at ?? '–'}</td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{p.cases?.case_number ?? p.cases?.case_no ?? '–'}</td>
+                      <td className="px-1 py-1 text-right" onClick={(e) => e.stopPropagation()}><ErpDocPdfButton type="bestellung" id={p.id} iconOnly variant="ghost" /></td>
                     </tr>
                   );})}
                   {pos.length === 0 && (
-                    <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
+                    <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -681,6 +684,7 @@ function PODetailDialog({ po, onClose, onChanged }: { po: PO | null; onClose: ()
           {po.notes && <div className="text-sm text-muted-foreground"><span className="text-xs uppercase tracking-wide">Notizen:</span> {po.notes}</div>}
         </div>
         <DialogFooter>
+          <ErpDocPdfButton type="bestellung" id={po.id} label="Bestellung als PDF" />
           {po.status !== 'cancelled' && po.status !== 'received' && (
             <Button variant="destructive" onClick={cancelPO}>Stornieren</Button>
           )}

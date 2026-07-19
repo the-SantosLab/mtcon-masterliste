@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Receipt, Plus, Trash2, Download } from "lucide-react";
 import { generateInvoicePdf } from "@/lib/document-pdf";
+import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosInvoicesTab } from "@/components/IssosInvoicesTab";
 
@@ -192,6 +193,7 @@ export default function AdminInvoices() {
                       <th className="text-left p-3 font-medium">Fällig</th>
                       <th className="text-right p-3 font-medium">Summe</th>
                       <th className="text-right p-3 font-medium">Bezahlt</th>
+                      <th className="p-3 w-12"></th>
                     </tr>
                     <tr className="border-t border-border/40">
                       {([
@@ -213,11 +215,12 @@ export default function AdminInvoices() {
                       ))}
                       <th />
                       <th />
+                      <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {loading ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
-                    : filtered.length===0 ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Keine Rechnungen</td></tr>
+                    {loading ? <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
+                    : filtered.length===0 ? <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Keine Rechnungen</td></tr>
                     : filtered.map(r => (
                       <tr key={r.id} onClick={() => open(r)} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer">
                         <td className="p-3 font-mono text-xs">{r.invoice_no}</td>
@@ -227,6 +230,7 @@ export default function AdminInvoices() {
                         <td className="p-3">{r.due_date || '—'}</td>
                         <td className="p-3 text-right tabular-nums">{r.total_amount != null ? `${Number(r.total_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${r.currency}` : '—'}</td>
                         <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.paid_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })}</td>
+                        <td className="p-1 text-right" onClick={(e) => e.stopPropagation()}><ErpDocPdfButton type="rechnung" id={r.id} iconOnly variant="ghost" /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -303,7 +307,8 @@ export default function AdminInvoices() {
               </div>
             )}
             <DialogFooter>
-              {items.length > 0 && <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>}
+              {items.length > 0 && sel && <ErpDocPdfButton type="rechnung" id={sel.id} label="PDF (MTCON)" />}
+              {items.length > 0 && <Button variant="ghost" size="sm" onClick={downloadPdf} title="Einfache Version"><Download className="h-4 w-4" /></Button>}
               {sel?.status !== 'paid' && sel?.status !== 'cancelled' && <Button variant="default" onClick={markPaid}>Als bezahlt</Button>}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
               <Button onClick={save}>Speichern</Button>

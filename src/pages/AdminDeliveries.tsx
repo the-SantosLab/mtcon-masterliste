@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Truck, Plus, Trash2, Download, Receipt } from "lucide-react";
 import { generateDeliveryPdf } from "@/lib/document-pdf";
+import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosDeliveriesTab } from "@/components/IssosDeliveriesTab";
@@ -251,11 +252,12 @@ export default function AdminDeliveries() {
                 <th className="text-left p-3 font-medium">Versand</th>
                 <th className="text-left p-3 font-medium">Tracking</th>
                 <th className="text-left p-3 font-medium">Erstellt</th>
+                <th className="p-3 w-12"></th>
               </tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
-                : filtered.length === 0 ? <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">Keine Lieferscheine</td></tr>
+              {loading ? <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Lade…</td></tr>
+                : filtered.length === 0 ? <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Keine Lieferscheine</td></tr>
                 : filtered.map(d => (
                   <tr key={d.id} onClick={() => open(d)} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer">
                     <td className="p-3 font-mono text-xs">{d.delivery_no}</td>
@@ -265,6 +267,7 @@ export default function AdminDeliveries() {
                     <td className="p-3">{d.delivery_date || '—'}</td>
                     <td className="p-3 text-xs">{d.tracking_no || '—'}</td>
                     <td className="p-3 text-xs text-muted-foreground">{format(new Date(d.created_at), 'dd.MM.yyyy')}</td>
+                    <td className="p-1 text-right" onClick={(e) => e.stopPropagation()}><ErpDocPdfButton type="lieferschein" id={d.id} iconOnly variant="ghost" /></td>
                   </tr>
                 ))}
             </tbody>
@@ -334,8 +337,12 @@ export default function AdminDeliveries() {
               </div>
             )}
             <DialogFooter>
-              {items.length > 0 && (
-                <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>
+              {items.length > 0 && sel && (
+                <>
+                  <ErpDocPdfButton type="lieferschein" id={sel.id} label="Lieferschein" />
+                  <ErpDocPdfButton type="ruecklieferschein" id={sel.id} label="Rücklieferung" variant="ghost" />
+                  <Button variant="ghost" size="sm" onClick={downloadPdf} title="Einfache Version"><Download className="h-4 w-4" /></Button>
+                </>
               )}
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>
