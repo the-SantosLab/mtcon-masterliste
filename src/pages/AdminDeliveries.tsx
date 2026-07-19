@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Truck, Plus, Trash2, Download, Receipt } from "lucide-react";
 import { generateDeliveryPdf } from "@/lib/document-pdf";
+import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosDeliveriesTab } from "@/components/IssosDeliveriesTab";
@@ -334,8 +335,12 @@ export default function AdminDeliveries() {
               </div>
             )}
             <DialogFooter>
-              {items.length > 0 && (
-                <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>
+              {items.length > 0 && sel && (
+                <>
+                  <ErpDocPdfButton type="lieferschein" id={sel.id} label="Lieferschein" />
+                  <ErpDocPdfButton type="ruecklieferschein" id={sel.id} label="Rücklieferung" variant="ghost" />
+                  <Button variant="ghost" size="sm" onClick={downloadPdf} title="Einfache Version"><Download className="h-4 w-4" /></Button>
+                </>
               )}
               {sel?.status === 'draft' && items.length > 0 && (
                 <Button variant="default" onClick={ship}>Versenden &amp; ausbuchen</Button>

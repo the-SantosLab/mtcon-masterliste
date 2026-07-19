@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Receipt, Plus, Trash2, Download } from "lucide-react";
 import { generateInvoicePdf } from "@/lib/document-pdf";
+import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosInvoicesTab } from "@/components/IssosInvoicesTab";
 
@@ -303,7 +304,8 @@ export default function AdminInvoices() {
               </div>
             )}
             <DialogFooter>
-              {items.length > 0 && <Button variant="outline" onClick={downloadPdf}><Download className="h-4 w-4 mr-1" /> PDF</Button>}
+              {items.length > 0 && sel && <ErpDocPdfButton type="rechnung" id={sel.id} label="PDF (MTCON)" />}
+              {items.length > 0 && <Button variant="ghost" size="sm" onClick={downloadPdf} title="Einfache Version"><Download className="h-4 w-4" /></Button>}
               {sel?.status !== 'paid' && sel?.status !== 'cancelled' && <Button variant="default" onClick={markPaid}>Als bezahlt</Button>}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
               <Button onClick={save}>Speichern</Button>
