@@ -148,7 +148,7 @@ async function loadRechnung(id: string) {
   });
 }
 
-export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
+export async function buildErpPdf(type: ErpDocType, id: string) {
   let doc;
   switch (type) {
     case 'angebot': doc = await loadAngebot(id); break;
@@ -158,6 +158,12 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
     case 'ruecklieferschein': doc = await loadLieferschein(id, true); break;
     case 'rechnung': doc = await loadRechnung(id); break;
   }
+  return doc!;
+}
+
+export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
+  const doc = await buildErpPdf(type, id);
   const url = doc.output('bloburl');
   window.open(url as any, '_blank');
 }
+
