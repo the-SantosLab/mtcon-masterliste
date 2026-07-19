@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, Loader2 } from 'lucide-react';
+import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { formatEUR } from '@/lib/crm';
 import { toast } from 'sonner';
 
@@ -109,13 +110,14 @@ export default function CrmOffers() {
               <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Status</th>
               <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Erstellt</th>
               <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider">Gültig bis</th>
+              <th className="px-3 py-2.5 font-medium text-[10px] uppercase tracking-wider text-right w-16">PDF</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="py-10 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></td></tr>
+              <tr><td colSpan={8} className="py-10 text-center"><Loader2 className="h-4 w-4 animate-spin inline" /></td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">Keine Angebote.</td></tr>
+              <tr><td colSpan={8} className="py-10 text-center text-muted-foreground">Keine Angebote.</td></tr>
             ) : filtered.map(r => (
               <tr key={r.id} className="border-t border-border/30 cursor-pointer" onClick={() => nav(`/crm/offers/${r.id}`)}>
                 <td className="px-3 py-2.5 tabular-nums text-foreground font-medium">{r.offer_no}{r.version > 1 ? ` v${r.version}` : ''}</td>
@@ -129,6 +131,7 @@ export default function CrmOffers() {
                 </td>
                 <td className="px-3 py-2.5 text-muted-foreground">{new Date(r.created_at).toLocaleDateString('de-DE')}</td>
                 <td className="px-3 py-2.5 text-muted-foreground">{r.valid_until ? new Date(r.valid_until).toLocaleDateString('de-DE') : '–'}</td>
+                <td className="px-3 py-1 text-right" onClick={(e) => e.stopPropagation()}><ErpDocPdfButton type="angebot" id={r.id} iconOnly variant="ghost" /></td>
               </tr>
             ))}
           </tbody>
