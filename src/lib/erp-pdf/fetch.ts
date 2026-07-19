@@ -148,7 +148,12 @@ async function loadRechnung(id: string) {
   });
 }
 
-export async function buildErpPdf(type: ErpDocType, id: string) {
+export async function buildErpPdf(
+  type: ErpDocType,
+  id: string,
+  report?: (phase: string, progress: number) => void,
+) {
+  report?.('Daten laden', 0.15);
   let doc;
   switch (type) {
     case 'angebot': doc = await loadAngebot(id); break;
@@ -158,6 +163,7 @@ export async function buildErpPdf(type: ErpDocType, id: string) {
     case 'ruecklieferschein': doc = await loadLieferschein(id, true); break;
     case 'rechnung': doc = await loadRechnung(id); break;
   }
+  report?.('Rendern', 0.8);
   return doc!;
 }
 
@@ -166,4 +172,5 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   const url = doc.output('bloburl');
   window.open(url as any, '_blank');
 }
+
 
