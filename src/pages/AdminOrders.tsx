@@ -245,18 +245,19 @@ export default function AdminOrders() {
                   <th className="text-right p-3 font-medium">Summe</th>
                   <th className="text-left p-3 font-medium">Quelle</th>
                   <th className="text-left p-3 font-medium">Erstellt</th>
+                  <th className="p-3 w-12"></th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-6 text-center text-muted-foreground">
                       Lade…
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-6 text-center text-muted-foreground">
                       Keine Bestellungen
                     </td>
                   </tr>
@@ -287,6 +288,9 @@ export default function AdminOrders() {
                       </td>
                       <td className="p-3 text-xs text-muted-foreground">
                         {format(new Date(o.created_at), "dd.MM.yyyy HH:mm")}
+                      </td>
+                      <td className="p-1 text-right" onClick={(e) => e.stopPropagation()}>
+                        <ErpDocPdfButton type="ab" id={o.id} iconOnly variant="ghost" />
                       </td>
                     </tr>
                   ))

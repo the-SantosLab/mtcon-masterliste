@@ -121,6 +121,7 @@ export default function AdminPurchasing() {
                     <th className="text-left px-3 py-2">AB / Wunsch</th>
                     <th className="text-left px-3 py-2">Erwartet</th>
                     <th className="text-left px-3 py-2">Vorgang</th>
+                    <th className="px-3 py-2 w-12"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -144,10 +145,11 @@ export default function AdminPurchasing() {
                       <td className="px-3 py-2 text-muted-foreground">{p.confirmed_delivery_date ?? '–'}</td>
                       <td className="px-3 py-2 text-muted-foreground">{p.expected_at ?? '–'}</td>
                       <td className="px-3 py-2 text-xs text-muted-foreground">{p.cases?.case_number ?? p.cases?.case_no ?? '–'}</td>
+                      <td className="px-1 py-1 text-right" onClick={(e) => e.stopPropagation()}><ErpDocPdfButton type="bestellung" id={p.id} iconOnly variant="ghost" /></td>
                     </tr>
                   );})}
                   {pos.length === 0 && (
-                    <tr><td colSpan={8} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
+                    <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground text-xs">Keine Bestellungen.</td></tr>
                   )}
                 </tbody>
               </table>
