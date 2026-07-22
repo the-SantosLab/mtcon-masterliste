@@ -58,7 +58,7 @@ export default function CrmOfferDetail() {
     const [{ data: its }, { data: pr }, { data: co }, { data: ct }, { data: pl }, { data: vs }] = await Promise.all([
       supabase.from('offer_items').select('*').eq('offer_id', id).order('sort_order'),
       supabase.from('products').select('id, code, name').order('name'),
-      supabase.from('companies').select('id, name').order('name'),
+      supabase.from('companies').select('id, name').order('name').limit(5000),
       supabase.from('contacts').select('id, first_name, last_name, company_id').order('last_name'),
       supabase.from('price_list_items').select('*').eq('is_active', true),
       supabase.from('offers').select('id, offer_no, version, status, created_at').or(`id.eq.${id},parent_offer_id.eq.${id},parent_offer_id.eq.${o.parent_offer_id ?? id}`).order('version'),
