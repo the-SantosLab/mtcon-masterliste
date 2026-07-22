@@ -150,7 +150,7 @@ export default function CrmOfferDetail() {
     const { data: existing } = await supabase.from('orders').select('id, order_no').eq('external_order_no', offer.offer_no).maybeSingle();
     if (existing) {
       toast.info(`Auftrag ${existing.order_no} existiert bereits`, {
-        action: { label: 'Öffnen', onClick: () => nav(`/admin/orders?open=${existing.id}`) },
+        action: { label: 'Öffnen', onClick: () => nav(`/orders?open=${existing.id}`) },
       });
       return;
     }
@@ -197,7 +197,7 @@ export default function CrmOfferDetail() {
     }
 
     toast.success(`Auftrag ${newOrder!.order_no} angelegt`, {
-      action: { label: 'Öffnen', onClick: () => nav(`/admin/orders?open=${newOrder!.id}`) },
+      action: { label: 'Öffnen', onClick: () => nav(`/orders?open=${newOrder!.id}`) },
     });
   };
 
