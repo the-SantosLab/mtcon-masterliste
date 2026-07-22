@@ -189,6 +189,7 @@ const erpItems = [
   { href: '/admin/lots', label: 'Chargen', icon: Package },
   { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock },
   { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
+  { href: '/orders', label: 'Aufträge', icon: ClipboardList },
   { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart },
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
@@ -222,7 +223,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     location.pathname.startsWith('/notes')
   );
   const [erpOpen, setErpOpen] = useState(
-    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/ki-artikel', '/admin/articles'].some(p => location.pathname.startsWith(p))
+    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/orders', '/bestellungen', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/ki-artikel', '/admin/articles'].some(p => location.pathname.startsWith(p))
   );
   const [systemOpen, setSystemOpen] = useState(
     ['/support', '/docs', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
