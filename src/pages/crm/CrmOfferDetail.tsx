@@ -240,10 +240,30 @@ export default function CrmOfferDetail() {
         <div className="grid md:grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Unternehmen</Label>
-            <Select value={offer.company_id ?? ''} onValueChange={v => setOffer({ ...offer, company_id: v })}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen…" /></SelectTrigger>
-              <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+            <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                  <span className="truncate">{companies.find(c => c.id === offer.company_id)?.name ?? 'Wählen…'}</span>
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50 shrink-0" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                <Command>
+                  <CommandInput placeholder="Unternehmen suchen…" className="h-8 text-xs" />
+                  <CommandList className="max-h-72">
+                    <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Unternehmen gefunden.</CommandEmpty>
+                    <CommandGroup>
+                      {companies.map(c => (
+                        <CommandItem key={c.id} value={c.name} onSelect={() => { setOffer({ ...offer, company_id: c.id }); setCompanyPickerOpen(false); }} className="text-xs">
+                          <Check className={cn('mr-2 h-3.5 w-3.5', offer.company_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                          <span className="truncate">{c.name}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Ansprechpartner</Label>
