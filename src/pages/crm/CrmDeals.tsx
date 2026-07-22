@@ -32,6 +32,24 @@ export default function CrmDeals() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ title: '', company_id: '', value_estimated: '', notes: '' });
+  const [newCompanyOpen, setNewCompanyOpen] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState('');
+  const [creatingCompany, setCreatingCompany] = useState(false);
+
+  const createCompany = async () => {
+    const name = newCompanyName.trim();
+    if (!name) { toast.error('Name erforderlich'); return; }
+    setCreatingCompany(true);
+    const { data, error } = await supabase.from('companies').insert({ name }).select('id, name').single();
+    setCreatingCompany(false);
+    if (error) { toast.error(error.message); return; }
+    if (data) {
+      setCompanies(prev => [...prev, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+      setForm(f => ({ ...f, company_id: data.id }));
+      toast.success('Unternehmen angelegt');
+      setNewCompanyOpen(false);
+    }
+  };
 
   useEffect(() => { void load(); }, []);
 
