@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, ChevronsUpDown, Check, FileDown, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
+import { fetchAllCompanies } from '@/lib/crmData';
 import { generateOfferPdf } from '@/lib/crm-pdf';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -56,10 +57,10 @@ export default function CrmOfferDetail() {
     if (!initial.primary_contact_id && o.deals?.primary_contact_id) initial.primary_contact_id = o.deals.primary_contact_id;
     setOffer(initial);
 
-    const [{ data: its }, { data: pr }, { data: co }, { data: ct }, { data: pl }, { data: vs }] = await Promise.all([
+    const [{ data: its }, { data: pr }, co, { data: ct }, { data: pl }, { data: vs }] = await Promise.all([
       supabase.from('offer_items').select('*').eq('offer_id', id).order('sort_order'),
       supabase.from('products').select('id, code, name').order('name'),
-      supabase.from('companies').select('id, name').order('name').limit(5000),
+      fetchAllCompanies(),
       supabase.from('contacts').select('id, first_name, last_name, company_id').order('last_name'),
       supabase.from('price_list_items').select('*').eq('is_active', true),
       supabase.from('offers').select('id, offer_no, version, status, created_at').or(`id.eq.${id},parent_offer_id.eq.${id},parent_offer_id.eq.${o.parent_offer_id ?? id}`).order('version'),
@@ -248,7 +249,7 @@ export default function CrmOfferDetail() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-                <Command>
+                <Command filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
                   <CommandInput placeholder="Unternehmen suchen…" className="h-8 text-xs" />
                   <CommandList className="max-h-72">
                     <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Unternehmen gefunden.</CommandEmpty>

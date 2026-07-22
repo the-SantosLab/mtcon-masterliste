@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Plus, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { formatEUR } from '@/lib/crm';
+import { fetchAllOfferDealOptions } from '@/lib/crmData';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -54,11 +55,12 @@ export default function CrmOffers() {
   };
 
   const openCreate = async () => {
-    const { data } = await supabase.from('deals')
-      .select('id, deal_no, title, company_id, companies(name)')
-      .order('created_at', { ascending: false })
-      .limit(5000);
-    setDeals(data ?? []); setDealId(''); setOpen(true);
+    try {
+      const data = await fetchAllOfferDealOptions();
+      setDeals(data); setDealId(''); setOpen(true);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   const create = async () => {
