@@ -35,6 +35,7 @@ export default function CrmOffers() {
   const [open, setOpen] = useState(false);
   const [deals, setDeals] = useState<any[]>([]);
   const [dealId, setDealId] = useState('');
+  const [dealPickerOpen, setDealPickerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => { void load(); }, []);
