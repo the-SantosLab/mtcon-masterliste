@@ -191,7 +191,7 @@ export default function CrmOfferDetail() {
     if (error) { setSaving(false); toast.error(error.message); return; }
     if (items.length) {
       await supabase.from('offer_items').insert(items.map((it, i) => ({
-        offer_id: newOffer!.id, product_id: it.product_id || null, description: it.description,
+        offer_id: newOffer!.id, product_id: it.product_id || null, art_nr: it.art_nr || null, description: it.description,
         quantity: it.quantity, unit_price: it.unit_price, discount_pct: it.discount_pct, sort_order: i,
       })));
     }
