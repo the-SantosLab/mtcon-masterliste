@@ -81,13 +81,14 @@ export default function CrmOfferDetail() {
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it));
   };
 
-  const onProductSelect = (idx: number, productId: string) => {
-    const p = products.find(x => x.id === productId);
-    const pi = priceItems.find(x => x.product_id === productId && x.customer_tier === 'standard');
+  const onArticleSelect = (idx: number, art: ArticleOption | null) => {
+    if (!art) { updateItem(idx, { art_nr: null }); return; }
+    const label = [art.art_nr, art.matchcode, art.bezeich_1].filter(Boolean).join(' · ');
     updateItem(idx, {
-      product_id: productId,
-      description: p ? `${p.code} · ${p.name}` : items[idx].description,
-      unit_price: pi ? Number(pi.price) : items[idx].unit_price,
+      art_nr: art.art_nr,
+      product_id: null,
+      description: items[idx].description ? items[idx].description : label,
+      unit_price: art.standardpreis != null ? Number(art.standardpreis) : items[idx].unit_price,
     });
   };
 
