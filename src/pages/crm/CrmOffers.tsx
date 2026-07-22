@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Plus, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { formatEUR } from '@/lib/crm';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -32,6 +35,7 @@ export default function CrmOffers() {
   const [open, setOpen] = useState(false);
   const [deals, setDeals] = useState<any[]>([]);
   const [dealId, setDealId] = useState('');
+  const [dealPickerOpen, setDealPickerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => { void load(); }, []);
@@ -50,7 +54,10 @@ export default function CrmOffers() {
   };
 
   const openCreate = async () => {
-    const { data } = await supabase.from('deals').select('id, deal_no, title, company_id, companies(name)').order('created_at', { ascending: false });
+    const { data } = await supabase.from('deals')
+      .select('id, deal_no, title, company_id, companies(name)')
+      .order('created_at', { ascending: false })
+      .limit(5000);
     setDeals(data ?? []); setDealId(''); setOpen(true);
   };
 
@@ -144,13 +151,38 @@ export default function CrmOffers() {
         <DialogContent>
           <DialogHeader><DialogTitle>Neues Angebot</DialogTitle></DialogHeader>
           <div className="space-y-2">
-            <Label className="text-xs">Deal *</Label>
-            <Select value={dealId} onValueChange={setDealId}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Deal wählen…" /></SelectTrigger>
-              <SelectContent>
-                {deals.map(d => <SelectItem key={d.id} value={d.id}>{d.deal_no} · {d.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">Deal * (nach Unternehmen oder Deal suchen)</Label>
+            <Popover open={dealPickerOpen} onOpenChange={setDealPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                  {dealId ? (() => {
+                    const d = deals.find(x => x.id === dealId);
+                    return d ? `${d.deal_no} · ${d.title}${d.companies?.name ? ` — ${d.companies.name}` : ''}` : 'Deal wählen…';
+                  })() : 'Deal wählen…'}
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                <Command filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
+                  <CommandInput placeholder="Unternehmen oder Deal suchen…" className="h-8 text-xs" />
+                  <CommandList className="max-h-72">
+                    <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Deal gefunden.</CommandEmpty>
+                    <CommandGroup>
+                      {deals.map(d => {
+                        const label = `${d.deal_no} · ${d.title}${d.companies?.name ? ` — ${d.companies.name}` : ''}`;
+                        return (
+                          <CommandItem key={d.id} value={label} onSelect={() => { setDealId(d.id); setDealPickerOpen(false); }} className="text-xs">
+                            <Check className={cn('mr-2 h-3.5 w-3.5', dealId === d.id ? 'opacity-100' : 'opacity-0')} />
+                            <span className="flex-1 truncate">{d.deal_no} · {d.title}</span>
+                            {d.companies?.name && <span className="ml-2 text-muted-foreground truncate">{d.companies.name}</span>}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="h-8 text-xs">Abbrechen</Button>
