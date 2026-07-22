@@ -211,6 +211,31 @@ export default function CrmDeals() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={newCompanyOpen} onOpenChange={setNewCompanyOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle className="text-sm">Neues Unternehmen</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Name *</Label>
+              <Input
+                value={newCompanyName}
+                onChange={e => setNewCompanyName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void createCompany(); } }}
+                autoFocus
+                placeholder="z. B. SantosLab"
+                className="h-8 text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setNewCompanyOpen(false)}>Abbrechen</Button>
+              <Button size="sm" className="h-8 text-xs" onClick={createCompany} disabled={creatingCompany}>
+                {creatingCompany ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Anlegen'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </CrmLayout>
   );
 }
