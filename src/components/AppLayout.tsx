@@ -189,6 +189,7 @@ const erpItems = [
   { href: '/admin/lots', label: 'Chargen', icon: Package },
   { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock },
   { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
+  { href: '/orders', label: 'Aufträge', icon: ClipboardList },
   { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart },
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
