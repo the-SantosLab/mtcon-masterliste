@@ -151,13 +151,38 @@ export default function CrmOffers() {
         <DialogContent>
           <DialogHeader><DialogTitle>Neues Angebot</DialogTitle></DialogHeader>
           <div className="space-y-2">
-            <Label className="text-xs">Deal *</Label>
-            <Select value={dealId} onValueChange={setDealId}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Deal wählen…" /></SelectTrigger>
-              <SelectContent>
-                {deals.map(d => <SelectItem key={d.id} value={d.id}>{d.deal_no} · {d.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">Deal * (nach Unternehmen oder Deal suchen)</Label>
+            <Popover open={dealPickerOpen} onOpenChange={setDealPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                  {dealId ? (() => {
+                    const d = deals.find(x => x.id === dealId);
+                    return d ? `${d.deal_no} · ${d.title}${d.companies?.name ? ` — ${d.companies.name}` : ''}` : 'Deal wählen…';
+                  })() : 'Deal wählen…'}
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                <Command filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
+                  <CommandInput placeholder="Unternehmen oder Deal suchen…" className="h-8 text-xs" />
+                  <CommandList className="max-h-72">
+                    <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Deal gefunden.</CommandEmpty>
+                    <CommandGroup>
+                      {deals.map(d => {
+                        const label = `${d.deal_no} · ${d.title}${d.companies?.name ? ` — ${d.companies.name}` : ''}`;
+                        return (
+                          <CommandItem key={d.id} value={label} onSelect={() => { setDealId(d.id); setDealPickerOpen(false); }} className="text-xs">
+                            <Check className={cn('mr-2 h-3.5 w-3.5', dealId === d.id ? 'opacity-100' : 'opacity-0')} />
+                            <span className="flex-1 truncate">{d.deal_no} · {d.title}</span>
+                            {d.companies?.name && <span className="ml-2 text-muted-foreground truncate">{d.companies.name}</span>}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="h-8 text-xs">Abbrechen</Button>
