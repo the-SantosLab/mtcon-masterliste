@@ -127,7 +127,18 @@ export default function CrmDeals() {
               <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Unternehmen</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Unternehmen</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={() => { setNewCompanyName(''); setNewCompanyOpen(true); }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Neues Unternehmen
+                </Button>
+              </div>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
@@ -141,7 +152,20 @@ export default function CrmDeals() {
                   <Command>
                     <CommandInput placeholder="Suchen…" className="h-8 text-xs" />
                     <CommandList>
-                      <CommandEmpty>Keine Unternehmen gefunden.</CommandEmpty>
+                      <CommandEmpty>
+                        <div className="p-2 space-y-2">
+                          <p className="text-xs text-muted-foreground">Keine Unternehmen gefunden.</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-7 text-xs"
+                            onClick={() => { setNewCompanyName(''); setNewCompanyOpen(true); }}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Neues Unternehmen anlegen
+                          </Button>
+                        </div>
+                      </CommandEmpty>
                       <CommandGroup>
                         <CommandItem value="__none__" onSelect={() => setForm(f => ({ ...f, company_id: '' }))} className="text-xs">
                           <Check className={cn('mr-2 h-3.5 w-3.5', !form.company_id ? 'opacity-100' : 'opacity-0')} />
