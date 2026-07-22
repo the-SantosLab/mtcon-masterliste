@@ -54,7 +54,10 @@ export default function CrmOffers() {
   };
 
   const openCreate = async () => {
-    const { data } = await supabase.from('deals').select('id, deal_no, title, company_id, companies(name)').order('created_at', { ascending: false });
+    const { data } = await supabase.from('deals')
+      .select('id, deal_no, title, company_id, companies(name)')
+      .order('created_at', { ascending: false })
+      .limit(5000);
     setDeals(data ?? []); setDealId(''); setOpen(true);
   };
 
