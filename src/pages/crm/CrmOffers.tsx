@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Plus, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { formatEUR } from '@/lib/crm';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const STATUS_LABEL: Record<string, string> = {
