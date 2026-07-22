@@ -22,7 +22,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface Item { id: string; product_id?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
+interface Item { id: string; product_id?: string | null; art_nr?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
 
 const STATUS_LABEL: Record<string, string> = { entwurf: 'Entwurf', versendet: 'Versendet', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt', abgelaufen: 'Abgelaufen' };
 const STATUS_COLOR: Record<string, string> = {
