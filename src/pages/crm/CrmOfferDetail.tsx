@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, FileDown, Link2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, ChevronsUpDown, Check, FileDown, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { generateOfferPdf } from '@/lib/crm-pdf';
@@ -35,6 +38,7 @@ export default function CrmOfferDetail() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [priceItems, setPriceItems] = useState<any[]>([]);
   const [versions, setVersions] = useState<any[]>([]);
+  const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -55,7 +59,7 @@ export default function CrmOfferDetail() {
     const [{ data: its }, { data: pr }, { data: co }, { data: ct }, { data: pl }, { data: vs }] = await Promise.all([
       supabase.from('offer_items').select('*').eq('offer_id', id).order('sort_order'),
       supabase.from('products').select('id, code, name').order('name'),
-      supabase.from('companies').select('id, name').order('name'),
+      supabase.from('companies').select('id, name').order('name').limit(5000),
       supabase.from('contacts').select('id, first_name, last_name, company_id').order('last_name'),
       supabase.from('price_list_items').select('*').eq('is_active', true),
       supabase.from('offers').select('id, offer_no, version, status, created_at').or(`id.eq.${id},parent_offer_id.eq.${id},parent_offer_id.eq.${o.parent_offer_id ?? id}`).order('version'),
@@ -236,10 +240,30 @@ export default function CrmOfferDetail() {
         <div className="grid md:grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Unternehmen</Label>
-            <Select value={offer.company_id ?? ''} onValueChange={v => setOffer({ ...offer, company_id: v })}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Wählen…" /></SelectTrigger>
-              <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+            <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                  <span className="truncate">{companies.find(c => c.id === offer.company_id)?.name ?? 'Wählen…'}</span>
+                  <ChevronsUpDown className="h-3.5 w-3.5 opacity-50 shrink-0" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+                <Command>
+                  <CommandInput placeholder="Unternehmen suchen…" className="h-8 text-xs" />
+                  <CommandList className="max-h-72">
+                    <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Unternehmen gefunden.</CommandEmpty>
+                    <CommandGroup>
+                      {companies.map(c => (
+                        <CommandItem key={c.id} value={c.name} onSelect={() => { setOffer({ ...offer, company_id: c.id }); setCompanyPickerOpen(false); }} className="text-xs">
+                          <Check className={cn('mr-2 h-3.5 w-3.5', offer.company_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                          <span className="truncate">{c.name}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Ansprechpartner</Label>
