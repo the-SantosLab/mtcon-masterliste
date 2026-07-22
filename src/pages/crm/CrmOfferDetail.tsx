@@ -38,6 +38,7 @@ export default function CrmOfferDetail() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [priceItems, setPriceItems] = useState<any[]>([]);
   const [versions, setVersions] = useState<any[]>([]);
+  const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
