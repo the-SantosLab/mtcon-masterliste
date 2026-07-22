@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, ChevronsUpDown, Check, FileDown, Link2 } from 'lucide-react';
+import { ArticlePicker, type ArticleOption } from '@/components/ArticlePicker';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllCompanies } from '@/lib/crmData';
