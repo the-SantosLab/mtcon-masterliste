@@ -128,10 +128,36 @@ export default function CrmDeals() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Unternehmen</Label>
-              <Select value={form.company_id} onValueChange={v => setForm(f => ({ ...f, company_id: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Auswählen…" /></SelectTrigger>
-                <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
+                    <span className="truncate">
+                      {form.company_id ? companies.find(c => c.id === form.company_id)?.name ?? 'Auswählen…' : 'Auswählen…'}
+                    </span>
+                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-50 shrink-0 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Suchen…" className="h-8 text-xs" />
+                    <CommandList>
+                      <CommandEmpty>Keine Unternehmen gefunden.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem value="__none__" onSelect={() => setForm(f => ({ ...f, company_id: '' }))} className="text-xs">
+                          <Check className={cn('mr-2 h-3.5 w-3.5', !form.company_id ? 'opacity-100' : 'opacity-0')} />
+                          — kein Unternehmen —
+                        </CommandItem>
+                        {companies.map(c => (
+                          <CommandItem key={c.id} value={c.name} onSelect={() => setForm(f => ({ ...f, company_id: c.id }))} className="text-xs">
+                            <Check className={cn('mr-2 h-3.5 w-3.5', form.company_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Geschätzter Wert (EUR)</Label>
