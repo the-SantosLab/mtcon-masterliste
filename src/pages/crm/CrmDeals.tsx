@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Plus, Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { fetchAllCompanies } from '@/lib/crmData';
 import { toast } from 'sonner';
 
 interface Deal {
@@ -56,9 +57,9 @@ export default function CrmDeals() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data }, { data: cmp }] = await Promise.all([
+    const [{ data }, cmp] = await Promise.all([
       supabase.from('deals').select('*, companies(name)').order('stage_changed_at', { ascending: false }),
-      supabase.from('companies').select('id, name').order('name').limit(5000),
+      fetchAllCompanies(),
     ]);
     setDeals((data ?? []) as any);
     setCompanies(cmp ?? []);
@@ -168,7 +169,7 @@ export default function CrmDeals() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
+                  <Command filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
                     <CommandInput placeholder="Suchen…" className="h-8 text-xs" />
                     <CommandList>
                       <CommandEmpty>
