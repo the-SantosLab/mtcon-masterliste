@@ -122,7 +122,7 @@ export default function CrmOfferDetail() {
     await supabase.from('offer_items').delete().eq('offer_id', id);
     if (items.length) {
       const { error: ie } = await supabase.from('offer_items').insert(items.map((it, i) => ({
-        offer_id: id, product_id: it.product_id || null, description: it.description,
+        offer_id: id, product_id: it.product_id || null, art_nr: it.art_nr || null, description: it.description,
         quantity: it.quantity, unit_price: it.unit_price, discount_pct: it.discount_pct, sort_order: i,
       })));
       if (ie) { setSaving(false); toast.error(ie.message); return; }
