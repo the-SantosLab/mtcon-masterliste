@@ -362,7 +362,7 @@ export default function CrmOfferDetail() {
   );
 }
 
-function SortableRow({ item, idx, products, onProductSelect, updateItem, removeItem }: any) {
+function SortableRow({ item, idx, onArticleSelect, updateItem, removeItem }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const line = item.quantity * item.unit_price * (1 - (item.discount_pct || 0) / 100);
@@ -370,10 +370,7 @@ function SortableRow({ item, idx, products, onProductSelect, updateItem, removeI
     <tr ref={setNodeRef} style={style} className="border-t border-border/40">
       <td><button {...attributes} {...listeners} className="text-muted-foreground hover:text-foreground cursor-grab"><GripVertical className="h-3.5 w-3.5" /></button></td>
       <td className="px-2 py-1">
-        <Select value={item.product_id ?? ''} onValueChange={v => onProductSelect(idx, v)}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="–" /></SelectTrigger>
-          <SelectContent>{products.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.code} · {p.name}</SelectItem>)}</SelectContent>
-        </Select>
+        <ArticlePicker value={item.art_nr ?? null} onChange={(a) => onArticleSelect(idx, a)} placeholder="–" className="h-7 text-xs" />
       </td>
       <td className="px-2 py-1"><Input value={item.description} onChange={e => updateItem(idx, { description: e.target.value })} className="h-7 text-xs" /></td>
       <td className="px-2 py-1"><Input type="number" value={item.quantity} onChange={e => updateItem(idx, { quantity: Number(e.target.value) })} className="h-7 text-xs text-right" /></td>
