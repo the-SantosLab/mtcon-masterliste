@@ -12,6 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, ChevronsUpDown, Check, FileDown, Link2 } from 'lucide-react';
+import { ArticlePicker, type ArticleOption } from '@/components/ArticlePicker';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllCompanies } from '@/lib/crmData';
@@ -21,7 +22,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface Item { id: string; product_id?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
+interface Item { id: string; product_id?: string | null; art_nr?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
 
 const STATUS_LABEL: Record<string, string> = { entwurf: 'Entwurf', versendet: 'Versendet', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt', abgelaufen: 'Abgelaufen' };
 const STATUS_COLOR: Record<string, string> = {
@@ -80,13 +81,14 @@ export default function CrmOfferDetail() {
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it));
   };
 
-  const onProductSelect = (idx: number, productId: string) => {
-    const p = products.find(x => x.id === productId);
-    const pi = priceItems.find(x => x.product_id === productId && x.customer_tier === 'standard');
+  const onArticleSelect = (idx: number, art: ArticleOption | null) => {
+    if (!art) { updateItem(idx, { art_nr: null }); return; }
+    const label = [art.art_nr, art.matchcode, art.bezeich_1].filter(Boolean).join(' · ');
     updateItem(idx, {
-      product_id: productId,
-      description: p ? `${p.code} · ${p.name}` : items[idx].description,
-      unit_price: pi ? Number(pi.price) : items[idx].unit_price,
+      art_nr: art.art_nr,
+      product_id: null,
+      description: items[idx].description ? items[idx].description : label,
+      unit_price: art.standardpreis != null ? Number(art.standardpreis) : items[idx].unit_price,
     });
   };
 
@@ -120,7 +122,7 @@ export default function CrmOfferDetail() {
     await supabase.from('offer_items').delete().eq('offer_id', id);
     if (items.length) {
       const { error: ie } = await supabase.from('offer_items').insert(items.map((it, i) => ({
-        offer_id: id, product_id: it.product_id || null, description: it.description,
+        offer_id: id, product_id: it.product_id || null, art_nr: it.art_nr || null, description: it.description,
         quantity: it.quantity, unit_price: it.unit_price, discount_pct: it.discount_pct, sort_order: i,
       })));
       if (ie) { setSaving(false); toast.error(ie.message); return; }
@@ -189,7 +191,7 @@ export default function CrmOfferDetail() {
     if (error) { setSaving(false); toast.error(error.message); return; }
     if (items.length) {
       await supabase.from('offer_items').insert(items.map((it, i) => ({
-        offer_id: newOffer!.id, product_id: it.product_id || null, description: it.description,
+        offer_id: newOffer!.id, product_id: it.product_id || null, art_nr: it.art_nr || null, description: it.description,
         quantity: it.quantity, unit_price: it.unit_price, discount_pct: it.discount_pct, sort_order: i,
       })));
     }
@@ -304,7 +306,7 @@ export default function CrmOfferDetail() {
                 <tbody>
                   {items.length === 0 && <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Keine Positionen.</td></tr>}
                   {items.map((it, idx) => (
-                    <SortableRow key={it.id} item={it} idx={idx} products={products} onProductSelect={onProductSelect} updateItem={updateItem} removeItem={removeItem} />
+                    <SortableRow key={it.id} item={it} idx={idx} onArticleSelect={onArticleSelect} updateItem={updateItem} removeItem={removeItem} />
                   ))}
                 </tbody>
               </SortableContext>
@@ -360,7 +362,7 @@ export default function CrmOfferDetail() {
   );
 }
 
-function SortableRow({ item, idx, products, onProductSelect, updateItem, removeItem }: any) {
+function SortableRow({ item, idx, onArticleSelect, updateItem, removeItem }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const line = item.quantity * item.unit_price * (1 - (item.discount_pct || 0) / 100);
@@ -368,10 +370,7 @@ function SortableRow({ item, idx, products, onProductSelect, updateItem, removeI
     <tr ref={setNodeRef} style={style} className="border-t border-border/40">
       <td><button {...attributes} {...listeners} className="text-muted-foreground hover:text-foreground cursor-grab"><GripVertical className="h-3.5 w-3.5" /></button></td>
       <td className="px-2 py-1">
-        <Select value={item.product_id ?? ''} onValueChange={v => onProductSelect(idx, v)}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="–" /></SelectTrigger>
-          <SelectContent>{products.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.code} · {p.name}</SelectItem>)}</SelectContent>
-        </Select>
+        <ArticlePicker value={item.art_nr ?? null} onChange={(a) => onArticleSelect(idx, a)} placeholder="–" className="h-7 text-xs" />
       </td>
       <td className="px-2 py-1"><Input value={item.description} onChange={e => updateItem(idx, { description: e.target.value })} className="h-7 text-xs" /></td>
       <td className="px-2 py-1"><Input type="number" value={item.quantity} onChange={e => updateItem(idx, { quantity: Number(e.target.value) })} className="h-7 text-xs text-right" /></td>
