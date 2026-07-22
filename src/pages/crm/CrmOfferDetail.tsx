@@ -248,7 +248,7 @@ export default function CrmOfferDetail() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-                <Command>
+                <Command filter={(value, search) => value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0}>
                   <CommandInput placeholder="Unternehmen suchen…" className="h-8 text-xs" />
                   <CommandList className="max-h-72">
                     <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Unternehmen gefunden.</CommandEmpty>
