@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { STAGES, StageKey, stageColor, formatEUR, daysSince } from '@/lib/crm';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +33,24 @@ export default function CrmDeals() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ title: '', company_id: '', value_estimated: '', notes: '' });
+  const [newCompanyOpen, setNewCompanyOpen] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState('');
+  const [creatingCompany, setCreatingCompany] = useState(false);
+
+  const createCompany = async () => {
+    const name = newCompanyName.trim();
+    if (!name) { toast.error('Name erforderlich'); return; }
+    setCreatingCompany(true);
+    const { data, error } = await supabase.from('companies').insert({ name }).select('id, name').single();
+    setCreatingCompany(false);
+    if (error) { toast.error(error.message); return; }
+    if (data) {
+      setCompanies(prev => [...prev, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+      setForm(f => ({ ...f, company_id: data.id }));
+      toast.success('Unternehmen angelegt');
+      setNewCompanyOpen(false);
+    }
+  };
 
   useEffect(() => { void load(); }, []);
 
@@ -127,7 +146,18 @@ export default function CrmDeals() {
               <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Unternehmen</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Unternehmen</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={() => { setNewCompanyName(''); setNewCompanyOpen(true); }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Neues Unternehmen
+                </Button>
+              </div>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
@@ -141,7 +171,20 @@ export default function CrmDeals() {
                   <Command>
                     <CommandInput placeholder="Suchen…" className="h-8 text-xs" />
                     <CommandList>
-                      <CommandEmpty>Keine Unternehmen gefunden.</CommandEmpty>
+                      <CommandEmpty>
+                        <div className="p-2 space-y-2">
+                          <p className="text-xs text-muted-foreground">Keine Unternehmen gefunden.</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full h-7 text-xs"
+                            onClick={() => { setNewCompanyName(''); setNewCompanyOpen(true); }}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Neues Unternehmen anlegen
+                          </Button>
+                        </div>
+                      </CommandEmpty>
                       <CommandGroup>
                         <CommandItem value="__none__" onSelect={() => setForm(f => ({ ...f, company_id: '' }))} className="text-xs">
                           <Check className={cn('mr-2 h-3.5 w-3.5', !form.company_id ? 'opacity-100' : 'opacity-0')} />
@@ -169,6 +212,31 @@ export default function CrmDeals() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={newCompanyOpen} onOpenChange={setNewCompanyOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle className="text-sm">Neues Unternehmen</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Name *</Label>
+              <Input
+                value={newCompanyName}
+                onChange={e => setNewCompanyName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void createCompany(); } }}
+                autoFocus
+                placeholder="z. B. SantosLab"
+                className="h-8 text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setNewCompanyOpen(false)}>Abbrechen</Button>
+              <Button size="sm" className="h-8 text-xs" onClick={createCompany} disabled={creatingCompany}>
+                {creatingCompany ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Anlegen'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </CrmLayout>
   );
 }
