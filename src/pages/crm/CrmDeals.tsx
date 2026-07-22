@@ -39,7 +39,7 @@ export default function CrmDeals() {
     setLoading(true);
     const [{ data }, { data: cmp }] = await Promise.all([
       supabase.from('deals').select('*, companies(name)').order('stage_changed_at', { ascending: false }),
-      supabase.from('companies').select('id, name').order('name'),
+      supabase.from('companies').select('id, name').order('name').limit(5000),
     ]);
     setDeals((data ?? []) as any);
     setCompanies(cmp ?? []);
