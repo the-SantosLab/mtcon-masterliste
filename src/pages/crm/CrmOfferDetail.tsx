@@ -138,8 +138,69 @@ export default function CrmOfferDetail() {
     const { error } = await supabase.from('offers').update(patch).eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Status: ${STATUS_LABEL[status]}`);
+
+    if (status === 'angenommen') {
+      await createOrderFromOffer();
+    }
     void load();
   };
+
+  const createOrderFromOffer = async () => {
+    // Idempotenz: gibt es bereits einen Auftrag mit gleicher externer Nr. (offer_no)?
+    const { data: existing } = await supabase.from('orders').select('id, order_no').eq('external_order_no', offer.offer_no).maybeSingle();
+    if (existing) {
+      toast.info(`Auftrag ${existing.order_no} existiert bereits`, {
+        action: { label: 'Öffnen', onClick: () => nav(`/admin/orders?open=${existing.id}`) },
+      });
+      return;
+    }
+    const company = companies.find(c => c.id === offer.company_id);
+    const contact = contacts.find(c => c.id === offer.primary_contact_id);
+    const { data: u } = await supabase.auth.getUser();
+    const net = items.reduce((s, it) => s + it.quantity * it.unit_price * (1 - (it.discount_pct || 0) / 100), 0);
+    const { data: newOrder, error: oe } = await supabase.from('orders').insert({
+      status: 'active',
+      source: 'offer',
+      order_kind: 'new',
+      company_id: offer.company_id || null,
+      customer_name: company?.name || null,
+      customer_email: contact ? (contact as any).email || null : null,
+      external_order_no: offer.offer_no,
+      order_date: new Date().toISOString().slice(0, 10),
+      payment_terms: offer.payment_terms || null,
+      currency: 'EUR',
+      subtotal_amount: Number(net.toFixed(2)),
+      tax_amount: Number((net * 0.19).toFixed(2)),
+      total_amount: Number((net * 1.19).toFixed(2)),
+      notes: offer.notes || null,
+      created_by: u.user?.id ?? null,
+    }).select('id, order_no').single();
+    if (oe) { toast.error(`Auftrag: ${oe.message}`); return; }
+
+    if (items.length) {
+      const { error: ie } = await supabase.from('order_items').insert(items.map((it, i) => ({
+        order_id: newOrder!.id,
+        position: i + 1,
+        art_nr: it.art_nr || null,
+        sku: it.art_nr || null,
+        description: it.description,
+        quantity: it.quantity,
+        unit_price: it.unit_price,
+        line_total: Number((it.quantity * it.unit_price * (1 - (it.discount_pct || 0) / 100)).toFixed(2)),
+        tax_rate: 19,
+      })));
+      if (ie) toast.error(`Positionen: ${ie.message}`);
+    }
+
+    if (offer.deal_id) {
+      await supabase.from('deals').update({ stage: 'won', won_at: new Date().toISOString() }).eq('id', offer.deal_id);
+    }
+
+    toast.success(`Auftrag ${newOrder!.order_no} angelegt`, {
+      action: { label: 'Öffnen', onClick: () => nav(`/admin/orders?open=${newOrder!.id}`) },
+    });
+  };
+
 
   const exportPdf = () => {
     const company = companies.find(c => c.id === offer.company_id);
