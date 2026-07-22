@@ -306,7 +306,7 @@ export default function CrmOfferDetail() {
                 <tbody>
                   {items.length === 0 && <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Keine Positionen.</td></tr>}
                   {items.map((it, idx) => (
-                    <SortableRow key={it.id} item={it} idx={idx} products={products} onProductSelect={onProductSelect} updateItem={updateItem} removeItem={removeItem} />
+                    <SortableRow key={it.id} item={it} idx={idx} onArticleSelect={onArticleSelect} updateItem={updateItem} removeItem={removeItem} />
                   ))}
                 </tbody>
               </SortableContext>
