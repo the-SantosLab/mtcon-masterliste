@@ -86,7 +86,7 @@ export function MtiqAsk() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Frag MTIQ…"
+          placeholder="Nachricht an MTIQ… (Text einfügen, Frage stellen, umschreiben lassen)"
           rows={1}
           className="flex-1 resize-none px-3 py-2 text-[13px] outline-none"
           style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 12, color: '#e0e0e0', maxHeight: 96, minHeight: 36, fontFamily: '"DM Sans", system-ui, sans-serif' }}
