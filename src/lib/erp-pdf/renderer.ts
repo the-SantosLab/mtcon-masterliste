@@ -6,12 +6,15 @@ import autoTable from 'jspdf-autotable';
 
 export const PAGE = { W: 210, H: 297, ML: 20, MR: 20, MT: 14, MB: 14 } as const;
 export const COLORS = {
-  power2pcbRed: [176, 30, 45] as [number, number, number],
-  mtconGreen: [90, 155, 60] as [number, number, number],
-  mtconPink: [220, 55, 130] as [number, number, number],
+  power2pcbGray: [88, 89, 91] as [number, number, number],   // "POWER" / "PCB"
+  power2pcbGold: [232, 178, 20] as [number, number, number], // "2"
+  mtconDark: [45, 45, 48] as [number, number, number],       // MTCON text
+  mtconOrange: [235, 168, 20] as [number, number, number],   // Speech-bubble dot
+  accentRed: [200, 30, 30] as [number, number, number],      // Currency notice + factoring
   ink: [30, 30, 30] as [number, number, number],
   mute: [110, 110, 110] as [number, number, number],
   rule: [180, 180, 180] as [number, number, number],
+  shade: [232, 232, 232] as [number, number, number],
 };
 
 export type L = 'de' | 'en';
