@@ -227,7 +227,7 @@ export function buildLieferscheinPdf(d: LieferscheinData): jsPDF {
 // -------- Rechnung DE / EN --------
 export interface RechnungData {
   invoiceNo: string; date: string; dueDate?: string | null;
-  party: Party; contact: ContactInfo; items: LineItem[]; currency: string;
+  party: Party; contact: ContactInfo; items: (LineItem & { deliveryNo?: string; deliveryDate?: string })[]; currency: string;
   subtotal: number; tax: number; total: number; taxRate?: number;
   paymentTerms?: string; language?: L; factoringNote?: boolean;
 }
@@ -242,46 +242,67 @@ export function buildRechnungPdf(d: RechnungData): jsPDF {
   );
 
   const totals = [
-    { label: isEN ? 'Net amount' : 'Nettobetrag', value: fmt.currency(d.subtotal, d.currency) },
-    { label: `${isEN ? 'VAT' : 'MwSt'} ${(d.taxRate ?? (d.currency === 'USD' ? 0 : 19)).toFixed(2).replace('.', ',')}%`, value: fmt.currency(d.tax, d.currency) },
     { label: isEN ? 'Total amount' : 'Gesamtbetrag', value: fmt.currency(d.total, d.currency), bold: true },
   ];
+  // Für EUR-Rechnungen zusätzlich Netto + MwSt
+  if (d.currency !== 'USD') {
+    totals.unshift({ label: `MwSt ${(d.taxRate ?? 19).toFixed(2).replace('.', ',')}%`, value: fmt.currency(d.tax, d.currency), bold: false });
+    totals.unshift({ label: 'Nettobetrag', value: fmt.currency(d.subtotal, d.currency), bold: false });
+  }
+
   const conds: { label: string; value: string }[] = [];
   if (d.paymentTerms) conds.push({ label: isEN ? 'Payment term' : 'Zahlung', value: d.paymentTerms });
   if (d.dueDate) conds.push({ label: isEN ? 'Due date' : 'Fällig am', value: fmt.date(d.dueDate, lang) });
+
+  const unitWord = isEN ? 'Pcs' : 'Stk';
+  const perUnit = (u?: string | null) => u || '1000';
 
   return renderDocument({
     meta,
     table: {
       head: [
         isEN ? 'DN no' : 'LS-Nr',
-        isEN ? 'Article No' : 'Art.-Nr.',
-        isEN ? 'Description' : 'Bezeichnung',
+        isEN ? 'Article No' : 'Art.-Nr. / Bezeichnung',
         isEN ? 'Qty' : 'Menge',
         isEN ? 'Price' : 'Preis',
         isEN ? 'Item value' : 'Positionswert',
       ],
-      body: d.items.map(it => [
-        it.pos ?? '',
-        it.artNr ?? '',
-        it.description + (it.extraLines?.length ? '\n' + it.extraLines.join('\n') : ''),
-        it.quantity != null ? `${fmt.qty(it.quantity)}${it.unit ? ' ' + it.unit : ''}` : '',
-        it.price != null ? `${fmt.currency(it.price, d.currency)} / ${it.unit || '1000'}` : '',
-        it.positionValue != null ? fmt.currency(it.positionValue, d.currency) : '',
-      ]),
+      body: d.items.map(it => {
+        const dnCell = it.deliveryNo
+          ? `${it.deliveryNo}${it.deliveryDate ? `\n${isEN ? 'from' : 'vom'} ${fmt.date(it.deliveryDate, lang)}` : ''}`
+          : '';
+        const descLines: string[] = [];
+        if (it.artNr) descLines.push(it.artNr);
+        if (it.description) descLines.push(it.description);
+        for (const ex of it.extraLines || []) descLines.push(ex);
+        return [
+          dnCell,
+          descLines.join('\n'),
+          it.quantity != null ? `${fmt.qty(it.quantity)} ${unitWord}` : '',
+          it.price != null ? `${fmt.currency(it.price, d.currency)} / ${perUnit(it.unit)}` : '',
+          it.positionValue != null ? fmt.currency(it.positionValue, d.currency) : '',
+        ];
+      }),
       columnStyles: {
-        0: { cellWidth: 18 }, 1: { cellWidth: 26 },
-        3: { cellWidth: 22, halign: 'right' }, 4: { cellWidth: 30, halign: 'right' },
-        5: { cellWidth: 28, halign: 'right' },
+        0: { cellWidth: 26 },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 28, halign: 'right' },
+        3: { cellWidth: 34, halign: 'right' },
+        4: { cellWidth: 28, halign: 'right' },
       },
+      hideTableRowStripes: true,
       totals,
+      currencyNotice: d.currency === 'USD' ? (isEN ? 'Currency in USD / US$' : 'Währung in USD / US$') : undefined,
       conditions: conds,
-      footNote: d.factoringNote
-        ? (isEN
-          ? 'Under a factoring agreement, our receivables have been transferred to SüdFactoring GmbH, Pariser Platz 7, 70173 Stuttgart, Germany. Payment with debt-discharging effect can only be made to their account: BW-Bank, IBAN: DE42 6005 0101 7482 0107 83, BIC: SOLADEST600.'
-          : 'Unsere Forderungen sind im Rahmen eines Factoring-Vertrages an die SüdFactoring GmbH, Pariser Platz 7, 70173 Stuttgart abgetreten. Zahlung mit schuldbefreiender Wirkung kann nur auf deren Konto erfolgen: BW-Bank, IBAN: DE42 6005 0101 7482 0107 83, BIC: SOLADEST600.')
-        : undefined,
-      closing: isEN ? 'Best regards' : 'Mit freundlichen Grüßen',
+      redBoldBlock: d.factoringNote ? (isEN
+        ? 'Under a factoring agreement, our receivables have been transferred to SüdFactoring GmbH, Pariser Platz 7, 70173 Stuttgart, Germany. Payment with debt-discharging effect can only be made to their account:\n\nName: Baden-Württembergische Bank\nIBAN: DE42 6005 0101 7482 0107 83\nBIC: SOLADEST600\n\nWhen making the transfer, please state the customer number and the complete invoice number without spaces or special characters, separated by a comma, in the reference field. If there are more than 5 invoice numbers, please send a notification to debitoren@suedfactoring.de.\n\nThe data protection information of SüdFactoring GmbH can be found at https://www.suedfactoring.de/Datenschutz/.'
+        : 'Unsere Forderungen sind im Rahmen eines Factoring-Vertrages an die SüdFactoring GmbH, Pariser Platz 7, 70173 Stuttgart abgetreten. Zahlung mit schuldbefreiender Wirkung kann nur auf deren Konto erfolgen:\n\nName: Baden-Württembergische Bank\nIBAN: DE42 6005 0101 7482 0107 83\nBIC: SOLADEST600\n\nBitte geben Sie bei der Überweisung die Kunden-Nr. und die vollständige Rechnungs-Nr. ohne Leer- und Sonderzeichen, durch Komma getrennt, im Verwendungszweck an. Bei mehr als 5 Rechnungsnummern senden Sie bitte eine Avisierung an debitoren@suedfactoring.de.\n\nDie Datenschutzinformationen der SüdFactoring GmbH finden Sie unter https://www.suedfactoring.de/Datenschutz/.'
+      ) : undefined,
+      trailingLines: d.factoringNote ? (isEN
+        ? ['Complaints can only be considered within the following 8 days.', 'Delivery according to our general terms and conditions of trade:\nsee www.mtcon.eu/en/power2pcb/gcs/', 'Best regards\nMTCONNECTIVITY power2pcb GmbH']
+        : ['Reklamationen können nur innerhalb der folgenden 8 Tage berücksichtigt werden.', 'Lieferung gemäß unseren allgemeinen Verkaufsbedingungen:\nsiehe www.mtcon.eu/power2pcb/avb/', 'Mit freundlichen Grüßen\nMTCONNECTIVITY power2pcb GmbH']
+      ) : undefined,
+      closing: d.factoringNote ? undefined : (isEN ? 'Best regards' : 'Mit freundlichen Grüßen'),
     },
   });
 }
