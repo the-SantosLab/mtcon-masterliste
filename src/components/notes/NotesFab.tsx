@@ -19,7 +19,7 @@ export function NotesFab() {
       onClick={() => navigate('/notes')}
       title="Notizen öffnen"
       className={cn(
-        'fixed bottom-5 right-5 z-[60] h-12 w-12 rounded-full',
+        'fixed bottom-24 right-5 z-[60] h-12 w-12 rounded-full',
         'bg-primary text-primary-foreground shadow-lg hover:shadow-xl',
         'flex items-center justify-center transition-all hover:scale-105'
       )}
