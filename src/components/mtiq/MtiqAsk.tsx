@@ -48,7 +48,7 @@ export function MtiqAsk() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 py-1.5" style={{ borderBottom: '1px solid #1a1a1a' }}>
-        <div className="text-[11px]" style={{ color: '#666' }}>Freie Fragen zu Vorgängen, Projekten, Kennzahlen. Nur lesend.</div>
+        <div className="text-[11px]" style={{ color: '#666' }}>Chat mit MTIQ. Texte umschreiben, formulieren, zusammenfassen — oder Fragen zu Vorgängen, Projekten, Kennzahlen.</div>
         <button onClick={reset} className="flex items-center gap-1 text-[10px] px-2 py-1 rounded hover:bg-white/5" style={{ color: '#666' }} title="Sitzung leeren">
           <RefreshCw className="h-3 w-3" /> Neu
         </button>
@@ -57,8 +57,8 @@ export function MtiqAsk() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5">
         {messages.length === 0 && !sending && (
           <div className="text-center text-[12px] mt-8 space-y-2" style={{ color: '#666' }}>
-            <div>Frag MTIQ.</div>
-            <div className="text-[11px]">z. B. „Wie viele offene Vorgänge hat die Fertigung?", „Alle überfälligen Vorgänge von Kunde XY", „Vergleiche Auslastung nach Abteilung."</div>
+            <div>Chat mit MTIQ.</div>
+            <div className="text-[11px]">Text einfügen zum Umschreiben, Formulierungen anfordern, Zusammenfassungen erstellen — oder Fragen zu Vorgängen, Projekten und Kennzahlen stellen.</div>
           </div>
         )}
         {messages.map((m, i) => (
@@ -86,7 +86,7 @@ export function MtiqAsk() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-          placeholder="Frag MTIQ…"
+          placeholder="Nachricht an MTIQ… (Text einfügen, Frage stellen, umschreiben lassen)"
           rows={1}
           className="flex-1 resize-none px-3 py-2 text-[13px] outline-none"
           style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 12, color: '#e0e0e0', maxHeight: 96, minHeight: 36, fontFamily: '"DM Sans", system-ui, sans-serif' }}

@@ -109,8 +109,8 @@ export function MtiqPanel({ open, onClose }: Props) {
   if (!open) return null;
 
   const tabs: [Mode, string][] = vorgangId
-    ? [['current', 'Vorgang'], ['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte'], ['dupes', 'Duplikate']]
-    : [['ask', 'Fragen'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte'], ['dupes', 'Duplikate']];
+    ? [['current', 'Vorgang'], ['ask', 'Chat'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte'], ['dupes', 'Duplikate']]
+    : [['ask', 'Chat'], ['list', 'Alle'], ['drafts', 'Entwürfe'], ['new', 'Neu'], ['scan', 'Scan'], ['card', 'Visitenkarte'], ['dupes', 'Duplikate']];
 
   const subline = mode === 'current'
     ? '· aktueller Vorgang'
@@ -125,7 +125,7 @@ export function MtiqPanel({ open, onClose }: Props) {
             : mode === 'drafts'
               ? '· offene Entwürfe'
               : mode === 'ask'
-                ? '· freie Fragen'
+                ? '· Chat'
                 : '· alle Vorgänge';
 
 
