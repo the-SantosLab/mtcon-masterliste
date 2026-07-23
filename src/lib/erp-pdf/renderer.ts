@@ -41,11 +41,12 @@ export interface FooterBlock {
 
 export const DEFAULT_FOOTER: FooterBlock = {
   companyLine:
-    'MTCONNECTIVITY power2pcb GmbH \\ Rathausgässle 5 \\ 74676 Niedernhall \\ Telefon: +49 7940 989998-0',
+    'MTCONNECTIVITY power2pcb GmbH  \\  Rathausgässle 5  \\  74676 Niedernhall  \\  Telefon: +49 7940 989998-0',
   legalLine:
-    'Fax: +49 7940 989998-9 \\ info@mtcon.eu \\ www.mtcon.eu\nGeschäftsführer: Mario Tolj \\ Gerichtsstand Stuttgart \\ HRB 737643 \\ Erfüllungsort Niedernhall \\ USt-IdNr. DE277204235',
-  bankLine: 'BW-Bank Stuttgart \\ IBAN: DE92 6005 0101 0002 3397 86 \\ BIC: SOLADEST600',
+    'Fax: +49 7940 989998-9  \\  info@mtcon.eu  \\  www.mtcon.eu\nGeschäftsführer: Mario Tolj  \\  Gerichtsstand Stuttgart  \\  HRB 737643  \\  Erfüllungsort Niedernhall  \\  USt-IdNr. DE277204235',
+  bankLine: 'BW-Bank Stuttgart  \\  IBAN: DE92 6005 0101 0002 3397 86  \\  BIC: SOLADEST600',
 };
+
 
 // -------- Brand marks (vektorisiert, kein Bild-Asset nötig) --------
 function drawBrandMark(doc: jsPDF) {
