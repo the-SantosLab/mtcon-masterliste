@@ -258,7 +258,11 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
 
   return (
     <Dialog modal={false} open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent
+        className="max-w-lg"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold flex items-center gap-2">
             <Bug className="h-4 w-4 text-primary" />
