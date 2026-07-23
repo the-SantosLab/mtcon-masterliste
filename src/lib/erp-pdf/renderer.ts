@@ -6,12 +6,15 @@ import autoTable from 'jspdf-autotable';
 
 export const PAGE = { W: 210, H: 297, ML: 20, MR: 20, MT: 14, MB: 14 } as const;
 export const COLORS = {
-  power2pcbRed: [176, 30, 45] as [number, number, number],
-  mtconGreen: [90, 155, 60] as [number, number, number],
-  mtconPink: [220, 55, 130] as [number, number, number],
+  power2pcbGray: [88, 89, 91] as [number, number, number],   // "POWER" / "PCB"
+  power2pcbGold: [232, 178, 20] as [number, number, number], // "2"
+  mtconDark: [45, 45, 48] as [number, number, number],       // MTCON text
+  mtconOrange: [235, 168, 20] as [number, number, number],   // Speech-bubble dot
+  accentRed: [200, 30, 30] as [number, number, number],      // Currency notice + factoring
   ink: [30, 30, 30] as [number, number, number],
   mute: [110, 110, 110] as [number, number, number],
   rule: [180, 180, 180] as [number, number, number],
+  shade: [232, 232, 232] as [number, number, number],
 };
 
 export type L = 'de' | 'en';
@@ -38,32 +41,57 @@ export interface FooterBlock {
 
 export const DEFAULT_FOOTER: FooterBlock = {
   companyLine:
-    'MTCONNECTIVITY power2pcb GmbH \\ Rathausgässle 5 \\ 74676 Niedernhall \\ Telefon: +49 7940 989998-0',
+    'MTCONNECTIVITY power2pcb GmbH  \\  Rathausgässle 5  \\  74676 Niedernhall  \\  Telefon: +49 7940 989998-0',
   legalLine:
-    'Fax: +49 7940 989998-9 \\ info@mtcon.eu \\ www.mtcon.eu\nGeschäftsführer: Mario Tolj \\ Gerichtsstand Stuttgart \\ HRB 737643 \\ Erfüllungsort Niedernhall \\ USt-IdNr. DE277204235',
-  bankLine: 'BW-Bank Stuttgart \\ IBAN: DE92 6005 0101 0002 3397 86 \\ BIC: SOLADEST600',
+    'Fax: +49 7940 989998-9  \\  info@mtcon.eu  \\  www.mtcon.eu\nGeschäftsführer: Mario Tolj  \\  Gerichtsstand Stuttgart  \\  HRB 737643  \\  Erfüllungsort Niedernhall  \\  USt-IdNr. DE277204235',
+  bankLine: 'BW-Bank Stuttgart  \\  IBAN: DE92 6005 0101 0002 3397 86  \\  BIC: SOLADEST600',
 };
+
 
 // -------- Brand marks (vektorisiert, kein Bild-Asset nötig) --------
 function drawBrandMark(doc: jsPDF) {
-  // POWER2PCB in rot, oben rechts
+  // POWER2PCB links: "POWER" grau, "2" gold, "PCB" grau
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(...COLORS.power2pcbRed);
-  doc.text('POWER2PCB', PAGE.W - PAGE.MR, 22, { align: 'right' });
+  doc.setFontSize(24);
+  const yLogo = 30;
+  doc.setTextColor(...COLORS.power2pcbGray);
+  doc.text('POWER', PAGE.ML, yLogo);
+  const wPower = doc.getTextWidth('POWER');
+  doc.setTextColor(...COLORS.power2pcbGold);
+  doc.text('2', PAGE.ML + wPower + 0.5, yLogo);
+  const w2 = doc.getTextWidth('2');
+  doc.setTextColor(...COLORS.power2pcbGray);
+  doc.text('PCB', PAGE.ML + wPower + w2 + 1, yLogo);
 
-  // MTCON – zweifarbig (MTCON grün + power2pcb-Zusatz)
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.mtconGreen);
-  doc.text('MTCONNECTIVITY', PAGE.W - PAGE.MR, 27, { align: 'right' });
-  doc.setTextColor(...COLORS.mtconPink);
-  doc.text('power2pcb', PAGE.W - PAGE.MR - 28, 27, { align: 'right' });
+  // MTCON Wortmarke rechts oben (Sprechblase + gestapeltes MTCON / NECT / IVITY)
+  const bubbleCx = PAGE.W - PAGE.MR - 3;
+  const bubbleCy = 16;
+  const r = 5.5;
+  doc.setFillColor(...COLORS.mtconDark);
+  doc.circle(bubbleCx, bubbleCy, r, 'F');
+  // "Tail" der Sprechblase (kleines Dreieck unten links)
+  doc.triangle(
+    bubbleCx - r + 1.5, bubbleCy + 3,
+    bubbleCx - r - 1, bubbleCy + 5.5,
+    bubbleCx - r + 3, bubbleCy + 5,
+    'F',
+  );
+  // Gold dot inside bubble
+  doc.setFillColor(...COLORS.mtconOrange);
+  doc.circle(bubbleCx - 1, bubbleCy, 1.6, 'F');
 
-  // Reset
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...COLORS.mtconDark);
+  const textX = bubbleCx - r - 2;
+  doc.text('MTCON', textX, bubbleCy - 1, { align: 'right' });
+  doc.text('NECT', textX, bubbleCy + 3.5, { align: 'right' });
+  doc.text('IVITY', textX, bubbleCy + 8, { align: 'right' });
+
   doc.setTextColor(...COLORS.ink);
 }
 
-function drawSenderLine(doc: jsPDF, senderLine: string, y = 38) {
+function drawSenderLine(doc: jsPDF, senderLine: string, y = 48) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(...COLORS.mute);
@@ -75,13 +103,13 @@ function drawSenderLine(doc: jsPDF, senderLine: string, y = 38) {
   doc.setTextColor(...COLORS.ink);
 }
 
-function drawRecipient(doc: jsPDF, lines: string[], y = 46) {
+function drawRecipient(doc: jsPDF, lines: string[], y = 54) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(...COLORS.ink);
   for (const l of lines.filter(Boolean)) {
     doc.text(l, PAGE.ML, y);
-    y += 4.5;
+    y += 4.8;
   }
   return y;
 }
@@ -89,59 +117,62 @@ function drawRecipient(doc: jsPDF, lines: string[], y = 46) {
 function drawMetaBox(
   doc: jsPDF,
   meta: HeaderMeta,
-  y = 46,
+  y = 48,
 ) {
   const rightX = PAGE.W - PAGE.MR;
-  const labelX = rightX - 55;
+  const boxX = rightX - 85;
+  const boxW = 85;
 
+  // Grau hinterlegte Titelzeile
+  doc.setFillColor(...COLORS.shade);
+  doc.rect(boxX, y - 4, boxW, 6, 'F');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text(`${meta.docTitle} ${meta.docNo}`, rightX, y - 2, { align: 'right' });
+  doc.setFontSize(12);
+  doc.setTextColor(...COLORS.ink);
+  doc.text(`${meta.docTitle} ${meta.docNo}`, boxX + 2, y);
 
-  doc.setFontSize(8.5);
-  let py = y + 6;
+  const labelX = boxX + 2;
+  const valueX = boxX + 30;
+  doc.setFontSize(9);
+  let py = y + 8;
   for (const r of meta.metaRows) {
     doc.setFont('helvetica', 'bold');
     doc.text(r.label, labelX, py);
     doc.setFont('helvetica', 'normal');
-    doc.text(r.value ?? '', rightX, py, { align: 'right' });
-    py += 4;
+    doc.text(r.value ?? '', valueX, py);
+    py += 4.5;
   }
   return py;
 }
 
-function drawDateAndPage(doc: jsPDF, meta: HeaderMeta, pageNo: number, pageCount: number) {
+function drawDateAndPage(doc: jsPDF, meta: HeaderMeta, pageNo: number, pageCount: number, y = 88) {
   const rightX = PAGE.W - PAGE.MR;
-  const y = 82;
+  const boxX = rightX - 85;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.text(`${meta.dateLabel}`, PAGE.ML, y);
+  doc.text(meta.dateLabel, boxX + 2, y);
   doc.setFont('helvetica', 'normal');
-  doc.text(meta.date, PAGE.ML + 18, y);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.text(meta.date, boxX + 30, y);
   doc.text(`${meta.pageLabel} ${pageNo} ${meta.pageOfWord} ${pageCount}`, rightX, y, { align: 'right' });
 }
 
-// Fuß: nur auf Seite 1 (wie Muster)
+// Fuß: rechtsbündig auf jeder Seite (wie Muster)
 function drawFooter(doc: jsPDF, footer: FooterBlock) {
-  const y = PAGE.H - 22;
-  doc.setDrawColor(...COLORS.rule);
-  doc.setLineWidth(0.2);
-  doc.line(PAGE.ML, y - 4, PAGE.W - PAGE.MR, y - 4);
+  const rightX = PAGE.W - PAGE.MR;
+  const y = PAGE.H - 18;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
   doc.setTextColor(...COLORS.mute);
   let py = y;
   const write = (t: string) => {
-    t.split('\n').forEach(line => { doc.text(line, PAGE.ML, py); py += 3; });
+    t.split('\n').forEach(line => { doc.text(line, rightX, py, { align: 'right' }); py += 3.2; });
   };
   write(footer.companyLine);
   write(footer.legalLine);
   write(footer.bankLine);
   doc.setTextColor(...COLORS.ink);
 }
+
 
 export interface RenderTableOpts {
   startY?: number;
@@ -153,6 +184,10 @@ export interface RenderTableOpts {
   conditions?: { label: string; value: string }[];
   legend?: string;                        // R=Rahmen A=Abruf ...
   closing?: string;                       // "Mit freundlichen Grüßen"
+  currencyNotice?: string;                // z.B. "Currency in USD / US$" (rot links)
+  redBoldBlock?: string;                  // Factoring-Text (fett rot, eigene Seite)
+  trailingLines?: string[];               // Zeilen unter dem redBoldBlock (Reklamation etc.)
+  hideTableRowStripes?: boolean;
 }
 
 export interface RenderDocInput {
@@ -165,9 +200,6 @@ export function renderDocument(input: RenderDocInput): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const footer = input.footer ?? DEFAULT_FOOTER;
 
-  // Wir zeichnen Kopf auf JEDER Seite (Ausnahme: kleiner Rahmen unter Kopf für Empfänger nur Seite 1)
-  // autoTable didDrawPage übernimmt das Zeichnen ab Seite 2.
-
   const paintHeaderFull = () => {
     drawBrandMark(doc);
     drawSenderLine(doc, input.meta.senderLine);
@@ -176,49 +208,53 @@ export function renderDocument(input: RenderDocInput): jsPDF {
   };
   const paintHeaderCompact = () => {
     drawBrandMark(doc);
+    const rightX = PAGE.W - PAGE.MR;
+    const boxX = rightX - 85;
+    doc.setFillColor(...COLORS.shade);
+    doc.rect(boxX, 44, 85, 6, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text(`${input.meta.docTitle} ${input.meta.docNo}`, PAGE.MR, 36);
+    doc.setTextColor(...COLORS.ink);
+    doc.text(`${input.meta.docTitle} ${input.meta.docNo}`, boxX + 2, 48);
   };
 
   paintHeaderFull();
   if (input.meta.intro) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text(input.meta.intro, PAGE.ML, 76, { maxWidth: PAGE.W - PAGE.ML - PAGE.MR });
+    doc.text(input.meta.intro, PAGE.ML, 96, { maxWidth: PAGE.W - PAGE.ML - PAGE.MR });
   }
 
-  const startY = input.table.startY ?? 92;
+  const startY = input.table.startY ?? (input.meta.intro ? 102 : 96);
 
   autoTable(doc, {
     startY,
     head: [input.table.head],
     body: input.table.body,
-    styles: { fontSize: 8, cellPadding: 1.5, textColor: COLORS.ink, lineColor: COLORS.rule, lineWidth: 0.1 },
-    headStyles: { fillColor: [245, 245, 245], textColor: COLORS.ink, fontStyle: 'bold', lineColor: COLORS.rule, lineWidth: 0.1 },
-    alternateRowStyles: { fillColor: [252, 252, 252] },
+    styles: { fontSize: 8.5, cellPadding: 1.5, textColor: COLORS.ink, lineColor: [255, 255, 255], lineWidth: 0, valign: 'top' },
+    headStyles: { fillColor: [245, 245, 245], textColor: COLORS.ink, fontStyle: 'bold', lineColor: COLORS.rule, lineWidth: 0.1, halign: 'left' },
+    alternateRowStyles: input.table.hideTableRowStripes ? { fillColor: [255, 255, 255] } : { fillColor: [252, 252, 252] },
     columnStyles: input.table.columnStyles || {},
-    margin: { left: PAGE.ML, right: PAGE.MR, top: 44, bottom: 30 },
+    margin: { left: PAGE.ML, right: PAGE.MR, top: 54, bottom: 30 },
     showHead: 'everyPage',
     didDrawPage: (data) => {
       if (data.pageNumber > 1) {
         paintHeaderCompact();
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.text(input.meta.dateLabel, PAGE.ML, 44);
-        doc.setFont('helvetica', 'normal');
-        doc.text(input.meta.date, PAGE.ML + 18, 44);
       }
     },
   });
 
-  let y = (doc as any).lastAutoTable.finalY + 6;
+  let y = (doc as any).lastAutoTable.finalY + 4;
 
-  // Totals rechtsbündig
+  // Trennlinie über Totals
   if (input.table.totals?.length) {
+    doc.setDrawColor(...COLORS.rule);
+    doc.setLineWidth(0.2);
+    doc.line(PAGE.ML, y, PAGE.W - PAGE.MR, y);
+    y += 4;
     const rightX = PAGE.W - PAGE.MR;
-    const labelX = rightX - 55;
-    doc.setFontSize(9);
+    const labelX = rightX - 60;
+    doc.setFontSize(10);
     for (const t of input.table.totals) {
       doc.setFont('helvetica', t.bold ? 'bold' : 'normal');
       doc.text(t.label, labelX, y);
@@ -229,7 +265,15 @@ export function renderDocument(input: RenderDocInput): jsPDF {
     y += 4;
   }
 
-  // Konditionen
+  if (input.table.currencyNotice) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORS.accentRed);
+    doc.text(input.table.currencyNotice, PAGE.ML, y);
+    doc.setTextColor(...COLORS.ink);
+    y += 6;
+  }
+
   if (input.table.conditions?.length) {
     doc.setFontSize(9);
     for (const c of input.table.conditions) {
@@ -260,7 +304,33 @@ export function renderDocument(input: RenderDocInput): jsPDF {
     y += 4 * (Array.isArray(lines) ? lines.length : 1);
   }
 
-  if (input.table.closing) {
+  // Zweite Seite: Factoring-Text (fett rot) + trailingLines
+  if (input.table.redBoldBlock) {
+    doc.addPage();
+    paintHeaderCompact();
+    // Datumzeile
+    drawDateAndPage(doc, input.meta, 0, 0, 60); // wird unten neu gesetzt
+    let py = 74;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...COLORS.accentRed);
+    const paragraphs = input.table.redBoldBlock.split('\n\n');
+    for (const p of paragraphs) {
+      const lines = doc.splitTextToSize(p, PAGE.W - PAGE.ML - PAGE.MR);
+      doc.text(lines, PAGE.ML, py);
+      py += 4.5 * (Array.isArray(lines) ? lines.length : 1) + 3;
+    }
+    doc.setTextColor(...COLORS.ink);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    py += 4;
+    for (const line of input.table.trailingLines || []) {
+      const wrapped = doc.splitTextToSize(line, PAGE.W - PAGE.ML - PAGE.MR);
+      doc.text(wrapped, PAGE.ML, py);
+      py += 4.5 * (Array.isArray(wrapped) ? wrapped.length : 1) + 2;
+    }
+    y = py;
+  } else if (input.table.closing) {
     y = Math.max(y, PAGE.H - 40);
     doc.setFontSize(9);
     doc.text(input.table.closing, PAGE.ML, y);
@@ -268,16 +338,17 @@ export function renderDocument(input: RenderDocInput): jsPDF {
     doc.text('MTCONNECTIVITY power2pcb GmbH', PAGE.ML, y);
   }
 
-  // Fuß nur auf Seite 1
+  // Datum/Seite + Fuß auf jeder Seite
   const totalPages = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     drawDateAndPage(doc, input.meta, i, totalPages);
-    if (i === 1) drawFooter(doc, footer);
+    drawFooter(doc, footer);
   }
 
   return doc;
 }
+
 
 // ---------- Format-Utilities ----------
 export const fmt = {
