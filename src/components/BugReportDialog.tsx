@@ -257,7 +257,7 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
+    <Dialog modal={false} open={open} onOpenChange={(o) => { if (!submitting) onOpenChange(o); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold flex items-center gap-2">
