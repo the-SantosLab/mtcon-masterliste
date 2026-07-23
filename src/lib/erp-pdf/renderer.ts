@@ -184,6 +184,10 @@ export interface RenderTableOpts {
   conditions?: { label: string; value: string }[];
   legend?: string;                        // R=Rahmen A=Abruf ...
   closing?: string;                       // "Mit freundlichen Grüßen"
+  currencyNotice?: string;                // z.B. "Currency in USD / US$" (rot links)
+  redBoldBlock?: string;                  // Factoring-Text (fett rot, eigene Seite)
+  trailingLines?: string[];               // Zeilen unter dem redBoldBlock (Reklamation etc.)
+  hideTableRowStripes?: boolean;
 }
 
 export interface RenderDocInput {
@@ -196,9 +200,6 @@ export function renderDocument(input: RenderDocInput): jsPDF {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const footer = input.footer ?? DEFAULT_FOOTER;
 
-  // Wir zeichnen Kopf auf JEDER Seite (Ausnahme: kleiner Rahmen unter Kopf für Empfänger nur Seite 1)
-  // autoTable didDrawPage übernimmt das Zeichnen ab Seite 2.
-
   const paintHeaderFull = () => {
     drawBrandMark(doc);
     drawSenderLine(doc, input.meta.senderLine);
@@ -207,49 +208,53 @@ export function renderDocument(input: RenderDocInput): jsPDF {
   };
   const paintHeaderCompact = () => {
     drawBrandMark(doc);
+    const rightX = PAGE.W - PAGE.MR;
+    const boxX = rightX - 85;
+    doc.setFillColor(...COLORS.shade);
+    doc.rect(boxX, 44, 85, 6, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text(`${input.meta.docTitle} ${input.meta.docNo}`, PAGE.MR, 36);
+    doc.setTextColor(...COLORS.ink);
+    doc.text(`${input.meta.docTitle} ${input.meta.docNo}`, boxX + 2, 48);
   };
 
   paintHeaderFull();
   if (input.meta.intro) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.text(input.meta.intro, PAGE.ML, 76, { maxWidth: PAGE.W - PAGE.ML - PAGE.MR });
+    doc.text(input.meta.intro, PAGE.ML, 96, { maxWidth: PAGE.W - PAGE.ML - PAGE.MR });
   }
 
-  const startY = input.table.startY ?? 92;
+  const startY = input.table.startY ?? (input.meta.intro ? 102 : 96);
 
   autoTable(doc, {
     startY,
     head: [input.table.head],
     body: input.table.body,
-    styles: { fontSize: 8, cellPadding: 1.5, textColor: COLORS.ink, lineColor: COLORS.rule, lineWidth: 0.1 },
-    headStyles: { fillColor: [245, 245, 245], textColor: COLORS.ink, fontStyle: 'bold', lineColor: COLORS.rule, lineWidth: 0.1 },
-    alternateRowStyles: { fillColor: [252, 252, 252] },
+    styles: { fontSize: 8.5, cellPadding: 1.5, textColor: COLORS.ink, lineColor: [255, 255, 255], lineWidth: 0, valign: 'top' },
+    headStyles: { fillColor: [245, 245, 245], textColor: COLORS.ink, fontStyle: 'bold', lineColor: COLORS.rule, lineWidth: 0.1, halign: 'left' },
+    alternateRowStyles: input.table.hideTableRowStripes ? { fillColor: [255, 255, 255] } : { fillColor: [252, 252, 252] },
     columnStyles: input.table.columnStyles || {},
-    margin: { left: PAGE.ML, right: PAGE.MR, top: 44, bottom: 30 },
+    margin: { left: PAGE.ML, right: PAGE.MR, top: 54, bottom: 30 },
     showHead: 'everyPage',
     didDrawPage: (data) => {
       if (data.pageNumber > 1) {
         paintHeaderCompact();
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.text(input.meta.dateLabel, PAGE.ML, 44);
-        doc.setFont('helvetica', 'normal');
-        doc.text(input.meta.date, PAGE.ML + 18, 44);
       }
     },
   });
 
-  let y = (doc as any).lastAutoTable.finalY + 6;
+  let y = (doc as any).lastAutoTable.finalY + 4;
 
-  // Totals rechtsbündig
+  // Trennlinie über Totals
   if (input.table.totals?.length) {
+    doc.setDrawColor(...COLORS.rule);
+    doc.setLineWidth(0.2);
+    doc.line(PAGE.ML, y, PAGE.W - PAGE.MR, y);
+    y += 4;
     const rightX = PAGE.W - PAGE.MR;
-    const labelX = rightX - 55;
-    doc.setFontSize(9);
+    const labelX = rightX - 60;
+    doc.setFontSize(10);
     for (const t of input.table.totals) {
       doc.setFont('helvetica', t.bold ? 'bold' : 'normal');
       doc.text(t.label, labelX, y);
@@ -260,7 +265,15 @@ export function renderDocument(input: RenderDocInput): jsPDF {
     y += 4;
   }
 
-  // Konditionen
+  if (input.table.currencyNotice) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...COLORS.accentRed);
+    doc.text(input.table.currencyNotice, PAGE.ML, y);
+    doc.setTextColor(...COLORS.ink);
+    y += 6;
+  }
+
   if (input.table.conditions?.length) {
     doc.setFontSize(9);
     for (const c of input.table.conditions) {
@@ -291,7 +304,33 @@ export function renderDocument(input: RenderDocInput): jsPDF {
     y += 4 * (Array.isArray(lines) ? lines.length : 1);
   }
 
-  if (input.table.closing) {
+  // Zweite Seite: Factoring-Text (fett rot) + trailingLines
+  if (input.table.redBoldBlock) {
+    doc.addPage();
+    paintHeaderCompact();
+    // Datumzeile
+    drawDateAndPage(doc, input.meta, 0, 0, 60); // wird unten neu gesetzt
+    let py = 74;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...COLORS.accentRed);
+    const paragraphs = input.table.redBoldBlock.split('\n\n');
+    for (const p of paragraphs) {
+      const lines = doc.splitTextToSize(p, PAGE.W - PAGE.ML - PAGE.MR);
+      doc.text(lines, PAGE.ML, py);
+      py += 4.5 * (Array.isArray(lines) ? lines.length : 1) + 3;
+    }
+    doc.setTextColor(...COLORS.ink);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    py += 4;
+    for (const line of input.table.trailingLines || []) {
+      const wrapped = doc.splitTextToSize(line, PAGE.W - PAGE.ML - PAGE.MR);
+      doc.text(wrapped, PAGE.ML, py);
+      py += 4.5 * (Array.isArray(wrapped) ? wrapped.length : 1) + 2;
+    }
+    y = py;
+  } else if (input.table.closing) {
     y = Math.max(y, PAGE.H - 40);
     doc.setFontSize(9);
     doc.text(input.table.closing, PAGE.ML, y);
@@ -299,16 +338,17 @@ export function renderDocument(input: RenderDocInput): jsPDF {
     doc.text('MTCONNECTIVITY power2pcb GmbH', PAGE.ML, y);
   }
 
-  // Fuß nur auf Seite 1
+  // Datum/Seite + Fuß auf jeder Seite
   const totalPages = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     drawDateAndPage(doc, input.meta, i, totalPages);
-    if (i === 1) drawFooter(doc, footer);
+    drawFooter(doc, footer);
   }
 
   return doc;
 }
+
 
 // ---------- Format-Utilities ----------
 export const fmt = {
