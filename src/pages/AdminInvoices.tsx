@@ -250,6 +250,7 @@ export default function AdminInvoices() {
         </Tabs>
 
         <CreateInvoiceDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load} />
+        <InvoiceDemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
 
         <Dialog open={!!sel} onOpenChange={(o) => !o && setSel(null)}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
