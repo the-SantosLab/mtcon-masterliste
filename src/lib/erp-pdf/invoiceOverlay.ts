@@ -235,7 +235,7 @@ export async function renderInvoiceOverlay(d: RechnungData): Promise<Uint8Array>
 /** Öffnet die Overlay-Rechnung in einem neuen Tab. */
 export async function openInvoiceOverlayPdf(data: RechnungData): Promise<void> {
   const bytes = await renderInvoiceOverlay(data);
-  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
   // URL wird bewusst nicht sofort revoked, damit der neue Tab sie laden kann.
