@@ -18,6 +18,7 @@ import { useCrmAccess } from "./hooks/useCrmAccess";
 // Auth-Seiten eager (immer benötigt bei Kaltstart, klein)
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import AdminInvoices from "./pages/AdminInvoices";
 
 // Alle übrigen Seiten lazy — Route-basiertes Code-Splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -55,7 +56,6 @@ const AdminAiPrompts = lazy(() => import("./pages/AdminAiPrompts"));
 const AdminInsurance = lazy(() => import("./pages/AdminInsurance"));
 const AdminOrders = lazy(() => import("./pages/AdminOrders"));
 const AdminDeliveries = lazy(() => import("./pages/AdminDeliveries"));
-const AdminInvoices = lazy(() => import("./pages/AdminInvoices"));
 const AdminSupplierInvoices = lazy(() => import("./pages/AdminSupplierInvoices"));
 const AdminPurchasingReport = lazy(() => import("./pages/AdminPurchasingReport"));
 const AdminCapacityPlan = lazy(() => import("./pages/AdminCapacityPlan"));
