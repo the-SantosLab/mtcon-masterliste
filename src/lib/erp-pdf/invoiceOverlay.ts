@@ -46,11 +46,11 @@ const P1 = {
   cols: {
     dn:      48,
     article: 175,
-    qty:     445,
-    price:   510,
-    value:   570,
+    qty:     360,   // right-align: unter Header "Qty"
+    price:   470,   // right-align: unter Header "Price"
+    value:   560,   // right-align: unter Header "Item value"
   },
-  totalValue:   { x: 570, top: 683, size: 10 },
+  totalValue:   { x: 560, top: 683, size: 10 },
   currencyLine: { x: 48,  top: 685, size: 9 },
   paymentValue: { x: 190, top: 706, size: 9 },
 };
