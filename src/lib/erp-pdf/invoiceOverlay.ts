@@ -18,14 +18,14 @@ const WHITE = rgb(1, 1, 1);
 // ---- Runtime-Masken (weiße Rechtecke über dynamische Zonen der Vorlage) ----
 // [x1, yTop1, x2, yTop2]
 const MASKS_P1: [number, number, number, number][] = [
-  [340, 128, 570, 152],   // "Invoice No. 18831"
+  [340, 128, 570, 158],   // "Invoice No. 18831"
   [ 45, 155, 335, 220],   // Empfänger-Block
   [445, 158, 570, 225],   // Cust.no/Contact/Phone/Fax/Email Werte
   [430, 232, 570, 252],   // Date + Page counter
   [ 45, 305, 570, 668],   // Positionen-Tabelle
   [425, 672, 570, 694],   // Total amount Wert
-  [ 45, 683, 340, 702],   // Currency Notice
-  [ 45, 702, 340, 722],   // Payment term Wert
+  [ 45, 683, 340, 702],   // Currency Notice (Label + Wert)
+  [175, 702, 340, 722],   // Payment term Wert (Label bleibt)
 ];
 const MASKS_P2: [number, number, number, number][] = [
   [340, 128, 570, 152],   // Invoice No.
