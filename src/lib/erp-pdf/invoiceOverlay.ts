@@ -45,23 +45,23 @@ const P1 = {
   dateLabel:    { x: 358, top: 233, size: 9 },
   dateValue:    { x: 456, top: 233, size: 9 },
   pageValue:    { x: 505, top: 233, size: 9 },
-  intro:        { x: 48,  top: 262, size: 9 },
+  intro:        { x: 66,  top: 262, size: 9 },
   headerRow:    { top: 287, size: 9 },
   tableTop:     310,
   tableBottom:  660,
   rowLine:      11,
   cols: {
-    dn:      48,
-    article: 175,
+    dn:      66,
+    article: 190,
     qty:     360,   // right-align
     price:   470,   // right-align
     value:   560,   // right-align
   },
   totalLabel:   { x: 420, top: 683, size: 10 },
   totalValue:   { x: 560, top: 683, size: 10 },
-  currencyLine: { x: 48,  top: 685, size: 9 },
-  paymentLabel: { x: 48,  top: 706, size: 9 },
-  paymentValue: { x: 190, top: 706, size: 9 },
+  currencyLine: { x: 66,  top: 685, size: 9 },
+  paymentLabel: { x: 66,  top: 706, size: 9 },
+  paymentValue: { x: 208, top: 706, size: 9 },
 };
 const P2 = {
   invoiceTitle: { x: 358, top: 134, size: 11 },
