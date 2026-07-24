@@ -211,12 +211,33 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
     }
   }
 
+  // 6) DEMO-Wasserzeichen (diagonal, transparent, auf jeder Seite)
+  if (opts.demo) {
+    for (const page of pages) {
+      page.drawText('DEMO', {
+        x: 90, y: 240,
+        size: 180,
+        font: bold,
+        color: COLOR_RED,
+        opacity: 0.18,
+        rotate: degrees(35),
+      });
+      page.drawText('DEMO — nicht rechtsgültig', {
+        x: 48, y: topY(60),
+        size: 8,
+        font: bold,
+        color: COLOR_RED,
+        opacity: 0.9,
+      });
+    }
+  }
+
   return await pdf.save();
 }
 
 /** Öffnet die Overlay-Rechnung in einem neuen Tab. */
-export async function openInvoiceOverlayPdf(data: RechnungData): Promise<void> {
-  const bytes = await renderInvoiceOverlay(data);
+export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean } = {}): Promise<void> {
+  const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
