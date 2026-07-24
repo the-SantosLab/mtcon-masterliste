@@ -28,7 +28,7 @@ const MASKS_P1: [number, number, number, number][] = [
   [175, 702, 340, 722],   // Payment term Wert (Label bleibt)
 ];
 const MASKS_P2: [number, number, number, number][] = [
-  [340, 128, 570, 152],   // Invoice No.
+  [340, 128, 570, 158],   // Invoice No.
   [430, 158, 570, 178],   // Date + Page counter
   [150, 190, 340, 220],   // Fälligkeits-Zeile
 ];
