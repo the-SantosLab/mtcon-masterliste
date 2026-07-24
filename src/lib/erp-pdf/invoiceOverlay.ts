@@ -39,7 +39,7 @@ const MASKS_P2: [number, number, number, number][] = [
 // ---- Feldpositionen (baseline ≈ yFromTop + size*0.85) ----
 const P1 = {
   invoiceTitle: { x: 358, top: 134, size: 11 },
-  recipient:    { x: 66,  top: 158, size: 10, lineHeight: 13 },
+  recipient:    { x: 71,  top: 158, size: 10, lineHeight: 13 },
   metaLabel:    { x: 358, top: 160, size: 9,  lineHeight: 12 },
   metaValue:    { x: 456, top: 160, size: 9,  lineHeight: 12 },
   dateLabel:    { x: 358, top: 233, size: 9 },
