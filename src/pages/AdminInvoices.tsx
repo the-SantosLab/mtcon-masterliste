@@ -167,7 +167,10 @@ export default function AdminInvoices() {
           </TabsList>
 
           <TabsContent value="outgoing" className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)}>
+                <FlaskConical className="h-4 w-4 mr-1" /> Demo-PDF
+              </Button>
               <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neue Rechnung</Button>
             </div>
             <div className="grid grid-cols-2 gap-3 max-w-md">
