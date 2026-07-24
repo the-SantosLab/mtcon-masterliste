@@ -65,7 +65,7 @@ const P1 = {
 };
 const P2 = {
   invoiceTitle: { x: 358, top: 134, size: 11 },
-  dateLabel:    { x: 342, top: 160, size: 9 },
+  dateLabel:    { x: 358, top: 160, size: 9 },
   dateValue:    { x: 456, top: 160, size: 9 },
   pageValue:    { x: 505, top: 160, size: 9 },
   factoring:    { x: 70,  top: 232, size: 9, lineHeight: 12, width: 485 },
