@@ -104,7 +104,7 @@ function txt(
 }
 
 /** Rechnung als PDF-Bytes; nutzt Overlay auf Original-Vorlage. */
-export async function renderInvoiceOverlay(d: RechnungData): Promise<Uint8Array> {
+export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean } = {}): Promise<Uint8Array> {
   const tplBytes = await loadTemplate();
   const pdf = await PDFDocument.load(tplBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
