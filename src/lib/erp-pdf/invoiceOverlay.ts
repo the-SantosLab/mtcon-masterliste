@@ -242,7 +242,7 @@ export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: b
   const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
-  const fileName = `${opts.demo ? 'DEMO-' : ''}Rechnung-${data.rechnungsNr || 'preview'}.pdf`;
+  const fileName = `${opts.demo ? 'DEMO-' : ''}Rechnung-${data.invoiceNo || 'preview'}.pdf`;
   const a = document.createElement('a');
   a.href = url;
   a.target = '_blank';
