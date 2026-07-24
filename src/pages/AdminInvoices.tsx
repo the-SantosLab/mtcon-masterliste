@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Receipt, Plus, Trash2, Download } from "lucide-react";
+import { Receipt, Plus, Trash2, Download, FlaskConical } from "lucide-react";
 import { generateInvoicePdf } from "@/lib/document-pdf";
 import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosInvoicesTab } from "@/components/IssosInvoicesTab";
+import { InvoiceDemoDialog } from "@/components/InvoiceDemoDialog";
 
 type Invoice = {
   id: string;
