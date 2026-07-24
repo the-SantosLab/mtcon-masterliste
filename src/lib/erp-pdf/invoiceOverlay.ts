@@ -235,10 +235,21 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
   return await pdf.save();
 }
 
-/** Öffnet die Overlay-Rechnung in einem neuen Tab. */
+/** Öffnet die Overlay-Rechnung in einem neuen Tab.
+ *  Nutzt einen Anchor-Klick statt window.open, da Chrome / AdBlocker
+ *  asynchron geöffnete Popups oft mit ERR_BLOCKED_BY_CLIENT blockieren. */
 export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean } = {}): Promise<void> {
   const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  const fileName = `${opts.demo ? 'DEMO-' : ''}Rechnung-${data.invoiceNo || 'preview'}.pdf`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
