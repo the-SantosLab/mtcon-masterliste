@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Receipt, Plus, Trash2, Download } from "lucide-react";
+import { Receipt, Plus, Trash2, Download, FlaskConical } from "lucide-react";
 import { generateInvoicePdf } from "@/lib/document-pdf";
 import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosInvoicesTab } from "@/components/IssosInvoicesTab";
+import { InvoiceDemoDialog } from "@/components/InvoiceDemoDialog";
 
 type Invoice = {
   id: string;
@@ -60,6 +61,7 @@ export default function AdminInvoices() {
   const [sel, setSel] = useState<Invoice | null>(null);
   const [items, setItems] = useState<InvItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const [colFilters, setColFilters] = useState({
     invoice_no: 'all', status: 'all', customer: 'all', invoice_date: 'all', due_date: 'all',
   });
@@ -165,7 +167,10 @@ export default function AdminInvoices() {
           </TabsList>
 
           <TabsContent value="outgoing" className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)}>
+                <FlaskConical className="h-4 w-4 mr-1" /> Demo-PDF
+              </Button>
               <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neue Rechnung</Button>
             </div>
             <div className="grid grid-cols-2 gap-3 max-w-md">
@@ -245,6 +250,7 @@ export default function AdminInvoices() {
         </Tabs>
 
         <CreateInvoiceDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load} />
+        <InvoiceDemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
 
         <Dialog open={!!sel} onOpenChange={(o) => !o && setSel(null)}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

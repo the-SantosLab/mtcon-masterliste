@@ -2,7 +2,7 @@
 // Nutzt pdf-lib: (1) weiße Masken über die dynamischen Zonen der Vorlage,
 // (2) neue Werte an exakt ausgemessenen Koordinaten. Logo, Briefkopf und
 // Footer stammen unverändert aus der Vorlage.
-import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateAsset from '@/assets/invoice-template.pdf.asset.json';
 import { fmt } from './renderer';
 import type { RechnungData } from './generators';
@@ -104,7 +104,7 @@ function txt(
 }
 
 /** Rechnung als PDF-Bytes; nutzt Overlay auf Original-Vorlage. */
-export async function renderInvoiceOverlay(d: RechnungData): Promise<Uint8Array> {
+export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean } = {}): Promise<Uint8Array> {
   const tplBytes = await loadTemplate();
   const pdf = await PDFDocument.load(tplBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -211,12 +211,33 @@ export async function renderInvoiceOverlay(d: RechnungData): Promise<Uint8Array>
     }
   }
 
+  // 6) DEMO-Wasserzeichen (diagonal, transparent, auf jeder Seite)
+  if (opts.demo) {
+    for (const page of pages) {
+      page.drawText('DEMO', {
+        x: 90, y: 240,
+        size: 180,
+        font: bold,
+        color: COLOR_RED,
+        opacity: 0.18,
+        rotate: degrees(35),
+      });
+      page.drawText('DEMO — nicht rechtsgültig', {
+        x: 48, y: topY(60),
+        size: 8,
+        font: bold,
+        color: COLOR_RED,
+        opacity: 0.9,
+      });
+    }
+  }
+
   return await pdf.save();
 }
 
 /** Öffnet die Overlay-Rechnung in einem neuen Tab. */
-export async function openInvoiceOverlayPdf(data: RechnungData): Promise<void> {
-  const bytes = await renderInvoiceOverlay(data);
+export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean } = {}): Promise<void> {
+  const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank');
