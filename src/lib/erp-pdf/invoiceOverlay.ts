@@ -2,7 +2,7 @@
 // Nutzt pdf-lib: (1) weiße Masken über die dynamischen Zonen der Vorlage,
 // (2) neue Werte an exakt ausgemessenen Koordinaten. Logo, Briefkopf und
 // Footer stammen unverändert aus der Vorlage.
-import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateAsset from '@/assets/invoice-template.pdf.asset.json';
 import { fmt } from './renderer';
 import type { RechnungData } from './generators';
