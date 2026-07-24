@@ -122,7 +122,7 @@ async function loadLieferschein(id: string, isReturn = false) {
   });
 }
 
-async function loadRechnung(id: string) {
+async function loadRechnungData(id: string) {
   const { data: inv } = await supabase.from('invoices' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('invoice_items' as any).select('*').eq('invoice_id', id).order('position') as any;
   const party = await loadCompanyParty(inv.company_id, inv.customer_name);
@@ -135,7 +135,7 @@ async function loadRechnung(id: string) {
     pos: it.position, artNr: it.art_nr, description: it.description,
     quantity: it.quantity, unit: it.unit || 'ST', price: it.unit_price, positionValue: it.line_total,
   }));
-  return buildRechnungPdf({
+  return {
     invoiceNo: inv.invoice_no, date: fmt.date(inv.invoice_date || inv.created_at, lang),
     dueDate: inv.due_date, party,
     contact: { customerNo: inv.customer_no, email: inv.customer_email },
@@ -144,8 +144,12 @@ async function loadRechnung(id: string) {
     tax: Number(inv.tax_amount || 0),
     total: Number(inv.total_amount || 0),
     paymentTerms: inv.payment_terms || (inv.currency === 'USD' ? '45 days net' : '14 Tage 2%, 30 Tage netto'),
-    language: lang, factoringNote: true,
-  });
+    language: lang as 'de' | 'en', factoringNote: true,
+  };
+}
+
+async function loadRechnung(id: string) {
+  return buildRechnungPdf(await loadRechnungData(id));
 }
 
 export async function buildErpPdf(
@@ -168,9 +172,16 @@ export async function buildErpPdf(
 }
 
 export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
+  if (type === 'rechnung') {
+    // Rechnungen laufen über den Overlay-Renderer auf der Originalvorlage.
+    const { openInvoiceOverlayPdf } = await import('./invoiceOverlay');
+    await openInvoiceOverlayPdf(await loadRechnungData(id) as any);
+    return;
+  }
   const doc = await buildErpPdf(type, id);
   const url = doc.output('bloburl');
   window.open(url as any, '_blank');
 }
+
 
 
