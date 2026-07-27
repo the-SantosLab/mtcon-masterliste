@@ -170,9 +170,8 @@ export async function renderOrderOverlay(
     txt(page, `Auftragsbestätigung Nr. ${d.abNo}`, P.title.x, P.title.top, fonts,
       { size: P.title.size, bold: true });
 
-    txt(page, 'Datum', P.dateLabel.x, P.dateLabel.top, fonts, { size: P.dateLabel.size, bold: true });
-    txt(page, d.date, P.dateValue.x, P.dateValue.top, fonts, { size: P.dateValue.size, bold: true });
     txt(page, `Seite ${i + 1} von ${totalPages}`, P.pageValue.x, P.pageValue.top, fonts, { size: P.pageValue.size });
+
 
     if (isFirst) {
       const recipientLines = [d.party.name, ...d.party.lines].filter(Boolean);
