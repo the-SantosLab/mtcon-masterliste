@@ -8503,6 +8503,42 @@ export type Database = {
           },
         ]
       }
+      user_satisfaction_surveys: {
+        Row: {
+          design_improvements: string | null
+          id: string
+          missing_features: string | null
+          other: string | null
+          score_design: number
+          score_functionality: number
+          score_performance: number
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          design_improvements?: string | null
+          id?: string
+          missing_features?: string | null
+          other?: string | null
+          score_design: number
+          score_functionality: number
+          score_performance: number
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          design_improvements?: string | null
+          id?: string
+          missing_features?: string | null
+          other?: string | null
+          score_design?: number
+          score_functionality?: number
+          score_performance?: number
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       users_profile: {
         Row: {
           active: boolean

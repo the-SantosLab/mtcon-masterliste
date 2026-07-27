@@ -40,6 +40,7 @@ import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
 import { SortableNavList } from '@/components/SortableNavList';
 import { PerfPanel, PerfProfiler } from '@/components/PerfPanel';
 import { PdfJobToaster } from '@/components/PdfJobToaster';
+import { SatisfactionSurveyBanner } from '@/components/SatisfactionSurveyBanner';
 
 
 function MtiqPendingBadge() {
@@ -149,6 +150,7 @@ const adminItems = [
   
   { href: '/admin/templates', label: 'Vorlagen', icon: FileText },
   { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
+  { href: '/admin/feedback', label: 'Feedback', icon: Star },
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles },
@@ -574,7 +576,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="hidden lg:flex items-center justify-end gap-2 px-6 h-12 glass-header shrink-0 relative z-[100]">
           <NotificationBell />
         </header>
-        <main className="erp-shell flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 relative z-[1]"><MfaReminderBanner />{isAdmin ? <PerfProfiler id="route">{children}</PerfProfiler> : children}</main>
+        <main className="erp-shell flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 relative z-[1]"><MfaReminderBanner /><SatisfactionSurveyBanner />{isAdmin ? <PerfProfiler id="route">{children}</PerfProfiler> : children}</main>
         
       </div>
 

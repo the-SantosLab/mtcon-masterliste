@@ -52,6 +52,7 @@ const AdminTrash = lazy(() => import("./pages/AdminTrash"));
 const AdminTemplates = lazy(() => import("./pages/AdminTemplates"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminAnnouncements = lazy(() => import("./pages/AdminAnnouncements"));
+const AdminFeedback = lazy(() => import("./pages/AdminFeedback"));
 const AdminAiPrompts = lazy(() => import("./pages/AdminAiPrompts"));
 const AdminInsurance = lazy(() => import("./pages/AdminInsurance"));
 const AdminOrders = lazy(() => import("./pages/AdminOrders"));
@@ -251,6 +252,7 @@ function AuthenticatedApp() {
           <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
           <Route path="/admin/security" element={<ProtectedRoute><AdminSecurity /></ProtectedRoute>} />
           <Route path="/admin/announcements" element={<ProtectedRoute><AdminAnnouncements /></ProtectedRoute>} />
+          <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
           <Route path="/admin/ai-prompts" element={<ProtectedRoute><AdminAiPrompts /></ProtectedRoute>} />
           <Route path="/admin/container-access" element={<ProtectedRoute><AdminContainerAccess /></ProtectedRoute>} />
           <Route path="/insurance" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
