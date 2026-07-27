@@ -89,6 +89,9 @@ export default function AdminOrders() {
   const [items, setItems] = useState<Item[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [aiOriginal, setAiOriginal] = useState<Record<string, any>>({});
+  const [demoOrderOpen, setDemoOrderOpen] = useState(false);
+  const [demoPurchaseOpen, setDemoPurchaseOpen] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
@@ -210,7 +213,17 @@ export default function AdminOrders() {
             </p>
           </div>
         </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setDemoOrderOpen(true)}>
+            <FlaskConical className="h-4 w-4 mr-1" /> Demo Auftragsbestätigung
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setDemoPurchaseOpen(true)}>
+            <FlaskConical className="h-4 w-4 mr-1" /> Demo Bestellung
+          </Button>
+        </div>
       </div>
+
+
 
       <Tabs defaultValue="internal" className="space-y-4">
         <TabsList>
