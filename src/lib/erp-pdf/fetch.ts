@@ -38,7 +38,7 @@ async function loadSupplier(supplierId: string): Promise<{ party: Party; contact
   };
 }
 
-async function loadAngebot(id: string) {
+async function loadAngebotData(id: string) {
   const { data: o } = await supabase.from('offers' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('offer_items' as any).select('*').eq('offer_id', id).order('sort_order') as any;
   const party = await loadCompanyParty(o.company_id);
@@ -50,13 +50,17 @@ async function loadAngebot(id: string) {
       quantity: it.quantity, unit: 'ST', price: it.unit_price, positionValue: val,
     };
   });
-  return buildAngebotPdf({
+  return {
     offerNo: `${o.offer_no}${o.version && o.version > 1 ? '-' + String(o.version).padStart(2, '0') : ''}`,
     date: fmt.date(o.created_at), validUntil: o.valid_until,
     party, contact, items: lineItems, currency: 'EUR',
     paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
     deliveryTerms: 'ab Werk', notes: o.notes,
-  });
+  };
+}
+
+async function loadAngebot(id: string) {
+  return buildAngebotPdf(await loadAngebotData(id) as any);
 }
 
 async function loadAB(id: string) {
