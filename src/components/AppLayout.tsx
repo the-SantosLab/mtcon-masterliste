@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedDepartments } from '@/hooks/useDeptLead';
+import { useErpAccess } from '@/hooks/useErpAccess';
+import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { CommandPalette } from '@/components/CommandPalette';
