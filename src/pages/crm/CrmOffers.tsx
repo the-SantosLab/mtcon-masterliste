@@ -96,7 +96,12 @@ export default function CrmOffers() {
             <h1 className="text-xl font-semibold tracking-tight">Angebote</h1>
             <p className="text-xs text-muted-foreground mt-1">Versendete, angenommene und ablaufende Offerten.</p>
           </div>
-          <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)} className="h-8 text-xs gap-1.5">
+              <FlaskConical className="h-3.5 w-3.5" /> Demo-PDF
+            </Button>
+            <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
+          </div>
         </div>
 
       <div className="flex gap-2 mb-3">
