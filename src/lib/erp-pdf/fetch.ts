@@ -182,15 +182,18 @@ export async function buildErpPdf(
 
 export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   if (type === 'rechnung') {
-    // Rechnungen laufen über den Overlay-Renderer auf der Originalvorlage.
     const { openInvoiceOverlayPdf } = await import('./invoiceOverlay');
     await openInvoiceOverlayPdf(await loadRechnungData(id) as any);
     return;
   }
   if (type === 'lieferschein' || type === 'ruecklieferschein') {
-    // Lieferscheine ebenfalls pixelgleich per Overlay auf die Originalvorlage.
     const { openDeliveryOverlayPdf } = await import('./deliveryOverlay');
     await openDeliveryOverlayPdf(await loadLieferscheinData(id, type === 'ruecklieferschein') as any);
+    return;
+  }
+  if (type === 'angebot') {
+    const { openOfferOverlayPdf } = await import('./offerOverlay');
+    await openOfferOverlayPdf(await loadAngebotData(id) as any);
     return;
   }
 
