@@ -36,11 +36,12 @@ const MASKS_PX: [number, number, number, number][] = [
 const P = {
   title:      { x: 358, top: 134, size: 11 },
   recipient:  { x: 71,  top: 158, size: 10, lineHeight: 13 },
-  metaLabel:  { x: 358, top: 160, size: 9,  lineHeight: 12 },
-  metaValue:  { x: 456, top: 160, size: 9,  lineHeight: 12 },
+  metaLabel:  { x: 358, top: 160, size: 9,  lineHeight: 11 },
+  metaValue:  { x: 456, top: 160, size: 9,  lineHeight: 11 },
   dateLabel:  { x: 358, top: 240, size: 9 },
   dateValue:  { x: 456, top: 240, size: 9 },
-  pageValue:  { x: 505, top: 240, size: 9 },
+  pageValue:  { x: 505, top: 140, size: 9 },
+
   intro:      { x: 66,  top: 262, size: 9, lineHeight: 12 },
   headerRow:  { top: 312, size: 9 },
   tableTop:   328,
@@ -169,9 +170,8 @@ export async function renderOrderOverlay(
     txt(page, `Auftragsbestätigung Nr. ${d.abNo}`, P.title.x, P.title.top, fonts,
       { size: P.title.size, bold: true });
 
-    txt(page, 'Datum', P.dateLabel.x, P.dateLabel.top, fonts, { size: P.dateLabel.size, bold: true });
-    txt(page, d.date, P.dateValue.x, P.dateValue.top, fonts, { size: P.dateValue.size, bold: true });
     txt(page, `Seite ${i + 1} von ${totalPages}`, P.pageValue.x, P.pageValue.top, fonts, { size: P.pageValue.size });
+
 
     if (isFirst) {
       const recipientLines = [d.party.name, ...d.party.lines].filter(Boolean);
@@ -188,7 +188,9 @@ export async function renderOrderOverlay(
         ['E-Mail',          d.contact.email],
         ['Lieferanten-Nr',  d.contact.supplierNo],
         ['USt-ID-Nr',       d.contact.vatId],
+        ['Datum',            d.date],
         ['Betreff',         d.contact.subject],
+
       ];
       let row = 0;
       for (const [label, value] of metaRows) {
