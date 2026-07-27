@@ -61,7 +61,7 @@ export function SatisfactionSurveyBanner() {
       <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 backdrop-blur-sm px-3 py-2 flex items-center gap-3 flex-wrap">
         <Sparkles className="h-4 w-4 text-primary shrink-0" />
         <div className="flex-1 min-w-[220px]">
-          <p className="text-xs font-medium text-foreground">Kurze Umfrage (60 Sek.): Wie zufrieden bist du mit MTCON?</p>
+          <p className="text-xs font-medium text-foreground">Kurze Umfrage (60 Sek.): Wie zufrieden bist du mit der Masterliste?</p>
           <p className="text-[10px] text-muted-foreground">Dein Feedback zu Funktionalität, Design und Performance — einmalig.</p>
         </div>
         <div className="flex items-center gap-1.5">
