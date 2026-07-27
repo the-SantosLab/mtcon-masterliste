@@ -209,6 +209,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
   const { isLead } = useLedDepartments();
+  const { allowed: erpAllowed } = useErpAccess();
+  const { allowed: crmAllowed } = useCrmAccess();
+  const showErp = isAdmin || erpAllowed;
+  const showCrm = isAdmin || crmAllowed === true;
   const { preferences, setTheme, setCompactTables, setSidebarCompact } = usePreferences();
   const sidebarCompact = preferences.sidebarCompact;
   const sbText = sidebarCompact ? 'text-sm' : 'text-[15px]';
