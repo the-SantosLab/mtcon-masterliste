@@ -196,6 +196,48 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
     await openOfferOverlayPdf(await loadAngebotData(id) as any);
     return;
   }
+  if (type === 'ab') {
+    const { openOrderOverlayPdf } = await import('./orderOverlay');
+    const { data: o } = await supabase.from('orders' as any).select('*').eq('id', id).single() as any;
+    const { data: items } = await supabase.from('order_items' as any).select('*').eq('order_id', id).order('position') as any;
+    const party = await loadCompanyParty(o.company_id, o.customer_name);
+    const lineItems: any[] = (items || []).map((it: any) => ({
+      pos: it.position, artNr: it.art_nr || it.sku, description: it.description,
+      quantity: it.quantity, unit: it.unit || 'ST', price: it.unit_price, positionValue: it.line_total,
+    }));
+    const subtotal = Number(o.subtotal_amount || 0);
+    const tax = Number(o.tax_amount || subtotal * 0.19);
+    const total = Number(o.total_amount || subtotal + tax);
+    await openOrderOverlayPdf({
+      abNo: o.order_no, date: fmt.date(o.order_date || o.created_at),
+      deliveryDate: o.delivery_date, party,
+      contact: { customerNo: o.customer_no, contactName: 'Auftragsbestätigungen', email: o.customer_email, subject: o.external_order_no },
+      items: lineItems, currency: o.currency || 'EUR',
+      subtotal, tax, total,
+      paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
+      deliveryTerms: 'ab Werk',
+      isFrame: o.order_kind === 'frame' || o.order_kind === 'rahmen',
+    } as any);
+    return;
+  }
+  if (type === 'bestellung') {
+    const { openPurchaseOverlayPdf } = await import('./purchaseOverlay');
+    const { data: p } = await supabase.from('purchase_orders' as any).select('*').eq('id', id).single() as any;
+    const { data: items } = await supabase.from('purchase_order_items' as any).select('*').eq('po_id', id).order('position') as any;
+    const sup = await loadSupplier(p.supplier_id);
+    const lineItems: any[] = (items || []).map((it: any) => ({
+      pos: it.position, artNr: it.art_nr, description: it.description || '',
+      quantity: it.qty_ordered, unit: 'ST', price: it.unit_price,
+      positionValue: it.unit_price != null ? Number(it.qty_ordered) * Number(it.unit_price) / 1000 : null,
+    }));
+    await openPurchaseOverlayPdf({
+      poNo: p.po_no || p.id.slice(0, 8), date: fmt.date(p.ordered_at || p.created_at),
+      expected: p.expected_at, party: sup.party, contact: sup.contact,
+      items: lineItems, currency: 'EUR', notes: p.notes,
+    } as any);
+    return;
+  }
+
 
   const doc = await buildErpPdf(type, id);
   const url = doc.output('bloburl');
