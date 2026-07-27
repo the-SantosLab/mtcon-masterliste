@@ -373,6 +373,7 @@ export default function AdminDeliveries() {
             <IssosDeliveriesTab />
           </TabsContent>
         </Tabs>
+        <DeliveryDemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
       </div>
     </AppLayout>
 
