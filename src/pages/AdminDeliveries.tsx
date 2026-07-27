@@ -230,7 +230,10 @@ export default function AdminDeliveries() {
             <TabsTrigger value="issos">ISSOS</TabsTrigger>
           </TabsList>
           <TabsContent value="intern" className="space-y-4 mt-4">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)}>
+            <FlaskConical className="h-4 w-4 mr-1" /> Demo-PDF
+          </Button>
           <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neuer Lieferschein</Button>
         </div>
 
