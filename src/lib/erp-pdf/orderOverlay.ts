@@ -36,11 +36,12 @@ const MASKS_PX: [number, number, number, number][] = [
 const P = {
   title:      { x: 358, top: 134, size: 11 },
   recipient:  { x: 71,  top: 158, size: 10, lineHeight: 13 },
-  metaLabel:  { x: 358, top: 160, size: 9,  lineHeight: 12 },
-  metaValue:  { x: 456, top: 160, size: 9,  lineHeight: 12 },
+  metaLabel:  { x: 358, top: 160, size: 9,  lineHeight: 11 },
+  metaValue:  { x: 456, top: 160, size: 9,  lineHeight: 11 },
   dateLabel:  { x: 358, top: 240, size: 9 },
   dateValue:  { x: 456, top: 240, size: 9 },
-  pageValue:  { x: 505, top: 240, size: 9 },
+  pageValue:  { x: 505, top: 140, size: 9 },
+
   intro:      { x: 66,  top: 262, size: 9, lineHeight: 12 },
   headerRow:  { top: 312, size: 9 },
   tableTop:   328,
