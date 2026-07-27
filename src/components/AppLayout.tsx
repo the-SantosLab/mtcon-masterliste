@@ -378,7 +378,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-          {isAdmin && (
+          {showCrm && (
             <>
               <div className="border-t border-sidebar-border my-1" />
               <button
