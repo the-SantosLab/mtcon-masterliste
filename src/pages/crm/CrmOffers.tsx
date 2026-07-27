@@ -201,6 +201,7 @@ export default function CrmOffers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <OfferDemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
     </CrmLayout>
   );
 }
