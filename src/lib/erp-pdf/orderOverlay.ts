@@ -188,7 +188,9 @@ export async function renderOrderOverlay(
         ['E-Mail',          d.contact.email],
         ['Lieferanten-Nr',  d.contact.supplierNo],
         ['USt-ID-Nr',       d.contact.vatId],
+        ['Datum',            d.date],
         ['Betreff',         d.contact.subject],
+
       ];
       let row = 0;
       for (const [label, value] of metaRows) {
