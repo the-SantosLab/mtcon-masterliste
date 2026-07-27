@@ -30,7 +30,7 @@ const SAMPLE = {
   phone: '+49 7940 989998-0',
   fax: '+49 7940 989998-9',
   email: 'Anja.Magnussen@mtcon.eu',
-  subject: 'Anfrage Alternative Powerelemente',
+  subject: 'Alternative Powerelemente',
   deliveryTerms: 'ab Werk',
   paymentTerms: '14 Tage 2%, 30 Tage netto',
   notes: '',
