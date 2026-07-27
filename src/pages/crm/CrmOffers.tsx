@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Plus, Loader2, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Loader2, Check, ChevronsUpDown, FlaskConical } from 'lucide-react';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
+import { OfferDemoDialog } from '@/components/OfferDemoDialog';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllOfferDealOptions } from '@/lib/crmData';
 import { cn } from '@/lib/utils';
