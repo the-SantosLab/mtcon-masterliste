@@ -563,7 +563,10 @@ export default function AdminOrders() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <OrderDemoDialog open={demoOrderOpen} onClose={() => setDemoOrderOpen(false)} />
+      <PurchaseDemoDialog open={demoPurchaseOpen} onClose={() => setDemoPurchaseOpen(false)} />
     </div>
     </AppLayout>
+
   );
 }
