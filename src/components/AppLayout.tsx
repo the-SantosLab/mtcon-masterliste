@@ -40,6 +40,7 @@ import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
 import { SortableNavList } from '@/components/SortableNavList';
 import { PerfPanel, PerfProfiler } from '@/components/PerfPanel';
 import { PdfJobToaster } from '@/components/PdfJobToaster';
+import { SatisfactionSurveyBanner } from '@/components/SatisfactionSurveyBanner';
 
 
 function MtiqPendingBadge() {
