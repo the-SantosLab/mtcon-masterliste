@@ -11,12 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Truck, Plus, Trash2, Download, Receipt } from "lucide-react";
+import { Truck, Plus, Trash2, Download, Receipt, FlaskConical } from "lucide-react";
 import { generateDeliveryPdf } from "@/lib/document-pdf";
 import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosDeliveriesTab } from "@/components/IssosDeliveriesTab";
+import { DeliveryDemoDialog } from "@/components/DeliveryDemoDialog";
 
 type Delivery = {
   id: string;
@@ -65,6 +66,7 @@ export default function AdminDeliveries() {
   const [sel, setSel] = useState<Delivery | null>(null);
   const [items, setItems] = useState<DeliveryItem[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
   const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -228,7 +230,10 @@ export default function AdminDeliveries() {
             <TabsTrigger value="issos">ISSOS</TabsTrigger>
           </TabsList>
           <TabsContent value="intern" className="space-y-4 mt-4">
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)}>
+            <FlaskConical className="h-4 w-4 mr-1" /> Demo-PDF
+          </Button>
           <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neuer Lieferschein</Button>
         </div>
 
@@ -368,6 +373,7 @@ export default function AdminDeliveries() {
             <IssosDeliveriesTab />
           </TabsContent>
         </Tabs>
+        <DeliveryDemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
       </div>
     </AppLayout>
 
