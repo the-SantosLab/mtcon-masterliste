@@ -9,15 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, FileText, Download, Package, ArrowLeft } from "lucide-react";
+import { Sparkles, FileText, Download, Package, ArrowLeft, FlaskConical } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrderFulfillment } from "@/components/OrderFulfillment";
 import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { PartnerPicker } from "@/components/PartnerPicker";
+import { OrderDemoDialog } from "@/components/OrderDemoDialog";
+import { PurchaseDemoDialog } from "@/components/PurchaseDemoDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosOrdersTab } from "@/components/IssosOrdersTab";
+
 
 type Order = {
   id: string;
@@ -86,6 +89,9 @@ export default function AdminOrders() {
   const [items, setItems] = useState<Item[]>([]);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [aiOriginal, setAiOriginal] = useState<Record<string, any>>({});
+  const [demoOrderOpen, setDemoOrderOpen] = useState(false);
+  const [demoPurchaseOpen, setDemoPurchaseOpen] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
@@ -207,7 +213,17 @@ export default function AdminOrders() {
             </p>
           </div>
         </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setDemoOrderOpen(true)}>
+            <FlaskConical className="h-4 w-4 mr-1" /> Demo Auftragsbestätigung
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setDemoPurchaseOpen(true)}>
+            <FlaskConical className="h-4 w-4 mr-1" /> Demo Bestellung
+          </Button>
+        </div>
       </div>
+
+
 
       <Tabs defaultValue="internal" className="space-y-4">
         <TabsList>
@@ -547,7 +563,10 @@ export default function AdminOrders() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <OrderDemoDialog open={demoOrderOpen} onClose={() => setDemoOrderOpen(false)} />
+      <PurchaseDemoDialog open={demoPurchaseOpen} onClose={() => setDemoPurchaseOpen(false)} />
     </div>
     </AppLayout>
+
   );
 }
