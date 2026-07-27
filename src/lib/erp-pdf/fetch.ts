@@ -98,7 +98,7 @@ async function loadBestellung(id: string) {
   });
 }
 
-async function loadLieferschein(id: string, isReturn = false) {
+async function loadLieferscheinData(id: string, isReturn = false) {
   const { data: d } = await supabase.from('deliveries' as any).select('*, orders(order_no, customer_name, company_id, customer_no)').eq('id', id).single() as any;
   const { data: items } = await supabase.from('delivery_items' as any).select('*').eq('delivery_id', id).order('position') as any;
   const companyId = d.company_id || d.orders?.company_id;
@@ -113,14 +113,19 @@ async function loadLieferschein(id: string, isReturn = false) {
     extraLines: [it.lot_no && `Chargen-Nr: ${it.lot_no}`, it.serial_no && `SN: ${it.serial_no}`].filter(Boolean) as string[],
     orderNo: d.orders?.order_no,
   }));
-  return buildLieferscheinPdf({
+  return {
     deliveryNo: d.delivery_no, date: fmt.date(d.delivery_date || d.created_at),
     orderNo: d.orders?.order_no, party,
     contact: { customerNo: d.orders?.customer_no },
     items: lineItems, deliveryTerms: 'ab Werk', notes: d.notes,
     isReturn,
-  });
+  };
 }
+
+async function loadLieferschein(id: string, isReturn = false) {
+  return buildLieferscheinPdf(await loadLieferscheinData(id, isReturn) as any);
+}
+
 
 async function loadRechnungData(id: string) {
   const { data: inv } = await supabase.from('invoices' as any).select('*').eq('id', id).single() as any;
