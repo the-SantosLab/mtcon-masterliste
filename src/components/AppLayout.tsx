@@ -149,6 +149,7 @@ const adminItems = [
   
   { href: '/admin/templates', label: 'Vorlagen', icon: FileText },
   { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
+  { href: '/admin/feedback', label: 'Feedback', icon: Star },
   { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
   { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles },
