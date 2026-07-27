@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Plus, Loader2, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Loader2, Check, ChevronsUpDown, FlaskConical } from 'lucide-react';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
+import { OfferDemoDialog } from '@/components/OfferDemoDialog';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllOfferDealOptions } from '@/lib/crmData';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ export default function CrmOffers() {
   const [dealId, setDealId] = useState('');
   const [dealPickerOpen, setDealPickerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => { void load(); }, []);
 
@@ -94,7 +96,12 @@ export default function CrmOffers() {
             <h1 className="text-xl font-semibold tracking-tight">Angebote</h1>
             <p className="text-xs text-muted-foreground mt-1">Versendete, angenommene und ablaufende Offerten.</p>
           </div>
-          <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)} className="h-8 text-xs gap-1.5">
+              <FlaskConical className="h-3.5 w-3.5" /> Demo-PDF
+            </Button>
+            <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
+          </div>
         </div>
 
       <div className="flex gap-2 mb-3">
@@ -194,6 +201,7 @@ export default function CrmOffers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <OfferDemoDialog open={demoOpen} onClose={() => setDemoOpen(false)} />
     </CrmLayout>
   );
 }
