@@ -52,6 +52,7 @@ const AdminTrash = lazy(() => import("./pages/AdminTrash"));
 const AdminTemplates = lazy(() => import("./pages/AdminTemplates"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminAnnouncements = lazy(() => import("./pages/AdminAnnouncements"));
+const AdminFeedback = lazy(() => import("./pages/AdminFeedback"));
 const AdminAiPrompts = lazy(() => import("./pages/AdminAiPrompts"));
 const AdminInsurance = lazy(() => import("./pages/AdminInsurance"));
 const AdminOrders = lazy(() => import("./pages/AdminOrders"));
