@@ -356,7 +356,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           ))}
 
-          {isAdmin && (
+          {showErp && (
             <>
               <div className="border-t border-sidebar-border my-1" />
               <button
