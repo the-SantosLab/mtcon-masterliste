@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedDepartments } from '@/hooks/useDeptLead';
+import { useErpAccess } from '@/hooks/useErpAccess';
+import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -33,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAvatar } from '@/components/UserAvatar';
-import { useCrmAccess } from '@/hooks/useCrmAccess';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { MtiqWidget } from '@/components/mtiq/MtiqWidget';
 import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
@@ -209,6 +210,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { profile, role, signOut, isAdmin, user } = useAuth();
   const isMaster = isMasterUser(user?.id);
   const { isLead } = useLedDepartments();
+  const { allowed: erpAllowed } = useErpAccess();
+  const { allowed: crmAllowed } = useCrmAccess();
+  const showErp = isAdmin || erpAllowed;
+  const showCrm = isAdmin || crmAllowed === true;
   const { preferences, setTheme, setCompactTables, setSidebarCompact } = usePreferences();
   const sidebarCompact = preferences.sidebarCompact;
   const sbText = sidebarCompact ? 'text-sm' : 'text-[15px]';
@@ -351,7 +356,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           ))}
 
-          {isAdmin && (
+          {showErp && (
             <>
               <div className="border-t border-sidebar-border my-1" />
               <button
@@ -373,7 +378,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </>
           )}
 
-          {isAdmin && (
+          {showCrm && (
             <>
               <div className="border-t border-sidebar-border my-1" />
               <button

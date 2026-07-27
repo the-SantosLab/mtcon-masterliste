@@ -3575,6 +3575,27 @@ export type Database = {
           },
         ]
       }
+      erp_access: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       fx_rates: {
         Row: {
           created_at: string
@@ -8979,6 +9000,7 @@ export type Database = {
         Args: { p_dept_id: string; p_uid: string }
         Returns: boolean
       }
+      has_erp_access: { Args: { uid?: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
