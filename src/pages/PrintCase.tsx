@@ -121,26 +121,25 @@ export default function PrintCase() {
   return (
     <div className="print-page bg-white text-black min-h-screen">
       <style>{`
-        .running-header { display: none; }
+        .running-footer { display: none; }
         @media print {
           .no-print { display: none !important; }
           .print-page { padding: 0 !important; }
           .print-section { break-inside: avoid; page-break-inside: avoid; }
-          @page { size: A4; margin: 22mm 10mm 12mm 10mm; }
-          .running-header {
+          @page { size: A4; margin: 12mm 10mm 16mm 10mm; }
+          .running-footer {
             display: flex;
             position: fixed;
-            top: 6mm;
+            bottom: 4mm;
             left: 10mm;
             right: 10mm;
             font-family: 'Inter', system-ui, sans-serif;
             font-size: 8.5pt;
             color: #555;
-            border-bottom: 1px solid #999;
-            padding-bottom: 2pt;
+            border-top: 1px solid #999;
+            padding-top: 2pt;
             justify-content: space-between;
           }
-          .running-header .first-only { display: none; }
         }
         .print-page { font-family: 'Inter', system-ui, sans-serif; font-size: 10pt; line-height: 1.4; color: #111; }
         .print-page h1 { font-size: 18pt; font-weight: 700; letter-spacing: -0.01em; }
@@ -165,7 +164,7 @@ export default function PrintCase() {
         .print-page .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #ccc; font-size: 8pt; color: #777; display: flex; justify-content: space-between; }
       `}</style>
 
-      <div className="running-header">
+      <div className="running-footer">
         <span className="mono">{c.case_no || (c.case_number ? `#${c.case_number}` : '')}</span>
         <span>{c.project_name}</span>
       </div>
