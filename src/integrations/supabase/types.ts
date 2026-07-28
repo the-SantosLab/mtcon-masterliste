@@ -9037,6 +9037,10 @@ export type Database = {
       }
       is_portal_customer: { Args: { uid?: string }; Returns: boolean }
       is_private_inbox_dept: { Args: { p_dept_id: string }; Returns: boolean }
+      is_project_manager: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_project_member: {
         Args: { p_project_id: string; uid?: string }
         Returns: boolean
