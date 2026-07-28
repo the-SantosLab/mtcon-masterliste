@@ -168,18 +168,192 @@ var list_support_tickets_default = defineTool4({
   }
 });
 
+// src/lib/mcp/tools/claim-case.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+var claim_case_default = defineTool5({
+  name: "claim_case",
+  title: "Claim case",
+  description: "Assign a Masterliste case (Vorgang) to the signed-in user. If `release` is true, the user releases the case (only when currently assigned to them). RLS rules from the app apply.",
+  inputSchema: {
+    case_id: z5.string().optional().describe("Case UUID. Use either case_id or case_no."),
+    case_no: z5.string().optional().describe("Case number, e.g. VOR-2026-0123."),
+    release: z5.boolean().optional().describe("Set true to release/unclaim the case instead of claiming it.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ case_id, case_no, release }, ctx) => {
+    const scoped = supabaseForUser(ctx);
+    if ("error" in scoped) return scoped.error;
+    const id = case_id?.trim();
+    const number = case_no?.trim();
+    if (!id && !number) return errorResult("Bitte case_id oder case_no angeben.");
+    let lookup = scoped.client.from("cases").select("id, case_no, project_name, assignee_id").eq("deleted", false).limit(1);
+    lookup = id ? lookup.eq("id", id) : lookup.eq("case_no", number);
+    const { data: caseRow, error: lookupErr } = await lookup.maybeSingle();
+    if (lookupErr) return errorResult(lookupErr.message);
+    if (!caseRow) return errorResult("Vorgang nicht gefunden oder nicht sichtbar.");
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const userId = scoped.userId;
+    if (release) {
+      if (caseRow.assignee_id && caseRow.assignee_id !== userId) {
+        return errorResult("Vorgang ist einer anderen Person zugewiesen.");
+      }
+      const { error: error2 } = await scoped.client.from("cases").update({ assignee_id: null, last_changed_by: userId, last_changed_at: now }).eq("id", caseRow.id);
+      if (error2) return errorResult(error2.message);
+      await scoped.client.from("case_activity").insert({ case_id: caseRow.id, action: "UNCLAIM", actor_id: userId });
+      return jsonResult(`Vorgang ${caseRow.case_no} freigegeben.`, { case_id: caseRow.id, released: true });
+    }
+    if (caseRow.assignee_id && caseRow.assignee_id !== userId) {
+      return errorResult("Vorgang ist bereits einer anderen Person zugewiesen.");
+    }
+    const { data, error } = await scoped.client.from("cases").update({ assignee_id: userId, last_changed_by: userId, last_changed_at: now }).eq("id", caseRow.id).is("assignee_id", null).select("id, case_no, project_name");
+    if (error) return errorResult(error.message);
+    if (!data || data.length === 0) {
+      if (caseRow.assignee_id === userId) {
+        return jsonResult(`Vorgang ${caseRow.case_no} war bereits dir zugewiesen.`, { case_id: caseRow.id, already_assigned: true });
+      }
+      return errorResult("Vorgang wurde in der Zwischenzeit vergeben.");
+    }
+    await scoped.client.from("case_activity").insert({ case_id: caseRow.id, action: "CLAIM", actor_id: userId });
+    return jsonResult(`Vorgang ${caseRow.case_no} \xFCbernommen.`, { case: data[0] });
+  }
+});
+
+// src/lib/mcp/tools/set-case-status.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+var ALLOWED = [
+  "nicht_begonnen",
+  "in_planung",
+  "in_arbeit",
+  "in_verzug",
+  "abgeschlossen",
+  "verworfen",
+  "archiv",
+  "ready_for_review",
+  "blocked"
+];
+var set_case_status_default = defineTool6({
+  name: "set_case_status",
+  title: "Set case status",
+  description: "Change the status of a Masterliste case (Vorgang). Backend RLS and workflow rules apply. Allowed values: " + ALLOWED.join(", ") + ".",
+  inputSchema: {
+    case_id: z6.string().optional().describe("Case UUID. Use either case_id or case_no."),
+    case_no: z6.string().optional().describe("Case number, e.g. VOR-2026-0123."),
+    status: z6.string().describe("New case status. See tool description for allowed values."),
+    note: z6.string().optional().describe("Optional short note added to the case activity log.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ case_id, case_no, status, note }, ctx) => {
+    const scoped = supabaseForUser(ctx);
+    if ("error" in scoped) return scoped.error;
+    const id = case_id?.trim();
+    const number = case_no?.trim();
+    const nextStatus = status?.trim();
+    if (!id && !number) return errorResult("Bitte case_id oder case_no angeben.");
+    if (!nextStatus || !ALLOWED.includes(nextStatus)) {
+      return errorResult(`Ung\xFCltiger Status. Erlaubt: ${ALLOWED.join(", ")}.`);
+    }
+    let lookup = scoped.client.from("cases").select("id, case_no, status").eq("deleted", false).limit(1);
+    lookup = id ? lookup.eq("id", id) : lookup.eq("case_no", number);
+    const { data: caseRow, error: lookupErr } = await lookup.maybeSingle();
+    if (lookupErr) return errorResult(lookupErr.message);
+    if (!caseRow) return errorResult("Vorgang nicht gefunden oder nicht sichtbar.");
+    if (nextStatus === "abgeschlossen") {
+      const { data: openTasks, error: tasksErr } = await scoped.client.from("case_tasks").select("id").eq("case_id", caseRow.id).neq("status", "done");
+      if (tasksErr) return errorResult(tasksErr.message);
+      if (openTasks && openTasks.length > 0) {
+        return errorResult(`Vorgang kann nicht abgeschlossen werden: ${openTasks.length} offene Unteraufgabe(n).`);
+      }
+    }
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const userId = scoped.userId;
+    const patch = {
+      status: nextStatus,
+      last_changed_by: userId,
+      last_changed_at: now
+    };
+    if (nextStatus === "abgeschlossen") {
+      patch.completed_at = now;
+      patch.closed_by = userId;
+      patch.closed_at = now;
+    }
+    const { data, error } = await scoped.client.from("cases").update(patch).eq("id", caseRow.id).select("id, case_no, status");
+    if (error) return errorResult(error.message);
+    if (!data || data.length === 0) return errorResult("Aktualisierung nicht erlaubt.");
+    await scoped.client.from("case_activity").insert({
+      case_id: caseRow.id,
+      action: nextStatus === "abgeschlossen" ? "CLOSE" : "STATUS",
+      actor_id: userId,
+      field: "status",
+      old_value: caseRow.status,
+      new_value: nextStatus,
+      ...note?.trim() ? { message: note.trim() } : {}
+    });
+    return jsonResult(`Vorgang ${caseRow.case_no}: Status ${caseRow.status} \u2192 ${nextStatus}.`, { case: data[0] });
+  }
+});
+
+// src/lib/mcp/tools/post-case-comment.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z7 } from "npm:zod@^3.25.76";
+var post_case_comment_default = defineTool7({
+  name: "post_case_comment",
+  title: "Post case comment",
+  description: "Post a comment on a Masterliste case (Vorgang). Choose `target` = 'chat' to post into the Vorgang-Chat (default), or 'note' to add an internal note. Backend RLS applies.",
+  inputSchema: {
+    case_id: z7.string().optional().describe("Case UUID. Use either case_id or case_no."),
+    case_no: z7.string().optional().describe("Case number, e.g. VOR-2026-0123."),
+    body: z7.string().describe("Comment text. Plain text or markdown."),
+    target: z7.enum(["chat", "note"]).optional().describe("Where to post. Defaults to 'chat'.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ case_id, case_no, body, target }, ctx) => {
+    const scoped = supabaseForUser(ctx);
+    if ("error" in scoped) return scoped.error;
+    const id = case_id?.trim();
+    const number = case_no?.trim();
+    const text = body?.trim();
+    const dest = target ?? "chat";
+    if (!id && !number) return errorResult("Bitte case_id oder case_no angeben.");
+    if (!text) return errorResult("Kommentartext darf nicht leer sein.");
+    let lookup = scoped.client.from("cases").select("id, case_no").eq("deleted", false).limit(1);
+    lookup = id ? lookup.eq("id", id) : lookup.eq("case_no", number);
+    const { data: caseRow, error: lookupErr } = await lookup.maybeSingle();
+    if (lookupErr) return errorResult(lookupErr.message);
+    if (!caseRow) return errorResult("Vorgang nicht gefunden oder nicht sichtbar.");
+    const userId = scoped.userId;
+    if (dest === "note") {
+      const { data: data2, error: error2 } = await scoped.client.from("case_notes").insert({ case_id: caseRow.id, author_id: userId, body: text }).select("id, created_at").single();
+      if (error2) return errorResult(error2.message);
+      return jsonResult(`Notiz auf ${caseRow.case_no} gespeichert.`, { case_id: caseRow.id, note: data2 });
+    }
+    const { data, error } = await scoped.client.from("case_chat_messages").insert({ case_id: caseRow.id, author_id: userId, body: text }).select("id, created_at").single();
+    if (error) return errorResult(error.message);
+    return jsonResult(`Chat-Nachricht auf ${caseRow.case_no} gepostet.`, { case_id: caseRow.id, message: data });
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "tfzwssplxetptxnhrxse";
 var mcp_default = defineMcp({
   name: "mtcon-masterliste-mcp",
   title: "MTCON Masterliste",
-  version: "0.1.0",
-  instructions: "Read-only tools for MTCON Masterliste. Use them to inspect cases, projects, and internal support tickets that the signed-in user is allowed to see. Existing app roles, visibility rules, and backend policies remain authoritative.",
+  version: "0.2.0",
+  instructions: "Tools for MTCON Masterliste. Read tools inspect cases, projects, and internal support tickets. Write tools let the signed-in user claim/release Vorg\xE4nge, change their status, and post chat messages or notes. Existing app roles, visibility rules, and backend RLS remain authoritative.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [list_cases_default, get_case_summary_default, list_projects_default, list_support_tickets_default]
+  tools: [
+    list_cases_default,
+    get_case_summary_default,
+    list_projects_default,
+    list_support_tickets_default,
+    claim_case_default,
+    set_case_status_default,
+    post_case_comment_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts
