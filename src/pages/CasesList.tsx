@@ -470,7 +470,7 @@ export default function CasesList() {
                 const isExpanded = expandedSubtasks.has(c.id);
                 return (
                 <Fragment key={c.id}>
-                <tr className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((c as any).urgency, (c as any).status))}>
+                <tr className={cn('hover:bg-muted/40 transition-colors', !myDoneOnlyCaseIds.has(c.id) && getUrgencyRowClass((c as any).urgency, (c as any).status))}>
                   <td className={cellCls}>
                     <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
                       <button
