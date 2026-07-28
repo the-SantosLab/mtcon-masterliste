@@ -408,7 +408,7 @@ export default function ProjectsList() {
                     </td>
                   </tr>
                 ) : filtered.map(p => (
-                  <tr key={p.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((p as any).urgency))}>
+                  <tr key={p.id} className={cn('hover:bg-muted/40 transition-colors', !myDoneOnlyProjectIds.has(p.id) && getUrgencyRowClass((p as any).urgency))}>
                     <td className={cn(cellCls, 'font-mono')}>
                       <Link to={`/projects/${p.id}`} className="text-primary hover:underline">{p.project_number}</Link>
                     </td>
