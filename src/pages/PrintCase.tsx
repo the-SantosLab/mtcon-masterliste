@@ -160,7 +160,7 @@ export default function PrintCase() {
         .print-page .task-meta { font-size: 8.5pt; color: #666; margin-top: 1pt; }
         .print-page .progress-shell { width: 100%; height: 10pt; background: #eee; border-radius: 999px; overflow: hidden; border: 1px solid #ccc; }
         .print-page .progress-fill { height: 100%; background: #000; }
-        .print-page .badge { display: inline-block; padding: 1pt 6pt; border-radius: 999px; border: 1px solid #000; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .print-page .badge { display: inline-block; padding: 1pt 5pt; border-radius: 999px; border: 1px solid #000; font-size: 6.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
         .print-page .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #ccc; font-size: 8pt; color: #777; display: flex; justify-content: space-between; }
       `}</style>
 
