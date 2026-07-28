@@ -126,7 +126,7 @@ export default function PrintCase() {
           .no-print { display: none !important; }
           .print-page { padding: 0 !important; }
           .print-section { break-inside: avoid; page-break-inside: avoid; }
-          @page { size: A4; margin: 12mm 10mm 16mm 10mm; }
+          @page { size: A4; margin: 12mm 10mm 22mm 10mm; }
           .running-footer {
             display: flex;
             position: fixed;
