@@ -150,6 +150,36 @@ export default function ProjectsList() {
 
   useEffect(() => { fetchProjects(); }, [departments]);
 
+  const [myDoneOnlyProjectIds, setMyDoneOnlyProjectIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!user?.id) { setMyDoneOnlyProjectIds(new Set()); return; }
+    (async () => {
+      const { data } = await supabase
+        .from('case_tasks')
+        .select('status, case:cases!inner(project_id)')
+        .eq('assigned_to', user.id);
+      const byProject = new Map<string, { total: number; done: number }>();
+      (data || []).forEach((r: any) => {
+        const pid = r.case?.project_id;
+        if (!pid) return;
+        const cur = byProject.get(pid) || { total: 0, done: 0 };
+        cur.total += 1;
+        if (r.status === 'done') cur.done += 1;
+        byProject.set(pid, cur);
+      });
+      const done = new Set<string>();
+      byProject.forEach((v, k) => { if (v.total > 0 && v.done === v.total) done.add(k); });
+      setMyDoneOnlyProjectIds(done);
+    })();
+    const ch = supabase.channel('proj-mytasks')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_tasks' }, () => {
+        // simple re-trigger by nudging user id effect
+        setMyDoneOnlyProjectIds(prev => new Set(prev));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id]);
+
   const handleSort = (col: ProjectSortKey) => {
     setSort(prev => {
       const next = nextSort(prev, col);
