@@ -127,47 +127,7 @@ var get_case_details_default = defineTool3({
     if (!id && !number) return errorResult("Bitte case_id oder case_no angeben.");
     const limit = clampLimit(activity_limit, 10, 50);
     let caseRequest = scoped.client.from("cases").select(
-      [
-        "id",
-        "case_no",
-        "project_name",
-        "client_name",
-        "customer_no",
-        "status",
-        "urgency",
-        "effective_urgency",
-        "priority_order",
-        "received_at",
-        "due_at",
-        "planned_week",
-        "started_at",
-        "completed_at",
-        "closed_at",
-        "archived_at",
-        "assignee_id",
-        "department_id",
-        "project_id",
-        "internal_area_code",
-        "product_code",
-        "project_article_no",
-        "quantity",
-        "estimated_hours",
-        "note",
-        "closure_summary",
-        "closure_outputs",
-        "sequential_mode",
-        "lock_mode",
-        "watchers",
-        "watcher_departments",
-        "visibility",
-        "version",
-        "created_by",
-        "created_at",
-        "last_changed_by",
-        "last_changed_at",
-        "closed_by",
-        "archived_by"
-      ].join(", ")
+      "id, case_no, project_name, client_name, customer_no, status, urgency, effective_urgency, priority_order, received_at, due_at, planned_week, started_at, completed_at, closed_at, archived_at, assignee_id, department_id, project_id, internal_area_code, product_code, project_article_no, quantity, estimated_hours, note, closure_summary, closure_outputs, sequential_mode, lock_mode, watchers, watcher_departments, visibility, version, created_by, created_at, last_changed_by, last_changed_at, closed_by, archived_by"
     ).eq("deleted", false).limit(1);
     caseRequest = id ? caseRequest.eq("id", id) : caseRequest.eq("case_no", number);
     const { data: caseRow, error: caseError } = await caseRequest.maybeSingle();
