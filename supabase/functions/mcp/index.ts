@@ -106,17 +106,60 @@ var get_case_summary_default = defineTool2({
   }
 });
 
-// src/lib/mcp/tools/list-projects.ts
+// src/lib/mcp/tools/get-case-details.ts
 import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z3 } from "npm:zod@^3.25.76";
-var list_projects_default = defineTool3({
+var get_case_details_default = defineTool3({
+  name: "get_case_details",
+  title: "Get case details",
+  description: "Detaillierte Metadaten eines einzelnen Vorgangs (Status, F\xE4lligkeit, Zuweisung, Abteilung, Bearbeitungsvermerke) inklusive letzter \xC4nderungen aus dem Aktivit\xE4tsprotokoll. Sichtbarkeit folgt den RLS-Regeln des eingeloggten Users.",
+  inputSchema: {
+    case_id: z3.string().optional().describe("Vorgangs-UUID. Entweder case_id oder case_no angeben."),
+    case_no: z3.string().optional().describe("Vorgangsnummer (z. B. VOR-2026-0784)."),
+    activity_limit: z3.number().int().optional().describe("Maximale Anzahl letzter Aktivit\xE4ten (1-50, Standard 10).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ case_id, case_no, activity_limit }, ctx) => {
+    const scoped = supabaseForUser(ctx);
+    if ("error" in scoped) return scoped.error;
+    const id = case_id?.trim();
+    const number = case_no?.trim();
+    if (!id && !number) return errorResult("Bitte case_id oder case_no angeben.");
+    const limit = clampLimit(activity_limit, 10, 50);
+    let caseRequest = scoped.client.from("cases").select(
+      "id, case_no, project_name, client_name, customer_no, status, urgency, effective_urgency, priority_order, received_at, due_at, planned_week, started_at, completed_at, closed_at, archived_at, assignee_id, department_id, project_id, internal_area_code, product_code, project_article_no, quantity, estimated_hours, note, closure_summary, closure_outputs, sequential_mode, lock_mode, watchers, watcher_departments, visibility, version, created_by, created_at, last_changed_by, last_changed_at, closed_by, archived_by"
+    ).eq("deleted", false).limit(1);
+    caseRequest = id ? caseRequest.eq("id", id) : caseRequest.eq("case_no", number);
+    const { data: caseRow, error: caseError } = await caseRequest.maybeSingle();
+    if (caseError) return errorResult(caseError.message);
+    if (!caseRow) return errorResult("Vorgang nicht gefunden oder nicht sichtbar.");
+    const { data: activity, error: activityError } = await scoped.client.from("case_activity").select("id, action, field, old_value, new_value, message, actor_id, task_id, created_at").eq("case_id", caseRow.id).order("created_at", { ascending: false }).limit(limit);
+    if (activityError) return errorResult(activityError.message);
+    const lastActivityAt = activity?.[0]?.created_at ?? null;
+    return jsonResult(
+      `Vorgang ${caseRow.case_no} \u2014 Status ${caseRow.status}` + (caseRow.last_changed_at ? `, zuletzt ge\xE4ndert ${caseRow.last_changed_at}` : ""),
+      {
+        case: caseRow,
+        last_changed_at: caseRow.last_changed_at,
+        last_changed_by: caseRow.last_changed_by,
+        last_activity_at: lastActivityAt,
+        recent_activity: activity ?? []
+      }
+    );
+  }
+});
+
+// src/lib/mcp/tools/list-projects.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z4 } from "npm:zod@^3.25.76";
+var list_projects_default = defineTool4({
   name: "list_projects",
   title: "List projects",
   description: "List visible projects for the signed-in user, optionally filtered by search text or status.",
   inputSchema: {
-    query: z3.string().optional().describe("Optional search text for project number, code, or name."),
-    status: z3.string().optional().describe("Optional exact project status filter."),
-    limit: z3.number().optional().describe("Maximum number of rows to return. The server clamps this to a safe range.")
+    query: z4.string().optional().describe("Optional search text for project number, code, or name."),
+    status: z4.string().optional().describe("Optional exact project status filter."),
+    limit: z4.number().optional().describe("Maximum number of rows to return. The server clamps this to a safe range.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, status, limit }, ctx) => {
@@ -138,16 +181,16 @@ var list_projects_default = defineTool3({
 });
 
 // src/lib/mcp/tools/list-support-tickets.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z4 } from "npm:zod@^3.25.76";
-var list_support_tickets_default = defineTool4({
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+var list_support_tickets_default = defineTool5({
   name: "list_support_tickets",
   title: "List support tickets",
   description: "List visible internal support tickets for the signed-in user, optionally filtered by search text or status.",
   inputSchema: {
-    query: z4.string().optional().describe("Optional search text for ticket number, title, or description."),
-    status: z4.string().optional().describe("Optional exact support ticket status filter."),
-    limit: z4.number().optional().describe("Maximum number of rows to return. The server clamps this to a safe range.")
+    query: z5.string().optional().describe("Optional search text for ticket number, title, or description."),
+    status: z5.string().optional().describe("Optional exact support ticket status filter."),
+    limit: z5.number().optional().describe("Maximum number of rows to return. The server clamps this to a safe range.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ query, status, limit }, ctx) => {
@@ -169,16 +212,16 @@ var list_support_tickets_default = defineTool4({
 });
 
 // src/lib/mcp/tools/claim-case.ts
-import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z5 } from "npm:zod@^3.25.76";
-var claim_case_default = defineTool5({
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+var claim_case_default = defineTool6({
   name: "claim_case",
   title: "Claim case",
   description: "Assign a Masterliste case (Vorgang) to the signed-in user. If `release` is true, the user releases the case (only when currently assigned to them). RLS rules from the app apply.",
   inputSchema: {
-    case_id: z5.string().optional().describe("Case UUID. Use either case_id or case_no."),
-    case_no: z5.string().optional().describe("Case number, e.g. VOR-2026-0123."),
-    release: z5.boolean().optional().describe("Set true to release/unclaim the case instead of claiming it.")
+    case_id: z6.string().optional().describe("Case UUID. Use either case_id or case_no."),
+    case_no: z6.string().optional().describe("Case number, e.g. VOR-2026-0123."),
+    release: z6.boolean().optional().describe("Set true to release/unclaim the case instead of claiming it.")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async ({ case_id, case_no, release }, ctx) => {
@@ -220,8 +263,8 @@ var claim_case_default = defineTool5({
 });
 
 // src/lib/mcp/tools/set-case-status.ts
-import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z6 } from "npm:zod@^3.25.76";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z7 } from "npm:zod@^3.25.76";
 var ALLOWED = [
   "nicht_begonnen",
   "in_planung",
@@ -233,15 +276,15 @@ var ALLOWED = [
   "ready_for_review",
   "blocked"
 ];
-var set_case_status_default = defineTool6({
+var set_case_status_default = defineTool7({
   name: "set_case_status",
   title: "Set case status",
   description: "Change the status of a Masterliste case (Vorgang). Backend RLS and workflow rules apply. Allowed values: " + ALLOWED.join(", ") + ".",
   inputSchema: {
-    case_id: z6.string().optional().describe("Case UUID. Use either case_id or case_no."),
-    case_no: z6.string().optional().describe("Case number, e.g. VOR-2026-0123."),
-    status: z6.string().describe("New case status. See tool description for allowed values."),
-    note: z6.string().optional().describe("Optional short note added to the case activity log.")
+    case_id: z7.string().optional().describe("Case UUID. Use either case_id or case_no."),
+    case_no: z7.string().optional().describe("Case number, e.g. VOR-2026-0123."),
+    status: z7.string().describe("New case status. See tool description for allowed values."),
+    note: z7.string().optional().describe("Optional short note added to the case activity log.")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async ({ case_id, case_no, status, note }, ctx) => {
@@ -295,17 +338,17 @@ var set_case_status_default = defineTool6({
 });
 
 // src/lib/mcp/tools/post-case-comment.ts
-import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.24.0";
-import { z as z7 } from "npm:zod@^3.25.76";
-var post_case_comment_default = defineTool7({
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z8 } from "npm:zod@^3.25.76";
+var post_case_comment_default = defineTool8({
   name: "post_case_comment",
   title: "Post case comment",
   description: "Post a comment on a Masterliste case (Vorgang). Choose `target` = 'chat' to post into the Vorgang-Chat (default), or 'note' to add an internal note. Backend RLS applies.",
   inputSchema: {
-    case_id: z7.string().optional().describe("Case UUID. Use either case_id or case_no."),
-    case_no: z7.string().optional().describe("Case number, e.g. VOR-2026-0123."),
-    body: z7.string().describe("Comment text. Plain text or markdown."),
-    target: z7.enum(["chat", "note"]).optional().describe("Where to post. Defaults to 'chat'.")
+    case_id: z8.string().optional().describe("Case UUID. Use either case_id or case_no."),
+    case_no: z8.string().optional().describe("Case number, e.g. VOR-2026-0123."),
+    body: z8.string().describe("Comment text. Plain text or markdown."),
+    target: z8.enum(["chat", "note"]).optional().describe("Where to post. Defaults to 'chat'.")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   handler: async ({ case_id, case_no, body, target }, ctx) => {
@@ -339,7 +382,7 @@ var projectRef = "tfzwssplxetptxnhrxse";
 var mcp_default = defineMcp({
   name: "mtcon-masterliste-mcp",
   title: "MTCON Masterliste",
-  version: "0.2.0",
+  version: "0.3.0",
   instructions: "Tools for MTCON Masterliste. Read tools inspect cases, projects, and internal support tickets. Write tools let the signed-in user claim/release Vorg\xE4nge, change their status, and post chat messages or notes. Existing app roles, visibility rules, and backend RLS remain authoritative.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
@@ -348,6 +391,7 @@ var mcp_default = defineMcp({
   tools: [
     list_cases_default,
     get_case_summary_default,
+    get_case_details_default,
     list_projects_default,
     list_support_tickets_default,
     claim_case_default,
