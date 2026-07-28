@@ -483,7 +483,9 @@ export default function CasesList() {
                       >
                         {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                       </button>
-                      <UrgencyDot status={c.status} dueAt={c.due_at} />
+                      {myDoneOnlyCaseIds.has(c.id)
+                        ? <UrgencyDot status={c.status} dueAt={c.due_at} forceColor="bg-muted-foreground/30" forceLabel="✓" />
+                        : <UrgencyDot status={c.status} dueAt={c.due_at} />}
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>
