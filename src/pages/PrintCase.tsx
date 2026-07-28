@@ -121,11 +121,28 @@ export default function PrintCase() {
   return (
     <div className="print-page bg-white text-black min-h-screen">
       <style>{`
+        .running-header { display: none; }
         @media print {
           .no-print { display: none !important; }
           .print-page { padding: 0 !important; }
           .print-section { break-inside: avoid; page-break-inside: avoid; }
-          @page { size: A4; margin: 12mm 10mm; }
+          @page { size: A4; margin: 18mm 10mm 12mm 10mm; }
+          @page :first { margin-top: 12mm; }
+          .running-header {
+            display: block;
+            position: fixed;
+            top: -12mm;
+            left: 0;
+            right: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 8.5pt;
+            color: #555;
+            border-bottom: 1px solid #999;
+            padding-bottom: 2pt;
+            display: flex;
+            justify-content: space-between;
+          }
+          .running-header .first-only { display: none; }
         }
         .print-page { font-family: 'Inter', system-ui, sans-serif; font-size: 10pt; line-height: 1.4; color: #111; }
         .print-page h1 { font-size: 18pt; font-weight: 700; letter-spacing: -0.01em; }
@@ -149,6 +166,11 @@ export default function PrintCase() {
         .print-page .badge { display: inline-block; padding: 1pt 6pt; border-radius: 999px; border: 1px solid #000; font-size: 8pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
         .print-page .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #ccc; font-size: 8pt; color: #777; display: flex; justify-content: space-between; }
       `}</style>
+
+      <div className="running-header">
+        <span className="mono">{c.case_no || (c.case_number ? `#${c.case_number}` : '')}</span>
+        <span>{c.project_name}</span>
+      </div>
 
       <div className="no-print sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-xs text-gray-600 hover:text-black">
