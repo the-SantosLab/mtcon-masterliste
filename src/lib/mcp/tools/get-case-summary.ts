@@ -23,12 +23,11 @@ export default defineTool({
       .from("cases")
       .select("id, case_no, project_name, client_name, customer_no, status, due_at, created_at, note, closure_summary, assignee_id, department_id, project_id")
       .eq("deleted", false)
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
     caseRequest = id ? caseRequest.eq("id", id) : caseRequest.eq("case_no", number);
 
-    const { data: caseRow, error: caseError } = await caseRequest;
+    const { data: caseRow, error: caseError } = await caseRequest.maybeSingle();
     if (caseError) return errorResult(caseError.message);
     if (!caseRow) return errorResult("Vorgang nicht gefunden oder nicht sichtbar.");
 
