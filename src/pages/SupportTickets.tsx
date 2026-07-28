@@ -63,7 +63,7 @@ const KIND_LABELS: Record<string, string> = {
 };
 
 export default function SupportTickets() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { preferences } = usePreferences();
   const compact = preferences.compactTables;
   const cellCls = compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2.5 text-xs';
@@ -76,6 +76,19 @@ export default function SupportTickets() {
   const [assigneeFilter, setAssigneeFilter] = useState<Set<string>>(new Set());
   const [sourceFilter, setSourceFilter] = useState<Set<string>>(new Set());
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [defaultApplied, setDefaultApplied] = useState(false);
+
+  // Johannes: automatisch nur offene Tickets vorfiltern
+  useEffect(() => {
+    if (defaultApplied) return;
+    const name = profile?.display_name?.toLowerCase() || '';
+    const code = (profile as any)?.short_code?.toUpperCase() || '';
+    const isJohannes = name.includes('johannes') || code === 'JOK' || code === 'JK';
+    if (isJohannes) {
+      setStatusFilter(new Set(['open', 'in_progress', 'waiting']));
+    }
+    if (profile) setDefaultApplied(true);
+  }, [profile, defaultApplied]);
 
   const fetchTickets = async () => {
     const { data } = await supabase
