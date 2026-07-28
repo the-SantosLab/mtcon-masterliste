@@ -95,14 +95,25 @@ export default function CasesList() {
   };
 
   const [myTaskCaseIds, setMyTaskCaseIds] = useState<Set<string>>(new Set());
+  const [myDoneOnlyCaseIds, setMyDoneOnlyCaseIds] = useState<Set<string>>(new Set());
 
   const fetchMyTaskCaseIds = async () => {
-    if (!user?.id) { setMyTaskCaseIds(new Set()); return; }
+    if (!user?.id) { setMyTaskCaseIds(new Set()); setMyDoneOnlyCaseIds(new Set()); return; }
     const { data } = await supabase
       .from('case_tasks')
-      .select('case_id')
+      .select('case_id, status')
       .eq('assigned_to', user.id);
-    setMyTaskCaseIds(new Set((data || []).map((r: any) => r.case_id)));
+    const byCase = new Map<string, { total: number; done: number }>();
+    (data || []).forEach((r: any) => {
+      const cur = byCase.get(r.case_id) || { total: 0, done: 0 };
+      cur.total += 1;
+      if (r.status === 'done') cur.done += 1;
+      byCase.set(r.case_id, cur);
+    });
+    setMyTaskCaseIds(new Set(byCase.keys()));
+    const done = new Set<string>();
+    byCase.forEach((v, k) => { if (v.total > 0 && v.done === v.total) done.add(k); });
+    setMyDoneOnlyCaseIds(done);
   };
 
   useEffect(() => {
@@ -459,7 +470,7 @@ export default function CasesList() {
                 const isExpanded = expandedSubtasks.has(c.id);
                 return (
                 <Fragment key={c.id}>
-                <tr className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((c as any).urgency, (c as any).status))}>
+                <tr className={cn('hover:bg-muted/40 transition-colors', !myDoneOnlyCaseIds.has(c.id) && getUrgencyRowClass((c as any).urgency, (c as any).status))}>
                   <td className={cellCls}>
                     <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
                       <button
@@ -472,7 +483,9 @@ export default function CasesList() {
                       >
                         {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                       </button>
-                      <UrgencyDot status={c.status} dueAt={c.due_at} />
+                      {myDoneOnlyCaseIds.has(c.id)
+                        ? <UrgencyDot status={c.status} dueAt={c.due_at} forceColor="bg-muted-foreground/30" forceLabel="✓" />
+                        : <UrgencyDot status={c.status} dueAt={c.due_at} />}
                       {STATUS_LABELS[c.status]}
                     </span>
                   </td>
