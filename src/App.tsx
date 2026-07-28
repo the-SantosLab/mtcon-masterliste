@@ -93,6 +93,7 @@ const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalTickets = lazy(() => import("./pages/portal/PortalTickets"));
 const PortalCreateTicket = lazy(() => import("./pages/portal/PortalCreateTicket"));
 const PortalTicketDetail = lazy(() => import("./pages/portal/PortalTicketDetail"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const ModuleSelect = lazy(() => import("./pages/ModuleSelect"));
 const CrmDashboard = lazy(() => import("./pages/crm/CrmDashboard"));
 const CrmDeals = lazy(() => import("./pages/crm/CrmDeals"));
@@ -204,6 +205,7 @@ function AuthenticatedApp() {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/mfa-challenge" element={<MfaChallenge />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
