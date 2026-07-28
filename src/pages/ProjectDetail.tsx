@@ -440,6 +440,25 @@ export default function ProjectDetail() {
                 <Printer className="h-3.5 w-3.5" />Drucken
               </Button>
             </Link>
+            {canEdit && project.status !== 'completed' && total > 0 && progress === 100 && (
+              <Button
+                size="sm"
+                className="h-8 text-xs gap-1.5 bg-[hsl(var(--status-done))] hover:bg-[hsl(var(--status-done))]/90 text-white"
+                onClick={() => saveField('status', 'completed', 'Status')}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />Projekt abschließen
+              </Button>
+            )}
+            {canEdit && project.status === 'completed' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1.5"
+                onClick={() => saveField('status', 'active', 'Status')}
+              >
+                Projekt wieder öffnen
+              </Button>
+            )}
 
           </div>
         </div>
