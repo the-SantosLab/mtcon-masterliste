@@ -366,7 +366,7 @@ export default function ProjectsList() {
                     </td>
                   </tr>
                 ) : filtered.map(p => (
-                  <tr key={p.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass((p as any).urgency))}>
+                  <tr key={p.id} className={cn('hover:bg-muted/40 transition-colors', !myDoneOnlyProjectIds.has(p.id) && getUrgencyRowClass((p as any).urgency))}>
                     <td className={cellCls}>
                       <span className={cn('inline-block h-1.5 w-1.5 rounded-full', STATUS_COLORS[p.status] ?? 'bg-muted-foreground')} />
                     </td>
