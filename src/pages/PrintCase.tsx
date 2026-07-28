@@ -164,7 +164,7 @@ export default function PrintCase() {
         .print-page .footer { margin-top: 14pt; padding-top: 6pt; border-top: 1px solid #ccc; font-size: 8pt; color: #777; display: flex; justify-content: space-between; }
       `}</style>
 
-      <div className="running-header">
+      <div className="running-footer">
         <span className="mono">{c.case_no || (c.case_number ? `#${c.case_number}` : '')}</span>
         <span>{c.project_name}</span>
       </div>
