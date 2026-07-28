@@ -1,6 +1,7 @@
 import { auth, defineMcp } from "@lovable.dev/mcp-js";
 import listCasesTool from "./tools/list-cases";
 import getCaseSummaryTool from "./tools/get-case-summary";
+import getCaseDetailsTool from "./tools/get-case-details";
 import listProjectsTool from "./tools/list-projects";
 import listSupportTicketsTool from "./tools/list-support-tickets";
 import claimCaseTool from "./tools/claim-case";
@@ -12,7 +13,7 @@ const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unse
 export default defineMcp({
   name: "mtcon-masterliste-mcp",
   title: "MTCON Masterliste",
-  version: "0.2.0",
+  version: "0.3.0",
   instructions:
     "Tools for MTCON Masterliste. Read tools inspect cases, projects, and internal support tickets. Write tools let the signed-in user claim/release Vorgänge, change their status, and post chat messages or notes. Existing app roles, visibility rules, and backend RLS remain authoritative.",
   auth: auth.oauth.issuer({
@@ -22,6 +23,7 @@ export default defineMcp({
   tools: [
     listCasesTool,
     getCaseSummaryTool,
+    getCaseDetailsTool,
     listProjectsTool,
     listSupportTicketsTool,
     claimCaseTool,
