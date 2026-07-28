@@ -126,20 +126,18 @@ export default function PrintCase() {
           .no-print { display: none !important; }
           .print-page { padding: 0 !important; }
           .print-section { break-inside: avoid; page-break-inside: avoid; }
-          @page { size: A4; margin: 18mm 10mm 12mm 10mm; }
-          @page :first { margin-top: 12mm; }
+          @page { size: A4; margin: 22mm 10mm 12mm 10mm; }
           .running-header {
-            display: block;
+            display: flex;
             position: fixed;
-            top: -12mm;
-            left: 0;
-            right: 0;
+            top: 6mm;
+            left: 10mm;
+            right: 10mm;
             font-family: 'Inter', system-ui, sans-serif;
             font-size: 8.5pt;
             color: #555;
             border-bottom: 1px solid #999;
             padding-bottom: 2pt;
-            display: flex;
             justify-content: space-between;
           }
           .running-header .first-only { display: none; }
