@@ -144,8 +144,8 @@ export function MtiqPanel({ open, onClose }: Props) {
         ...(pos
           ? { left: pos.x, top: pos.y }
           : { bottom: 96, right: 28 }),
-        width: expanded ? 920 : 480,
-        height: expanded ? 'calc(100vh - 140px)' : 680,
+        width: minimized ? 280 : (expanded ? 920 : 480),
+        height: minimized ? 'auto' : (expanded ? 'calc(100vh - 140px)' : 680),
         maxHeight: 'calc(100vh - 120px)',
         maxWidth: 'calc(100vw - 40px)',
         background: 'var(--mtiq-bg)',
