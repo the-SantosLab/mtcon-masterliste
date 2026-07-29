@@ -280,6 +280,61 @@ export default function AdminErpExport() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="audit">
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-lg font-semibold">Beleg-Audit-Log</h2>
+                  <p className="text-xs text-muted-foreground">Revisionssichere Protokollierung aller Belegänderungen (letzte 200 Einträge).</p>
+                </div>
+                <select
+                  className="text-sm bg-background border rounded px-2 py-1"
+                  value={activityFilter}
+                  onChange={(e) => setActivityFilter(e.target.value)}
+                >
+                  <option value="all">Alle Belege</option>
+                  <option value="invoice">Rechnungen</option>
+                  <option value="offer">Angebote</option>
+                  <option value="order">Aufträge</option>
+                  <option value="delivery">Lieferscheine</option>
+                  <option value="purchase_order">Bestellungen</option>
+                </select>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground border-b">
+                  <tr>
+                    <th className="text-left py-2 pr-3">Zeit</th>
+                    <th className="text-left py-2 pr-3">Beleg</th>
+                    <th className="text-left py-2 pr-3">Aktion</th>
+                    <th className="text-left py-2 pr-3">Person</th>
+                    <th className="text-left py-2 pr-3">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activity.filter(a => activityFilter === 'all' || a.entity_type === activityFilter).map(a => (
+                    <tr key={a.id} className="border-b hover:bg-white/5 align-top">
+                      <td className="py-2 pr-3 text-xs whitespace-nowrap">{new Date(a.created_at).toLocaleString('de-DE')}</td>
+                      <td className="py-2 pr-3"><div className="font-mono text-xs">{a.entity_no || a.entity_id.slice(0, 8)}</div><div className="text-[10px] text-muted-foreground uppercase">{a.entity_type}</div></td>
+                      <td className="py-2 pr-3"><Badge variant="outline" className="text-xs">{a.action}</Badge></td>
+                      <td className="py-2 pr-3 text-xs">{a.actor_name || '—'}</td>
+                      <td className="py-2 pr-3 text-xs text-muted-foreground">
+                        {a.note && <div>{a.note}</div>}
+                        {(a.before || a.after) && (
+                          <div className="font-mono text-[10px]">
+                            {a.before && <span>vorher: {JSON.stringify(a.before)}</span>}
+                            {a.before && a.after && ' → '}
+                            {a.after && <span>nachher: {JSON.stringify(a.after)}</span>}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {activity.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">Noch keine Audit-Einträge.</td></tr>}
+                </tbody>
+              </table>
+            </Card>
+          </TabsContent>
+
           {isAdmin && settings && (
             <TabsContent value="settings">
               <Card className="p-4 space-y-4 max-w-2xl">
