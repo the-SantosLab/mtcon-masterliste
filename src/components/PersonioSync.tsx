@@ -41,6 +41,36 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
   const [hasSecret, setHasSecret] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<{ at?: string; count?: number }>({});
+  const [stats, setStats] = useState<{
+    employees: number | null;
+    attendances: number | null;
+    attLatest: string | null;
+    absences: number | null;
+    mapped: number | null;
+    attUpdated: string | null;
+  }>({ employees: null, attendances: null, attLatest: null, absences: null, mapped: null, attUpdated: null });
+
+  const loadStats = async () => {
+    try {
+      const [emp, att, abs, map, attMeta] = await Promise.all([
+        supabase.from('users_profile').select('id', { count: 'exact', head: true }).eq('active', true),
+        supabase.from('personio_attendances').select('id', { count: 'exact', head: true }),
+        supabase.from('personio_absences').select('id', { count: 'exact', head: true }),
+        supabase.from('personio_employee_map').select('id', { count: 'exact', head: true }),
+        supabase.from('personio_attendances').select('work_date, updated_at').order('work_date', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      setStats({
+        employees: emp.count ?? null,
+        attendances: att.count ?? null,
+        absences: abs.count ?? null,
+        mapped: map.count ?? null,
+        attLatest: (attMeta.data as { work_date?: string } | null)?.work_date ?? null,
+        attUpdated: (attMeta.data as { updated_at?: string } | null)?.updated_at ?? null,
+      });
+    } catch {
+      /* stats optional */
+    }
+  };
 
   const loadSettings = async () => {
     setRunning('load');
