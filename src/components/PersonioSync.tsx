@@ -177,6 +177,66 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
         </p>
       </div>
 
+      {/* Status-Übersicht */}
+      <div className="rounded-md border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">Status</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px]">
+            {ready ? (
+              lastSync.at ? (
+                <><CheckCircle2 className="h-3 w-3 text-green-500" /><span className="text-muted-foreground">Aktiv</span></>
+              ) : (
+                <><AlertCircle className="h-3 w-3 text-amber-500" /><span className="text-muted-foreground">Konfiguriert, noch kein Sync</span></>
+              )
+            ) : (
+              <><AlertCircle className="h-3 w-3 text-amber-500" /><span className="text-muted-foreground">Nicht konfiguriert</span></>
+            )}
+            <Button
+              variant="ghost" size="sm" onClick={loadStats}
+              className="h-6 px-2 text-[11px] ml-1"
+              disabled={running === 'load'}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />Aktualisieren
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Aktive Nutzer</div>
+            <div className="text-lg font-semibold tabular-nums">{stats.employees ?? '–'}</div>
+            <div className="text-[10px] text-muted-foreground">{stats.mapped ?? 0} verknüpft</div>
+          </div>
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Letzter Mitarbeiter-Sync</div>
+            <div className="text-xs font-medium">
+              {lastSync.at ? new Date(lastSync.at).toLocaleString('de-DE') : '–'}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {typeof lastSync.count === 'number' ? `${lastSync.count} aus Personio` : '–'}
+            </div>
+          </div>
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Attendance-Zeilen</div>
+            <div className="text-lg font-semibold tabular-nums">{stats.attendances ?? '–'}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {stats.attLatest ? `bis ${new Date(stats.attLatest).toLocaleDateString('de-DE')}` : '–'}
+            </div>
+          </div>
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Absence-Zeilen</div>
+            <div className="text-lg font-semibold tabular-nums">{stats.absences ?? '–'}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {stats.attUpdated ? `Update ${new Date(stats.attUpdated).toLocaleString('de-DE')}` : '–'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       {/* Credentials-Maske */}
       <div className="rounded-md border border-border bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
