@@ -94,7 +94,7 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
     }
   };
 
-  useEffect(() => { loadSettings(); }, []);
+  useEffect(() => { loadSettings(); loadStats(); }, []);
 
   const save = async () => {
     if (!clientId.trim()) {
