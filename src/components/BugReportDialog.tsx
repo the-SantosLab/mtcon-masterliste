@@ -194,11 +194,24 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
         ? `Bezug zu Vorgang ${caseNo}\n\n${description.trim()}`
         : description.trim();
 
-      // Session vor dem Insert absichern – bei abgelaufenem/refreshendem Access-Token
-      // wäre auth.uid() = NULL und die RLS-Policy würde greifen.
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
-        await supabase.auth.refreshSession();
+      // Server-seitig gültige Session sicherstellen. Ein lokal vorhandener
+      // JWT kann nach Signing-Key-Rotation "missing sub claim" liefern –
+      // dann ist auth.uid() = NULL und die RLS-Policy blockt den Insert.
+      let verifiedUserId: string | null = null;
+      {
+        const { data: u1 } = await supabase.auth.getUser();
+        verifiedUserId = u1?.user?.id ?? null;
+        if (!verifiedUserId) {
+          await supabase.auth.refreshSession();
+          const { data: u2 } = await supabase.auth.getUser();
+          verifiedUserId = u2?.user?.id ?? null;
+        }
+      }
+      if (!verifiedUserId) {
+        toast.error('Deine Sitzung ist abgelaufen. Bitte neu anmelden.');
+        try { await supabase.auth.signOut(); } catch { /* ignore */ }
+        navigate('/auth');
+        return;
       }
 
       const doInsert = () => supabase
@@ -210,7 +223,7 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
           priority: priority as any,
           source: 'intern',
           kind,
-          reporter_user_id: user.id,
+          reporter_user_id: verifiedUserId,
           case_id: caseId ?? null,
           route: meta.route,
           client_meta: meta,
@@ -220,7 +233,7 @@ export function BugReportDialog({ open, onOpenChange, caseId, caseNo }: Props) {
 
       let { data: inserted, error } = await doInsert();
       // Bei RLS-/Auth-Fehler einmal Token refreshen und erneut versuchen
-      if (error && /row-level security|JWT|permission/i.test(error.message)) {
+      if (error && /row-level security|JWT|permission|sub claim/i.test(error.message)) {
         await supabase.auth.refreshSession();
         ({ data: inserted, error } = await doInsert());
       }
