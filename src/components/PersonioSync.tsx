@@ -153,6 +153,7 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
           } catch { /* nicht fatal */ }
           onDone?.();
           loadSettings();
+          loadStats();
         }
       }
     } catch (e) {
