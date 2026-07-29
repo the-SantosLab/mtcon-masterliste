@@ -177,13 +177,23 @@ export function MtiqPanel({ open, onClose }: Props) {
           <div className="text-[10px]" style={{ color: '#666' }}>KI-Assistent {subline}</div>
         </div>
         <button
-          onClick={() => setExpanded(e => !e)}
+          onClick={() => setMinimized(m => !m)}
           className="p-1 rounded hover:bg-white/5"
           style={{ color: '#666' }}
-          title={expanded ? 'Verkleinern' : 'Vergrößern'}
+          title={minimized ? 'Öffnen' : 'Minimieren'}
         >
-          {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          {minimized ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
+        {!minimized && (
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="p-1 rounded hover:bg-white/5"
+            style={{ color: '#666' }}
+            title={expanded ? 'Verkleinern' : 'Vergrößern'}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+        )}
         <button onClick={onClose} className="p-1 rounded hover:bg-white/5" style={{ color: '#666' }}>
           <X className="h-4 w-4" />
         </button>
