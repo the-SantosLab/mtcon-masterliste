@@ -199,6 +199,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         </button>
       </div>
 
+      {!minimized && <>
       <div className="px-3 pt-2 pb-1 flex gap-1 flex-wrap" style={{ borderBottom: '1px solid #1a1a1a' }}>
         {tabs.map(([k, label]) => (
           <button
@@ -241,6 +242,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         <span>powered by MTIQ v1</span>
         <span>Einstellungen</span>
       </div>
+      </>}
     </div>
   );
 }
