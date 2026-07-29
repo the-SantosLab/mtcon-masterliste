@@ -6521,6 +6521,7 @@ export type Database = {
           order_id: string
           position: number
           qty_delivered: number
+          qty_invoiced: number
           quantity: number
           sku: string | null
           tax_rate: number | null
@@ -6537,6 +6538,7 @@ export type Database = {
           order_id: string
           position?: number
           qty_delivered?: number
+          qty_invoiced?: number
           quantity?: number
           sku?: string | null
           tax_rate?: number | null
@@ -6553,6 +6555,7 @@ export type Database = {
           order_id?: string
           position?: number
           qty_delivered?: number
+          qty_invoiced?: number
           quantity?: number
           sku?: string | null
           tax_rate?: number | null
@@ -9159,6 +9162,11 @@ export type Database = {
         Args: { _case_id: string }
         Returns: undefined
       }
+      recalc_order_item_progress: {
+        Args: { _order_item_id: string }
+        Returns: undefined
+      }
+      recalc_order_status: { Args: { _order_id: string }; Returns: undefined }
       recompute_case_urgency: {
         Args: { p_case_id: string }
         Returns: undefined
