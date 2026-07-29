@@ -3,6 +3,15 @@ import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { buildErpPdf, ErpDocType } from '@/lib/erp-pdf/fetch';
 import { enqueuePdfJob } from '@/lib/pdfJobs';
+import { supabase } from '@/integrations/supabase/client';
+
+const LOCK_KIND: Partial<Record<ErpDocType, 'invoice' | 'offer' | 'order' | 'delivery' | 'purchase_order'>> = {
+  angebot: 'offer',
+  ab: 'order',
+  bestellung: 'purchase_order',
+  lieferschein: 'delivery',
+  rechnung: 'invoice',
+};
 
 interface Props {
   type: ErpDocType;
