@@ -226,8 +226,14 @@ Deno.serve(async (req) => {
       worked: number; brk: number; comments: string[];
     };
     const byDay = new Map<string, DayAgg>();
-    const nowMs = Date.now();
-    const todayLocal = new Date().toISOString().slice(0, 10);
+    // Berliner Zeitzone (Personio-Server) — Personio liefert naive Datetimes ohne TZ,
+    // die tatsächlich lokale (Berliner) Uhrzeit sind. Ein Vergleich mit Date.now()
+    // in UTC würde offene Perioden fälschlich als "Zukunft" verwerfen. Wir filtern
+    // daher nur nach Datum (attribution_date > heute in Berliner Zeit).
+    const todayBerlin = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Berlin',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date());
     let skippedFuture = 0;
     for (const p of periods) {
       const pid = String(p?.person?.id ?? '');
@@ -237,10 +243,9 @@ Deno.serve(async (req) => {
       if (!startIso) continue;
       const endIso: string | null = p?.end?.date_time ?? null;
       const date: string = p?.attribution_date || String(startIso).slice(0, 10);
-      // Zukunfts-Perioden verwerfen: Personio erlaubt manuelle Einträge und liefert
-      // ggf. Sollzeit-Planungen für zukünftige Tage. Diese sind KEINE echten Stempelzeiten.
-      const startMs = new Date(startIso).getTime();
-      if (date > todayLocal || (Number.isFinite(startMs) && startMs > nowMs)) {
+      // Zukunfts-Perioden (geplante Sollzeiten) verwerfen — rein datumsbasiert,
+      // damit offene Perioden am heutigen Tag NICHT durch UTC/Local-Drift rausfallen.
+      if (date > todayBerlin) {
         skippedFuture++;
         continue;
       }
