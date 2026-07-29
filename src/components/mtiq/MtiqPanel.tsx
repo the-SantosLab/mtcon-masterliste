@@ -34,6 +34,9 @@ export function MtiqPanel({ open, onClose }: Props) {
   const [expanded, setExpanded] = useState<boolean>(() => {
     try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
   });
+  const [minimized, setMinimized] = useState<boolean>(() => {
+    try { return localStorage.getItem('mtiq-panel-minimized') === '1'; } catch { return false; }
+  });
   const [pos, setPos] = useState<{ x: number; y: number } | null>(() => {
     try {
       const raw = localStorage.getItem('mtiq-panel-pos');
