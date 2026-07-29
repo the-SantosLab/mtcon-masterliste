@@ -19,6 +19,7 @@ import { useCrmAccess } from "./hooks/useCrmAccess";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminInvoices from "./pages/AdminInvoices";
+const AdminErpExport = lazy(() => import("./pages/AdminErpExport"));
 
 // Alle übrigen Seiten lazy — Route-basiertes Code-Splitting
 const Index = lazy(() => import("./pages/Index"));
