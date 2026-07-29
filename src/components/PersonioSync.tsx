@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, KeyRound, RefreshCw, FlaskConical, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, KeyRound, RefreshCw, FlaskConical, Save, CheckCircle2, AlertCircle, Activity } from 'lucide-react';
 
 interface SyncResult {
   ok?: boolean;
@@ -41,6 +41,36 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
   const [hasSecret, setHasSecret] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<{ at?: string; count?: number }>({});
+  const [stats, setStats] = useState<{
+    employees: number | null;
+    attendances: number | null;
+    attLatest: string | null;
+    absences: number | null;
+    mapped: number | null;
+    attUpdated: string | null;
+  }>({ employees: null, attendances: null, attLatest: null, absences: null, mapped: null, attUpdated: null });
+
+  const loadStats = async () => {
+    try {
+      const [emp, att, abs, map, attMeta] = await Promise.all([
+        supabase.from('users_profile').select('id', { count: 'exact', head: true }).eq('active', true),
+        supabase.from('personio_attendances').select('id', { count: 'exact', head: true }),
+        supabase.from('personio_absences').select('id', { count: 'exact', head: true }),
+        supabase.from('personio_employee_map').select('id', { count: 'exact', head: true }),
+        supabase.from('personio_attendances').select('work_date, updated_at').order('work_date', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      setStats({
+        employees: emp.count ?? null,
+        attendances: att.count ?? null,
+        absences: abs.count ?? null,
+        mapped: map.count ?? null,
+        attLatest: (attMeta.data as { work_date?: string } | null)?.work_date ?? null,
+        attUpdated: (attMeta.data as { updated_at?: string } | null)?.updated_at ?? null,
+      });
+    } catch {
+      /* stats optional */
+    }
+  };
 
   const loadSettings = async () => {
     setRunning('load');
@@ -64,7 +94,7 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
     }
   };
 
-  useEffect(() => { loadSettings(); }, []);
+  useEffect(() => { loadSettings(); loadStats(); }, []);
 
   const save = async () => {
     if (!clientId.trim()) {
@@ -123,6 +153,7 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
           } catch { /* nicht fatal */ }
           onDone?.();
           loadSettings();
+          loadStats();
         }
       }
     } catch (e) {
@@ -145,6 +176,66 @@ export function PersonioSync({ onDone }: { onDone?: () => void }) {
           Profile werden anhand der E-Mail aktualisiert, neue Mitarbeitende werden angelegt.
         </p>
       </div>
+
+      {/* Status-Übersicht */}
+      <div className="rounded-md border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">Status</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px]">
+            {ready ? (
+              lastSync.at ? (
+                <><CheckCircle2 className="h-3 w-3 text-green-500" /><span className="text-muted-foreground">Aktiv</span></>
+              ) : (
+                <><AlertCircle className="h-3 w-3 text-amber-500" /><span className="text-muted-foreground">Konfiguriert, noch kein Sync</span></>
+              )
+            ) : (
+              <><AlertCircle className="h-3 w-3 text-amber-500" /><span className="text-muted-foreground">Nicht konfiguriert</span></>
+            )}
+            <Button
+              variant="ghost" size="sm" onClick={loadStats}
+              className="h-6 px-2 text-[11px] ml-1"
+              disabled={running === 'load'}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />Aktualisieren
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Aktive Nutzer</div>
+            <div className="text-lg font-semibold tabular-nums">{stats.employees ?? '–'}</div>
+            <div className="text-[10px] text-muted-foreground">{stats.mapped ?? 0} verknüpft</div>
+          </div>
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Letzter Mitarbeiter-Sync</div>
+            <div className="text-xs font-medium">
+              {lastSync.at ? new Date(lastSync.at).toLocaleString('de-DE') : '–'}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {typeof lastSync.count === 'number' ? `${lastSync.count} aus Personio` : '–'}
+            </div>
+          </div>
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Attendance-Zeilen</div>
+            <div className="text-lg font-semibold tabular-nums">{stats.attendances ?? '–'}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {stats.attLatest ? `bis ${new Date(stats.attLatest).toLocaleDateString('de-DE')}` : '–'}
+            </div>
+          </div>
+          <div className="rounded border border-border/60 bg-background/50 p-2">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Absence-Zeilen</div>
+            <div className="text-lg font-semibold tabular-nums">{stats.absences ?? '–'}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {stats.attUpdated ? `Update ${new Date(stats.attUpdated).toLocaleString('de-DE')}` : '–'}
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       {/* Credentials-Maske */}
       <div className="rounded-md border border-border bg-card p-4 space-y-3">
