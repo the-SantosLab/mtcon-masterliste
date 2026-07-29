@@ -40,7 +40,7 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
 
   const load = useCallback(async () => {
     const [{ data: its }, { data: whs }, { data: dlvs }, { data: invs }] = await Promise.all([
-      supabase.from('order_items').select('id, position, sku, description, quantity, unit, art_nr').eq('order_id', orderId).order('position'),
+      supabase.from('order_items').select('id, position, sku, description, quantity, unit, art_nr, unit_price, tax_rate, qty_delivered, qty_invoiced').eq('order_id', orderId).order('position'),
       supabase.from('warehouses').select('id, code, name').order('code'),
       (supabase.from('deliveries' as any).select('id, delivery_no, status').eq('order_id', orderId).order('created_at', { ascending: false })) as any,
       (supabase.from('invoices' as any).select('id, invoice_no, status').eq('order_id', orderId).order('created_at', { ascending: false })) as any,
@@ -54,26 +54,15 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
     setInvoices((invs as Invoice[]) || []);
 
     const artNrs = items.map((it: any) => it.art_nr || it.sku).filter(Boolean);
-    const [{ data: stock }, { data: reserv }, { data: dlvIds }] = await Promise.all([
+    const [{ data: stock }, { data: reserv }] = await Promise.all([
       artNrs.length ? supabase.from('inventory_stock').select('art_nr, quantity').in('art_nr', artNrs) : Promise.resolve({ data: [] as any[] }),
       artNrs.length ? supabase.from('stock_reservations').select('art_nr, quantity').eq('order_id', orderId).eq('status', 'open') : Promise.resolve({ data: [] as any[] }),
-      (supabase.from('deliveries' as any).select('id').eq('order_id', orderId)) as any,
     ]);
 
     const stockMap = new Map<string, number>();
     (stock || []).forEach((s: any) => stockMap.set(s.art_nr, (stockMap.get(s.art_nr) || 0) + Number(s.quantity)));
     const resMap = new Map<string, number>();
     (reserv || []).forEach((r: any) => resMap.set(r.art_nr, (resMap.get(r.art_nr) || 0) + Number(r.quantity)));
-
-    const deliveryIds = ((dlvIds as any[]) || []).map(d => d.id);
-    let deliveredMap = new Map<string, number>();
-    if (deliveryIds.length) {
-      const { data: di } = await (supabase.from('delivery_items' as any).select('order_item_id, quantity').in('delivery_id', deliveryIds)) as any;
-      (di || []).forEach((d: any) => {
-        if (!d.order_item_id) return;
-        deliveredMap.set(d.order_item_id, (deliveredMap.get(d.order_item_id) || 0) + Number(d.quantity));
-      });
-    }
 
     setRows(items.map((it: any) => {
       const an = it.art_nr || it.sku;
@@ -82,9 +71,11 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
         art_nr: an,
         stock: an ? (stockMap.get(an) || 0) : 0,
         reserved: an ? (resMap.get(an) || 0) : 0,
-        delivered: deliveredMap.get(it.id) || 0,
+        delivered: Number(it.qty_delivered || 0),
+        invoiced: Number(it.qty_invoiced || 0),
       };
     }));
+
   }, [orderId, warehouseId]);
 
   useEffect(() => { load(); }, [load]);
