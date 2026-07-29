@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Maximize2, Minimize2, GripVertical } from 'lucide-react';
+import { X, Maximize2, Minimize2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
@@ -34,6 +34,9 @@ export function MtiqPanel({ open, onClose }: Props) {
   const [expanded, setExpanded] = useState<boolean>(() => {
     try { return localStorage.getItem('mtiq-panel-expanded') === '1'; } catch { return false; }
   });
+  const [minimized, setMinimized] = useState<boolean>(() => {
+    try { return localStorage.getItem('mtiq-panel-minimized') === '1'; } catch { return false; }
+  });
   const [pos, setPos] = useState<{ x: number; y: number } | null>(() => {
     try {
       const raw = localStorage.getItem('mtiq-panel-pos');
@@ -44,6 +47,9 @@ export function MtiqPanel({ open, onClose }: Props) {
   useEffect(() => {
     try { localStorage.setItem('mtiq-panel-expanded', expanded ? '1' : '0'); } catch { /* ignore */ }
   }, [expanded]);
+  useEffect(() => {
+    try { localStorage.setItem('mtiq-panel-minimized', minimized ? '1' : '0'); } catch { /* ignore */ }
+  }, [minimized]);
   useEffect(() => {
     if (pos) {
       try { localStorage.setItem('mtiq-panel-pos', JSON.stringify(pos)); } catch { /* ignore */ }
@@ -138,8 +144,8 @@ export function MtiqPanel({ open, onClose }: Props) {
         ...(pos
           ? { left: pos.x, top: pos.y }
           : { bottom: 96, right: 28 }),
-        width: expanded ? 920 : 480,
-        height: expanded ? 'calc(100vh - 140px)' : 680,
+        width: minimized ? 280 : (expanded ? 920 : 480),
+        height: minimized ? 'auto' : (expanded ? 'calc(100vh - 140px)' : 680),
         maxHeight: 'calc(100vh - 120px)',
         maxWidth: 'calc(100vw - 40px)',
         background: 'var(--mtiq-bg)',
@@ -171,18 +177,29 @@ export function MtiqPanel({ open, onClose }: Props) {
           <div className="text-[10px]" style={{ color: '#666' }}>KI-Assistent {subline}</div>
         </div>
         <button
-          onClick={() => setExpanded(e => !e)}
+          onClick={() => setMinimized(m => !m)}
           className="p-1 rounded hover:bg-white/5"
           style={{ color: '#666' }}
-          title={expanded ? 'Verkleinern' : 'Vergrößern'}
+          title={minimized ? 'Öffnen' : 'Minimieren'}
         >
-          {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          {minimized ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
+        {!minimized && (
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="p-1 rounded hover:bg-white/5"
+            style={{ color: '#666' }}
+            title={expanded ? 'Verkleinern' : 'Vergrößern'}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+        )}
         <button onClick={onClose} className="p-1 rounded hover:bg-white/5" style={{ color: '#666' }}>
           <X className="h-4 w-4" />
         </button>
       </div>
 
+      {!minimized && <>
       <div className="px-3 pt-2 pb-1 flex gap-1 flex-wrap" style={{ borderBottom: '1px solid #1a1a1a' }}>
         {tabs.map(([k, label]) => (
           <button
@@ -225,6 +242,7 @@ export function MtiqPanel({ open, onClose }: Props) {
         <span>powered by MTIQ v1</span>
         <span>Einstellungen</span>
       </div>
+      </>}
     </div>
   );
 }
