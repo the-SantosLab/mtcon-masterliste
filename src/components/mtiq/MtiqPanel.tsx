@@ -48,6 +48,9 @@ export function MtiqPanel({ open, onClose }: Props) {
     try { localStorage.setItem('mtiq-panel-expanded', expanded ? '1' : '0'); } catch { /* ignore */ }
   }, [expanded]);
   useEffect(() => {
+    try { localStorage.setItem('mtiq-panel-minimized', minimized ? '1' : '0'); } catch { /* ignore */ }
+  }, [minimized]);
+  useEffect(() => {
     if (pos) {
       try { localStorage.setItem('mtiq-panel-pos', JSON.stringify(pos)); } catch { /* ignore */ }
     }
