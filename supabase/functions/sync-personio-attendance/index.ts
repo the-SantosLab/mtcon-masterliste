@@ -118,9 +118,25 @@ function hhmm(dateTime: string | null | undefined): string | null {
   return s.length >= 16 ? s.slice(11, 16) : null;
 }
 
+function parsePersonioLocal(dt: string): number {
+  // Personio liefert naive Datetimes in Berliner Lokalzeit (z.B. "2026-07-29T07:21:00").
+  // JS würde das als UTC interpretieren. Wir hängen den korrekten Offset an
+  // (CEST = +02:00 im Sommer, CET = +01:00 im Winter).
+  const m = dt.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/);
+  if (!m) return new Date(dt).getTime();
+  const [, y, mo, d, h, mi, s] = m;
+  // Bestimme, ob das Datum in Sommerzeit (CEST) fällt.
+  const probe = new Date(Date.UTC(+y, +mo - 1, +d, 12, 0, 0));
+  const tzName = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Berlin', timeZoneName: 'short',
+  }).formatToParts(probe).find((p) => p.type === 'timeZoneName')?.value;
+  const offset = tzName === 'GMT+2' || tzName === 'CEST' ? '+02:00' : '+01:00';
+  return new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}${offset}`).getTime();
+}
+
 function minutesBetween(startIso: string, endIso: string | null): number {
-  const s = new Date(startIso).getTime();
-  const e = endIso ? new Date(endIso).getTime() : Date.now();
+  const s = parsePersonioLocal(startIso);
+  const e = endIso ? parsePersonioLocal(endIso) : Date.now();
   if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return 0;
   return Math.round((e - s) / 60000);
 }
