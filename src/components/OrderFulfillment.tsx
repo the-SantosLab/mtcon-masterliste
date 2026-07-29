@@ -7,13 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Package, Truck, Receipt, ExternalLink } from "lucide-react";
+import { Package, Truck, Receipt, ExternalLink, Split } from "lucide-react";
+import { PartialFulfillDialog } from "@/components/PartialFulfillDialog";
 
-type Item = { id: string; position: number; sku: string | null; description: string; quantity: number; unit: string | null };
+type Item = { id: string; position: number; sku: string | null; description: string; quantity: number; unit: string | null; unit_price?: number | null; tax_rate?: number | null };
 type Warehouse = { id: string; code: string; name: string };
-type Row = { item: Item; art_nr: string | null; stock: number; reserved: number; delivered: number };
+type Row = { item: Item; art_nr: string | null; stock: number; reserved: number; delivered: number; invoiced: number };
 type Delivery = { id: string; delivery_no: string; status: string };
 type Invoice = { id: string; invoice_no: string; status: string };
+
 
 const DLV_COLOR: Record<string,string> = {
   draft: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
