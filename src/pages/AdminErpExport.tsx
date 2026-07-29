@@ -156,6 +156,7 @@ export default function AdminErpExport() {
             <TabsTrigger value="dunning">Mahnwesen</TabsTrigger>
             <TabsTrigger value="history">Verlauf</TabsTrigger>
             <TabsTrigger value="datev">DATEV-Export</TabsTrigger>
+            <TabsTrigger value="audit">Audit-Log</TabsTrigger>
             {isAdmin && <TabsTrigger value="settings">Einstellungen</TabsTrigger>}
           </TabsList>
 
