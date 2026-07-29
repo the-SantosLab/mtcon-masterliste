@@ -2897,6 +2897,9 @@ export type Database = {
           delivery_date: string | null
           delivery_no: string
           id: string
+          locked: boolean
+          locked_at: string | null
+          locked_by: string | null
           notes: string | null
           order_id: string | null
           ship_to: string | null
@@ -2914,6 +2917,9 @@ export type Database = {
           delivery_date?: string | null
           delivery_no?: string
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_id?: string | null
           ship_to?: string | null
@@ -2931,6 +2937,9 @@ export type Database = {
           delivery_date?: string | null
           delivery_no?: string
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_id?: string | null
           ship_to?: string | null
@@ -3638,6 +3647,48 @@ export type Database = {
           granted_by?: string | null
           is_active?: boolean
           user_id?: string
+        }
+        Relationships: []
+      }
+      erp_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity_id: string
+          entity_no: string | null
+          entity_type: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id: string
+          entity_no?: string | null
+          entity_type: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string
+          entity_no?: string | null
+          entity_type?: string
+          id?: string
+          note?: string | null
         }
         Relationships: []
       }
@@ -4427,6 +4478,7 @@ export type Database = {
           last_reminder_at: string | null
           locked: boolean
           locked_at: string | null
+          locked_by: string | null
           notes: string | null
           order_id: string | null
           paid_amount: number
@@ -4465,6 +4517,7 @@ export type Database = {
           last_reminder_at?: string | null
           locked?: boolean
           locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_id?: string | null
           paid_amount?: number
@@ -4503,6 +4556,7 @@ export type Database = {
           last_reminder_at?: string | null
           locked?: boolean
           locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_id?: string | null
           paid_amount?: number
@@ -6452,6 +6506,9 @@ export type Database = {
           deal_id: string
           delivery_address: string | null
           id: string
+          locked: boolean
+          locked_at: string | null
+          locked_by: string | null
           notes: string | null
           offer_no: string
           owner_id: string | null
@@ -6475,6 +6532,9 @@ export type Database = {
           deal_id: string
           delivery_address?: string | null
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           offer_no?: string
           owner_id?: string | null
@@ -6498,6 +6558,9 @@ export type Database = {
           deal_id?: string
           delivery_address?: string | null
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           offer_no?: string
           owner_id?: string | null
@@ -6684,6 +6747,9 @@ export type Database = {
           department_id: string | null
           external_order_no: string | null
           id: string
+          locked: boolean
+          locked_at: string | null
+          locked_by: string | null
           notes: string | null
           order_date: string | null
           order_kind: string
@@ -6710,6 +6776,9 @@ export type Database = {
           department_id?: string | null
           external_order_no?: string | null
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_date?: string | null
           order_kind?: string
@@ -6736,6 +6805,9 @@ export type Database = {
           department_id?: string | null
           external_order_no?: string | null
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_date?: string | null
           order_kind?: string
@@ -7569,6 +7641,9 @@ export type Database = {
           delay_notified_at: string | null
           expected_at: string | null
           id: string
+          locked: boolean
+          locked_at: string | null
+          locked_by: string | null
           notes: string | null
           ordered_at: string | null
           po_no: string | null
@@ -7589,6 +7664,9 @@ export type Database = {
           delay_notified_at?: string | null
           expected_at?: string | null
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           ordered_at?: string | null
           po_no?: string | null
@@ -7609,6 +7687,9 @@ export type Database = {
           delay_notified_at?: string | null
           expected_at?: string | null
           id?: string
+          locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           ordered_at?: string | null
           po_no?: string | null
@@ -9030,6 +9111,7 @@ export type Database = {
       }
     }
     Functions: {
+      _erp_actor_name: { Args: { uid: string }; Returns: string }
       approve_supplier_invoice: {
         Args: { _approve: boolean; _invoice_id: string; _reason?: string }
         Returns: undefined
@@ -9242,6 +9324,10 @@ export type Database = {
         Args: { p_project_id: string; p_uid?: string }
         Returns: boolean
       }
+      lock_erp_document: {
+        Args: { _id: string; _kind: string }
+        Returns: boolean
+      }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       mark_invoices_overdue: { Args: never; Returns: number }
       match_supplier_invoice: { Args: { _invoice_id: string }; Returns: Json }
@@ -9303,6 +9389,10 @@ export type Database = {
           score: number
           type: Database["public"]["Enums"]["storage_location_type"]
         }[]
+      }
+      unlock_erp_document: {
+        Args: { _id: string; _kind: string; _reason: string }
+        Returns: boolean
       }
       user_department: { Args: { uid?: string }; Returns: string }
       user_id_by_email: { Args: { p_email: string }; Returns: string }

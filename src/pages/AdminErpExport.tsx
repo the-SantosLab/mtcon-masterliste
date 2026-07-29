@@ -36,11 +36,19 @@ const eur = (n: number | null | undefined) =>
 
 const daysAgo = (d: string | null) => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 0;
 
+type ActivityRow = {
+  id: string; entity_type: string; entity_id: string; entity_no: string | null;
+  action: string; actor_name: string | null; note: string | null;
+  before: any; after: any; created_at: string;
+};
+
 export default function AdminErpExport() {
   const { isAdmin } = useAuth();
   const [overdue, setOverdue] = useState<Overdue[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
+  const [activityFilter, setActivityFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
 
@@ -54,7 +62,7 @@ export default function AdminErpExport() {
 
   const load = async () => {
     setLoading(true);
-    const [ov, rm, st] = await Promise.all([
+    const [ov, rm, st, ac] = await Promise.all([
       supabase.from('invoices')
         .select('id,invoice_no,customer_name,customer_email,due_date,total_amount,paid_amount,reminder_stage,last_reminder_at,payment_status')
         .in('payment_status', ['open', 'partial', 'overdue'])
@@ -66,10 +74,15 @@ export default function AdminErpExport() {
         .order('sent_at', { ascending: false })
         .limit(100),
       supabase.from('dunning_settings').select('*').eq('id', true).maybeSingle(),
+      supabase.from('erp_activity')
+        .select('id,entity_type,entity_id,entity_no,action,actor_name,note,before,after,created_at')
+        .order('created_at', { ascending: false })
+        .limit(200),
     ]);
     setOverdue((ov.data ?? []).filter(r => r.due_date && new Date(r.due_date) < new Date()) as any);
     setReminders((rm.data ?? []) as any);
     setSettings((st.data ?? null) as any);
+    setActivity((ac.data ?? []) as any);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -143,6 +156,7 @@ export default function AdminErpExport() {
             <TabsTrigger value="dunning">Mahnwesen</TabsTrigger>
             <TabsTrigger value="history">Verlauf</TabsTrigger>
             <TabsTrigger value="datev">DATEV-Export</TabsTrigger>
+            <TabsTrigger value="audit">Audit-Log</TabsTrigger>
             {isAdmin && <TabsTrigger value="settings">Einstellungen</TabsTrigger>}
           </TabsList>
 
@@ -263,6 +277,61 @@ export default function AdminErpExport() {
                 <Download className="h-4 w-4 mr-2" /> {exporting ? 'Exportiere…' : 'CSV herunterladen'}
               </Button>
               {!isAdmin && <p className="text-xs text-yellow-400">Nur Admins können den DATEV-Export erzeugen.</p>}
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-lg font-semibold">Beleg-Audit-Log</h2>
+                  <p className="text-xs text-muted-foreground">Revisionssichere Protokollierung aller Belegänderungen (letzte 200 Einträge).</p>
+                </div>
+                <select
+                  className="text-sm bg-background border rounded px-2 py-1"
+                  value={activityFilter}
+                  onChange={(e) => setActivityFilter(e.target.value)}
+                >
+                  <option value="all">Alle Belege</option>
+                  <option value="invoice">Rechnungen</option>
+                  <option value="offer">Angebote</option>
+                  <option value="order">Aufträge</option>
+                  <option value="delivery">Lieferscheine</option>
+                  <option value="purchase_order">Bestellungen</option>
+                </select>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground border-b">
+                  <tr>
+                    <th className="text-left py-2 pr-3">Zeit</th>
+                    <th className="text-left py-2 pr-3">Beleg</th>
+                    <th className="text-left py-2 pr-3">Aktion</th>
+                    <th className="text-left py-2 pr-3">Person</th>
+                    <th className="text-left py-2 pr-3">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activity.filter(a => activityFilter === 'all' || a.entity_type === activityFilter).map(a => (
+                    <tr key={a.id} className="border-b hover:bg-white/5 align-top">
+                      <td className="py-2 pr-3 text-xs whitespace-nowrap">{new Date(a.created_at).toLocaleString('de-DE')}</td>
+                      <td className="py-2 pr-3"><div className="font-mono text-xs">{a.entity_no || a.entity_id.slice(0, 8)}</div><div className="text-[10px] text-muted-foreground uppercase">{a.entity_type}</div></td>
+                      <td className="py-2 pr-3"><Badge variant="outline" className="text-xs">{a.action}</Badge></td>
+                      <td className="py-2 pr-3 text-xs">{a.actor_name || '—'}</td>
+                      <td className="py-2 pr-3 text-xs text-muted-foreground">
+                        {a.note && <div>{a.note}</div>}
+                        {(a.before || a.after) && (
+                          <div className="font-mono text-[10px]">
+                            {a.before && <span>vorher: {JSON.stringify(a.before)}</span>}
+                            {a.before && a.after && ' → '}
+                            {a.after && <span>nachher: {JSON.stringify(a.after)}</span>}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {activity.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">Noch keine Audit-Einträge.</td></tr>}
+                </tbody>
+              </table>
             </Card>
           </TabsContent>
 

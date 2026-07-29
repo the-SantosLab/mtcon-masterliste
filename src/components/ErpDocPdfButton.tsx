@@ -3,6 +3,15 @@ import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { buildErpPdf, ErpDocType } from '@/lib/erp-pdf/fetch';
 import { enqueuePdfJob } from '@/lib/pdfJobs';
+import { supabase } from '@/integrations/supabase/client';
+
+const LOCK_KIND: Partial<Record<ErpDocType, 'invoice' | 'offer' | 'order' | 'delivery' | 'purchase_order'>> = {
+  angebot: 'offer',
+  ab: 'order',
+  bestellung: 'purchase_order',
+  lieferschein: 'delivery',
+  rechnung: 'invoice',
+};
 
 interface Props {
   type: ErpDocType;
@@ -40,6 +49,14 @@ export function ErpDocPdfButton({ type, id, label = 'PDF', size = 'sm', variant 
           const doc = await buildErpPdf(type, id, report);
           const meta: any = (doc as any).internal?.getDocumentProperties?.() ?? {};
           const base = (meta.title || TYPE_LABEL[type]).toString().replace(/[^\w.\-]+/g, '_');
+          // Beleg nach erfolgreichem Rendern sperren (Audit-Log/Revisionssicherheit)
+          const kind = LOCK_KIND[type];
+          if (kind) {
+            try {
+              const { data: locked } = await supabase.rpc('lock_erp_document', { _kind: kind, _id: id });
+              if (locked) toast.info(`${TYPE_LABEL[type]} wurde nach PDF-Download gesperrt.`);
+            } catch { /* locking best-effort */ }
+          }
           return { doc, fileName: `${base}.pdf` };
         } catch (err: any) {
           toast.error('PDF konnte nicht erzeugt werden: ' + (err?.message || String(err)));
