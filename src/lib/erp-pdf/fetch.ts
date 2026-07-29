@@ -154,6 +154,9 @@ async function loadRechnungData(id: string) {
     total: Number(inv.total_amount || 0),
     paymentTerms: inv.payment_terms || (inv.currency === 'USD' ? '45 days net' : '14 Tage 2%, 30 Tage netto'),
     language: lang as 'de' | 'en', factoringNote: true,
+    taxMode: inv.tax_mode || 'standard',
+    skontoPercent: inv.skonto_percent, skontoDays: inv.skonto_days,
+    docKind: inv.doc_kind || 'invoice',
   };
 }
 

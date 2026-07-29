@@ -230,6 +230,9 @@ export interface RechnungData {
   party: Party; contact: ContactInfo; items: (LineItem & { deliveryNo?: string; deliveryDate?: string })[]; currency: string;
   subtotal: number; tax: number; total: number; taxRate?: number;
   paymentTerms?: string; language?: L; factoringNote?: boolean;
+  taxMode?: 'standard' | 'reverse_charge' | 'tax_free_eu' | 'tax_free_third_country' | 'small_business';
+  skontoPercent?: number | null; skontoDays?: number | null;
+  docKind?: 'invoice' | 'credit_note' | 'storno';
 }
 export function buildRechnungPdf(d: RechnungData): jsPDF {
   const lang: L = d.language ?? 'de';
