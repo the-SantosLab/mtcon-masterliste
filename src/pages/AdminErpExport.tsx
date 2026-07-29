@@ -62,7 +62,7 @@ export default function AdminErpExport() {
 
   const load = async () => {
     setLoading(true);
-    const [ov, rm, st] = await Promise.all([
+    const [ov, rm, st, ac] = await Promise.all([
       supabase.from('invoices')
         .select('id,invoice_no,customer_name,customer_email,due_date,total_amount,paid_amount,reminder_stage,last_reminder_at,payment_status')
         .in('payment_status', ['open', 'partial', 'overdue'])
@@ -74,10 +74,15 @@ export default function AdminErpExport() {
         .order('sent_at', { ascending: false })
         .limit(100),
       supabase.from('dunning_settings').select('*').eq('id', true).maybeSingle(),
+      supabase.from('erp_activity')
+        .select('id,entity_type,entity_id,entity_no,action,actor_name,note,before,after,created_at')
+        .order('created_at', { ascending: false })
+        .limit(200),
     ]);
     setOverdue((ov.data ?? []).filter(r => r.due_date && new Date(r.due_date) < new Date()) as any);
     setReminders((rm.data ?? []) as any);
     setSettings((st.data ?? null) as any);
+    setActivity((ac.data ?? []) as any);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
