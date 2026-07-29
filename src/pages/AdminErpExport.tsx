@@ -36,11 +36,19 @@ const eur = (n: number | null | undefined) =>
 
 const daysAgo = (d: string | null) => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 0;
 
+type ActivityRow = {
+  id: string; entity_type: string; entity_id: string; entity_no: string | null;
+  action: string; actor_name: string | null; note: string | null;
+  before: any; after: any; created_at: string;
+};
+
 export default function AdminErpExport() {
   const { isAdmin } = useAuth();
   const [overdue, setOverdue] = useState<Overdue[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
+  const [activityFilter, setActivityFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
 
