@@ -81,15 +81,59 @@ export default function CrmOfferDetail() {
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it));
   };
 
-  const onArticleSelect = (idx: number, art: ArticleOption | null) => {
+  const resolveArticlePrice = async (artNr: string, qty: number): Promise<{ price: number | null; source: string }> => {
+    // 1) Customer-specific price via article_customer_refs (kunden_nr = companies.customer_no)
+    const company = companies.find(c => c.id === offer?.company_id);
+    const kdNr = company?.customer_no;
+    if (kdNr) {
+      const { data: cref } = await (supabase as any)
+        .from('article_customer_refs')
+        .select('la_preis, la_datum')
+        .eq('art_nr', artNr)
+        .eq('kunden_nr', kdNr)
+        .order('la_datum', { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle();
+      if (cref?.la_preis != null && Number(cref.la_preis) > 0) {
+        return { price: Number(cref.la_preis), source: `Kundenpreis (${kdNr})` };
+      }
+    }
+    // 2) Quantity-based price list item (article_price_list_items) — best matching bracket
+    const { data: pli } = await (supabase as any)
+      .from('article_price_list_items')
+      .select('vk_preis, menge_von, menge_bis, prl_nr, rab, pe')
+      .eq('art_nr', artNr)
+      .order('menge_von', { ascending: false });
+    const match = (pli ?? []).find((r: any) => {
+      const von = Number(r.menge_von ?? 0);
+      const bis = r.menge_bis != null ? Number(r.menge_bis) : Infinity;
+      return qty >= von && qty <= bis && r.vk_preis != null;
+    }) ?? (pli ?? [])[0];
+    if (match?.vk_preis != null && Number(match.vk_preis) > 0) {
+      const pe = Number(match.pe) > 0 ? Number(match.pe) : 1;
+      const base = Number(match.vk_preis) / pe;
+      const rab = Number(match.rab ?? 0);
+      const net = base * (1 - rab / 100);
+      return { price: net, source: `Preisliste ${match.prl_nr}` };
+    }
+    return { price: null, source: '' };
+  };
+
+  const onArticleSelect = async (idx: number, art: ArticleOption | null) => {
     if (!art) { updateItem(idx, { art_nr: null }); return; }
     const label = [art.art_nr, art.matchcode, art.bezeich_1].filter(Boolean).join(' · ');
+    const qty = items[idx]?.quantity || 1;
     updateItem(idx, {
       art_nr: art.art_nr,
       product_id: null,
       description: items[idx].description ? items[idx].description : label,
       unit_price: art.standardpreis != null ? Number(art.standardpreis) : items[idx].unit_price,
     });
+    const { price, source } = await resolveArticlePrice(art.art_nr, qty);
+    if (price != null) {
+      updateItem(idx, { unit_price: Number(price.toFixed(4)) });
+      if (source) toast.success(`Preis übernommen: ${source}`);
+    }
   };
 
   const addItem = () => setItems(p => [...p, { id: crypto.randomUUID(), description: '', quantity: 1, unit_price: 0, discount_pct: 0, sort_order: p.length, _new: true }]);
