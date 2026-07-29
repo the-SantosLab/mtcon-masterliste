@@ -197,6 +197,7 @@ const erpItems = [
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
   { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
+  { href: '/admin/erp-export', label: 'Mahnwesen & DATEV', icon: Receipt },
   { href: '/reporting/einkauf', label: 'Reporting Einkauf', icon: Receipt },
   { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange },
   { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText },
