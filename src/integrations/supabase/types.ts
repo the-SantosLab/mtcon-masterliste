@@ -3575,6 +3575,51 @@ export type Database = {
           },
         ]
       }
+      dunning_settings: {
+        Row: {
+          bcc_email: string | null
+          enabled: boolean
+          id: boolean
+          sender_email: string
+          sender_name: string
+          stage1_days: number
+          stage1_fee: number
+          stage2_days: number
+          stage2_fee: number
+          stage3_days: number
+          stage3_fee: number
+          updated_at: string
+        }
+        Insert: {
+          bcc_email?: string | null
+          enabled?: boolean
+          id?: boolean
+          sender_email?: string
+          sender_name?: string
+          stage1_days?: number
+          stage1_fee?: number
+          stage2_days?: number
+          stage2_fee?: number
+          stage3_days?: number
+          stage3_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          bcc_email?: string | null
+          enabled?: boolean
+          id?: boolean
+          sender_email?: string
+          sender_name?: string
+          stage1_days?: number
+          stage1_fee?: number
+          stage2_days?: number
+          stage2_fee?: number
+          stage3_days?: number
+          stage3_fee?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       erp_access: {
         Row: {
           granted_at: string
@@ -4317,6 +4362,50 @@ export type Database = {
           },
         ]
       }
+      invoice_reminders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          fee: number
+          id: string
+          invoice_id: string
+          note: string | null
+          sent_at: string
+          sent_to: string | null
+          stage: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          fee?: number
+          id?: string
+          invoice_id: string
+          note?: string | null
+          sent_at?: string
+          sent_to?: string | null
+          stage: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          fee?: number
+          id?: string
+          invoice_id?: string
+          note?: string | null
+          sent_at?: string
+          sent_to?: string | null
+          stage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           billing_address: string | null
@@ -4331,9 +4420,11 @@ export type Database = {
           delivery_id: string | null
           doc_kind: string
           due_date: string | null
+          dunning_fee_total: number
           id: string
           invoice_date: string | null
           invoice_no: string
+          last_reminder_at: string | null
           locked: boolean
           locked_at: string | null
           notes: string | null
@@ -4343,6 +4434,7 @@ export type Database = {
           payment_status: string
           payment_terms: string | null
           payment_terms_days: number
+          reminder_stage: number
           skonto_days: number | null
           skonto_percent: number | null
           status: string
@@ -4366,9 +4458,11 @@ export type Database = {
           delivery_id?: string | null
           doc_kind?: string
           due_date?: string | null
+          dunning_fee_total?: number
           id?: string
           invoice_date?: string | null
           invoice_no?: string
+          last_reminder_at?: string | null
           locked?: boolean
           locked_at?: string | null
           notes?: string | null
@@ -4378,6 +4472,7 @@ export type Database = {
           payment_status?: string
           payment_terms?: string | null
           payment_terms_days?: number
+          reminder_stage?: number
           skonto_days?: number | null
           skonto_percent?: number | null
           status?: string
@@ -4401,9 +4496,11 @@ export type Database = {
           delivery_id?: string | null
           doc_kind?: string
           due_date?: string | null
+          dunning_fee_total?: number
           id?: string
           invoice_date?: string | null
           invoice_no?: string
+          last_reminder_at?: string | null
           locked?: boolean
           locked_at?: string | null
           notes?: string | null
@@ -4413,6 +4510,7 @@ export type Database = {
           payment_status?: string
           payment_terms?: string | null
           payment_terms_days?: number
+          reminder_stage?: number
           skonto_days?: number | null
           skonto_percent?: number | null
           status?: string
