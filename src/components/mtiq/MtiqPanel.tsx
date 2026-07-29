@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Maximize2, Minimize2, GripVertical } from 'lucide-react';
+import { X, Maximize2, Minimize2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { MtiqOverview } from './MtiqOverview';
 import { MtiqVorgang } from './MtiqVorgang';
