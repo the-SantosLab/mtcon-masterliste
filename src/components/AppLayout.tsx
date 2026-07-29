@@ -197,6 +197,7 @@ const erpItems = [
   { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
   { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
   { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
+  { href: '/admin/erp-export', label: 'Mahnwesen & DATEV', icon: Receipt },
   { href: '/reporting/einkauf', label: 'Reporting Einkauf', icon: Receipt },
   { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange },
   { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText },
@@ -230,7 +231,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     location.pathname.startsWith('/notes')
   );
   const [erpOpen, setErpOpen] = useState(
-    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/orders', '/bestellungen', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/ki-artikel', '/admin/articles'].some(p => location.pathname.startsWith(p))
+    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/orders', '/bestellungen', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/admin/erp-export', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/ki-artikel', '/admin/articles'].some(p => location.pathname.startsWith(p))
   );
   const [systemOpen, setSystemOpen] = useState(
     ['/support', '/docs', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))

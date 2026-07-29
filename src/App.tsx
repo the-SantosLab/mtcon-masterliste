@@ -19,6 +19,7 @@ import { useCrmAccess } from "./hooks/useCrmAccess";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AdminInvoices from "./pages/AdminInvoices";
+const AdminErpExport = lazy(() => import("./pages/AdminErpExport"));
 
 // Alle übrigen Seiten lazy — Route-basiertes Code-Splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -266,6 +267,7 @@ function AuthenticatedApp() {
           <Route path="/bestellungen" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
           <Route path="/lieferscheine" element={<ProtectedRoute><AdminDeliveries /></ProtectedRoute>} />
           <Route path="/rechnungen" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
+          <Route path="/admin/erp-export" element={<ProtectedRoute><AdminErpExport /></ProtectedRoute>} />
           <Route path="/eingangsrechnungen" element={<ProtectedRoute><AdminSupplierInvoices /></ProtectedRoute>} />
           <Route path="/reporting/einkauf" element={<ProtectedRoute><AdminPurchasingReport /></ProtectedRoute>} />
           <Route path="/kapazitaet" element={<ProtectedRoute><AdminCapacityPlan /></ProtectedRoute>} />
