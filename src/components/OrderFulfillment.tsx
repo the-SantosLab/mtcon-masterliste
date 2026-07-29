@@ -157,21 +157,37 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
   };
 
   const totalOpen = rows.reduce((s, r) => s + Math.max(0, r.item.quantity - r.delivered), 0);
+  const totalReadyToInvoice = rows.reduce((s, r) => s + Math.max(0, r.delivered - r.invoiced), 0);
+  const [partialOpen, setPartialOpen] = useState<false | 'delivery' | 'invoice'>(false);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <Label className="text-xs flex items-center gap-1"><Package className="h-3 w-3" /> Abwicklung</Label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Select value={warehouseId} onValueChange={setWarehouseId}>
             <SelectTrigger className="h-7 text-xs w-40"><SelectValue placeholder="Lager…" /></SelectTrigger>
             <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.code} · {w.name}</SelectItem>)}</SelectContent>
           </Select>
           <Button size="sm" variant="outline" disabled={busy || totalOpen === 0} onClick={reserveAll}>Reservieren</Button>
-          <Button size="sm" variant="outline" disabled={busy || totalOpen === 0} onClick={createDelivery}><Truck className="h-3 w-3 mr-1" /> Lieferschein</Button>
-          <Button size="sm" variant="outline" disabled={busy} onClick={createInvoice}><Receipt className="h-3 w-3 mr-1" /> Rechnung</Button>
+          <Button size="sm" variant="outline" disabled={busy || totalOpen === 0} onClick={createDelivery} title="Alle offenen Positionen komplett liefern">
+            <Truck className="h-3 w-3 mr-1" /> Vollständig liefern
+          </Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => setPartialOpen('delivery')}>
+            <Split className="h-3 w-3 mr-1" /> Teil-Abwicklung
+          </Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={createInvoice} title="Rechnung über alle Positionen">
+            <Receipt className="h-3 w-3 mr-1" /> Gesamtrechnung
+          </Button>
         </div>
       </div>
+
+      {totalReadyToInvoice > 0 && (
+        <div className="text-[11px] text-amber-300/80 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1">
+          {totalReadyToInvoice} Einheit(en) geliefert, aber noch nicht berechnet.
+          <button className="ml-2 underline" onClick={() => setPartialOpen('invoice')}>Jetzt Teilrechnung erstellen</button>
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         <table className="w-full text-xs">
@@ -181,14 +197,15 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
               <th className="text-left p-2">Bezeichnung</th>
               <th className="text-right p-2">Bestellt</th>
               <th className="text-right p-2">Bestand</th>
-              <th className="text-right p-2">Reserviert</th>
+              <th className="text-right p-2">Reserv.</th>
               <th className="text-right p-2">Geliefert</th>
+              <th className="text-right p-2">Berechnet</th>
               <th className="text-right p-2">Offen</th>
               <th className="text-right p-2">Status</th>
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? <tr><td colSpan={8} className="p-3 text-center text-muted-foreground">Keine Positionen</td></tr>
+            {rows.length === 0 ? <tr><td colSpan={9} className="p-3 text-center text-muted-foreground">Keine Positionen</td></tr>
             : rows.map(r => {
               const open = Math.max(0, r.item.quantity - r.delivered);
               const coverage = r.art_nr ? (r.stock >= open ? 'ok' : r.stock > 0 ? 'partial' : 'none') : 'unknown';
@@ -200,6 +217,7 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
                   <td className="p-2 text-right tabular-nums">{r.art_nr ? r.stock : '—'}</td>
                   <td className="p-2 text-right tabular-nums">{r.reserved || '—'}</td>
                   <td className="p-2 text-right tabular-nums">{r.delivered || '—'}</td>
+                  <td className="p-2 text-right tabular-nums">{r.invoiced || '—'}</td>
                   <td className="p-2 text-right tabular-nums">{open || '—'}</td>
                   <td className="p-2 text-right">
                     {open === 0 ? <Badge variant="outline" className="bg-emerald-500/15 text-emerald-300 border-emerald-500/30 text-[10px]">geliefert</Badge>
@@ -214,6 +232,17 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
           </tbody>
         </table>
       </Card>
+
+      <PartialFulfillDialog
+        open={partialOpen !== false}
+        onOpenChange={(v) => { if (!v) setPartialOpen(false); }}
+        orderId={orderId}
+        warehouseId={warehouseId}
+        rows={rows.map(r => ({ item: r.item, art_nr: r.art_nr, delivered: r.delivered, invoiced: r.invoiced }))}
+        defaultMode={partialOpen === 'invoice' ? 'invoice' : 'delivery'}
+        onDone={load}
+      />
+
 
       {(deliveries.length > 0 || invoices.length > 0) && (
         <div className="grid grid-cols-2 gap-3">
