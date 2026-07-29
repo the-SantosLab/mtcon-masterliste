@@ -4273,29 +4273,83 @@ export type Database = {
           },
         ]
       }
+      invoice_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          method: string | null
+          note: string | null
+          paid_on: string
+          reference: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          reference?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          method?: string | null
+          note?: string | null
+          paid_on?: string
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           billing_address: string | null
           company_id: string | null
           created_at: string
           created_by: string | null
+          credit_note_of_invoice_id: string | null
           currency: string
           customer_email: string | null
           customer_name: string | null
           customer_no: string | null
           delivery_id: string | null
+          doc_kind: string
           due_date: string | null
           id: string
           invoice_date: string | null
           invoice_no: string
+          locked: boolean
+          locked_at: string | null
           notes: string | null
           order_id: string | null
           paid_amount: number
           paid_at: string | null
+          payment_status: string
           payment_terms: string | null
+          payment_terms_days: number
+          skonto_days: number | null
+          skonto_percent: number | null
           status: string
+          storno_of_invoice_id: string | null
           subtotal_amount: number | null
           tax_amount: number | null
+          tax_mode: string
           total_amount: number | null
           updated_at: string
         }
@@ -4304,23 +4358,33 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           created_by?: string | null
+          credit_note_of_invoice_id?: string | null
           currency?: string
           customer_email?: string | null
           customer_name?: string | null
           customer_no?: string | null
           delivery_id?: string | null
+          doc_kind?: string
           due_date?: string | null
           id?: string
           invoice_date?: string | null
           invoice_no?: string
+          locked?: boolean
+          locked_at?: string | null
           notes?: string | null
           order_id?: string | null
           paid_amount?: number
           paid_at?: string | null
+          payment_status?: string
           payment_terms?: string | null
+          payment_terms_days?: number
+          skonto_days?: number | null
+          skonto_percent?: number | null
           status?: string
+          storno_of_invoice_id?: string | null
           subtotal_amount?: number | null
           tax_amount?: number | null
+          tax_mode?: string
           total_amount?: number | null
           updated_at?: string
         }
@@ -4329,23 +4393,33 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           created_by?: string | null
+          credit_note_of_invoice_id?: string | null
           currency?: string
           customer_email?: string | null
           customer_name?: string | null
           customer_no?: string | null
           delivery_id?: string | null
+          doc_kind?: string
           due_date?: string | null
           id?: string
           invoice_date?: string | null
           invoice_no?: string
+          locked?: boolean
+          locked_at?: string | null
           notes?: string | null
           order_id?: string | null
           paid_amount?: number
           paid_at?: string | null
+          payment_status?: string
           payment_terms?: string | null
+          payment_terms_days?: number
+          skonto_days?: number | null
+          skonto_percent?: number | null
           status?: string
+          storno_of_invoice_id?: string | null
           subtotal_amount?: number | null
           tax_amount?: number | null
+          tax_mode?: string
           total_amount?: number | null
           updated_at?: string
         }
@@ -4355,6 +4429,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_credit_note_of_invoice_id_fkey"
+            columns: ["credit_note_of_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
           {
@@ -4369,6 +4450,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_storno_of_invoice_id_fkey"
+            columns: ["storno_of_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -9012,6 +9100,10 @@ export type Database = {
         Args: { p: Database["public"]["Tables"]["insurance_policies"]["Row"] }
         Returns: string
       }
+      invoice_recalc_payments: {
+        Args: { p_invoice_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       is_any_dept_lead: { Args: { p_uid?: string }; Returns: boolean }
       is_board_member: {
@@ -9050,6 +9142,7 @@ export type Database = {
         Returns: boolean
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
+      mark_invoices_overdue: { Args: never; Returns: number }
       match_supplier_invoice: { Args: { _invoice_id: string }; Returns: Json }
       next_counter: { Args: { p_key: string }; Returns: number }
       next_partner_customer_no: { Args: never; Returns: string }

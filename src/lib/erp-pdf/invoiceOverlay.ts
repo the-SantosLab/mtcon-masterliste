@@ -75,6 +75,8 @@ const P2 = {
 type Lang = 'de' | 'en';
 const L = {
   invoiceNo:     { de: 'Rechnung Nr.',     en: 'Invoice No.' },
+  creditNoteNo:  { de: 'Gutschrift Nr.',   en: 'Credit note No.' },
+  stornoNo:      { de: 'Storno Nr.',       en: 'Cancellation No.' },
   custNo:        { de: 'Kd.-Nr.',          en: 'Cust.no' },
   contact:       { de: 'Ansprechpartner',  en: 'Contact person' },
   phone:         { de: 'Telefon',          en: 'Phone' },
@@ -86,6 +88,8 @@ const L = {
   from:          { de: 'vom',              en: 'from' },
   intro:         { de: 'wir berechnen Ihnen folgende Positionen:',
                    en: 'we will charge you the following positions:' },
+  introCredit:   { de: 'wir schreiben Ihnen folgende Positionen gut:',
+                   en: 'we credit you for the following positions:' },
   colDn:         { de: 'LS-Nr.',           en: 'DN no' },
   colArticle:    { de: 'Artikel-Nr.',      en: 'Article No' },
   colQty:        { de: 'Menge',            en: 'Qty' },
@@ -95,8 +99,18 @@ const L = {
   payment:       { de: 'Zahlungsbedingung', en: 'Payment term' },
   currencyUsd:   { de: 'Währung in USD / US$', en: 'Currency in USD / US$' },
   unitPcs:       { de: 'Stk',              en: 'Pcs' },
+  taxReverse:    { de: 'Steuerschuldnerschaft des Leistungsempfängers (§ 13b UStG / Reverse charge).',
+                   en: 'Reverse charge — VAT liability transferred to the recipient.' },
+  taxFreeEu:     { de: 'Innergemeinschaftliche Lieferung, steuerfrei nach § 4 Nr. 1b UStG.',
+                   en: 'Intra-community supply, VAT-exempt.' },
+  taxFreeThird:  { de: 'Ausfuhrlieferung, steuerfrei nach § 4 Nr. 1a UStG.',
+                   en: 'Export delivery, VAT-exempt.' },
+  taxSmall:      { de: 'Kein Steuerausweis gem. § 19 UStG (Kleinunternehmer).',
+                   en: 'No VAT charged under § 19 UStG (small business exemption).' },
+  skonto:        { de: (p: string, d: string) => `Skonto: ${p}% bei Zahlung innerhalb ${d} Tagen.`,
+                   en: (p: string, d: string) => `Cash discount: ${p}% if paid within ${d} days.` },
 };
-const t = (key: keyof typeof L, lang: Lang) => L[key][lang];
+const t = (key: keyof typeof L, lang: Lang) => L[key][lang] as string;
 
 // ---- Factoring-Text (Seite 2) ----
 const FACTORING = {
@@ -222,7 +236,8 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
   if (factoringPage) mask(factoringPage, MASKS_P2);
 
   // 2) Titel + Meta-Labels/Werte (Seite 1)
-  txt(page1, `${t('invoiceNo', lang)} ${d.invoiceNo}`,
+  const titleKey = d.docKind === 'credit_note' ? 'creditNoteNo' : d.docKind === 'storno' ? 'stornoNo' : 'invoiceNo';
+  txt(page1, `${t(titleKey, lang)} ${d.invoiceNo}`,
     P1.invoiceTitle.x, P1.invoiceTitle.top, fonts,
     { size: P1.invoiceTitle.size, bold: true });
 
@@ -260,7 +275,8 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
     P1.pageValue.x, P1.pageValue.top, fonts, { size: P1.pageValue.size });
 
   // 3) Intro + Tabellen-Header
-  txt(page1, t('intro', lang), P1.intro.x, P1.intro.top, fonts,
+  const introText = d.docKind === 'credit_note' || d.docKind === 'storno' ? t('introCredit', lang) : t('intro', lang);
+  txt(page1, introText, P1.intro.x, P1.intro.top, fonts,
     { size: P1.intro.size });
 
   txt(page1, t('colDn', lang),      P1.cols.dn,      P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true });
@@ -320,7 +336,25 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
       { size: P1.paymentValue.size });
   }
 
-  // 6) Seite 2 (Factoring)
+  // Steuer-Hinweis (Reverse-Charge, EU-steuerfrei, Kleinunternehmer, Ausfuhr)
+  const taxNoteKey: keyof typeof L | null =
+    d.taxMode === 'reverse_charge' ? 'taxReverse' :
+    d.taxMode === 'tax_free_eu' ? 'taxFreeEu' :
+    d.taxMode === 'tax_free_third_country' ? 'taxFreeThird' :
+    d.taxMode === 'small_business' ? 'taxSmall' : null;
+  let noteY = P1.paymentLabel.top + 12;
+  if (taxNoteKey) {
+    const lines = wrap(t(taxNoteKey, lang), bold, 8.5, 480);
+    for (const line of lines) {
+      txt(page1, line, P1.paymentLabel.x, noteY, fonts, { size: 8.5, bold: true });
+      noteY += 10;
+    }
+  }
+  if (d.skontoPercent && d.skontoDays) {
+    const skontoFn = L.skonto[lang] as (p: string, d: string) => string;
+    txt(page1, skontoFn(Number(d.skontoPercent).toFixed(2).replace('.', lang === 'de' ? ',' : '.'), String(d.skontoDays)),
+      P1.paymentLabel.x, noteY, fonts, { size: 8.5 });
+  }
   if (factoringPage) {
     txt(factoringPage, `${t('invoiceNo', lang)} ${d.invoiceNo}`,
       P2.invoiceTitle.x, P2.invoiceTitle.top, fonts,
