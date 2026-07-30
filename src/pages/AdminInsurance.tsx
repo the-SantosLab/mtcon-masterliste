@@ -141,24 +141,28 @@ function fmtBytes(n: number | null) {
 export default function AdminInsurance() {
   const { user, isAdmin, profile } = useAuth();
   const isManager = !!(profile as any)?.is_manager;
-  const canWrite = isAdmin;
   const [hasCategoryGrant, setHasCategoryGrant] = useState(false);
+  const [hasWriteGrant, setHasWriteGrant] = useState(false);
   const canRead = isAdmin || isManager || hasCategoryGrant;
+  const canWrite = isAdmin || hasWriteGrant;
   const nav = useNavigate();
   const { id: routeId } = useParams();
 
   useEffect(() => {
-    if (!user?.id || isAdmin || isManager) return;
+    if (!user?.id || isAdmin) return;
     (async () => {
-      const { count } = await supabase
+      const { data } = await supabase
         .from('document_category_permissions' as any)
-        .select('id', { count: 'exact', head: true })
+        .select('permission')
         .eq('principal_type', 'user')
         .eq('user_id', user.id)
         .in('permission', ['read', 'write']);
-      if ((count ?? 0) > 0) setHasCategoryGrant(true);
+      const rows = (data ?? []) as any[];
+      if (rows.length > 0) setHasCategoryGrant(true);
+      if (rows.some(r => r.permission === 'write')) setHasWriteGrant(true);
     })();
-  }, [user?.id, isAdmin, isManager]);
+  }, [user?.id, isAdmin]);
+
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
