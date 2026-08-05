@@ -1343,13 +1343,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-              {(newDeptId
-                ? (() => {
-                    const extra = new Set(deptMembers.filter(m => m.department_id === newDeptId).map(m => m.user_id));
-                    return profiles.filter(p => p.department_id === newDeptId || extra.has(p.id));
-                  })()
-                : profiles
-              ).map(p => (
+              {assigneesForDept(newDeptId).map(p => (
+
                 <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
               ))}
             </SelectContent>
