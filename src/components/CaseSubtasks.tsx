@@ -741,6 +741,24 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     return departments.find(d => d.id === id)?.name;
   };
 
+  // Zuständige für eine Abteilung: Stamm-Abteilung + Unterabteilungen + Zusatz-Mitglieder.
+  // Fallback: alle aktiven Profile, damit die Auswahl nie leer ist.
+  const assigneesForDept = (deptId: string | null | undefined): Profile[] => {
+    if (!deptId) return profiles;
+    const ids = new Set<string>([deptId]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      departments.forEach(d => {
+        if (d.parent_id && ids.has(d.parent_id) && !ids.has(d.id)) { ids.add(d.id); grew = true; }
+      });
+    }
+    const extra = new Set(deptMembers.filter(m => ids.has(m.department_id)).map(m => m.user_id));
+    const list = profiles.filter(p => (p.department_id && ids.has(p.department_id)) || extra.has(p.id));
+    return list.length ? list : profiles;
+  };
+
+
   const getProfileName = (id: string | null) => {
     if (!id) return null;
     const p = profiles.find(p => p.id === id);
