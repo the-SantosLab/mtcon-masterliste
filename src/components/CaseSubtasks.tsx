@@ -645,9 +645,12 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
   const updateDepartment = async (taskId: string, deptId: string) => {
     const val = deptId === '_none' ? null : deptId;
-    await supabase.from('case_tasks').update({ department_id: val } as any).eq('id', taskId);
+    const { data, error } = await supabase.from('case_tasks').update({ department_id: val } as any).eq('id', taskId).select('id');
+    if (error) { toastError(error, 'case_subtask', 'Abteilung konnte nicht geändert werden'); return; }
+    if (!data || data.length === 0) { toast.error('Abteilung konnte nicht geändert werden – fehlende Berechtigung.'); return; }
     fetchTasks();
   };
+
 
   const updateTitle = async (taskId: string, title: string) => {
     const t = title.trim();
@@ -740,6 +743,24 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     if (!id) return null;
     return departments.find(d => d.id === id)?.name;
   };
+
+  // Zuständige für eine Abteilung: Stamm-Abteilung + Unterabteilungen + Zusatz-Mitglieder.
+  // Fallback: alle aktiven Profile, damit die Auswahl nie leer ist.
+  const assigneesForDept = (deptId: string | null | undefined): Profile[] => {
+    if (!deptId) return profiles;
+    const ids = new Set<string>([deptId]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      departments.forEach(d => {
+        if (d.parent_id && ids.has(d.parent_id) && !ids.has(d.id)) { ids.add(d.id); grew = true; }
+      });
+    }
+    const extra = new Set(deptMembers.filter(m => ids.has(m.department_id)).map(m => m.user_id));
+    const list = profiles.filter(p => (p.department_id && ids.has(p.department_id)) || extra.has(p.id));
+    return list.length ? list : profiles;
+  };
+
 
   const getProfileName = (id: string | null) => {
     if (!id) return null;
@@ -1128,7 +1149,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                   <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-                                    {profiles.map(p => (
+                                    {assigneesForDept(task.department_id).map(p => (
                                       <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
                                     ))}
                                   </SelectContent>
@@ -1325,13 +1346,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-              {(newDeptId
-                ? (() => {
-                    const extra = new Set(deptMembers.filter(m => m.department_id === newDeptId).map(m => m.user_id));
-                    return profiles.filter(p => p.department_id === newDeptId || extra.has(p.id));
-                  })()
-                : profiles
-              ).map(p => (
+              {assigneesForDept(newDeptId).map(p => (
+
                 <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
               ))}
             </SelectContent>
@@ -1464,9 +1480,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none" className="text-xs">— Nicht zugewiesen —</SelectItem>
-                      {profiles
-                        .filter(p => !editForm.department_id || p.department_id === editForm.department_id)
+                      {assigneesForDept(editForm.department_id)
                         .map(p => (
+
                           <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
                         ))}
                     </SelectContent>
