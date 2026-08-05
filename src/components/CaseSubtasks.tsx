@@ -645,9 +645,12 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
   const updateDepartment = async (taskId: string, deptId: string) => {
     const val = deptId === '_none' ? null : deptId;
-    await supabase.from('case_tasks').update({ department_id: val } as any).eq('id', taskId);
+    const { data, error } = await supabase.from('case_tasks').update({ department_id: val } as any).eq('id', taskId).select('id');
+    if (error) { toastError(error, 'case_subtask', 'Abteilung konnte nicht geändert werden'); return; }
+    if (!data || data.length === 0) { toast.error('Abteilung konnte nicht geändert werden – fehlende Berechtigung.'); return; }
     fetchTasks();
   };
+
 
   const updateTitle = async (taskId: string, title: string) => {
     const t = title.trim();
