@@ -1146,7 +1146,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                                   <SelectTrigger className="h-7 text-[11px]"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-                                    {profiles.map(p => (
+                                    {assigneesForDept(task.department_id).map(p => (
                                       <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
                                     ))}
                                   </SelectContent>
