@@ -1482,9 +1482,9 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                     <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none" className="text-xs">— Nicht zugewiesen —</SelectItem>
-                      {profiles
-                        .filter(p => !editForm.department_id || p.department_id === editForm.department_id)
+                      {assigneesForDept(editForm.department_id)
                         .map(p => (
+
                           <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
                         ))}
                     </SelectContent>
