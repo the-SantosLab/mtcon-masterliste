@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Download, RotateCcw, DatabaseBackup } from 'lucide-react';
+import { Loader2, Download, RotateCcw, DatabaseBackup, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
 interface BackupRow {
@@ -24,6 +24,26 @@ interface BackupRow {
   error: string | null;
 }
 
+interface TableCheck { table: string; expected: number; actual: number; diff: number; ok: boolean; error?: string }
+interface FileCheck { bucket: string; expected: number; present: number; missing: number; size_mismatch: number; extra: number; ok: boolean; samples: string[] }
+
+interface RestoreRun {
+  id: string;
+  created_at: string;
+  finished_at: string | null;
+  backup_created_at: string | null;
+  status: string;
+  rows_inserted: number;
+  files_restored: number;
+  files_failed: number;
+  bytes_restored: number;
+  issues_count: number;
+  duration_ms: number | null;
+  table_checks: TableCheck[] | null;
+  file_checks: FileCheck[] | null;
+  error: string | null;
+}
+
 function fmtSize(b: number | null) {
   if (!b) return '–';
   if (b < 1024) return `${b} B`;
@@ -34,11 +54,14 @@ function fmtSize(b: number | null) {
 export default function AdminBackups() {
   const { isAdmin, loading } = useAuth();
   const [rows, setRows] = useState<BackupRow[]>([]);
+  const [runs, setRuns] = useState<RestoreRun[]>([]);
+  const [runDetail, setRunDetail] = useState<RestoreRun | null>(null);
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState<BackupRow | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [restoring, setRestoring] = useState(false);
+
 
   const load = async () => {
     setBusy(true);
