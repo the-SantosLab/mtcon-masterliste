@@ -112,14 +112,19 @@ export default function AdminBackups() {
   const doRestore = async () => {
     if (!restoreOpen) return;
     setRestoring(true);
-    const { error } = await supabase.functions.invoke('restore-backup', { body: { backup_id: restoreOpen.id } });
+    const { data, error } = await supabase.functions.invoke('restore-backup', { body: { backup_id: restoreOpen.id } });
     if (error) toast.error(error.message);
-    else toast.success('Wiederherstellung abgeschlossen');
+    else {
+      const res = data as any;
+      if (res?.status === 'warning') toast.warning(`Wiederherstellung abgeschlossen – Validierung meldet ${res.issues_count} Abweichung(en)`);
+      else toast.success('Wiederherstellung abgeschlossen – Validierung ohne Befund');
+    }
     setRestoring(false);
     setRestoreOpen(null);
     setConfirmText('');
     load();
   };
+
 
   return (
     <AppLayout>
