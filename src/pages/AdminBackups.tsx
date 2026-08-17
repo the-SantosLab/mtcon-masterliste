@@ -65,14 +65,19 @@ export default function AdminBackups() {
 
   const load = async () => {
     setBusy(true);
-    const { data, error } = await supabase
-      .from('backups').select('*').order('created_at', { ascending: false }).limit(200);
+    const [{ data, error }, { data: runData, error: runErr }] = await Promise.all([
+      supabase.from('backups').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('restore_runs').select('*').order('created_at', { ascending: false }).limit(50),
+    ]);
     if (error) toast.error(error.message);
     else setRows((data as BackupRow[]) ?? []);
+    if (runErr) toast.error(runErr.message);
+    else setRuns((runData as unknown as RestoreRun[]) ?? []);
     setBusy(false);
   };
 
   useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+
 
   if (loading) return null;
   if (!isAdmin) return <Navigate to="/" replace />;
