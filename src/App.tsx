@@ -33,6 +33,7 @@ const PrintProject = lazy(() => import("./pages/PrintProject"));
 const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMasterData = lazy(() => import("./pages/AdminMasterData"));
+const AdminApiExplorer = lazy(() => import("./pages/AdminApiExplorer"));
 const AdminArticles = lazy(() => import("./pages/AdminArticles"));
 const AdminInventory = lazy(() => import("./pages/AdminInventory"));
 
