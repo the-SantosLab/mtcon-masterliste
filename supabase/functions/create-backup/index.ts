@@ -26,6 +26,8 @@ const STORAGE_BUCKETS = [
   'mtiq-draft-attachments','order-documents','project-files','support-attachments',
 ];
 
+type FileEntry = { path: string; size: number; dest: string };
+
 async function listAllFiles(admin: any, bucket: string, prefix = ''): Promise<{ path: string; size: number }[]> {
   const out: { path: string; size: number }[] = [];
   const stack: string[] = [prefix];
@@ -70,6 +72,15 @@ Deno.serve(async (req) => {
   let trigger: 'schedule' | 'manual' | 'pre_restore' = 'schedule';
   let note: string | null = null;
   let createdBy: string | null = null;
+  let wait = false;
+
+  if (isCron) {
+    let body: any = {};
+    try { body = await req.json(); } catch (_) {}
+    if (body?.trigger === 'pre_restore') trigger = 'pre_restore';
+    note = body?.note ?? null;
+    wait = trigger === 'pre_restore' || body?.wait === true;
+  }
 
   if (!isCron) {
     const authHeader = req.headers.get('Authorization');
@@ -93,21 +104,57 @@ Deno.serve(async (req) => {
     try { body = await req.json(); } catch (_) {}
     trigger = (body?.trigger === 'pre_restore' ? 'pre_restore' : 'manual');
     note = body?.note ?? null;
+    // Vor einer Wiederherstellung muss synchron gewartet werden
+    wait = trigger === 'pre_restore' || body?.wait === true;
   }
 
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
   const stamp = `${now.getUTCFullYear()}-${pad(now.getUTCMonth()+1)}-${pad(now.getUTCDate())}_${pad(now.getUTCHours())}-${pad(now.getUTCMinutes())}-${pad(now.getUTCSeconds())}_${trigger}`;
+
+  // Laufenden Vorgang sofort protokollieren, damit ein Abbruch sichtbar bleibt
+  const { data: runRow } = await admin.from('backups').insert({
+    created_by: createdBy,
+    trigger,
+    storage_path: `${stamp}.json`,
+    status: 'running',
+    tables_count: TABLES.length,
+    rows_count: 0,
+    note,
+  }).select().single();
+
+  const work = runBackup(admin, { stamp, trigger, note, backupId: runRow?.id ?? null });
+
+  if (wait) {
+    const result = await work;
+    return json(result.ok ? { ok: true, ...result } : { error: result.error }, result.ok ? 200 : 500);
+  }
+
+  // Im Hintergrund weiterlaufen lassen: pg_net bricht die Verbindung nach 5s ab
+  try { (globalThis as any).EdgeRuntime?.waitUntil?.(work); } catch (_) { /* noop */ }
+  return json({ ok: true, started: true, backup_id: runRow?.id ?? null });
+});
+
+async function runBackup(
+  admin: any,
+  opts: { stamp: string; trigger: string; note: string | null; backupId: string | null },
+) {
+  const { stamp, trigger, note, backupId } = opts;
   const filesRoot = `files/${stamp}`;
+  const startedAt = new Date();
 
   try {
-    // 1) DB-Snapshot
-    const snapshot: Record<string, any[]> = {};
+    // 1) DB-Snapshot – jede Tabelle wird in Blöcken direkt in den Storage geschrieben,
+    //    damit nie der komplette Datenbestand im Speicher liegt (Memory-Limit).
+    const tablesRoot = `tables/${stamp}`;
+    const tablesManifest: Record<string, { chunks: string[]; rows: number }> = {};
     let totalRows = 0;
     for (const t of TABLES) {
-      const all: any[] = [];
       let from = 0;
-      const batch = 1000;
+      const batch = 500;
+      let part = 0;
+      let rows = 0;
+      const chunks: string[] = [];
       while (true) {
         const { data, error } = await admin.from(t).select('*').range(from, from + batch - 1);
         if (error) {
@@ -116,18 +163,33 @@ Deno.serve(async (req) => {
           break;
         }
         if (!data || data.length === 0) break;
-        all.push(...data);
-        if (data.length < batch) break;
+        const dest = `${tablesRoot}/${t}/${String(part).padStart(5, '0')}.json`;
+        const bytes = new TextEncoder().encode(JSON.stringify(data));
+        const { error: cErr } = await admin.storage.from('backups').upload(dest, bytes, {
+          contentType: 'application/json', upsert: true,
+        });
+        if (cErr) throw new Error(`upload ${dest}: ${cErr.message}`);
+        chunks.push(dest);
+        rows += data.length;
+        part++;
+        const done = data.length < batch;
+        if (done) break;
         from += batch;
       }
-      snapshot[t] = all;
-      totalRows += all.length;
+      tablesManifest[t] = { chunks, rows };
+      totalRows += rows;
     }
 
-    // 2) Storage-Snapshot: alle Buckets in den Backups-Bucket unter filesRoot spiegeln
-    const filesManifest: Record<string, { path: string; size: number; dest: string }[]> = {};
+
+    // 2) Storage-Snapshot – inkrementell: unveränderte Dateien werden aus dem
+    //    letzten erfolgreichen Backup referenziert statt erneut kopiert.
+    const prev = await loadPreviousManifest(admin);
+
+    const filesManifest: Record<string, FileEntry[]> = {};
     let totalFiles = 0;
     let totalFileBytes = 0;
+    let copiedFiles = 0;
+    let reusedFiles = 0;
 
     for (const bucket of STORAGE_BUCKETS) {
       let items: { path: string; size: number }[] = [];
@@ -137,30 +199,36 @@ Deno.serve(async (req) => {
         console.warn(`bucket ${bucket} list failed: ${e?.message}`);
         continue;
       }
-      const entries: { path: string; size: number; dest: string }[] = [];
-      // Parallel-Kopie in kleinen Batches, damit Speicher & Verbindung stabil bleiben
-      const concurrency = 6;
+      const prevMap = new Map<string, FileEntry>();
+      for (const e of (prev?.[bucket] ?? [])) prevMap.set(e.path, e);
+
+      const entries: FileEntry[] = [];
+      const concurrency = 4;
       let idx = 0;
       async function worker() {
         while (idx < items.length) {
-          const my = idx++;
-          const it = items[my];
+          const it = items[idx++];
+          const reuse = prevMap.get(it.path);
+          if (reuse && reuse.size === it.size && reuse.dest) {
+            entries.push({ path: it.path, size: it.size, dest: reuse.dest });
+            totalFileBytes += it.size;
+            totalFiles++; reusedFiles++;
+            continue;
+          }
           const dest = `${filesRoot}/${bucket}/${it.path}`;
           try {
-            const { data: blob, error: dErr } = await admin.storage.from(bucket).download(it.path);
-            if (dErr || !blob) throw new Error(dErr?.message || 'download failed');
-            const buf = new Uint8Array(await blob.arrayBuffer());
-            const { error: uErr } = await admin.storage.from('backups').upload(dest, buf, {
-              contentType: (blob as any).type || 'application/octet-stream',
-              upsert: true,
+            // Server-seitige Kopie: keine Datei landet im Funktionsspeicher
+            const { error: cErr } = await admin.storage.from(bucket).copy(it.path, dest, {
+              destinationBucket: 'backups',
             });
-            if (uErr) throw uErr;
-            entries.push({ path: it.path, size: buf.byteLength, dest });
-            totalFileBytes += buf.byteLength;
-            totalFiles++;
+            if (cErr) throw cErr;
+            entries.push({ path: it.path, size: it.size, dest });
+            totalFileBytes += it.size;
+            totalFiles++; copiedFiles++;
           } catch (e: any) {
             console.warn(`copy ${bucket}/${it.path}: ${e?.message}`);
           }
+
         }
       }
       await Promise.all(Array.from({ length: concurrency }, () => worker()));
@@ -170,11 +238,12 @@ Deno.serve(async (req) => {
     // 3) Manifest / Payload schreiben
     const fname = `${stamp}.json`;
     const payload = {
-      version: 2,
-      created_at: now.toISOString(),
+      version: 3,
+      created_at: startedAt.toISOString(),
       trigger,
       tables: TABLES,
-      data: snapshot,
+      table_data: { root: tablesRoot, tables: tablesManifest },
+
       storage: {
         root: filesRoot,
         buckets: STORAGE_BUCKETS,
@@ -186,32 +255,72 @@ Deno.serve(async (req) => {
     const body = new TextEncoder().encode(JSON.stringify(payload));
 
     const { error: upErr } = await admin.storage.from('backups').upload(fname, body, {
-      contentType: 'application/json', upsert: false,
+      contentType: 'application/json', upsert: true,
     });
     if (upErr) throw upErr;
 
-    const { data: row, error: insErr } = await admin.from('backups').insert({
-      created_by: createdBy,
-      trigger,
+    const finalNote = [
+      note,
+      `Dokumente: ${totalFiles} Dateien / ${(totalFileBytes/1024/1024).toFixed(1)} MB` +
+      ` (${copiedFiles} neu, ${reusedFiles} übernommen)`,
+    ].filter(Boolean).join(' · ');
+
+    const patch = {
       storage_path: fname,
       size_bytes: body.byteLength + totalFileBytes,
       tables_count: TABLES.length,
       rows_count: totalRows,
       status: 'success',
-      note: [note, `Dokumente: ${totalFiles} Dateien / ${(totalFileBytes/1024/1024).toFixed(1)} MB`].filter(Boolean).join(' · '),
-    }).select().single();
-    if (insErr) throw insErr;
+      note: finalNote,
+      error: null,
+    };
 
-    return json({ ok: true, backup: row, files: totalFiles, file_bytes: totalFileBytes });
+    let row: any = null;
+    if (backupId) {
+      const { data } = await admin.from('backups').update(patch).eq('id', backupId).select().single();
+      row = data;
+    } else {
+      const { data } = await admin.from('backups').insert({ trigger, ...patch }).select().single();
+      row = data;
+    }
+
+    return { ok: true as const, backup: row, files: totalFiles, file_bytes: totalFileBytes };
   } catch (err: any) {
     console.error('create-backup error', err);
-    await admin.from('backups').insert({
-      created_by: createdBy, trigger, storage_path: '', status: 'failed',
-      tables_count: TABLES.length, rows_count: 0, error: String(err?.message || err), note,
-    });
-    return json({ error: err?.message || 'Backup failed' }, 500);
+    const msg = String(err?.message || err);
+    if (backupId) {
+      await admin.from('backups').update({ status: 'failed', error: msg }).eq('id', backupId);
+    } else {
+      await admin.from('backups').insert({
+        trigger, storage_path: '', status: 'failed',
+        tables_count: TABLES.length, rows_count: 0, error: msg, note,
+      });
+    }
+    return { ok: false as const, error: msg };
   }
-});
+}
+
+async function loadPreviousManifest(admin: any): Promise<Record<string, FileEntry[]> | null> {
+  try {
+    const { data: last } = await admin
+      .from('backups').select('storage_path')
+      .eq('status', 'success').not('storage_path', 'eq', '')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (!last?.storage_path) return null;
+    const { data: blob, error } = await admin.storage.from('backups').download(last.storage_path);
+    if (error || !blob) return null;
+    // Alte v1/v2-Manifeste enthalten die kompletten Tabellendaten inline und
+    // würden das Speicherlimit sprengen – nur schlanke v3-Manifeste wiederverwenden.
+    if (blob.size > 8 * 1024 * 1024) return null;
+    const parsed = JSON.parse(await blob.text());
+    if ((parsed?.version ?? 0) < 3) return null;
+    return parsed?.storage?.files ?? null;
+
+  } catch (e: any) {
+    console.warn('previous manifest unavailable:', e?.message);
+    return null;
+  }
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

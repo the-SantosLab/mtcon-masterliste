@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
         'x-cron-secret': Deno.env.get('BACKUP_CRON_SECRET') ?? '',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ trigger: 'pre_restore', wait: true }),
     });
     await preRes.text();
 
@@ -70,6 +70,9 @@ Deno.serve(async (req) => {
     const text = await file.text();
     const payload = JSON.parse(text);
     const data = (payload.data ?? {}) as Record<string, any[]>;
+    const tableData = payload.table_data as
+      | { root: string; tables: Record<string, { chunks: string[]; rows: number }> }
+      | undefined;
     const storage = payload.storage as
       | { root: string; buckets: string[]; files: Record<string, { path: string; size: number; dest: string }[]> }
       | undefined;
@@ -82,6 +85,22 @@ Deno.serve(async (req) => {
 
     let inserted = 0;
     for (const t of RESTORE_ORDER) {
+      // v3: Tabellendaten liegen als Chunk-Dateien im Storage
+      const chunks = tableData?.tables?.[t]?.chunks;
+      if (chunks && chunks.length) {
+        for (const c of chunks) {
+          const { data: blob, error: cErr } = await admin.storage.from('backups').download(c);
+          if (cErr || !blob) throw new Error(`Chunk ${c} nicht lesbar`);
+          const rows = JSON.parse(await blob.text()) as any[];
+          for (let i = 0; i < rows.length; i += 500) {
+            const slice = rows.slice(i, i + 500);
+            const { error } = await admin.from(t).insert(slice);
+            if (error) throw new Error(`Wiederherstellung ${t}: ${error.message}`);
+            inserted += slice.length;
+          }
+        }
+        continue;
+      }
       const rows = data[t];
       if (!rows || rows.length === 0) continue;
       const chunk = 500;
@@ -92,6 +111,7 @@ Deno.serve(async (req) => {
         inserted += slice.length;
       }
     }
+
 
     // 2) Dateien wiederherstellen
     let filesRestored = 0;
