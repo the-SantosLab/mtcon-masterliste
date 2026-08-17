@@ -7774,6 +7774,71 @@ export type Database = {
           },
         ]
       }
+      restore_runs: {
+        Row: {
+          backup_created_at: string | null
+          backup_id: string | null
+          bytes_restored: number
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          file_checks: Json
+          files_failed: number
+          files_restored: number
+          finished_at: string | null
+          id: string
+          issues_count: number
+          rows_inserted: number
+          started_by: string | null
+          status: string
+          table_checks: Json
+        }
+        Insert: {
+          backup_created_at?: string | null
+          backup_id?: string | null
+          bytes_restored?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          file_checks?: Json
+          files_failed?: number
+          files_restored?: number
+          finished_at?: string | null
+          id?: string
+          issues_count?: number
+          rows_inserted?: number
+          started_by?: string | null
+          status?: string
+          table_checks?: Json
+        }
+        Update: {
+          backup_created_at?: string | null
+          backup_id?: string | null
+          bytes_restored?: number
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          file_checks?: Json
+          files_failed?: number
+          files_restored?: number
+          finished_at?: string | null
+          id?: string
+          issues_count?: number
+          rows_inserted?: number
+          started_by?: string | null
+          status?: string
+          table_checks?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restore_runs_backup_id_fkey"
+            columns: ["backup_id"]
+            isOneToOne: false
+            referencedRelation: "backups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_routing_rules: {
         Row: {
           assigned_to: string | null
