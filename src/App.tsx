@@ -33,6 +33,7 @@ const PrintProject = lazy(() => import("./pages/PrintProject"));
 const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMasterData = lazy(() => import("./pages/AdminMasterData"));
+const AdminApiExplorer = lazy(() => import("./pages/AdminApiExplorer"));
 const AdminArticles = lazy(() => import("./pages/AdminArticles"));
 const AdminInventory = lazy(() => import("./pages/AdminInventory"));
 
@@ -238,6 +239,7 @@ function AuthenticatedApp() {
           <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
           <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/master-data" element={<ProtectedRoute><AdminMasterData /></ProtectedRoute>} />
+          <Route path="/admin/api-explorer" element={<ProtectedRoute><AdminApiExplorer /></ProtectedRoute>} />
           <Route path="/admin/partners" element={<Navigate to="/crm/companies" replace />} />
           <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
           <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />

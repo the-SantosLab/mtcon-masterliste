@@ -12,7 +12,7 @@ import { MfaReminderBanner } from '@/components/MfaReminderBanner';
 import { supabase } from '@/integrations/supabase/client';
 import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
-  LayoutDashboard, ClipboardList, Settings, Users, Database,
+  LayoutDashboard, ClipboardList, Settings, Users, Database, TerminalSquare,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
   FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp, FolderTree, Globe, PlugZap,
 } from 'lucide-react';
@@ -146,6 +146,7 @@ const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
+  { href: '/admin/api-explorer', label: 'API-Explorer', icon: TerminalSquare },
   
   
   
