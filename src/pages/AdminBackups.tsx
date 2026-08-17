@@ -138,6 +138,7 @@ export default function AdminBackups() {
                   <TableCell>
                     {r.status === 'success' ? <Badge>Erfolgreich</Badge>
                       : r.status === 'failed' ? <Badge variant="destructive">Fehlgeschlagen</Badge>
+                      : r.status === 'running' ? <Badge variant="secondary">Läuft…</Badge>
                       : <Badge variant="secondary">{r.status}</Badge>}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{r.rows_count ?? '–'}</TableCell>
