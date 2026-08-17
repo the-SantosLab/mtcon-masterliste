@@ -49,9 +49,21 @@ Deno.serve(async (req) => {
   const wipeBuckets = body?.wipe_buckets !== false; // default: leere Ziel-Buckets vor Restore
   if (!backupId) return json({ error: 'backup_id required' }, 400);
 
+  const startedAt = Date.now();
+  let runId: string | null = null;
+
   try {
     const { data: backup, error: bErr } = await admin.from('backups').select('*').eq('id', backupId).single();
     if (bErr || !backup) throw new Error('Backup nicht gefunden');
+
+    const { data: runRow } = await admin.from('restore_runs').insert({
+      backup_id: backup.id,
+      backup_created_at: backup.created_at,
+      started_by: uid,
+      status: 'running',
+    }).select('id').single();
+    runId = runRow?.id ?? null;
+
 
     // Pre-restore safety backup
     const preRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/create-backup`, {
