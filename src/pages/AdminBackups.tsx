@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Download, RotateCcw, DatabaseBackup } from 'lucide-react';
+import { Loader2, Download, RotateCcw, DatabaseBackup, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 
 interface BackupRow {
@@ -24,6 +24,26 @@ interface BackupRow {
   error: string | null;
 }
 
+interface TableCheck { table: string; expected: number; actual: number; diff: number; ok: boolean; error?: string }
+interface FileCheck { bucket: string; expected: number; present: number; missing: number; size_mismatch: number; extra: number; ok: boolean; samples: string[] }
+
+interface RestoreRun {
+  id: string;
+  created_at: string;
+  finished_at: string | null;
+  backup_created_at: string | null;
+  status: string;
+  rows_inserted: number;
+  files_restored: number;
+  files_failed: number;
+  bytes_restored: number;
+  issues_count: number;
+  duration_ms: number | null;
+  table_checks: TableCheck[] | null;
+  file_checks: FileCheck[] | null;
+  error: string | null;
+}
+
 function fmtSize(b: number | null) {
   if (!b) return '–';
   if (b < 1024) return `${b} B`;
@@ -34,22 +54,30 @@ function fmtSize(b: number | null) {
 export default function AdminBackups() {
   const { isAdmin, loading } = useAuth();
   const [rows, setRows] = useState<BackupRow[]>([]);
+  const [runs, setRuns] = useState<RestoreRun[]>([]);
+  const [runDetail, setRunDetail] = useState<RestoreRun | null>(null);
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
   const [restoreOpen, setRestoreOpen] = useState<BackupRow | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [restoring, setRestoring] = useState(false);
 
+
   const load = async () => {
     setBusy(true);
-    const { data, error } = await supabase
-      .from('backups').select('*').order('created_at', { ascending: false }).limit(200);
+    const [{ data, error }, { data: runData, error: runErr }] = await Promise.all([
+      supabase.from('backups').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('restore_runs').select('*').order('created_at', { ascending: false }).limit(50),
+    ]);
     if (error) toast.error(error.message);
     else setRows((data as BackupRow[]) ?? []);
+    if (runErr) toast.error(runErr.message);
+    else setRuns((runData as unknown as RestoreRun[]) ?? []);
     setBusy(false);
   };
 
   useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
+
 
   if (loading) return null;
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -84,14 +112,19 @@ export default function AdminBackups() {
   const doRestore = async () => {
     if (!restoreOpen) return;
     setRestoring(true);
-    const { error } = await supabase.functions.invoke('restore-backup', { body: { backup_id: restoreOpen.id } });
+    const { data, error } = await supabase.functions.invoke('restore-backup', { body: { backup_id: restoreOpen.id } });
     if (error) toast.error(error.message);
-    else toast.success('Wiederherstellung abgeschlossen');
+    else {
+      const res = data as any;
+      if (res?.status === 'warning') toast.warning(`Wiederherstellung abgeschlossen – Validierung meldet ${res.issues_count} Abweichung(en)`);
+      else toast.success('Wiederherstellung abgeschlossen – Validierung ohne Befund');
+    }
     setRestoring(false);
     setRestoreOpen(null);
     setConfirmText('');
     load();
   };
+
 
   return (
     <AppLayout>
@@ -157,7 +190,151 @@ export default function AdminBackups() {
             </TableBody>
           </Table>
         </div>
+
+        <div className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">Wiederherstellungen &amp; Validierung</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Nach jeder Wiederherstellung wird automatisch geprüft, ob alle Tabellen-Datensätze und Dateien vollständig zurückgespielt wurden.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Zeitpunkt</TableHead>
+                  <TableHead>Backup-Stand</TableHead>
+                  <TableHead>Ergebnis</TableHead>
+                  <TableHead className="text-right">Datensätze</TableHead>
+                  <TableHead className="text-right">Dateien</TableHead>
+                  <TableHead className="text-right">Abweichungen</TableHead>
+                  <TableHead className="text-right">Dauer</TableHead>
+                  <TableHead className="text-right">Details</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {runs.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">Noch keine Wiederherstellungen.</TableCell></TableRow>
+                ) : runs.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>{new Date(r.created_at).toLocaleString('de-DE')}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {r.backup_created_at ? new Date(r.backup_created_at).toLocaleString('de-DE') : '–'}
+                    </TableCell>
+                    <TableCell>
+                      {r.status === 'success' ? (
+                        <Badge className="gap-1"><ShieldCheck className="h-3 w-3" />Validiert</Badge>
+                      ) : r.status === 'warning' ? (
+                        <Badge variant="secondary" className="gap-1"><ShieldAlert className="h-3 w-3" />Mit Hinweisen</Badge>
+                      ) : r.status === 'failed' ? (
+                        <Badge variant="destructive">Fehlgeschlagen</Badge>
+                      ) : (
+                        <Badge variant="secondary">Läuft…</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{r.rows_inserted}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {r.files_restored}{r.files_failed > 0 ? ` (${r.files_failed} fehlerhaft)` : ''}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{r.issues_count}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {r.duration_ms ? `${(r.duration_ms / 1000).toFixed(1)} s` : '–'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline" onClick={() => setRunDetail(r)}>Bericht</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </div>
+
+      <Dialog open={!!runDetail} onOpenChange={(o) => { if (!o) setRunDetail(null); }}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Validierungsbericht</DialogTitle>
+            <DialogDescription>
+              Wiederherstellung vom {runDetail && new Date(runDetail.created_at).toLocaleString('de-DE')} ·{' '}
+              {runDetail?.issues_count ?? 0} Abweichung(en)
+            </DialogDescription>
+          </DialogHeader>
+
+          {runDetail?.error && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs">{runDetail.error}</div>
+          )}
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Tabellen</h3>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tabelle</TableHead>
+                    <TableHead className="text-right">Erwartet</TableHead>
+                    <TableHead className="text-right">Vorhanden</TableHead>
+                    <TableHead className="text-right">Differenz</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(runDetail?.table_checks ?? []).map((t) => (
+                    <TableRow key={t.table} className={t.ok ? '' : 'bg-destructive/5'}>
+                      <TableCell className="font-mono text-xs">{t.table}</TableCell>
+                      <TableCell className="text-right tabular-nums">{t.expected}</TableCell>
+                      <TableCell className="text-right tabular-nums">{t.actual < 0 ? '–' : t.actual}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {t.error ? <span className="text-xs text-destructive">{t.error}</span> : t.diff === 0 ? '0' : (t.diff > 0 ? `+${t.diff}` : t.diff)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Dateien</h3>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Bereich</TableHead>
+                    <TableHead className="text-right">Erwartet</TableHead>
+                    <TableHead className="text-right">Vorhanden</TableHead>
+                    <TableHead className="text-right">Fehlend</TableHead>
+                    <TableHead className="text-right">Abweichende Größe</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(runDetail?.file_checks ?? []).map((f) => (
+                    <TableRow key={f.bucket} className={f.ok ? '' : 'bg-destructive/5'}>
+                      <TableCell className="font-mono text-xs">{f.bucket}</TableCell>
+                      <TableCell className="text-right tabular-nums">{f.expected}</TableCell>
+                      <TableCell className="text-right tabular-nums">{f.present}</TableCell>
+                      <TableCell className="text-right tabular-nums">{f.missing}</TableCell>
+                      <TableCell className="text-right tabular-nums">{f.size_mismatch}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {(runDetail?.file_checks ?? []).some((f) => f.samples?.length) && (
+              <div className="rounded-md border bg-muted/40 p-3 text-xs space-y-1">
+                {(runDetail?.file_checks ?? []).flatMap((f) => (f.samples ?? []).map((s) => `${f.bucket}: ${s}`)).slice(0, 30).map((s, i) => (
+                  <div key={i} className="font-mono">{s}</div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRunDetail(null)}>Schließen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
       <Dialog open={!!restoreOpen} onOpenChange={(o) => { if (!o) { setRestoreOpen(null); setConfirmText(''); } }}>
         <DialogContent>
