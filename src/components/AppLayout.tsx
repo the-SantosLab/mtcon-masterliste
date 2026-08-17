@@ -146,6 +146,7 @@ const adminItems = [
   { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
   { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
   { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
+  { href: '/admin/api-explorer', label: 'API-Explorer', icon: TerminalSquare },
   
   
   
