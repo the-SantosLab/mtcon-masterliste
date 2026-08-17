@@ -197,20 +197,139 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 3) Automatischer Validierungscheck
+    const tableChecks: {
+      table: string; expected: number; actual: number; diff: number; ok: boolean; error?: string;
+    }[] = [];
+    let issues = 0;
+
+    for (const t of RESTORE_ORDER) {
+      const expected = tableData?.tables?.[t]?.rows ?? (data[t]?.length ?? 0);
+      const { count, error } = await admin.from(t).select('*', { count: 'exact', head: true });
+      if (error) {
+        tableChecks.push({ table: t, expected, actual: -1, diff: 0, ok: false, error: error.message });
+        issues++;
+        continue;
+      }
+      const actual = count ?? 0;
+      const ok = actual === expected;
+      if (!ok) issues++;
+      tableChecks.push({ table: t, expected, actual, diff: actual - expected, ok });
+    }
+
+    const fileChecks: {
+      bucket: string; expected: number; present: number; missing: number;
+      size_mismatch: number; extra: number; ok: boolean; samples: string[];
+    }[] = [];
+
+    if (storage?.files) {
+      for (const [bucket, entries] of Object.entries(storage.files)) {
+        const expectedMap = new Map<string, number>();
+        for (const e of entries ?? []) expectedMap.set(e.path, e.size);
+        let actual: { path: string; size: number }[] = [];
+        try {
+          actual = await listAllFiles(admin, bucket);
+        } catch (e: any) {
+          fileChecks.push({
+            bucket, expected: expectedMap.size, present: 0, missing: expectedMap.size,
+            size_mismatch: 0, extra: 0, ok: false, samples: [`Liste nicht lesbar: ${e?.message}`],
+          });
+          issues++;
+          continue;
+        }
+        const actualMap = new Map(actual.map((a) => [a.path, a.size]));
+        let present = 0, missing = 0, mismatch = 0;
+        const samples: string[] = [];
+        for (const [p, size] of expectedMap) {
+          if (!actualMap.has(p)) {
+            missing++;
+            if (samples.length < 10) samples.push(`fehlt: ${p}`);
+          } else {
+            present++;
+            const a = actualMap.get(p)!;
+            if (size > 0 && a > 0 && a !== size) {
+              mismatch++;
+              if (samples.length < 10) samples.push(`Größe abweichend: ${p} (${a} statt ${size})`);
+            }
+          }
+        }
+        const extra = Math.max(0, actualMap.size - present);
+        const ok = missing === 0 && mismatch === 0;
+        if (!ok) issues++;
+        fileChecks.push({ bucket, expected: expectedMap.size, present, missing, size_mismatch: mismatch, extra, ok, samples });
+      }
+    }
+
+    const status = issues > 0 || filesFailed > 0 ? 'warning' : 'success';
+    if (runId) {
+      await admin.from('restore_runs').update({
+        finished_at: new Date().toISOString(),
+        status,
+        rows_inserted: inserted,
+        files_restored: filesRestored,
+        files_failed: filesFailed,
+        bytes_restored: bytesRestored,
+        issues_count: issues,
+        duration_ms: Date.now() - startedAt,
+        table_checks: tableChecks,
+        file_checks: fileChecks,
+        error: failedSamples.length ? failedSamples.join(' | ').slice(0, 4000) : null,
+      }).eq('id', runId);
+    }
+
     return json({
       ok: true,
+      run_id: runId,
+      status,
       inserted,
       files_restored: filesRestored,
       files_failed: filesFailed,
       bytes_restored: bytesRestored,
       failed_samples: failedSamples,
+      issues_count: issues,
+      table_checks: tableChecks,
+      file_checks: fileChecks,
       manifest_version: payload.version ?? 1,
     });
   } catch (err: any) {
     console.error('restore-backup error', err);
+    if (runId) {
+      await admin.from('restore_runs').update({
+        finished_at: new Date().toISOString(),
+        status: 'failed',
+        duration_ms: Date.now() - startedAt,
+        error: String(err?.message || err).slice(0, 4000),
+      }).eq('id', runId);
+    }
     return json({ error: err?.message || 'Restore failed' }, 500);
   }
 });
+
+async function listAllFiles(admin: any, bucket: string): Promise<{ path: string; size: number }[]> {
+  const out: { path: string; size: number }[] = [];
+  const stack: string[] = [''];
+  while (stack.length) {
+    const cur = stack.pop()!;
+    let offset = 0;
+    const limit = 1000;
+    while (true) {
+      const { data, error } = await admin.storage.from(bucket).list(cur, {
+        limit, offset, sortBy: { column: 'name', order: 'asc' },
+      });
+      if (error) throw new Error(`list ${bucket}/${cur}: ${error.message}`);
+      if (!data || data.length === 0) break;
+      for (const item of data) {
+        const full = cur ? `${cur}/${item.name}` : item.name;
+        if (item.id === null || !item.metadata) stack.push(full);
+        else out.push({ path: full, size: Number(item.metadata?.size ?? 0) });
+      }
+      if (data.length < limit) break;
+      offset += limit;
+    }
+  }
+  return out;
+}
+
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
