@@ -460,15 +460,26 @@ export default function CasesKanban() {
     const subDone: Record<string, number> = {};
     const subTotal: Record<string, number> = {};
     if (caseIds.length > 0) {
-      const { data: subs } = await supabase
-        .from('case_tasks')
-        .select('case_id, status')
-        .in('case_id', caseIds);
-      (subs || []).forEach((t: any) => {
-        subTotal[t.case_id] = (subTotal[t.case_id] || 0) + 1;
-        if (t.status === 'done') subDone[t.case_id] = (subDone[t.case_id] || 0) + 1;
-      });
+      // Seitenweise laden: PostgREST liefert max. 1000 Zeilen pro Anfrage,
+      // sonst fehlen Unteraufgaben bei Vorgängen weiter hinten in der Liste.
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data: subs, error } = await supabase
+          .from('case_tasks')
+          .select('case_id, status')
+          .in('case_id', caseIds)
+          .is('archived_at', null)
+          .order('case_id', { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) break;
+        (subs || []).forEach((t: any) => {
+          subTotal[t.case_id] = (subTotal[t.case_id] || 0) + 1;
+          if (t.status === 'done') subDone[t.case_id] = (subDone[t.case_id] || 0) + 1;
+        });
+        if (!subs || subs.length < PAGE) break;
+      }
     }
+
 
     setCases(list.map(c => {
       const fallback = !c.department_id && c.created_by ? creatorDept[c.created_by] ?? null : null;
