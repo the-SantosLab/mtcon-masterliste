@@ -108,6 +108,27 @@ export function CaseEmails({ caseId }: Props) {
     }
   };
 
+  const downloadEml = async (path: string, subject: string | null) => {
+    const { data, error } = await supabase.storage.from('case-attachments').createSignedUrl(path, 300);
+    if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
+    try {
+      const res = await fetch(data.signedUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `${(subject || 'email').replace(/[^\w\-. ]+/g, '_').slice(0, 80)}.eml`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch {
+      toast.error('Download fehlgeschlagen');
+    }
+  };
+
+
+
   const deleteEmail = async (email: EmailRow) => {
     const paths = email.attachments.map(a => a.storage_path).filter(Boolean);
     const { error } = await (supabase as any)
