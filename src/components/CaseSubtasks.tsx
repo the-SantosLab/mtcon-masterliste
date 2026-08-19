@@ -1094,6 +1094,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
+                        {task.description && (
+                          <div className="px-3 pb-2 -mt-1 pl-9">
+                            <p className="text-[12px] leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
+                              {task.description}
+                            </p>
+                          </div>
+                        )}
+
+
+
                         {hasNote && (
                           <div className="px-3 pb-2.5 pt-1.5 bg-[hsl(var(--status-done))]/5 border-t border-[hsl(var(--status-done))]/25">
                             <div className="flex items-start gap-2">
