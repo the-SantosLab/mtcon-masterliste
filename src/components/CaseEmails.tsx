@@ -20,6 +20,7 @@ interface EmailRow {
   body_plain: string | null;
   body_html: string | null;
   received_at: string;
+  raw_eml_path: string | null;
   attachments: { id: string; file_name: string; storage_path: string; size_bytes: number | null }[];
 }
 
@@ -54,7 +55,7 @@ export function CaseEmails({ caseId }: Props) {
   const fetchEmails = async () => {
     const { data, error } = await (supabase as any)
       .from('case_emails')
-      .select('id, case_id, from_email, from_name, subject, body_plain, body_html, received_at, case_email_attachments(id, file_name, storage_path, size_bytes)')
+      .select('id, case_id, from_email, from_name, subject, body_plain, body_html, received_at, raw_eml_path, case_email_attachments(id, file_name, storage_path, size_bytes)')
       .eq('case_id', caseId)
       .order('received_at', { ascending: false });
     if (error) { console.error(error); setLoading(false); return; }
@@ -63,6 +64,7 @@ export function CaseEmails({ caseId }: Props) {
       from_email: e.from_email, from_name: e.from_name,
       subject: e.subject, body_plain: e.body_plain, body_html: e.body_html,
       received_at: e.received_at,
+      raw_eml_path: e.raw_eml_path ?? null,
       attachments: e.case_email_attachments || [],
     })));
     setLoading(false);
