@@ -696,6 +696,7 @@ export default function AdminInsurance() {
                         {detailCategory?.name || 'Ohne Kategorie'}
                         {detailPolicy.provider && <> · {detailPolicy.provider}</>}
                         {detailPolicy.policy_number && <> · <span className="font-mono">{detailPolicy.policy_number}</span></>}
+                        {detailCustomer && <div className="mt-0.5">Kunde: {detailCustomer.name}{detailCustomer.customer_no ? ` (${detailCustomer.customer_no})` : ''}</div>}
                       </div>
                     </div>
                   </div>
@@ -1051,6 +1052,50 @@ function CategoryRow({ active, onClick, icon: Icon, color, label, count }: {
       </div>
       <span className="text-[10px] tabular-nums text-muted-foreground shrink-0">{count}</span>
     </button>
+  );
+}
+
+function CustomerCombobox({ customers, value, onChange }: {
+  customers: { id: string; name: string; customer_no: string | null }[];
+  value: string | null;
+  onChange: (id: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? customers.find(c => c.id === value) : null;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="h-8 w-full justify-between text-xs font-normal">
+          <span className="truncate">
+            {selected ? `${selected.name}${selected.customer_no ? ` (${selected.customer_no})` : ''}` : 'Kein Kunde zugeordnet'}
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 opacity-50 rotate-90 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Kunde suchen…" className="h-8 text-xs" />
+          <CommandList>
+            <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Treffer</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="__none__" onSelect={() => { onChange(null); setOpen(false); }} className="text-xs">
+                Kein Kunde zugeordnet
+              </CommandItem>
+              {customers.map(c => (
+                <CommandItem
+                  key={c.id}
+                  value={`${c.name} ${c.customer_no || ''}`}
+                  onSelect={() => { onChange(c.id); setOpen(false); }}
+                  className="text-xs"
+                >
+                  {c.name}{c.customer_no ? ` (${c.customer_no})` : ''}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 
