@@ -394,6 +394,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const { data: ins, error } = await supabase.from('case_tasks').insert({
       case_id: caseId,
       title: newTitle.trim(),
+      description: newDescription.trim() || null,
       created_by: userId,
       sort_order: tasks.length,
       department_id: newDeptId || null,
@@ -404,6 +405,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     if (error) toastError(error, 'case_subtask');
     else {
       setNewTitle('');
+      setNewDescription('');
+
       setNewDeptId('');
       setNewAssignee('');
       setNewDueAt('');
