@@ -237,6 +237,21 @@ export function CaseEmails({ caseId }: Props) {
 
                 <EmailBody html={e.body_html} plain={e.body_plain} />
 
+                {e.raw_eml_path && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => downloadEml(e.raw_eml_path!, e.subject)}
+                      className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+                      title="Original-E-Mail (.eml) herunterladen – in Outlook öffenbar"
+                    >
+                      <Mail className="h-3 w-3" />
+                      Original-E-Mail (.eml)
+                    </button>
+                  </div>
+                )}
+
+
                 {canDelete && (
                   <div className="flex justify-end">
                     <AlertDialog>
