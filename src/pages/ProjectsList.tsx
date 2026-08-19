@@ -156,19 +156,21 @@ export default function ProjectsList() {
     (async () => {
       const { data } = await supabase
         .from('case_tasks')
-        .select('status, case:cases!inner(project_id)')
-        .eq('assigned_to', user.id);
-      const byProject = new Map<string, { total: number; done: number }>();
+        .select('status, assigned_to, case:cases!inner(project_id)');
+      const byProject = new Map<string, { mine: number; mineDone: number; openTotal: number }>();
       (data || []).forEach((r: any) => {
         const pid = r.case?.project_id;
         if (!pid) return;
-        const cur = byProject.get(pid) || { total: 0, done: 0 };
-        cur.total += 1;
-        if (r.status === 'done') cur.done += 1;
+        const cur = byProject.get(pid) || { mine: 0, mineDone: 0, openTotal: 0 };
+        if (r.assigned_to === user.id) {
+          cur.mine += 1;
+          if (r.status === 'done') cur.mineDone += 1;
+        }
+        if (r.status !== 'done') cur.openTotal += 1;
         byProject.set(pid, cur);
       });
       const done = new Set<string>();
-      byProject.forEach((v, k) => { if (v.total > 0 && v.done === v.total) done.add(k); });
+      byProject.forEach((v, k) => { if (v.mine > 0 && v.mine === v.mineDone && v.openTotal === 0) done.add(k); });
       setMyDoneOnlyProjectIds(done);
     })();
     const ch = supabase.channel('proj-mytasks')
