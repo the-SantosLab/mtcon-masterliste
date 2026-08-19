@@ -1,0 +1,1 @@
+ALTER TABLE public.case_emails ADD COLUMN IF NOT EXISTS raw_eml_path text;

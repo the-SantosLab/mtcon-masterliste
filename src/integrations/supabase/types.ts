@@ -1364,6 +1364,7 @@ export type Database = {
           message_id: string | null
           note_id: string | null
           raw: Json | null
+          raw_eml_path: string | null
           received_at: string
           subject: string | null
           to_email: string | null
@@ -1379,6 +1380,7 @@ export type Database = {
           message_id?: string | null
           note_id?: string | null
           raw?: Json | null
+          raw_eml_path?: string | null
           received_at?: string
           subject?: string | null
           to_email?: string | null
@@ -1394,6 +1396,7 @@ export type Database = {
           message_id?: string | null
           note_id?: string | null
           raw?: Json | null
+          raw_eml_path?: string | null
           received_at?: string
           subject?: string | null
           to_email?: string | null
