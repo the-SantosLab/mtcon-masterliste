@@ -199,6 +199,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
   const [deptMembers, setDeptMembers] = useState<{ department_id: string; user_id: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+
   const [newDeptId, setNewDeptId] = useState('');
   const [newAssignee, setNewAssignee] = useState('');
   const [newDueAt, setNewDueAt] = useState('');
@@ -392,6 +394,7 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     const { data: ins, error } = await supabase.from('case_tasks').insert({
       case_id: caseId,
       title: newTitle.trim(),
+      description: newDescription.trim() || null,
       created_by: userId,
       sort_order: tasks.length,
       department_id: newDeptId || null,
@@ -402,6 +405,8 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
     if (error) toastError(error, 'case_subtask');
     else {
       setNewTitle('');
+      setNewDescription('');
+
       setNewDeptId('');
       setNewAssignee('');
       setNewDueAt('');
@@ -1089,6 +1094,16 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
                           <ChevronDown className={cn('h-3 w-3 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </div>
 
+                        {task.description && (
+                          <div className="px-3 pb-2 -mt-1 pl-9">
+                            <p className="text-[12px] leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
+                              {task.description}
+                            </p>
+                          </div>
+                        )}
+
+
+
                         {hasNote && (
                           <div className="px-3 pb-2.5 pt-1.5 bg-[hsl(var(--status-done))]/5 border-t border-[hsl(var(--status-done))]/25">
                             <div className="flex items-start gap-2">
@@ -1321,48 +1336,57 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
       {/* Add new subtask */}
       {canEdit && (
-        <div className="flex gap-2 mt-3">
-          <Input
-            value={newTitle}
-            onChange={e => setNewTitle(e.target.value)}
-            placeholder="Neue Unteraufgabe…"
-            className="h-8 text-xs flex-1"
-            onKeyDown={e => e.key === 'Enter' && addTask()}
+        <div className="mt-3 space-y-2">
+          <div className="flex gap-2">
+            <Input
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              placeholder="Neue Unteraufgabe…"
+              className="h-8 text-xs flex-1"
+              onKeyDown={e => e.key === 'Enter' && addTask()}
+            />
+            <Select value={newDeptId || '_none'} onValueChange={v => { setNewDeptId(v === '_none' ? '' : v); setNewAssignee(''); }}>
+              <SelectTrigger className="h-8 text-xs w-[130px]">
+                <SelectValue placeholder="Abt." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none" className="text-xs">Keine Abt.</SelectItem>
+                {departments.map(d => (
+                  <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={newAssignee || '_none'} onValueChange={v => setNewAssignee(v === '_none' ? '' : v)}>
+              <SelectTrigger className="h-8 text-xs w-[150px]">
+                <SelectValue placeholder="Zuständig" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
+                {assigneesForDept(newDeptId).map(p => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={addTask}
+              disabled={adding || !newTitle.trim()}
+              className="h-8 text-xs gap-1 shrink-0"
+            >
+              {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+          <Textarea
+            value={newDescription}
+            onChange={e => setNewDescription(e.target.value)}
+            placeholder="Beschreibung (optional)…"
+            rows={2}
+            className="text-xs resize-y min-h-[48px]"
           />
-          <Select value={newDeptId || '_none'} onValueChange={v => { setNewDeptId(v === '_none' ? '' : v); setNewAssignee(''); }}>
-            <SelectTrigger className="h-8 text-xs w-[130px]">
-              <SelectValue placeholder="Abt." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none" className="text-xs">Keine Abt.</SelectItem>
-              {departments.map(d => (
-                <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={newAssignee || '_none'} onValueChange={v => setNewAssignee(v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-8 text-xs w-[150px]">
-              <SelectValue placeholder="Zuständig" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-              {assigneesForDept(newDeptId).map(p => (
-
-                <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={addTask}
-            disabled={adding || !newTitle.trim()}
-            className="h-8 text-xs gap-1 shrink-0"
-          >
-            {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-          </Button>
         </div>
       )}
+
       {canEdit && (
         <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
           <NotifyToggle
