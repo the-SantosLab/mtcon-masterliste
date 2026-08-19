@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import {
   Shield, ShieldCheck, Lock, Building, Car, Users as UsersIcon, Folder, FolderOpen, FolderArchive,
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
@@ -53,6 +55,7 @@ interface Policy {
   tags: string[] | null;
   status: string;
   source?: string | null;
+  customer_id?: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -98,7 +101,7 @@ const EMPTY_FORM: Partial<Policy> = {
   start_date: '', end_date: '', renewal_date: '', notice_period_days: 90,
   premium_amount: null, premium_currency: 'EUR', premium_interval: 'yearly',
   contact_name: '', contact_email: '', contact_phone: '',
-  tags: [], status: 'active', notes: '',
+  tags: [], status: 'active', notes: '', customer_id: null,
 };
 
 type EffectiveStatus = 'draft' | 'active' | 'expiring_soon' | 'expired' | 'cancelled' | 'archived';
@@ -166,6 +169,7 @@ export default function AdminInsurance() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const [customers, setCustomers] = useState<{ id: string; name: string; customer_no: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedCat, setSelectedCat] = useState<string>('all');
@@ -270,12 +274,14 @@ export default function AdminInsurance() {
 
   const load = async () => {
     setLoading(true);
-    const [catRes, polRes] = await Promise.all([
+    const [catRes, polRes, cusRes] = await Promise.all([
       supabase.from('insurance_categories' as any).select('*').order('sort_order'),
       supabase.from('insurance_policies' as any).select('*').order('updated_at', { ascending: false }),
+      supabase.from('customers').select('id, name, customer_no').order('name').limit(5000),
     ]);
     setCategories((catRes.data || []) as any);
     setPolicies((polRes.data || []) as any);
+    setCustomers((cusRes.data || []) as any);
     setLoading(false);
   };
 
@@ -345,16 +351,18 @@ export default function AdminInsurance() {
       if (selectedSet && (!p.category_id || !selectedSet.has(p.category_id))) return false;
       if (statusFilter !== 'all' && getEffectiveStatus(p) !== statusFilter) return false;
       if (s) {
-        const hay = [p.name, p.provider, p.policy_number, p.insured_object, p.description, p.notes, (p.tags || []).join(' ')]
+        const cus = p.customer_id ? customers.find(c => c.id === p.customer_id) : null;
+        const hay = [p.name, p.provider, p.policy_number, p.insured_object, p.description, p.notes, (p.tags || []).join(' '), cus?.name, cus?.customer_no]
           .filter(Boolean).join(' ').toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
     });
-  }, [policies, selectedCat, statusFilter, search, descendantIds]);
+  }, [policies, selectedCat, statusFilter, search, descendantIds, customers]);
 
   const detailPolicy = policies.find(p => p.id === detailId) || null;
   const detailCategory = detailPolicy ? categories.find(c => c.id === detailPolicy.category_id) : null;
+  const detailCustomer = detailPolicy?.customer_id ? customers.find(c => c.id === detailPolicy.customer_id) || null : null;
 
   // ---- editor ----
   const openCreate = () => {
@@ -397,6 +405,7 @@ export default function AdminInsurance() {
       contact_email: form.contact_email || null,
       contact_phone: form.contact_phone || null,
       notes: form.notes || null,
+      customer_id: form.customer_id || null,
       tags: form.tags || [],
       updated_by: user?.id || null,
     };
@@ -687,6 +696,7 @@ export default function AdminInsurance() {
                         {detailCategory?.name || 'Ohne Kategorie'}
                         {detailPolicy.provider && <> · {detailPolicy.provider}</>}
                         {detailPolicy.policy_number && <> · <span className="font-mono">{detailPolicy.policy_number}</span></>}
+                        {detailCustomer && <div className="mt-0.5">Kunde: {detailCustomer.name}{detailCustomer.customer_no ? ` (${detailCustomer.customer_no})` : ''}</div>}
                       </div>
                     </div>
                   </div>
@@ -895,6 +905,13 @@ export default function AdminInsurance() {
               <Field label="Bezeichnung *" className="col-span-2">
                 <Input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Betriebshaftpflicht 2026" />
               </Field>
+              <Field label="Kunde (CRM)" className="col-span-2">
+                <CustomerCombobox
+                  customers={customers}
+                  value={form.customer_id || null}
+                  onChange={(id) => setForm(f => ({ ...f, customer_id: id }))}
+                />
+              </Field>
               <Field label="Kategorie">
                 <Select value={form.category_id || '_none'} onValueChange={v => setForm(f => ({ ...f, category_id: v === '_none' ? null : v }))}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kategorie" /></SelectTrigger>
@@ -1035,6 +1052,50 @@ function CategoryRow({ active, onClick, icon: Icon, color, label, count }: {
       </div>
       <span className="text-[10px] tabular-nums text-muted-foreground shrink-0">{count}</span>
     </button>
+  );
+}
+
+function CustomerCombobox({ customers, value, onChange }: {
+  customers: { id: string; name: string; customer_no: string | null }[];
+  value: string | null;
+  onChange: (id: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? customers.find(c => c.id === value) : null;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="h-8 w-full justify-between text-xs font-normal">
+          <span className="truncate">
+            {selected ? `${selected.name}${selected.customer_no ? ` (${selected.customer_no})` : ''}` : 'Kein Kunde zugeordnet'}
+          </span>
+          <ChevronRight className="h-3.5 w-3.5 opacity-50 rotate-90 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Kunde suchen…" className="h-8 text-xs" />
+          <CommandList>
+            <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Treffer</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="__none__" onSelect={() => { onChange(null); setOpen(false); }} className="text-xs">
+                Kein Kunde zugeordnet
+              </CommandItem>
+              {customers.map(c => (
+                <CommandItem
+                  key={c.id}
+                  value={`${c.name} ${c.customer_no || ''}`}
+                  onSelect={() => { onChange(c.id); setOpen(false); }}
+                  className="text-xs"
+                >
+                  {c.name}{c.customer_no ? ` (${c.customer_no})` : ''}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -4132,6 +4132,7 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           created_by: string | null
+          customer_id: string | null
           description: string | null
           end_date: string | null
           id: string
@@ -4160,6 +4161,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -4188,6 +4190,7 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           created_by?: string | null
+          customer_id?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -4215,6 +4218,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "insurance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "insurance_policies_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
