@@ -274,12 +274,14 @@ export default function AdminInsurance() {
 
   const load = async () => {
     setLoading(true);
-    const [catRes, polRes] = await Promise.all([
+    const [catRes, polRes, cusRes] = await Promise.all([
       supabase.from('insurance_categories' as any).select('*').order('sort_order'),
       supabase.from('insurance_policies' as any).select('*').order('updated_at', { ascending: false }),
+      supabase.from('customers').select('id, name, customer_no').order('name').limit(5000),
     ]);
     setCategories((catRes.data || []) as any);
     setPolicies((polRes.data || []) as any);
+    setCustomers((cusRes.data || []) as any);
     setLoading(false);
   };
 
@@ -349,7 +351,8 @@ export default function AdminInsurance() {
       if (selectedSet && (!p.category_id || !selectedSet.has(p.category_id))) return false;
       if (statusFilter !== 'all' && getEffectiveStatus(p) !== statusFilter) return false;
       if (s) {
-        const hay = [p.name, p.provider, p.policy_number, p.insured_object, p.description, p.notes, (p.tags || []).join(' ')]
+        const cus = p.customer_id ? customers.find(c => c.id === p.customer_id) : null;
+        const hay = [p.name, p.provider, p.policy_number, p.insured_object, p.description, p.notes, (p.tags || []).join(' '), cus?.name, cus?.customer_no]
           .filter(Boolean).join(' ').toLowerCase();
         if (!hay.includes(s)) return false;
       }
@@ -401,6 +404,7 @@ export default function AdminInsurance() {
       contact_email: form.contact_email || null,
       contact_phone: form.contact_phone || null,
       notes: form.notes || null,
+      customer_id: form.customer_id || null,
       tags: form.tags || [],
       updated_by: user?.id || null,
     };
