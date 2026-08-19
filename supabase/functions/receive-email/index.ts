@@ -174,6 +174,52 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Original email (.eml) — verlustfreie Sicherung
+  try {
+    let eml: string | null = payload?.RawEmail || null;
+    if (!eml) {
+      // Rekonstruktion aus Headern + Bodies, falls Postmark "Raw Email" nicht mitliefert
+      const hdrs: any[] = Array.isArray(payload?.Headers) ? payload.Headers : [];
+      const headerLines = hdrs.map((h) => `${h.Name}: ${h.Value}`).join("\r\n");
+      const boundary = `----mtcon-${crypto.randomUUID()}`;
+      eml = [
+        `From: ${fromName ? `${fromName} <${fromEmail}>` : fromEmail}`,
+        `To: ${toEmail}`,
+        `Subject: ${subject}`,
+        `Date: ${new Date(receivedAt).toUTCString()}`,
+        messageId ? `Message-ID: ${messageId}` : "",
+        headerLines,
+        `MIME-Version: 1.0`,
+        `Content-Type: multipart/alternative; boundary="${boundary}"`,
+        "",
+        `--${boundary}`,
+        `Content-Type: text/plain; charset="utf-8"`,
+        "",
+        bodyPlain,
+        `--${boundary}`,
+        `Content-Type: text/html; charset="utf-8"`,
+        "",
+        bodyHtml,
+        `--${boundary}--`,
+        "",
+      ].filter((l) => l !== "").join("\r\n");
+    }
+    const emlPath = `${caseRow.id}/email/${emailRow.id}/original.eml`;
+    const { error: emlErr } = await admin.storage
+      .from("case-attachments")
+      .upload(emlPath, new TextEncoder().encode(eml), {
+        contentType: "message/rfc822",
+        upsert: true,
+      });
+    if (emlErr) {
+      console.error("receive-email: eml upload failed", emlErr.message);
+    } else {
+      await admin.from("case_emails").update({ raw_eml_path: emlPath }).eq("id", emailRow.id);
+    }
+  } catch (e) {
+    console.error("receive-email: eml error", e);
+  }
+
   // Attachments
   const atts: any[] = Array.isArray(payload?.Attachments) ? payload.Attachments : [];
   for (const att of atts) {

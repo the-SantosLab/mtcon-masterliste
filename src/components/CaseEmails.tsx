@@ -20,6 +20,7 @@ interface EmailRow {
   body_plain: string | null;
   body_html: string | null;
   received_at: string;
+  raw_eml_path: string | null;
   attachments: { id: string; file_name: string; storage_path: string; size_bytes: number | null }[];
 }
 
@@ -54,7 +55,7 @@ export function CaseEmails({ caseId }: Props) {
   const fetchEmails = async () => {
     const { data, error } = await (supabase as any)
       .from('case_emails')
-      .select('id, case_id, from_email, from_name, subject, body_plain, body_html, received_at, case_email_attachments(id, file_name, storage_path, size_bytes)')
+      .select('id, case_id, from_email, from_name, subject, body_plain, body_html, received_at, raw_eml_path, case_email_attachments(id, file_name, storage_path, size_bytes)')
       .eq('case_id', caseId)
       .order('received_at', { ascending: false });
     if (error) { console.error(error); setLoading(false); return; }
@@ -63,6 +64,7 @@ export function CaseEmails({ caseId }: Props) {
       from_email: e.from_email, from_name: e.from_name,
       subject: e.subject, body_plain: e.body_plain, body_html: e.body_html,
       received_at: e.received_at,
+      raw_eml_path: e.raw_eml_path ?? null,
       attachments: e.case_email_attachments || [],
     })));
     setLoading(false);
@@ -105,6 +107,27 @@ export function CaseEmails({ caseId }: Props) {
       document.body.removeChild(a);
     }
   };
+
+  const downloadEml = async (path: string, subject: string | null) => {
+    const { data, error } = await supabase.storage.from('case-attachments').createSignedUrl(path, 300);
+    if (error || !data) { toast.error('Download fehlgeschlagen'); return; }
+    try {
+      const res = await fetch(data.signedUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `${(subject || 'email').replace(/[^\w\-. ]+/g, '_').slice(0, 80)}.eml`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch {
+      toast.error('Download fehlgeschlagen');
+    }
+  };
+
+
 
   const deleteEmail = async (email: EmailRow) => {
     const paths = email.attachments.map(a => a.storage_path).filter(Boolean);
@@ -213,6 +236,21 @@ export function CaseEmails({ caseId }: Props) {
                 </div>
 
                 <EmailBody html={e.body_html} plain={e.body_plain} />
+
+                {e.raw_eml_path && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => downloadEml(e.raw_eml_path!, e.subject)}
+                      className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+                      title="Original-E-Mail (.eml) herunterladen – in Outlook öffenbar"
+                    >
+                      <Mail className="h-3 w-3" />
+                      Original-E-Mail (.eml)
+                    </button>
+                  </div>
+                )}
+
 
                 {canDelete && (
                   <div className="flex justify-end">
