@@ -1,0 +1,2 @@
+ALTER TABLE public.insurance_policies ADD COLUMN IF NOT EXISTS customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_insurance_policies_customer ON public.insurance_policies(customer_id);
