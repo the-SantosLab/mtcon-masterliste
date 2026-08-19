@@ -904,6 +904,13 @@ export default function AdminInsurance() {
               <Field label="Bezeichnung *" className="col-span-2">
                 <Input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Betriebshaftpflicht 2026" />
               </Field>
+              <Field label="Kunde (CRM)" className="col-span-2">
+                <CustomerCombobox
+                  customers={customers}
+                  value={form.customer_id || null}
+                  onChange={(id) => setForm(f => ({ ...f, customer_id: id }))}
+                />
+              </Field>
               <Field label="Kategorie">
                 <Select value={form.category_id || '_none'} onValueChange={v => setForm(f => ({ ...f, category_id: v === '_none' ? null : v }))}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kategorie" /></SelectTrigger>
