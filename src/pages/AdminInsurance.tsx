@@ -358,10 +358,11 @@ export default function AdminInsurance() {
       }
       return true;
     });
-  }, [policies, selectedCat, statusFilter, search, descendantIds]);
+  }, [policies, selectedCat, statusFilter, search, descendantIds, customers]);
 
   const detailPolicy = policies.find(p => p.id === detailId) || null;
   const detailCategory = detailPolicy ? categories.find(c => c.id === detailPolicy.category_id) : null;
+  const detailCustomer = detailPolicy?.customer_id ? customers.find(c => c.id === detailPolicy.customer_id) || null : null;
 
   // ---- editor ----
   const openCreate = () => {
