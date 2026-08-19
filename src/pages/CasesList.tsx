@@ -101,26 +101,20 @@ export default function CasesList() {
     if (!user?.id) { setMyTaskCaseIds(new Set()); setMyDoneOnlyCaseIds(new Set()); return; }
     const { data } = await supabase
       .from('case_tasks')
-      .select('case_id, status, assigned_to');
-    const byCase = new Map<string, { mine: number; mineDone: number; openTotal: number }>();
+      .select('case_id, status')
+      .eq('assigned_to', user.id);
+    const byCase = new Map<string, { total: number; done: number }>();
     (data || []).forEach((r: any) => {
-      const cur = byCase.get(r.case_id) || { mine: 0, mineDone: 0, openTotal: 0 };
-      if (r.assigned_to === user.id) {
-        cur.mine += 1;
-        if (r.status === 'done') cur.mineDone += 1;
-      }
-      if (r.status !== 'done') cur.openTotal += 1;
+      const cur = byCase.get(r.case_id) || { total: 0, done: 0 };
+      cur.total += 1;
+      if (r.status === 'done') cur.done += 1;
       byCase.set(r.case_id, cur);
     });
-    const mineIds = new Set<string>();
+    setMyTaskCaseIds(new Set(byCase.keys()));
     const done = new Set<string>();
-    byCase.forEach((v, k) => {
-      if (v.mine > 0) mineIds.add(k);
-      // Farbe nur entfernen, wenn meine Aufgaben erledigt sind UND im Vorgang
-      // insgesamt keine offenen Unteraufgaben mehr liegen.
-      if (v.mine > 0 && v.mine === v.mineDone && v.openTotal === 0) done.add(k);
-    });
-    setMyTaskCaseIds(mineIds);
+    if (urgencyMuteEnabled(user.id)) {
+      byCase.forEach((v, k) => { if (v.total > 0 && v.done === v.total) done.add(k); });
+    }
     setMyDoneOnlyCaseIds(done);
   };
 
