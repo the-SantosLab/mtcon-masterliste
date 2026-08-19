@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import {
   Shield, ShieldCheck, Lock, Building, Car, Users as UsersIcon, Folder, FolderOpen, FolderArchive,
   Plus, Search, Upload, FileText, Download, Trash2, History, Pencil,
@@ -53,6 +55,7 @@ interface Policy {
   tags: string[] | null;
   status: string;
   source?: string | null;
+  customer_id?: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -98,7 +101,7 @@ const EMPTY_FORM: Partial<Policy> = {
   start_date: '', end_date: '', renewal_date: '', notice_period_days: 90,
   premium_amount: null, premium_currency: 'EUR', premium_interval: 'yearly',
   contact_name: '', contact_email: '', contact_phone: '',
-  tags: [], status: 'active', notes: '',
+  tags: [], status: 'active', notes: '', customer_id: null,
 };
 
 type EffectiveStatus = 'draft' | 'active' | 'expiring_soon' | 'expired' | 'cancelled' | 'archived';
@@ -166,6 +169,7 @@ export default function AdminInsurance() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const [customers, setCustomers] = useState<{ id: string; name: string; customer_no: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedCat, setSelectedCat] = useState<string>('all');
