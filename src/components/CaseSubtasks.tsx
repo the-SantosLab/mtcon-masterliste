@@ -1321,48 +1321,57 @@ export function CaseSubtasks({ caseId, canEdit, userId, sequentialMode = false, 
 
       {/* Add new subtask */}
       {canEdit && (
-        <div className="flex gap-2 mt-3">
-          <Input
-            value={newTitle}
-            onChange={e => setNewTitle(e.target.value)}
-            placeholder="Neue Unteraufgabe…"
-            className="h-8 text-xs flex-1"
-            onKeyDown={e => e.key === 'Enter' && addTask()}
+        <div className="mt-3 space-y-2">
+          <div className="flex gap-2">
+            <Input
+              value={newTitle}
+              onChange={e => setNewTitle(e.target.value)}
+              placeholder="Neue Unteraufgabe…"
+              className="h-8 text-xs flex-1"
+              onKeyDown={e => e.key === 'Enter' && addTask()}
+            />
+            <Select value={newDeptId || '_none'} onValueChange={v => { setNewDeptId(v === '_none' ? '' : v); setNewAssignee(''); }}>
+              <SelectTrigger className="h-8 text-xs w-[130px]">
+                <SelectValue placeholder="Abt." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none" className="text-xs">Keine Abt.</SelectItem>
+                {departments.map(d => (
+                  <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={newAssignee || '_none'} onValueChange={v => setNewAssignee(v === '_none' ? '' : v)}>
+              <SelectTrigger className="h-8 text-xs w-[150px]">
+                <SelectValue placeholder="Zuständig" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
+                {assigneesForDept(newDeptId).map(p => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={addTask}
+              disabled={adding || !newTitle.trim()}
+              className="h-8 text-xs gap-1 shrink-0"
+            >
+              {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
+          <Textarea
+            value={newDescription}
+            onChange={e => setNewDescription(e.target.value)}
+            placeholder="Beschreibung (optional)…"
+            rows={2}
+            className="text-xs resize-y min-h-[48px]"
           />
-          <Select value={newDeptId || '_none'} onValueChange={v => { setNewDeptId(v === '_none' ? '' : v); setNewAssignee(''); }}>
-            <SelectTrigger className="h-8 text-xs w-[130px]">
-              <SelectValue placeholder="Abt." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none" className="text-xs">Keine Abt.</SelectItem>
-              {departments.map(d => (
-                <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={newAssignee || '_none'} onValueChange={v => setNewAssignee(v === '_none' ? '' : v)}>
-            <SelectTrigger className="h-8 text-xs w-[150px]">
-              <SelectValue placeholder="Zuständig" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none" className="text-xs">Niemand</SelectItem>
-              {assigneesForDept(newDeptId).map(p => (
-
-                <SelectItem key={p.id} value={p.id} className="text-xs">{p.display_name} ({p.short_code})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={addTask}
-            disabled={adding || !newTitle.trim()}
-            className="h-8 text-xs gap-1 shrink-0"
-          >
-            {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-          </Button>
         </div>
       )}
+
       {canEdit && (
         <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
           <NotifyToggle
