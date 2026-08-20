@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail } from "lucide-react";
+import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail, FileSignature } from "lucide-react";
 import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
 import { useContainerBlocks } from "@/hooks/useContainerBlocks";
 import { Lock } from "lucide-react";
@@ -42,6 +42,14 @@ const SATELLITES: Module[] = [
     icon: Package,
     color: "25 90% 55%", // orange
     angle: 30,
+  },
+  {
+    href: "/ghv",
+    label: "GHV",
+    sub: "Geheimhaltungserklärungen",
+    icon: FileSignature,
+    color: "265 85% 65%",
+    angle: 60,
   },
   {
     href: "/documents",

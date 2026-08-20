@@ -452,7 +452,7 @@ export default function AdminGhv() {
 
 
   const deletePolicy = async (p: Policy) => {
-    if (!confirm(`Police "${p.name}" inkl. aller Dokumente löschen?`)) return;
+    if (!confirm(`GHV "${p.name}" inkl. aller Dokumente löschen?`)) return;
     // Best-effort: delete storage objects first
     const { data: docs } = await supabase.from('ghv_documents' as any).select('storage_path').eq('policy_id', p.id);
     const paths = (docs || []).map((d: any) => d.storage_path).filter(Boolean);
@@ -719,7 +719,7 @@ export default function AdminGhv() {
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium text-foreground">KI-Entwurf aus E-Mail</div>
                       <div className="text-[11px] text-muted-foreground mt-0.5">
-                        Diese Police wurde automatisch aus einem eingehenden PDF erstellt. Bitte Felder prüfen und bestätigen.
+                        Dieser Eintrag wurde automatisch aus einem eingehenden PDF erstellt. Bitte Felder prüfen und bestätigen.
                       </div>
                     </div>
                     {canWrite && (
@@ -827,7 +827,7 @@ export default function AdminGhv() {
                   {canWrite && (
                     <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
                       <Button variant="ghost" size="sm" className="h-8 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10" onClick={() => deletePolicy(detailPolicy)}>
-                        <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Police löschen
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" /> GHV löschen
                       </Button>
                       <Button size="sm" onClick={() => openEdit(detailPolicy)} className="h-8 text-xs gap-1.5">
                         <Pencil className="h-3.5 w-3.5" /> Bearbeiten
@@ -850,7 +850,7 @@ export default function AdminGhv() {
         >
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold">
-              {editingId ? 'Police bearbeiten' : 'Neue Police anlegen'}
+              {editingId ? 'GHV bearbeiten' : 'Neue GHV anlegen'}
             </DialogTitle>
           </DialogHeader>
 
@@ -932,7 +932,7 @@ export default function AdminGhv() {
               <Field label="Versicherer">
                 <Input value={form.provider || ''} onChange={e => setForm(f => ({ ...f, provider: e.target.value }))} className="h-8 text-xs" placeholder="z.B. Allianz" />
               </Field>
-              <Field label="Policennummer">
+              <Field label="Vertragsnummer">
                 <Input value={form.policy_number || ''} onChange={e => setForm(f => ({ ...f, policy_number: e.target.value }))} className="h-8 text-xs font-mono" />
               </Field>
               <Field label="Versichertes Objekt" className="col-span-2">
