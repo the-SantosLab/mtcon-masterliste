@@ -146,8 +146,8 @@ export default function AdminGhv() {
   const isManager = !!(profile as any)?.is_manager;
   const [hasCategoryGrant, setHasCategoryGrant] = useState(false);
   const [hasWriteGrant, setHasWriteGrant] = useState(false);
-  const canRead = isAdmin || isManager || hasCategoryGrant;
-  const canWrite = isAdmin || hasWriteGrant;
+  const canRead = isAdmin || isManager;
+  const canWrite = isAdmin || isManager;
   const nav = useNavigate();
   const { id: routeId } = useParams();
 
@@ -414,7 +414,7 @@ export default function AdminGhv() {
       const original = policies.find(p => p.id === editingId);
       const { error } = await supabase.from('ghv_agreements' as any).update(payload).eq('id', editingId);
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
-      toast.success('Police aktualisiert');
+      toast.success('Eintrag aktualisiert');
       // Log AI corrections for learning loop
       if (original && original.source === 'email_intake') {
         const trackFields: (keyof Policy)[] = [
@@ -432,15 +432,13 @@ export default function AdminGhv() {
             corrected_value: (payload as any)[f] == null ? null : String((payload as any)[f]),
             corrected_by: user?.id || null,
           }));
-        if (corrections.length) {
-          await supabase.from('insurance_intake_corrections' as any).insert(corrections);
-        }
+        void corrections;
       }
     } else {
       payload.created_by = user?.id || null;
       const { data, error } = await supabase.from('ghv_agreements' as any).insert(payload).select('id').single();
       if (error) { toast.error('Fehler: ' + error.message); setSaving(false); return; }
-      toast.success('Police angelegt');
+      toast.success('Eintrag angelegt');
       if (data) { newPolicyId = (data as any).id; setDetailId(newPolicyId); }
     }
     if (pendingFile && newPolicyId) {
@@ -461,7 +459,7 @@ export default function AdminGhv() {
     if (paths.length) await supabase.storage.from('ghv-documents').remove(paths);
     const { error } = await supabase.from('ghv_agreements' as any).delete().eq('id', p.id);
     if (error) { toast.error('Fehler: ' + error.message); return; }
-    toast.success('Police gelöscht');
+    toast.success('Eintrag gelöscht');
     setDetailId(null);
     await load();
   };
@@ -526,7 +524,7 @@ export default function AdminGhv() {
       <AppLayout>
         <div className="max-w-2xl">
           <div className="rounded-md border border-border bg-card p-6">
-            <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
+            <h1 className="text-base font-semibold text-foreground">GHV – Geheimhaltungserklärungen</h1>
             <p className="text-xs text-muted-foreground mt-1">Diese Ablage ist nur für Admins und Manager sichtbar.</p>
           </div>
         </div>
@@ -553,9 +551,9 @@ export default function AdminGhv() {
                 <div className="h-8 w-8 rounded-md bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center">
                   <FolderArchive className="h-4 w-4 text-primary" />
                 </div>
-                <h1 className="text-base font-semibold text-foreground">Dokumentenablage</h1>
+                <h1 className="text-base font-semibold text-foreground">GHV – Geheimhaltungserklärungen</h1>
               </div>
-              <p className="text-xs text-muted-foreground ml-8">Zentrale Ablage für Verträge, Dokumente und Versicherungen – mit Versionierung, Volltextsuche und Ablauf-Erinnerung.</p>
+              <p className="text-xs text-muted-foreground ml-8">Zentrale Ablage für Geheimhaltungserklärungen (NDAs) – mit Versionierung, Volltextsuche und Ablauf-Erinnerung.</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
