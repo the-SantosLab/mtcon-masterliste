@@ -3719,6 +3719,196 @@ export type Database = {
         }
         Relationships: []
       }
+      ghv_agreements: {
+        Row: {
+          category_id: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          insured_object: string | null
+          name: string
+          notes: string | null
+          notice_period_days: number | null
+          policy_number: string | null
+          premium_amount: number | null
+          premium_currency: string | null
+          premium_interval: string | null
+          provider: string | null
+          renewal_date: string | null
+          search_tsv: unknown
+          source: string
+          start_date: string | null
+          status: string
+          tags: string[] | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          insured_object?: string | null
+          name: string
+          notes?: string | null
+          notice_period_days?: number | null
+          policy_number?: string | null
+          premium_amount?: number | null
+          premium_currency?: string | null
+          premium_interval?: string | null
+          provider?: string | null
+          renewal_date?: string | null
+          search_tsv?: unknown
+          source?: string
+          start_date?: string | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          insured_object?: string | null
+          name?: string
+          notes?: string | null
+          notice_period_days?: number | null
+          policy_number?: string | null
+          premium_amount?: number | null
+          premium_currency?: string | null
+          premium_interval?: string | null
+          provider?: string | null
+          renewal_date?: string | null
+          search_tsv?: unknown
+          source?: string
+          start_date?: string | null
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghv_agreements_category_fk"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ghv_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ghv_categories: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          name: string
+          parent_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ghv_documents: {
+        Row: {
+          description: string | null
+          doc_kind: string
+          file_name: string
+          file_size: number | null
+          id: string
+          is_current: boolean
+          mime_type: string | null
+          policy_id: string
+          replaced_by: string | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          description?: string | null
+          doc_kind?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean
+          mime_type?: string | null
+          policy_id: string
+          replaced_by?: string | null
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          description?: string | null
+          doc_kind?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          is_current?: boolean
+          mime_type?: string | null
+          policy_id?: string
+          replaced_by?: string | null
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghv_documents_agreement_fk"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "ghv_agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_items: {
         Row: {
           created_at: string

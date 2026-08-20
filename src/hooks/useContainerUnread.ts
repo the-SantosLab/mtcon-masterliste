@@ -11,6 +11,7 @@ const SOURCES: Source[] = [
   { href: '/mtiq/drafts', table: 'mtiq_drafts', dateColumn: 'created_at' },
   { href: '/insurance', table: 'insurance_policies', dateColumn: 'updated_at' },
   { href: '/bestellungen', table: 'orders', dateColumn: 'created_at' },
+  { href: '/ghv', table: 'ghv_agreements', dateColumn: 'updated_at' },
   { href: '/documents', table: 'documents', dateColumn: 'updated_at' },
   { href: '/issos', table: 'issos_documents', dateColumn: 'created_at' },
   { href: '/inbox/documents', table: 'inbox_documents', dateColumn: 'received_at' },

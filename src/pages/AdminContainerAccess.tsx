@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 const MODULES: { key: string; label: string }[] = [
   { key: '/mtiq/drafts', label: 'MTIQ Posteingang' },
   { key: '/insurance', label: 'Versicherungen' },
+  { key: '/ghv', label: 'GHV (Geheimhaltungserklärungen)' },
   { key: '/bestellungen', label: 'Bestellungen' },
   { key: '/documents', label: 'Dokumente' },
   { key: '/issos', label: 'ISSOS (APS-Delta)' },

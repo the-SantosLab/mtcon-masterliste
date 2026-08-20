@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail } from "lucide-react";
+import { Shield, FolderArchive, Boxes, Inbox, Sparkles, Package, Copy, Check, Mail, FileSignature } from "lucide-react";
 import { useContainerUnread, markContainerSeen } from "@/hooks/useContainerUnread";
 import { useContainerBlocks } from "@/hooks/useContainerBlocks";
 import { Lock } from "lucide-react";
@@ -33,7 +33,7 @@ const SATELLITES: Module[] = [
     sub: "Policies · Verträge",
     icon: Shield,
     color: "190 90% 55%", // cyan
-    angle: -30,
+    angle: -38.6,
   },
   {
     href: "/bestellungen",
@@ -41,7 +41,15 @@ const SATELLITES: Module[] = [
     sub: "Eingänge · Aufträge",
     icon: Package,
     color: "25 90% 55%", // orange
-    angle: 30,
+    angle: 12.9,
+  },
+  {
+    href: "/ghv",
+    label: "GHV",
+    sub: "Geheimhaltungserklärungen",
+    icon: FileSignature,
+    color: "265 85% 65%",
+    angle: 64.3,
   },
   {
     href: "/documents",
@@ -49,7 +57,7 @@ const SATELLITES: Module[] = [
     sub: "Verträge · Dateien",
     icon: FolderArchive,
     color: "255 85% 65%", // violet
-    angle: 90,
+    angle: 115.7,
   },
   {
     href: "/issos",
@@ -57,7 +65,7 @@ const SATELLITES: Module[] = [
     sub: "APS-Delta · Trigger",
     icon: Boxes,
     color: "160 80% 50%", // emerald
-    angle: 150,
+    angle: 167.1,
   },
   {
     href: "/inbox/documents",
@@ -65,7 +73,7 @@ const SATELLITES: Module[] = [
     sub: "Verarbeitete Eingänge",
     icon: Inbox,
     color: "320 85% 65%", // fuchsia
-    angle: 210,
+    angle: 218.6,
   },
 ];
 

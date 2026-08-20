@@ -57,6 +57,7 @@ const AdminAnnouncements = lazy(() => import("./pages/AdminAnnouncements"));
 const AdminFeedback = lazy(() => import("./pages/AdminFeedback"));
 const AdminAiPrompts = lazy(() => import("./pages/AdminAiPrompts"));
 const AdminInsurance = lazy(() => import("./pages/AdminInsurance"));
+const AdminGhv = lazy(() => import("./pages/AdminGhv"));
 const AdminOrders = lazy(() => import("./pages/AdminOrders"));
 const AdminDeliveries = lazy(() => import("./pages/AdminDeliveries"));
 const AdminSupplierInvoices = lazy(() => import("./pages/AdminSupplierInvoices"));
@@ -262,6 +263,8 @@ function AuthenticatedApp() {
           <Route path="/admin/container-access" element={<ProtectedRoute><AdminContainerAccess /></ProtectedRoute>} />
           <Route path="/insurance" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
           <Route path="/insurance/:id" element={<ProtectedRoute><AdminInsurance /></ProtectedRoute>} />
+          <Route path="/ghv" element={<ProtectedRoute><AdminGhv /></ProtectedRoute>} />
+          <Route path="/ghv/:id" element={<ProtectedRoute><AdminGhv /></ProtectedRoute>} />
           <Route path="/issos" element={<ProtectedRoute><Issos /></ProtectedRoute>} />
           <Route path="/container" element={<ProtectedRoute><Container3D /></ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute><BusinessMap /></ProtectedRoute>} />
