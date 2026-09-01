@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     if (comp?.email) return comp.email as string;
     const { data: contact } = await admin.from('contacts').select('email')
       .eq('company_id', inv.company_id).not('email', 'is', null)
-      .order('is_primary', { ascending: false }).limit(1).maybeSingle();
+      .order('is_decision_maker', { ascending: false }).limit(1).maybeSingle();
     return (contact?.email as string) ?? null;
   }
 
