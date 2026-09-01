@@ -9578,6 +9578,7 @@ export type Database = {
         Args: { manager_uid: string; target_uid: string }
         Returns: boolean
       }
+      is_internal_user: { Args: never; Returns: boolean }
       is_portal_customer: { Args: { uid?: string }; Returns: boolean }
       is_private_inbox_dept: { Args: { p_dept_id: string }; Returns: boolean }
       is_project_manager: {
