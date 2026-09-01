@@ -29,6 +29,13 @@
       "when": 1788262880831,
       "tag": "0003_fix_supplier_invoice_net_matching",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788263572581,
+      "tag": "0004_cron_mark_invoices_overdue",
+      "breakpoints": true
     }
   ]
 }

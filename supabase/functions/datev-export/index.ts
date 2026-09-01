@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     .select('id,invoice_no,invoice_date,total_amount,subtotal_amount,tax_amount,tax_mode,doc_kind,payment_status,customer_no,customer_name,currency,invoice_items(quantity,unit_price,line_total,tax_rate,description)')
     .gte('invoice_date', from)
     .lte('invoice_date', to)
-    .in('payment_status', ['paid','partial','cancelled'])
+    .neq('status', 'draft')
     .order('invoice_no');
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
@@ -79,9 +79,9 @@ Deno.serve(async (req) => {
 
   for (const inv of invoices ?? []) {
     const sign = inv.doc_kind === 'credit_note' || inv.doc_kind === 'storno' ? -1 : 1;
-    const debitor = inv.customer_no
-      ? String(inv.customer_no).replace(/\D/g, '').slice(-5).padStart(5, '0')
-      : String(DEFAULTS.debitor_base).padStart(5,'0');
+    // DATEV-Debitorenkonto: 5-stellig, Bereich 10000-69999
+    const rawNo = Number(String(inv.customer_no ?? '').replace(/\D/g, '')) || 0;
+    const debitor = String(rawNo > 0 ? DEFAULTS.debitor_base + (rawNo % 50000) : DEFAULTS.debitor_base);
     // Aggregate items per tax rate
     const buckets = new Map<number, number>();
     for (const it of (inv.invoice_items ?? []) as any[]) {
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
         gross >= 0 ? 'S' : 'H',
         inv.currency || 'EUR',
         '', '', '',
-        `20000${debitor}`.slice(-5).padStart(5,'0'), // Debitor konto (5-stellig 10000+)
+        debitor, // Debitorenkonto
         revenueAccount(rate, inv.tax_mode || 'standard'),
         buSchluessel(rate),
         fmtDate(inv.invoice_date),
