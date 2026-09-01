@@ -36,6 +36,13 @@
       "when": 1788263572581,
       "tag": "0004_cron_mark_invoices_overdue",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788274422122,
+      "tag": "0005_fix_duplicate_order_creation_and_dup_triggers",
+      "breakpoints": true
     }
   ]
 }
