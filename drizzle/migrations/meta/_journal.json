@@ -43,6 +43,13 @@
       "when": 1788274422122,
       "tag": "0005_fix_duplicate_order_creation_and_dup_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788274598028,
+      "tag": "0006_drop_duplicate_gr_number_trigger",
+      "breakpoints": true
     }
   ]
 }

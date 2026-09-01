@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS trg_gr_no ON public.goods_receipts;
