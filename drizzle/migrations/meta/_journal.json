@@ -8,6 +8,13 @@
       "when": 1788262638691,
       "tag": "0000_fix_erp_lock_and_delivery_double_count",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788262793229,
+      "tag": "0001_fix_purchase_order_status_progress",
+      "breakpoints": true
     }
   ]
 }
