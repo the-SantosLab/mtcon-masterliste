@@ -43,8 +43,18 @@ Deno.serve(async (req) => {
     .upsert({ key: rateKey, value: nowSec }, { onConflict: 'key' });
 
   // Generate the recovery link via admin API
-  // redirectTo must be the published app URL so Supabase redirects correctly
-  const finalRedirectTo = redirectTo || 'https://mtcon.kscommand.com/reset-password';
+  // SICHERHEIT: redirectTo darf NICHT frei vom Client gesetzt werden — sonst
+  // könnte ein Angreifer den Recovery-Token auf eine fremde Domain umleiten.
+  const ALLOWED_REDIRECTS = new Set([
+    'https://mtcon.kscommand.com/reset-password',
+    'https://work-sync-quest.lovable.app/reset-password',
+    'http://localhost:8080/reset-password',
+  ]);
+  const requested = typeof redirectTo === 'string' ? redirectTo.trim() : '';
+  const finalRedirectTo = ALLOWED_REDIRECTS.has(requested)
+    ? requested
+    : 'https://mtcon.kscommand.com/reset-password';
+
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: 'recovery',
     email,
