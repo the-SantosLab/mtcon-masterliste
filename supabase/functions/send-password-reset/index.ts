@@ -45,15 +45,20 @@ Deno.serve(async (req) => {
   // Generate the recovery link via admin API
   // SICHERHEIT: redirectTo darf NICHT frei vom Client gesetzt werden — sonst
   // könnte ein Angreifer den Recovery-Token auf eine fremde Domain umleiten.
-  const ALLOWED_REDIRECTS = new Set([
-    'https://mtcon.kscommand.com/reset-password',
-    'https://work-sync-quest.lovable.app/reset-password',
-    'http://localhost:8080/reset-password',
-  ]);
-  const requested = typeof redirectTo === 'string' ? redirectTo.trim() : '';
-  const finalRedirectTo = ALLOWED_REDIRECTS.has(requested)
-    ? requested
-    : 'https://mtcon.kscommand.com/reset-password';
+  const DEFAULT_REDIRECT = 'https://mtcon.kscommand.com/reset-password';
+  const isAllowed = (value: unknown): value is string => {
+    if (typeof value !== 'string') return false;
+    try {
+      const u = new URL(value);
+      if (u.pathname !== '/reset-password' || u.search || u.hash) return false;
+      const h = u.hostname;
+      if (u.protocol === 'http:') return h === 'localhost' || h === '127.0.0.1';
+      if (u.protocol !== 'https:') return false;
+      return h === 'mtcon.kscommand.com' || h.endsWith('.lovable.app');
+    } catch { return false; }
+  };
+  const finalRedirectTo = isAllowed(redirectTo) ? redirectTo : DEFAULT_REDIRECT;
+
 
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: 'recovery',
