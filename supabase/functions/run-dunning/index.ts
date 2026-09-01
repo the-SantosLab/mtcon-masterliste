@@ -87,7 +87,20 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? '';
   const isCron = cronSecret && auth === `Bearer ${cronSecret}`;
   const isService = auth.startsWith('Bearer ') && auth.slice(7) === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!isCron && !isService && !manualIds) {
+
+  // Manueller Aufruf: nur eingeloggte Admins dürfen Mahnungen auslösen
+  let isAdminUser = false;
+  if (!isCron && !isService && auth.startsWith('Bearer ')) {
+    const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: auth } },
+    });
+    const { data: userData } = await userClient.auth.getUser();
+    if (userData?.user) {
+      const { data: ok } = await admin.rpc('has_role', { _user_id: userData.user.id, _role: 'admin' });
+      isAdminUser = !!ok;
+    }
+  }
+  if (!isCron && !isService && !isAdminUser) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
@@ -97,7 +110,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ skipped: 'disabled' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  let query = admin.from('invoices').select('id,invoice_no,customer_name,customer_email,due_date,total_amount,paid_amount,payment_status,reminder_stage,doc_kind,locked,currency')
+  let query = admin.from('invoices').select('id,invoice_no,customer_name,customer_email,due_date,total_amount,paid_amount,payment_status,reminder_stage,doc_kind,locked,currency,company_id')
     .in('payment_status', ['open','partial','overdue'])
     .eq('doc_kind', 'invoice')
     .not('due_date', 'is', null);
@@ -105,12 +118,24 @@ Deno.serve(async (req) => {
   const { data: invoices, error } = await query;
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+  // E-Mail-Fallback: Rechnung -> Firma -> Hauptkontakt
+  async function resolveEmail(inv: Invoice & { company_id?: string | null }): Promise<string | null> {
+    if (inv.customer_email) return inv.customer_email;
+    if (!inv.company_id) return null;
+    const { data: comp } = await admin.from('companies').select('email').eq('id', inv.company_id).maybeSingle();
+    if (comp?.email) return comp.email as string;
+    const { data: contact } = await admin.from('contacts').select('email')
+      .eq('company_id', inv.company_id).not('email', 'is', null)
+      .order('is_primary', { ascending: false }).limit(1).maybeSingle();
+    return (contact?.email as string) ?? null;
+  }
+
   const today = new Date();
   const results: any[] = [];
   for (const inv of (invoices ?? []) as Invoice[]) {
     const next = nextStageFor(inv, s, today);
     if (!next) continue;
-    const to = inv.customer_email;
+    const to = await resolveEmail(inv as any);
     if (!to) { results.push({ invoice: inv.invoice_no, skipped: 'no_email', would_be_stage: next.stage }); continue; }
     if (dryRun) { results.push({ invoice: inv.invoice_no, stage: next.stage, fee: next.fee, dry_run: true, to }); continue; }
     try {
