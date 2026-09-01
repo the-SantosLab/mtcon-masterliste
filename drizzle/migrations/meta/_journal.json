@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788262638691,
+      "tag": "0000_fix_erp_lock_and_delivery_double_count",
+      "breakpoints": true
+    }
+  ]
+}
