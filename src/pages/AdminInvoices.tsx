@@ -96,6 +96,12 @@ export default function AdminInvoices() {
   };
   useEffect(() => { load(); }, []);
 
+  // Deep-Link-Filter, z.B. /rechnungen?payment=overdue (Big-7 KPI Drill-down)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get('payment');
+    if (p) setPayFilter(p);
+  }, []);
+
   const open = async (i: Invoice) => {
     setSel(i);
     const [{ data: itemsData }, { data: payData }] = await Promise.all([

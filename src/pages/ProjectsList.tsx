@@ -75,6 +75,7 @@ export default function ProjectsList() {
   const [owners, setOwners] = useState<{ id: string; short_code: string; display_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState('all');
   const [deptFilter, setDeptFilter] = useState('all');

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,6 +78,17 @@ export default function SupportTickets() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [defaultApplied, setDefaultApplied] = useState(false);
 
+  const [searchParams] = useSearchParams();
+
+  // Deep-Link-Filter, z.B. /support?status=open,in_progress,waiting (Big-7 KPI Drill-down)
+  useEffect(() => {
+    const st = searchParams.get('status');
+    if (st) {
+      setStatusFilter(new Set(st.split(',').map(s => s.trim()).filter(Boolean)));
+      setDefaultApplied(true);
+    }
+  }, [searchParams]);
+
   // Johannes: automatisch nur offene Tickets vorfiltern
   useEffect(() => {
     if (defaultApplied) return;
@@ -89,6 +100,7 @@ export default function SupportTickets() {
     }
     if (profile) setDefaultApplied(true);
   }, [profile, defaultApplied]);
+
 
   const fetchTickets = async () => {
     const { data } = await supabase
