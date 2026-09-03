@@ -7,6 +7,7 @@ import { CaseChat } from '@/components/CaseChat';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
 import { CaseNotes } from '@/components/CaseNotes';
 import { CaseEmails } from '@/components/CaseEmails';
+import { CaseMinutesButton } from '@/components/CaseMinutesButton';
 import { CaseSubtasks } from '@/components/CaseSubtasks';
 import { CaseOutputPanel } from '@/components/CaseOutputPanel';
 import { CaseArticles } from '@/components/CaseArticles';
@@ -568,6 +569,7 @@ export default function CaseDetail() {
             <Button variant="outline" size="sm" onClick={() => window.open(`/print/case/${c.id}`, '_blank')} className="h-8 text-xs gap-1.5">
               <Printer className="h-3.5 w-3.5" />Drucken
             </Button>
+            <CaseMinutesButton caseId={c.id} refreshKey={refreshKey} />
             <Button variant="outline" size="sm" onClick={() => setBugOpen(true)} className="h-8 text-xs gap-1.5">
               <Bug className="h-3.5 w-3.5" />Problem melden
             </Button>
