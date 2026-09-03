@@ -85,6 +85,13 @@
       "when": 1788438727692,
       "tag": "0011_crm_enrollments_updated_at_offer_items_lock_order_customer_no",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788439097761,
+      "tag": "0012_grant_inbox_documents_authenticated",
+      "breakpoints": true
     }
   ]
 }
