@@ -139,7 +139,16 @@ export default function CasesList() {
     const f = searchParams.get('filter');
     if (f === 'mine') setAssigneeFilter(user?.id || 'all');
     if (f === 'available') setAssigneeFilter('unassigned');
+    const st = searchParams.get('status');
+    if (st) {
+      const wanted = st.split(',').map(s => s.trim()).filter(s => (allStatuses as readonly string[]).includes(s));
+      if (wanted.length) setStatusFilter(wanted);
+    }
+    const due = searchParams.get('due');
+    if (due && ['overdue', 'today', 'week', 'next14', 'none'].includes(due)) setDueFilter(due as DueFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, user]);
+
 
   const { claimCase, unclaimCase, completeCase } = useCaseActions(user?.id, fetchCases);
   const { unreadMap } = useChatUnread(cases.map(c => c.id));
