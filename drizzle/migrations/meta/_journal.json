@@ -57,6 +57,48 @@
       "when": 1788436626498,
       "tag": "0007_erp_ship_stock_lock_status_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788438543800,
+      "tag": "0008_crm_enrollments_align_schema_1",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788438576806,
+      "tag": "0009_crm_won_promotes_customer_and_offer_lock",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788438659031,
+      "tag": "0010_crm_deal_won_promote_company_fix_cast",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788438727692,
+      "tag": "0011_crm_enrollments_updated_at_offer_items_lock_order_customer_no",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788439097761,
+      "tag": "0012_grant_inbox_documents_authenticated",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788439158305,
+      "tag": "0013_inbox_documents_policy_no_auth_users",
+      "breakpoints": true
     }
   ]
 }

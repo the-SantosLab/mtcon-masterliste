@@ -8143,33 +8143,55 @@ export type Database = {
       }
       sequence_enrollments: {
         Row: {
+          company_id: string | null
           completed_at: string | null
           contact_id: string
           current_step: number
+          current_step_index: number
           id: string
+          next_action_at: string | null
+          paused_at: string | null
           sequence_id: string
           started_at: string
           status: Database["public"]["Enums"]["sequence_enrollment_status"]
+          updated_at: string
         }
         Insert: {
+          company_id?: string | null
           completed_at?: string | null
           contact_id: string
           current_step?: number
+          current_step_index?: number
           id?: string
+          next_action_at?: string | null
+          paused_at?: string | null
           sequence_id: string
           started_at?: string
           status?: Database["public"]["Enums"]["sequence_enrollment_status"]
+          updated_at?: string
         }
         Update: {
+          company_id?: string | null
           completed_at?: string | null
           contact_id?: string
           current_step?: number
+          current_step_index?: number
           id?: string
+          next_action_at?: string | null
+          paused_at?: string | null
           sequence_id?: string
           started_at?: string
           status?: Database["public"]["Enums"]["sequence_enrollment_status"]
+          updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sequence_enrollments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sequence_enrollments_contact_id_fkey"
             columns: ["contact_id"]
@@ -9466,6 +9488,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_user_email: { Args: never; Returns: string }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_member_role: {
         Args: { p_dept_id: string; p_uid: string }
@@ -9717,7 +9740,16 @@ export type Database = {
       protection_scope: "global" | "department" | "subsidiary"
       protection_status: "aktiv" | "abgelaufen" | "strittig"
       sequence_channel: "email" | "task"
-      sequence_enrollment_status: "active" | "paused" | "done"
+      sequence_enrollment_status:
+        | "active"
+        | "paused"
+        | "done"
+        | "aktiv"
+        | "pausiert"
+        | "abgeschlossen"
+        | "abgemeldet"
+        | "geantwortet"
+        | "failed"
       sequence_status: "aktiv" | "pausiert"
       sequence_step_type: "email" | "wait" | "task"
       stock_movement_type: "inbound" | "outbound" | "adjustment" | "transfer"
@@ -9923,7 +9955,17 @@ export const Constants = {
       protection_scope: ["global", "department", "subsidiary"],
       protection_status: ["aktiv", "abgelaufen", "strittig"],
       sequence_channel: ["email", "task"],
-      sequence_enrollment_status: ["active", "paused", "done"],
+      sequence_enrollment_status: [
+        "active",
+        "paused",
+        "done",
+        "aktiv",
+        "pausiert",
+        "abgeschlossen",
+        "abgemeldet",
+        "geantwortet",
+        "failed",
+      ],
       sequence_status: ["aktiv", "pausiert"],
       sequence_step_type: ["email", "wait", "task"],
       stock_movement_type: ["inbound", "outbound", "adjustment", "transfer"],
