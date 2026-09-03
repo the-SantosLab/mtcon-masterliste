@@ -173,17 +173,9 @@ export default function AdminDeliveries() {
 
   const ship = async () => {
     if (!sel) return;
-    // Bestätigung: für jede Position Outbound-Bewegung erzeugen
-    const { data: { user } } = await supabase.auth.getUser();
-    for (const it of items) {
-      if (!it.art_nr || !it.warehouse_id) continue;
-      await supabase.from('stock_movements').insert({
-        art_nr: it.art_nr, warehouse_id: it.warehouse_id, movement_type: 'outbound',
-        quantity: it.quantity, order_id: sel.order_id, note: `Lieferschein ${sel.delivery_no}`,
-        lot_no: it.lot_no, serial_no: it.serial_no, created_by: user?.id ?? null,
-      } as any);
-    }
-    await (supabase.from('deliveries' as any).update({ status: 'shipped' }).eq('id', sel.id)) as any;
+    // Lagerausbuchung + Reservierungsverbrauch erfolgen serverseitig (Trigger, idempotent)
+    const { error } = await (supabase.from('deliveries' as any).update({ status: 'shipped' }).eq('id', sel.id)) as any;
+    if (error) return toast.error(error.message);
     toast.success(`${items.length} Position(en) ausgebucht`);
     setSel(null); load();
   };
