@@ -9488,6 +9488,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_user_email: { Args: never; Returns: string }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_member_role: {
         Args: { p_dept_id: string; p_uid: string }
