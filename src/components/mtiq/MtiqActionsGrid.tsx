@@ -18,7 +18,7 @@ export interface MtiqAction {
   /** Custom endpoint statt mtiq-tool. */
   endpoint?: 'mtiq-summarize-case' | 'mtiq-suggest-subtasks';
   /** Spezielle UI-Behandlung */
-  kind?: 'text' | 'subtasks';
+  kind?: 'text' | 'subtasks' | 'meeting';
 }
 
 export const MTIQ_ACTIONS: MtiqAction[] = [
@@ -27,7 +27,7 @@ export const MTIQ_ACTIONS: MtiqAction[] = [
   { key: 'todos', icon: CheckCircle2, label: 'To-dos ableiten', desc: 'Aus Notizen Unteraufgaben vorschlagen', instruction: 'Leite aus den Notizen und dem Stand des Vorgangs eine nummerierte Liste konkreter Unteraufgaben ab. Pro Eintrag: Titel, ggf. Verantwortlich, Fälligkeit. Keine Doppelungen zu vorhandenen Unteraufgaben.' },
   { key: 'text', icon: Edit3, label: 'Text formulieren', desc: 'Beschreibung professionell ausformulieren', instruction: 'Formuliere einen professionellen Beschreibungstext. Wenn eine Eingabe vorhanden ist, überarbeite sie; sonst nutze den vorhandenen Notiztext.', inputLabel: 'Rohtext (optional)', inputPlaceholder: 'Stichpunkte oder Entwurf …' },
   { key: 'risk', icon: BarChart3, label: 'Status analysieren', desc: 'Fortschritt & Risiken bewerten', instruction: 'Bewerte den Fortschritt und die Risiken dieses Vorgangs. Struktur: 1) Stand, 2) Risiken, 3) Empfehlung.' },
-  { key: 'meeting', icon: Calendar, label: 'Meeting verarbeiten', desc: 'Transkript → Aufgaben', instruction: 'Extrahiere aus dem Meeting-Transkript relevante Aufgaben für diesen Vorgang. Pro Aufgabe: Titel, Verantwortlich (falls genannt), Fälligkeit (falls genannt).', inputLabel: 'Meeting-Transkript', inputPlaceholder: 'Transkript hier einfügen …', requiresInput: true },
+  { key: 'meeting', icon: Calendar, label: 'Meeting verarbeiten', desc: 'Transkript → Protokoll-PDF + Aufgaben', instruction: '', kind: 'meeting', inputLabel: 'Meeting-Transkript', inputPlaceholder: 'Transkript hier einfügen …', requiresInput: true },
   { key: 'email', icon: Mail, label: 'E-Mail analysieren', desc: 'Eingegangene E-Mail auswerten', instruction: 'Analysiere die E-Mail im Kontext des Vorgangs. Struktur: 1) Kern, 2) Forderungen / Fragen, 3) Vorgeschlagene nächste Schritte, 4) Antwort-Entwurf (kurz, neutral).', inputLabel: 'E-Mail-Text', inputPlaceholder: 'E-Mail hier einfügen …', requiresInput: true },
 ];
 
@@ -37,6 +37,9 @@ export function MtiqActionsGrid({ vorgangId }: { vorgangId: string }) {
   if (active) {
     if (active.kind === 'subtasks') {
       return <SubtaskRunner action={active} vorgangId={vorgangId} onBack={() => setActive(null)} />;
+    }
+    if (active.kind === 'meeting') {
+      return <MeetingRunner action={active} vorgangId={vorgangId} onBack={() => setActive(null)} />;
     }
     return <ActionRunner action={active} vorgangId={vorgangId} onBack={() => setActive(null)} />;
   }
