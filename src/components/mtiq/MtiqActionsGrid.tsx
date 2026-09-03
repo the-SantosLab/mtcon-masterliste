@@ -410,3 +410,254 @@ function SubtaskRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorg
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Meeting verarbeiten: Transkript → strukturiertes Protokoll → PDF im Vorgang
+// ---------------------------------------------------------------------------
+type MeetingPhase = 'idle' | 'analyze' | 'pdf' | 'store' | 'done';
+type MeetingTask = { title: string; assignee: string; due: string; accepted: boolean; added: boolean };
+
+const inputStyle: React.CSSProperties = {
+  background: '#0f0f0f', border: '1px solid #222', borderRadius: 10, color: '#e0e0e0',
+  fontFamily: '"DM Sans", system-ui, sans-serif',
+};
+const btnStyle: React.CSSProperties = { background: '#181818', border: '1px solid #222', color: '#cbd5e1' };
+
+function MeetingRunner({ action, vorgangId, onBack }: { action: MtiqAction; vorgangId: string; onBack: () => void }) {
+  const { user } = useAuth();
+  const storageKey = `mtiq:meeting:${vorgangId}`;
+  const initial = (() => { try { return JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { return {}; } })();
+  const [transcript, setTranscript] = useState<string>(initial.transcript ?? '');
+  const [meetingDate, setMeetingDate] = useState<string>(initial.meetingDate ?? new Date().toISOString().slice(0, 10));
+  const [participants, setParticipants] = useState<string>(initial.participants ?? '');
+  const [minutes, setMinutes] = useState<MeetingMinutes | null>(initial.minutes ?? null);
+  const [attachmentPath, setAttachmentPath] = useState<string | null>(initial.attachmentPath ?? null);
+  const [tasks, setTasks] = useState<MeetingTask[]>(initial.tasks ?? []);
+  const [phase, setPhase] = useState<MeetingPhase>('idle');
+  const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify({ transcript, meetingDate, participants, minutes, attachmentPath, tasks })); } catch {}
+  }, [storageKey, transcript, meetingDate, participants, minutes, attachmentPath, tasks]);
+
+  const busy = phase !== 'idle' && phase !== 'done';
+
+  /** PDF erzeugen, Notiz anlegen, PDF hochladen und als Notiz-Anhang registrieren. */
+  const storePdf = async (m: MeetingMinutes): Promise<string | null> => {
+    if (!user?.id) return null;
+    setPhase('pdf');
+    const doc = buildMeetingMinutesPdf(m, user.email ?? null);
+    const blob = doc.output('blob');
+    const fileName = minutesFileName(m);
+
+    setPhase('store');
+    const noteBody = `${MINUTES_NOTE_PREFIX} ${m.title} · ${new Date(m.date).toLocaleDateString('de-DE')}\n\n${m.summary}${m.conclusion ? `\n\nFazit: ${m.conclusion}` : ''}`;
+    const { data: note, error: noteErr } = await supabase.from('case_notes')
+      .insert({ case_id: vorgangId, body: noteBody, author_id: user.id })
+      .select('id').single();
+    if (noteErr || !note) throw new Error(noteErr?.message ?? 'Notiz konnte nicht angelegt werden');
+
+    const path = `cases/${vorgangId}/notes/${note.id}/${Date.now()}_${sanitizeFileName(fileName)}`;
+    const { error: upErr } = await supabase.storage.from('case-attachments').upload(path, blob, { contentType: 'application/pdf' });
+    if (upErr) throw new Error(`Upload fehlgeschlagen: ${upErr.message}`);
+    const { error: attErr } = await (supabase as any).from('case_note_attachments').insert({
+      note_id: note.id, case_id: vorgangId, storage_path: path, file_name: fileName,
+      mime_type: 'application/pdf', size_bytes: blob.size, uploaded_by: user.id,
+    });
+    if (attErr) throw new Error(attErr.message);
+    return path;
+  };
+
+  const run = async () => {
+    if (!transcript.trim()) { toast.error('Bitte Transkript einfügen.'); return; }
+    setPhase('analyze');
+    setMinutes(null); setAttachmentPath(null); setTasks([]);
+    try {
+      const { data, error } = await supabase.functions.invoke('mtiq-meeting-minutes', {
+        body: { vorgang_id: vorgangId, transcript, meeting_date: meetingDate, participants },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const m: MeetingMinutes = data.minutes;
+      setMinutes(m);
+      setTasks(m.tasks.map(t => ({ ...t, accepted: true, added: false })));
+      try {
+        const path = await storePdf(m);
+        setAttachmentPath(path);
+        toast.success('Protokoll erstellt und im Vorgang abgelegt');
+      } catch (e: any) {
+        toast.error(e?.message ?? 'Ablage fehlgeschlagen – „PDF erneut ablegen“ nutzen.');
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Fehler');
+    } finally {
+      setPhase('done');
+    }
+  };
+
+  const retryStore = async () => {
+    if (!minutes) return;
+    try {
+      const path = await storePdf(minutes);
+      setAttachmentPath(path);
+      toast.success('Protokoll im Vorgang abgelegt');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Ablage fehlgeschlagen');
+    } finally { setPhase('done'); }
+  };
+
+  const openPdf = async (download = false) => {
+    if (!attachmentPath) return;
+    const { data } = await supabase.storage.from('case-attachments').createSignedUrl(attachmentPath, 300, download ? { download: true } : undefined);
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener');
+  };
+
+  const addTasks = async () => {
+    if (!user?.id) return;
+    const toAdd = tasks.map((t, idx) => ({ t, idx })).filter(x => x.t.accepted && !x.t.added && x.t.title.trim());
+    if (!toAdd.length) { toast.error('Keine Auswahl.'); return; }
+    setAdding(true);
+    try {
+      const { count } = await supabase.from('case_tasks').select('id', { count: 'exact', head: true }).eq('case_id', vorgangId);
+      const base = count ?? 0;
+      const rows = toAdd.map((x, k) => ({
+        case_id: vorgangId,
+        title: x.t.title.trim() + (x.t.assignee ? ` (${x.t.assignee})` : ''),
+        due_at: /^\d{4}-\d{2}-\d{2}$/.test(x.t.due) ? x.t.due : null,
+        created_by: user.id,
+        sort_order: base + k,
+      }));
+      const { error } = await (supabase as any).from('case_tasks').insert(rows);
+      if (error) throw error;
+      const set = new Set(toAdd.map(x => x.idx));
+      setTasks(prev => prev.map((t, idx) => set.has(idx) ? { ...t, added: true } : t));
+      toast.success(`${rows.length} Unteraufgabe${rows.length === 1 ? '' : 'n'} angelegt`);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Fehler beim Anlegen');
+    } finally { setAdding(false); }
+  };
+
+  const reset = () => {
+    try { localStorage.removeItem(storageKey); } catch {}
+    setTranscript(''); setParticipants(''); setMinutes(null); setAttachmentPath(null); setTasks([]); setPhase('idle');
+  };
+
+  const pending = tasks.filter(t => t.accepted && !t.added).length;
+  const steps: [MeetingPhase, string][] = [['analyze', 'Auswerten'], ['pdf', 'PDF erzeugen'], ['store', 'Im Vorgang ablegen']];
+  const order: MeetingPhase[] = ['idle', 'analyze', 'pdf', 'store', 'done'];
+
+  return (
+    <div className="flex flex-col h-full">
+      <ActionHeader action={action} onBack={onBack} />
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+        {!minutes && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] uppercase tracking-wide block mb-1" style={{ color: '#666' }}>Besprechungsdatum</label>
+                <input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full px-2 py-1.5 text-[12px] outline-none" style={inputStyle} />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wide block mb-1" style={{ color: '#666' }}>Teilnehmer (optional)</label>
+                <input value={participants} onChange={e => setParticipants(e.target.value)} placeholder="Name, Name …" className="w-full px-2 py-1.5 text-[12px] outline-none" style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wide block mb-1" style={{ color: '#666' }}>{action.inputLabel} *</label>
+              <textarea value={transcript} onChange={e => setTranscript(e.target.value)} placeholder={action.inputPlaceholder} rows={8}
+                className="w-full resize-y px-3 py-2 text-[12px] outline-none" style={{ ...inputStyle, minHeight: 140, maxHeight: 320 }} />
+            </div>
+          </>
+        )}
+
+        {busy && (
+          <div className="flex items-center gap-3 text-[11px] py-2" style={{ color: '#888' }}>
+            {steps.map(([k, label], i) => {
+              const cur = order.indexOf(phase), me = order.indexOf(k);
+              const state = me < cur ? 'done' : me === cur ? 'active' : 'todo';
+              return (
+                <div key={k} className="flex items-center gap-1.5">
+                  {state === 'done' ? <Check className="h-3 w-3" style={{ color: '#22c55e' }} /> : state === 'active' ? <Loader2 className="h-3 w-3 animate-spin" style={{ color: '#38bdf8' }} /> : <span className="inline-block h-2 w-2 rounded-full" style={{ background: '#333' }} />}
+                  <span style={{ color: state === 'active' ? '#e0e0e0' : undefined }}>{label}</span>
+                  {i < steps.length - 1 && <span style={{ color: '#333' }}>→</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {minutes && (
+          <div className="space-y-3">
+            <div className="p-3 space-y-2" style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12 }}>
+              <div className="text-[12px] font-medium" style={{ color: '#e0e0e0' }}>{minutes.title}</div>
+              <div className="text-[10px]" style={{ color: '#94a3b8' }}>
+                {new Date(minutes.date).toLocaleDateString('de-DE')}{minutes.participants.length ? ` · ${minutes.participants.join(', ')}` : ''}
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide mb-0.5" style={{ color: '#666' }}>Zusammenfassung</div>
+                <div className="text-[12px] leading-relaxed whitespace-pre-wrap" style={{ color: '#e0e0e0' }}>{minutes.summary || '–'}</div>
+              </div>
+              {minutes.conclusion && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide mb-0.5" style={{ color: '#666' }}>Fazit</div>
+                  <div className="text-[12px] leading-relaxed whitespace-pre-wrap" style={{ color: '#e0e0e0' }}>{minutes.conclusion}</div>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {attachmentPath ? (
+                  <>
+                    <button onClick={() => openPdf(false)} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-md" style={btnStyle}><ExternalLink className="h-3 w-3" /> Protokoll öffnen</button>
+                    <button onClick={() => openPdf(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-md" style={btnStyle}><FileText className="h-3 w-3" /> Herunterladen</button>
+                  </>
+                ) : (
+                  <button onClick={retryStore} disabled={busy} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-md disabled:opacity-50" style={btnStyle}><FileText className="h-3 w-3" /> PDF erneut ablegen</button>
+                )}
+              </div>
+            </div>
+
+            {tasks.length > 0 && (
+              <div>
+                <div className="text-[10px] uppercase tracking-wide mb-1.5" style={{ color: '#666' }}>Abgeleitete Aufgaben</div>
+                <div className="space-y-1.5">
+                  {tasks.map((t, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: '#181818', border: '1px solid #222', opacity: t.added ? 0.6 : 1 }}>
+                      <input type="checkbox" checked={t.accepted} disabled={t.added} onChange={() => setTasks(prev => prev.map((x, idx) => idx === i ? { ...x, accepted: !x.accepted } : x))} className="mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <input value={t.title} disabled={t.added} onChange={e => setTasks(prev => prev.map((x, idx) => idx === i ? { ...x, title: e.target.value } : x))}
+                          className="w-full bg-transparent text-[12px] outline-none" style={{ color: '#e0e0e0' }} />
+                        {(t.assignee || t.due) && (
+                          <div className="text-[10px]" style={{ color: '#666' }}>{[t.assignee, t.due ? `fällig ${new Date(t.due).toLocaleDateString('de-DE')}` : ''].filter(Boolean).join(' · ')}</div>
+                        )}
+                      </div>
+                      {t.added && <Check className="h-3 w-3 mt-1" style={{ color: '#22c55e' }} />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="px-3 py-2.5 flex gap-2" style={{ borderTop: '1px solid #222' }}>
+        {minutes ? (
+          <>
+            {pending > 0 && (
+              <button onClick={addTasks} disabled={adding} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium text-white rounded-lg disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' }}>
+                {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />} {pending} Unteraufgabe{pending === 1 ? '' : 'n'} anlegen
+              </button>
+            )}
+            <button onClick={reset} className="px-3 py-2 text-[12px] rounded-lg" style={btnStyle}>Neues Meeting</button>
+          </>
+        ) : (
+          <button onClick={run} disabled={busy} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium text-white rounded-lg disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #818cf8 100%)' }}>
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+            {busy ? 'Wird verarbeitet …' : 'Protokoll erstellen'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
