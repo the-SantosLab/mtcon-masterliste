@@ -111,6 +111,14 @@ export default function ProjectsList() {
     } catch {}
   }, [form]);
 
+  // Deep-Link-Filter, z.B. /projects?status=active (Big-7 KPI Drill-down)
+  useEffect(() => {
+    const st = searchParams.get('status');
+    if (st) setStatusFilter(st);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+
   const discardProjectDraft = () => {
     try { localStorage.removeItem(PROJECT_DRAFT_KEY); } catch {}
     setForm({ name: '', description: '', department_id: '', visibility: 'project_members' });
