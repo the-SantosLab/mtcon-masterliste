@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { STAGES, StageKey, stageColor, formatEUR, daysSince } from '@/lib/crm';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -28,6 +28,7 @@ interface Deal {
 export default function CrmDeals() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +85,12 @@ export default function CrmDeals() {
     void load();
   };
 
-  const grouped = STAGES.map(s => ({ ...s, deals: deals.filter(d => d.stage === s.key) }));
+  // Deep-Link-Filter, z.B. /crm/deals?stages=anfrage,verhandlung (Big-7 KPI Drill-down)
+  const stageParam = searchParams.get('stages');
+  const stageWhitelist = stageParam ? stageParam.split(',').map(s => s.trim()).filter(Boolean) : null;
+  const grouped = STAGES
+    .filter(s => !stageWhitelist || stageWhitelist.includes(s.key))
+    .map(s => ({ ...s, deals: deals.filter(d => d.stage === s.key) }));
 
   return (
     <CrmLayout>
