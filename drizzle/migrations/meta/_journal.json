@@ -50,6 +50,13 @@
       "when": 1788274598028,
       "tag": "0006_drop_duplicate_gr_number_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788436626498,
+      "tag": "0007_erp_ship_stock_lock_status_sync",
+      "breakpoints": true
     }
   ]
 }
