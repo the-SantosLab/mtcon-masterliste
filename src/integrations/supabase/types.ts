@@ -8154,6 +8154,7 @@ export type Database = {
           sequence_id: string
           started_at: string
           status: Database["public"]["Enums"]["sequence_enrollment_status"]
+          updated_at: string
         }
         Insert: {
           company_id?: string | null
@@ -8167,6 +8168,7 @@ export type Database = {
           sequence_id: string
           started_at?: string
           status?: Database["public"]["Enums"]["sequence_enrollment_status"]
+          updated_at?: string
         }
         Update: {
           company_id?: string | null
@@ -8180,6 +8182,7 @@ export type Database = {
           sequence_id?: string
           started_at?: string
           status?: Database["public"]["Enums"]["sequence_enrollment_status"]
+          updated_at?: string
         }
         Relationships: [
           {

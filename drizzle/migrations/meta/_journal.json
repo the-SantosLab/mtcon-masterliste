@@ -78,6 +78,13 @@
       "when": 1788438659031,
       "tag": "0010_crm_deal_won_promote_company_fix_cast",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788438727692,
+      "tag": "0011_crm_enrollments_updated_at_offer_items_lock_order_customer_no",
+      "breakpoints": true
     }
   ]
 }
