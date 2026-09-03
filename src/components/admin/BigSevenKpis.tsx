@@ -149,7 +149,7 @@ export function BigSevenKpis({ startDate, rangeLabel, showFinance, refreshKey }:
         {
           key: 'receivables', label: 'Offene Posten', value: fmtEUR(openAmount),
           sub: `${fmtInt(unpaid.length)} Rechnungen · ${fmtEUR(overdueAmount)} überfällig`, icon: Wallet,
-          accent: 'bg-[hsl(var(--status-rejected))]/10 text-[hsl(var(--status-rejected))]', href: '/erp/invoices',
+          accent: 'bg-[hsl(var(--status-rejected))]/10 text-[hsl(var(--status-rejected))]', href: '/rechnungen',
           tone: overdueAmount > 0 ? 'warn' : 'ok',
         },
       );
