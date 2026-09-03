@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Zap, CheckCircle2, Edit3, BarChart3, Calendar, Mail, ArrowLeft, Loader2, Copy, StickyNote, Check, Plus, ListPlus } from 'lucide-react';
+import { Zap, CheckCircle2, Edit3, BarChart3, Calendar, Mail, ArrowLeft, Loader2, Copy, StickyNote, Check, Plus, ListPlus, FileText, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { buildMeetingMinutesPdf, minutesFileName, MINUTES_NOTE_PREFIX, type MeetingMinutes } from '@/lib/meeting-minutes-pdf';
+import { sanitizeFileName } from '@/lib/utils';
 
 export interface MtiqAction {
   key: string;
