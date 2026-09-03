@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/UserAvatar';
 import { MasterControlPanel } from '@/components/MasterControlPanel';
 import { TeamAttendanceOverview } from '@/components/TeamAttendanceOverview';
+import { BigSevenKpis } from '@/components/admin/BigSevenKpis';
 import { subDays, startOfQuarter, parseISO } from 'date-fns';
 
 interface CaseRow {
@@ -278,6 +279,14 @@ export default function AdminDashboard() {
         {/* Team-Zeiten & Abwesenheiten aus Personio – Leads sehen nur ihre Abteilungen */}
         <TeamAttendanceOverview restrictDepartmentIds={leadOnly ? ledIds : undefined} />
 
+
+        {/* Big 7 KPIs */}
+        <BigSevenKpis
+          startDate={startDate}
+          rangeLabel={rangeLabel}
+          showFinance={!leadOnly}
+          refreshKey={lastRefresh.getTime()}
+        />
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
