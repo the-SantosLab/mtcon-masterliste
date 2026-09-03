@@ -144,7 +144,7 @@ export default function AdminDeliveries() {
     }
     setExistingInvoiceId(inv.id);
     toast.success(`Rechnung ${inv.invoice_no} erstellt`);
-    navigate('/admin/invoices');
+    navigate('/rechnungen');
   };
 
   const save = async () => {
@@ -352,7 +352,7 @@ export default function AdminDeliveries() {
               )}
               {sel?.status === 'shipped' && (
                 existingInvoiceId
-                  ? <Button variant="outline" onClick={() => navigate('/admin/invoices')}><Receipt className="h-4 w-4 mr-1" /> Rechnung öffnen</Button>
+                  ? <Button variant="outline" onClick={() => navigate('/rechnungen')}><Receipt className="h-4 w-4 mr-1" /> Rechnung öffnen</Button>
                   : <Button variant="default" onClick={createInvoiceFromDelivery}><Receipt className="h-4 w-4 mr-1" /> Rechnung 1:1 erstellen</Button>
               )}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
