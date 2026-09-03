@@ -64,12 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => { fetchProfileAndRole(session.user.id); }, 0);
+          // loading erst beenden, wenn Profil + Rolle geladen sind – sonst leiten
+          // rollenbasierte Seiten (z.B. Disposition) beim Direktaufruf fälschlich um.
+          setTimeout(() => { fetchProfileAndRole(session.user.id).finally(() => setLoading(false)); }, 0);
         } else {
           setProfile(null);
           setRole(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 

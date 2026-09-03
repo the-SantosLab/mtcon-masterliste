@@ -251,7 +251,7 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
             <div className="space-y-1">
               {deliveries.length === 0 ? <div className="text-xs text-muted-foreground">—</div>
               : deliveries.map(d => (
-                <button key={d.id} onClick={() => navigate('/admin/deliveries')} className="w-full flex items-center justify-between p-2 rounded border border-border/40 hover:bg-muted/20 text-xs">
+                <button key={d.id} onClick={() => navigate('/lieferscheine')} className="w-full flex items-center justify-between p-2 rounded border border-border/40 hover:bg-muted/20 text-xs">
                   <span className="font-mono">{d.delivery_no}</span>
                   <span className="flex items-center gap-2">
                     <Badge variant="outline" className={`${DLV_COLOR[d.status]} text-[10px]`}>{d.status}</Badge>
@@ -266,7 +266,7 @@ export function OrderFulfillment({ orderId }: { orderId: string }) {
             <div className="space-y-1">
               {invoices.length === 0 ? <div className="text-xs text-muted-foreground">—</div>
               : invoices.map(i => (
-                <button key={i.id} onClick={() => navigate('/admin/invoices')} className="w-full flex items-center justify-between p-2 rounded border border-border/40 hover:bg-muted/20 text-xs">
+                <button key={i.id} onClick={() => navigate('/rechnungen')} className="w-full flex items-center justify-between p-2 rounded border border-border/40 hover:bg-muted/20 text-xs">
                   <span className="font-mono">{i.invoice_no}</span>
                   <span className="flex items-center gap-2">
                     <Badge variant="outline" className={`${INV_COLOR[i.status]} text-[10px]`}>{i.status}</Badge>
