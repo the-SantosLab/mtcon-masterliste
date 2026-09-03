@@ -1,6 +1,6 @@
 import { urgencyMuteEnabled } from '@/lib/urgencyMute';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -75,6 +75,7 @@ export default function ProjectsList() {
   const [owners, setOwners] = useState<{ id: string; short_code: string; display_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState('all');
   const [ownerFilter, setOwnerFilter] = useState('all');
   const [deptFilter, setDeptFilter] = useState('all');
@@ -110,6 +111,14 @@ export default function ProjectsList() {
       else localStorage.removeItem(PROJECT_DRAFT_KEY);
     } catch {}
   }, [form]);
+
+  // Deep-Link-Filter, z.B. /projects?status=active (Big-7 KPI Drill-down)
+  useEffect(() => {
+    const st = searchParams.get('status');
+    if (st) setStatusFilter(st);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
 
   const discardProjectDraft = () => {
     try { localStorage.removeItem(PROJECT_DRAFT_KEY); } catch {}

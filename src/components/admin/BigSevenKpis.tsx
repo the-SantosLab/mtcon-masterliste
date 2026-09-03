@@ -103,28 +103,28 @@ export function BigSevenKpis({ startDate, rangeLabel, showFinance, refreshKey }:
       {
         key: 'open', label: 'Offene Vorgänge', value: fmtInt(active.length),
         sub: `${fmtInt(fCases.length)} gesamt · ${rangeLabel}`, icon: ClipboardList,
-        accent: 'bg-primary/10 text-primary', href: '/cases', tone: 'neutral',
+        accent: 'bg-primary/10 text-primary', href: `/cases?status=${ACTIVE_STATUSES.join(',')}`, tone: 'neutral',
       },
       {
         key: 'overdue', label: 'Verzugsquote', value: fmtPct(overdueRate),
         sub: `${fmtInt(overdue.length)} von ${fmtInt(active.length)} aktiven`, icon: AlertTriangle,
-        accent: 'bg-[hsl(var(--status-overdue))]/10 text-[hsl(var(--status-overdue))]', href: '/cases',
+        accent: 'bg-[hsl(var(--status-overdue))]/10 text-[hsl(var(--status-overdue))]', href: `/cases?status=${ACTIVE_STATUSES.join(',')}&due=overdue`,
         tone: overdueRate >= 25 ? 'crit' : overdueRate >= 10 ? 'warn' : 'ok',
       },
       {
         key: 'lead', label: 'Ø Durchlaufzeit', value: closed.length ? fmtDays(leadDays) : '–',
         sub: `${fmtInt(closed.length)} abgeschlossen · ${rangeLabel}`, icon: Timer,
-        accent: 'bg-[hsl(var(--status-planning))]/10 text-[hsl(var(--status-planning))]', href: '/cases', tone: 'neutral',
+        accent: 'bg-[hsl(var(--status-planning))]/10 text-[hsl(var(--status-planning))]', href: '/cases?status=abgeschlossen', tone: 'neutral',
       },
       {
         key: 'projects', label: 'Aktive Projekte', value: fmtInt(activeProjects.length),
         sub: `${fmtInt(fProjects.length)} Projekte gesamt`, icon: FolderKanban,
-        accent: 'bg-[hsl(var(--status-working))]/10 text-[hsl(var(--status-working))]', href: '/projects', tone: 'neutral',
+        accent: 'bg-[hsl(var(--status-working))]/10 text-[hsl(var(--status-working))]', href: '/projects?status=active', tone: 'neutral',
       },
       {
         key: 'tickets', label: 'Offene Support-Tickets', value: fmtInt(openTickets.length),
         sub: `${fmtInt(fTickets.length)} Tickets gesamt`, icon: LifeBuoy,
-        accent: 'bg-[hsl(var(--status-open))]/10 text-[hsl(var(--status-open))]', href: '/support',
+        accent: 'bg-[hsl(var(--status-open))]/10 text-[hsl(var(--status-open))]', href: `/support?status=${OPEN_TICKET_STATUSES.join(',')}`,
         tone: openTickets.length >= 20 ? 'warn' : 'neutral',
       },
     ];
@@ -144,12 +144,12 @@ export function BigSevenKpis({ startDate, rangeLabel, showFinance, refreshKey }:
         {
           key: 'pipeline', label: 'Pipeline-Wert', value: fmtEUR(pipeline),
           sub: `${fmtInt(openDeals.length)} offene Deals · ${rangeLabel}`, icon: Target,
-          accent: 'bg-[hsl(var(--status-done))]/10 text-[hsl(var(--status-done))]', href: '/crm/deals', tone: 'neutral',
+          accent: 'bg-[hsl(var(--status-done))]/10 text-[hsl(var(--status-done))]', href: `/crm/deals?stages=${OPEN_DEAL_STAGES.join(',')}`, tone: 'neutral',
         },
         {
           key: 'receivables', label: 'Offene Posten', value: fmtEUR(openAmount),
           sub: `${fmtInt(unpaid.length)} Rechnungen · ${fmtEUR(overdueAmount)} überfällig`, icon: Wallet,
-          accent: 'bg-[hsl(var(--status-rejected))]/10 text-[hsl(var(--status-rejected))]', href: '/rechnungen',
+          accent: 'bg-[hsl(var(--status-rejected))]/10 text-[hsl(var(--status-rejected))]', href: '/rechnungen?payment=open',
           tone: overdueAmount > 0 ? 'warn' : 'ok',
         },
       );
