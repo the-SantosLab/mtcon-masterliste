@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ALLOWED_EMAIL = 'js@santosfx.de';
+const ALLOWED_EMAILS = new Set(['js@santosfx.de', 'js@santoslab.de']);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -29,7 +29,23 @@ Deno.serve(async (req) => {
       return json({ error: 'Unauthorized' }, 401);
     }
 
-    if (userData.user.email?.toLowerCase() !== ALLOWED_EMAIL) {
+    // Zugriff: Admin-Rolle (user_roles) oder explizit freigegebene E-Mail.
+    const email = userData.user.email?.toLowerCase() ?? '';
+    let allowed = ALLOWED_EMAILS.has(email);
+    if (!allowed) {
+      const admin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      const { data: roleRow } = await admin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userData.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      allowed = !!roleRow;
+    }
+    if (!allowed) {
       return json({ error: 'Forbidden' }, 403);
     }
 
