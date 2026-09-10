@@ -998,10 +998,12 @@ export type Database = {
           note: string | null
           rows_count: number | null
           size_bytes: number | null
+          state: Json | null
           status: string
           storage_path: string
           tables_count: number | null
           trigger: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -1011,10 +1013,12 @@ export type Database = {
           note?: string | null
           rows_count?: number | null
           size_bytes?: number | null
+          state?: Json | null
           status?: string
           storage_path: string
           tables_count?: number | null
           trigger: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -1024,10 +1028,12 @@ export type Database = {
           note?: string | null
           rows_count?: number | null
           size_bytes?: number | null
+          state?: Json | null
           status?: string
           storage_path?: string
           tables_count?: number | null
           trigger?: string
+          updated_at?: string
         }
         Relationships: []
       }
