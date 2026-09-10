@@ -10,8 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Receipt, Plus, Download, FlaskConical, FileCode, Ban, RotateCcw, Wallet } from "lucide-react";
-import { generateInvoicePdf } from "@/lib/document-pdf";
+import { Receipt, Plus, FlaskConical, FileCode, Ban, RotateCcw, Wallet } from "lucide-react";
 import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IssosInvoicesTab } from "@/components/IssosInvoicesTab";
@@ -140,22 +139,6 @@ export default function AdminInvoices() {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
     toast.success('XRechnung erzeugt');
-  };
-
-  const downloadPdf = () => {
-    if (!sel) return;
-    const pdf = generateInvoicePdf({
-      invoice_no: sel.invoice_no, invoice_date: sel.invoice_date, due_date: sel.due_date,
-      customer_name: sel.customer_name, customer_no: sel.customer_no,
-      billing_address: sel.billing_address, payment_terms: sel.payment_terms, notes: sel.notes,
-      currency: sel.currency, subtotal_amount: sel.subtotal_amount, tax_amount: sel.tax_amount, total_amount: sel.total_amount,
-      items: items.map(it => ({
-        position: it.position, art_nr: it.art_nr, description: it.description,
-        quantity: it.quantity, unit: it.unit, unit_price: it.unit_price,
-        tax_rate: it.tax_rate, line_total: it.line_total,
-      })),
-    });
-    pdf.save(`${sel.invoice_no}.pdf`);
   };
 
   const filtered = useMemo(() => {
@@ -384,7 +367,6 @@ export default function AdminInvoices() {
               )}
               {items.length > 0 && sel && <ErpDocPdfButton type="rechnung" id={sel.id} label="PDF (MTCON)" />}
               {items.length > 0 && sel && <Button variant="outline" size="sm" onClick={downloadXRechnung}><FileCode className="h-4 w-4 mr-1" /> XRechnung</Button>}
-              {items.length > 0 && <Button variant="ghost" size="icon" onClick={downloadPdf} title="Einfache Version"><Download className="h-4 w-4" /></Button>}
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
               <Button onClick={save} disabled={sel?.locked}>Speichern</Button>
             </DialogFooter>

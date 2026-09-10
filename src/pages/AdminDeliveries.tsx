@@ -11,8 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Truck, Plus, Trash2, Download, Receipt, FlaskConical } from "lucide-react";
-import { generateDeliveryPdf } from "@/lib/document-pdf";
+import { Truck, Plus, Trash2, Receipt, FlaskConical } from "lucide-react";
 import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -185,25 +184,6 @@ export default function AdminDeliveries() {
     if (sel) open(sel);
   };
 
-  const downloadPdf = () => {
-    if (!sel) return;
-    const pdf = generateDeliveryPdf({
-      delivery_no: sel.delivery_no,
-      delivery_date: sel.delivery_date,
-      carrier: sel.carrier,
-      tracking_no: sel.tracking_no,
-      ship_to: sel.ship_to,
-      notes: sel.notes,
-      order_no: sel.orders?.order_no,
-      customer_name: sel.orders?.customer_name,
-      items: items.map(it => ({
-        position: it.position, art_nr: it.art_nr, description: it.description,
-        quantity: it.quantity, unit: it.unit, lot_no: it.lot_no, serial_no: it.serial_no,
-      })),
-    });
-    pdf.save(`${sel.delivery_no}.pdf`);
-  };
-
   const filtered = useMemo(() => filter === 'all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
 
   return (
@@ -338,7 +318,6 @@ export default function AdminDeliveries() {
                 <>
                   <ErpDocPdfButton type="lieferschein" id={sel.id} label="Lieferschein" />
                   <ErpDocPdfButton type="ruecklieferschein" id={sel.id} label="Rücklieferung" variant="ghost" />
-                  <Button variant="ghost" size="sm" onClick={downloadPdf} title="Einfache Version"><Download className="h-4 w-4" /></Button>
                 </>
               )}
               {sel?.status === 'draft' && items.length > 0 && (
