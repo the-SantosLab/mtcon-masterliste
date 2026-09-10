@@ -11,12 +11,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, ChevronsUpDown, Check, FileDown, Link2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Plus, Trash2, GripVertical, ChevronDown, ChevronsUpDown, Check, Link2 } from 'lucide-react';
 import { ArticlePicker, type ArticleOption } from '@/components/ArticlePicker';
 import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllCompanies } from '@/lib/crmData';
-import { generateOfferPdf } from '@/lib/crm-pdf';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -204,24 +203,6 @@ export default function CrmOfferDetail() {
 
 
 
-  const exportPdf = () => {
-    const company = companies.find(c => c.id === offer.company_id);
-    const contact = contacts.find(c => c.id === offer.primary_contact_id);
-    const doc = generateOfferPdf({
-      offer_no: offer.offer_no,
-      created_at: offer.created_at,
-      valid_until: offer.valid_until,
-      version: offer.version,
-      company_name: company?.name,
-      contact_name: contact ? `${contact.first_name} ${contact.last_name}` : undefined,
-      delivery_address: offer.delivery_address,
-      items: items.map(it => ({ description: it.description, quantity: it.quantity, unit_price: it.unit_price, discount_pct: it.discount_pct })),
-      payment_terms: offer.payment_terms,
-      notes: offer.notes,
-    });
-    doc.save(`${offer.offer_no}_v${offer.version}.pdf`);
-  };
-
   const createShareLink = async () => {
     if (!id) return;
     const token = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 8);
@@ -285,7 +266,6 @@ export default function CrmOfferDetail() {
             {STATUS_LABEL[offer.status]}
           </span>
           <ErpDocPdfButton type="angebot" id={id!} />
-          <Button size="sm" variant="ghost" className="h-8 text-xs gap-1.5" onClick={exportPdf} title="Alte einfache Version"><FileDown className="h-3.5 w-3.5" /></Button>
           <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={createShareLink}><Link2 className="h-3.5 w-3.5" /> Freigabe-Link</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

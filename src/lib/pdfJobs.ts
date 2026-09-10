@@ -3,7 +3,13 @@
 // so dass der Click sofort zurückkehrt und die UI reagierbar bleibt.
 // Der Fortschritt wird über einen Store publiziert und vom PdfJobToaster
 // als schwebende Karte gerendert.
-import type jsPDF from 'jspdf';
+export interface PdfDocumentOutput {
+  output(type: 'blob'): Blob;
+  save(fileName: string): void;
+  internal?: {
+    getDocumentProperties?: () => { title?: string };
+  };
+}
 
 export type PdfJobStatus = 'queued' | 'running' | 'done' | 'error';
 
@@ -17,7 +23,7 @@ export interface PdfJob {
   finishedAt?: number;
   error?: string;
   fileName?: string;
-  doc?: jsPDF;
+  doc?: PdfDocumentOutput;
   blobUrl?: string;
   // wenn true, öffnet der Toaster nach Fertigstellung automatisch die Vorschau
   autoPreview?: boolean;
@@ -61,7 +67,7 @@ const yieldFrame = () => new Promise<void>(resolve => {
 
 export interface EnqueueOpts {
   label: string;
-  build: (report: (phase: string, progress: number) => void) => Promise<{ doc: jsPDF; fileName: string }>;
+  build: (report: (phase: string, progress: number) => void) => Promise<{ doc: PdfDocumentOutput; fileName: string }>;
   autoPreview?: boolean;
   onPreview?: (job: PdfJob) => void;
 }

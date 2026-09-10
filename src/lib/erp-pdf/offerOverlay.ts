@@ -1,9 +1,9 @@
 // Angebots-PDF via Overlay auf pixelgleiche Original-Vorlage.
 // Nutzt pdf-lib: (1) weiße Masken über alle statisch bedruckten Textzonen der
 // Vorlage (Kopfdaten, Positionen, Fußdaten), (2) Inhalt wird neu gezeichnet.
-// Für mehr als eine Seite wird Seite 1 der Vorlage kopiert.
+// Die Originaldatei enthält eine erste Seite und passende Folgeseiten.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
-import templateAsset from '@/assets/offer-template.pdf.asset.json';
+import templateUrl from '@/assets/offer-template.pdf?url';
 import { fmt } from './renderer';
 import type { AngebotData } from './generators';
 
@@ -13,40 +13,39 @@ const topY = (yFromTop: number) => PAGE_H - yFromTop;
 const COLOR_TEXT = rgb(0, 0, 0);
 const COLOR_RED = rgb(0.86, 0.08, 0.24);
 const WHITE = rgb(1, 1, 1);
+const SHADE = rgb(0.86, 0.86, 0.86);
 
 // Seite 1: alle bedruckten dynamischen Zonen der Vorlage überdecken
 const MASKS_P1: [number, number, number, number][] = [
-  [340, 128, 570, 158],   // Titel "Angebot Nr. …"
-  [ 45, 155, 335, 235],   // Empfänger-Block
-  [340, 155, 570, 235],   // Meta-Labels + Werte
-  [340, 235, 570, 260],   // Datum + Seitenzähler
-  [ 45, 253, 570, 305],   // Intro
-  [ 45, 305, 570, 330],   // Tabellen-Header
-  [ 45, 330, 570, 700],   // Positionen
-  [ 45, 700, 570, 760],   // Fuß-/Konditionen-Block
+  [335, 155, 570, 175],   // Titel "Angebot Nr. …"
+  [ 45, 175, 330, 255],   // Empfänger-Block
+  [335, 175, 570, 285],   // Meta-Labels + Werte
+  [335, 285, 570, 310],   // Datum + Seitenzähler
+  [ 45, 315, 570, 410],   // Intro
+  [ 45, 420, 570, 445],   // Tabellen-Header
+  [ 45, 445, 570, 755],   // Positionen
 ];
 // Folge-Seiten: Empfängerblock & Meta gehören dort nicht mehr hin → auch maskieren
 const MASKS_PX: [number, number, number, number][] = [
-  [340, 128, 570, 158],
-  [ 45, 155, 570, 260],
-  [ 45, 253, 570, 305],
-  [ 45, 305, 570, 330],
-  [ 45, 330, 570, 700],
-  [ 45, 700, 570, 760],
+  [335, 155, 570, 175],
+  [335, 175, 570, 230],
+  [ 45, 240, 570, 285],
+  [ 45, 285, 570, 310],
+  [ 45, 310, 570, 755],
 ];
 
 const P = {
-  title:      { x: 358, top: 134, size: 11 },
-  recipient:  { x: 71,  top: 158, size: 10, lineHeight: 13 },
-  metaLabel:  { x: 358, top: 160, size: 9,  lineHeight: 12 },
-  metaValue:  { x: 456, top: 160, size: 9,  lineHeight: 12 },
-  dateLabel:  { x: 358, top: 240, size: 9 },
-  dateValue:  { x: 456, top: 240, size: 9 },
-  pageValue:  { x: 505, top: 240, size: 9 },
-  intro:      { x: 66,  top: 262, size: 9, lineHeight: 12 },
-  headerRow:  { top: 312, size: 9 },
-  tableTop:   328,
-  tableBottom: 680,
+  title:      { x: 335, top: 160, size: 11 },
+  recipient:  { x: 70,  top: 180, size: 9, lineHeight: 12 },
+  metaLabel:  { x: 335, top: 180, size: 8, lineHeight: 12 },
+  metaValue:  { x: 435, top: 180, size: 8, lineHeight: 12 },
+  dateLabel:  { x: 335, top: 297, size: 8 },
+  dateValue:  { x: 435, top: 297, size: 8 },
+  pageValue:  { x: 500, top: 297, size: 8 },
+  intro:      { x: 70,  top: 335, size: 9, lineHeight: 14 },
+  headerRow:  { top: 426, size: 8 },
+  tableTop:   454,
+  tableBottom: 720,
   rowLine:    11,
   cols: {
     pos:     66,
@@ -55,17 +54,17 @@ const P = {
     preis:   455,  // right
     value:   560,  // right
   },
-  condLabel: { x: 66,  size: 9, lineHeight: 13 },
-  condValue: { x: 165, size: 9, lineHeight: 13 },
+  condLabel: { x: 70,  size: 8, lineHeight: 12 },
+  condValue: { x: 165, size: 8, lineHeight: 12 },
   totalLabel:{ x: 420, size: 10 },
   totalValue:{ x: 560, size: 10 },
-  closing:   { x: 66, top: 745, size: 9, lineHeight: 12 },
+  closing:   { x: 70, top: 730, size: 8, lineHeight: 12 },
 };
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplateBytes(): Promise<ArrayBuffer> {
-  const res = await fetch(templateAsset.url);
+  const res = await fetch(templateUrl);
   if (!res.ok) throw new Error(`Angebots-Vorlage konnte nicht geladen werden (${res.status})`);
   return res.arrayBuffer();
 }
@@ -172,7 +171,8 @@ export async function renderOfferOverlay(
 
   const drawnPages: PDFPage[] = [];
   for (let i = 0; i < totalPages; i++) {
-    const [copied] = await pdf.copyPages(tplDoc, [0]);
+    const templatePageIndex = i === 0 ? 0 : Math.min(i, tplDoc.getPageCount() - 1);
+    const [copied] = await pdf.copyPages(tplDoc, [templatePageIndex]);
     pdf.addPage(copied);
     drawnPages.push(copied);
   }
@@ -183,6 +183,7 @@ export async function renderOfferOverlay(
     mask(page, isFirst ? MASKS_P1 : MASKS_PX);
 
     // Titel
+    page.drawRectangle({ x: 335, y: topY(175), width: 225, height: 20, color: SHADE });
     txt(page, `Angebot Nr. ${d.offerNo}`, P.title.x, P.title.top, fonts,
       { size: P.title.size, bold: true });
 
@@ -213,12 +214,17 @@ export async function renderOfferOverlay(
         if (!value) continue;
         const y = P.metaLabel.top + row * P.metaLabel.lineHeight;
         txt(page, label, P.metaLabel.x, y, fonts, { size: P.metaLabel.size, bold: true });
-        txt(page, value, P.metaValue.x, y, fonts, { size: P.metaValue.size });
-        row++;
+        const valueLines = wrap(String(value), regular, P.metaValue.size, 120);
+        valueLines.forEach((line, lineIndex) => {
+          txt(page, line, P.metaValue.x, y + lineIndex * P.metaLabel.lineHeight, fonts, { size: P.metaValue.size });
+        });
+        row += Math.max(1, valueLines.length);
       }
 
       // Intro
       const introLines = [
+        'Sehr geehrte Damen und Herren,',
+        '',
         'Vielen Dank für Ihre Anfrage. Gerne bieten wir Ihnen gemäß unseren allgemeinen',
         'Verkaufsbedingungen wie folgt an:',
         'siehe www.mtcon.eu/power2pcb/avb/',
@@ -229,6 +235,7 @@ export async function renderOfferOverlay(
     }
 
     // Tabellen-Header
+    page.drawRectangle({ x: 45, y: topY(441), width: 525, height: 18, color: SHADE });
     txt(page, 'Pos',           P.cols.pos,     P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
     txt(page, 'Art.-Nr.',      P.cols.article, P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
     txt(page, 'Menge',         P.cols.menge,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
@@ -257,7 +264,7 @@ export async function renderOfferOverlay(
 
     // Konditionen + Summe + Closing nur auf letzter Seite
     if (i === totalPages - 1) {
-      let condY = Math.max(cursor + 12, 705);
+      let condY = Math.max(cursor + 18, 570);
       const drawCond = (label: string, value: string) => {
         txt(page, label, P.condLabel.x, condY, fonts, { size: P.condLabel.size, bold: true });
         txt(page, value, P.condValue.x, condY, fonts, { size: P.condValue.size });
