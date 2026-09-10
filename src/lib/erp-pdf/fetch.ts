@@ -3,7 +3,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { fmt } from './renderer';
 import {
-  buildABPdf, buildBestellungPdf,
+  buildBestellungPdf,
   buildLieferscheinPdf, buildRechnungPdf, Party, ContactInfo, LineItem,
 } from './generators';
 import type { PdfDocumentOutput } from '@/lib/pdfJobs';
@@ -67,7 +67,7 @@ export async function loadAngebotData(id: string) {
   };
 }
 
-async function loadAB(id: string) {
+export async function loadABData(id: string) {
   const { data: o } = await supabase.from('orders' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('order_items' as any).select('*').eq('order_id', id).order('position') as any;
   const party = await loadCompanyParty(o.company_id, o.customer_name);
@@ -78,7 +78,7 @@ async function loadAB(id: string) {
   const subtotal = Number(o.subtotal_amount || 0);
   const tax = Number(o.tax_amount || subtotal * 0.19);
   const total = Number(o.total_amount || subtotal + tax);
-  return buildABPdf({
+  return {
     abNo: o.order_no, date: fmt.date(o.order_date || o.created_at),
     deliveryDate: o.delivery_date,
     party, contact: { customerNo: o.customer_no, contactName: 'Auftragsbestätigungen', email: o.customer_email, subject: o.external_order_no },
@@ -87,7 +87,7 @@ async function loadAB(id: string) {
     paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
     deliveryTerms: 'ab Werk',
     isFrame: o.order_kind === 'frame' || o.order_kind === 'rahmen',
-  });
+  };
 }
 
 async function loadBestellung(id: string) {
@@ -201,10 +201,36 @@ export async function buildErpPdf(
       },
     };
   }
+  if (type === 'ab') {
+    const { renderOrderOverlay } = await import('./orderOverlay');
+    const data = await loadABData(id) as any;
+    report?.('Originalvorlage anwenden', 0.65);
+    const bytes = await renderOrderOverlay(data);
+    const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+    const download = (fileName: string) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    };
+    return {
+      output: (outputType: 'blob') => {
+        if (outputType !== 'blob') throw new Error('Nicht unterstütztes PDF-Ausgabeformat');
+        return blob;
+      },
+      save: download,
+      internal: {
+        getDocumentProperties: () => ({ title: `Auftragsbestaetigung-${data.abNo}` }),
+      },
+    };
+  }
 
   let doc;
   switch (type) {
-    case 'ab': doc = await loadAB(id); break;
     case 'bestellung': doc = await loadBestellung(id); break;
     case 'lieferschein': doc = await loadLieferschein(id, false); break;
     case 'ruecklieferschein': doc = await loadLieferschein(id, true); break;
@@ -233,26 +259,7 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   }
   if (type === 'ab') {
     const { openOrderOverlayPdf } = await import('./orderOverlay');
-    const { data: o } = await supabase.from('orders' as any).select('*').eq('id', id).single() as any;
-    const { data: items } = await supabase.from('order_items' as any).select('*').eq('order_id', id).order('position') as any;
-    const party = await loadCompanyParty(o.company_id, o.customer_name);
-    const lineItems: any[] = (items || []).map((it: any) => ({
-      pos: it.position, artNr: it.art_nr || it.sku, description: it.description,
-      quantity: it.quantity, unit: it.unit || 'ST', price: it.unit_price, positionValue: it.line_total,
-    }));
-    const subtotal = Number(o.subtotal_amount || 0);
-    const tax = Number(o.tax_amount || subtotal * 0.19);
-    const total = Number(o.total_amount || subtotal + tax);
-    await openOrderOverlayPdf({
-      abNo: o.order_no, date: fmt.date(o.order_date || o.created_at),
-      deliveryDate: o.delivery_date, party,
-      contact: { customerNo: o.customer_no, contactName: 'Auftragsbestätigungen', email: o.customer_email, subject: o.external_order_no },
-      items: lineItems, currency: o.currency || 'EUR',
-      subtotal, tax, total,
-      paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
-      deliveryTerms: 'ab Werk',
-      isFrame: o.order_kind === 'frame' || o.order_kind === 'rahmen',
-    } as any);
+    await openOrderOverlayPdf(await loadABData(id) as any);
     return;
   }
   if (type === 'bestellung') {
