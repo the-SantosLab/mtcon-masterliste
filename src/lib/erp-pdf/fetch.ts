@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fmt } from './renderer';
 import {
   buildBestellungPdf,
-  buildLieferscheinPdf, buildRechnungPdf, Party, ContactInfo, LineItem,
+  buildLieferscheinPdf, Party, ContactInfo, LineItem,
 } from './generators';
 import type { PdfDocumentOutput } from '@/lib/pdfJobs';
 
@@ -135,7 +135,7 @@ async function loadLieferschein(id: string, isReturn = false) {
 }
 
 
-async function loadRechnungData(id: string) {
+export async function loadRechnungData(id: string) {
   const { data: inv } = await supabase.from('invoices' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('invoice_items' as any).select('*').eq('invoice_id', id).order('position') as any;
   const party = await loadCompanyParty(inv.company_id, inv.customer_name);
@@ -162,10 +162,6 @@ async function loadRechnungData(id: string) {
     skontoPercent: inv.skonto_percent, skontoDays: inv.skonto_days,
     docKind: inv.doc_kind || 'invoice',
   };
-}
-
-async function loadRechnung(id: string) {
-  return buildRechnungPdf(await loadRechnungData(id));
 }
 
 export async function buildErpPdf(
@@ -228,13 +224,39 @@ export async function buildErpPdf(
       },
     };
   }
+  if (type === 'rechnung') {
+    const { renderInvoiceOverlay } = await import('./invoiceOverlay');
+    const data = await loadRechnungData(id) as any;
+    report?.('Originalvorlage anwenden', 0.65);
+    const bytes = await renderInvoiceOverlay(data);
+    const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+    const download = (fileName: string) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    };
+    return {
+      output: (outputType: 'blob') => {
+        if (outputType !== 'blob') throw new Error('Nicht unterstütztes PDF-Ausgabeformat');
+        return blob;
+      },
+      save: download,
+      internal: {
+        getDocumentProperties: () => ({ title: `Rechnung-${data.invoiceNo}` }),
+      },
+    };
+  }
 
   let doc;
   switch (type) {
     case 'bestellung': doc = await loadBestellung(id); break;
     case 'lieferschein': doc = await loadLieferschein(id, false); break;
     case 'ruecklieferschein': doc = await loadLieferschein(id, true); break;
-    case 'rechnung': doc = await loadRechnung(id); break;
   }
   report?.('Rendern', 0.8);
   if (!doc) throw new Error('Unbekannter Belegtyp');
