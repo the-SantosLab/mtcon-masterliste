@@ -2,10 +2,7 @@
 // und ruft den passenden Generator auf. Öffnet das PDF in einem neuen Tab.
 import { supabase } from '@/integrations/supabase/client';
 import { fmt } from './renderer';
-import {
-  buildBestellungPdf,
-  buildLieferscheinPdf, Party, ContactInfo, LineItem,
-} from './generators';
+import type { Party, ContactInfo, LineItem } from './generators';
 import type { PdfDocumentOutput } from '@/lib/pdfJobs';
 
 export type ErpDocType = 'angebot' | 'ab' | 'bestellung' | 'lieferschein' | 'ruecklieferschein' | 'rechnung';
@@ -90,7 +87,7 @@ export async function loadABData(id: string) {
   };
 }
 
-async function loadBestellung(id: string) {
+export async function loadBestellungData(id: string) {
   const { data: p } = await supabase.from('purchase_orders' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('purchase_order_items' as any).select('*').eq('po_id', id).order('position') as any;
   const sup = await loadSupplier(p.supplier_id);
@@ -99,14 +96,14 @@ async function loadBestellung(id: string) {
     quantity: it.qty_ordered, unit: 'ST', price: it.unit_price,
     positionValue: it.unit_price != null ? Number(it.qty_ordered) * Number(it.unit_price) : null,
   }));
-  return buildBestellungPdf({
+  return {
     poNo: p.po_no || p.id.slice(0, 8), date: fmt.date(p.ordered_at || p.created_at),
     expected: p.expected_at, party: sup.party, contact: sup.contact,
     items: lineItems, currency: 'EUR', notes: p.notes,
-  });
+  };
 }
 
-async function loadLieferscheinData(id: string, isReturn = false) {
+export async function loadLieferscheinData(id: string, isReturn = false) {
   const { data: d } = await supabase.from('deliveries' as any).select('*, orders(order_no, customer_name, company_id, customer_no)').eq('id', id).single() as any;
   const { data: items } = await supabase.from('delivery_items' as any).select('*').eq('delivery_id', id).order('position') as any;
   const companyId = d.company_id || d.orders?.company_id;
@@ -129,11 +126,6 @@ async function loadLieferscheinData(id: string, isReturn = false) {
     isReturn,
   };
 }
-
-async function loadLieferschein(id: string, isReturn = false) {
-  return buildLieferscheinPdf(await loadLieferscheinData(id, isReturn) as any);
-}
-
 
 export async function loadRechnungData(id: string) {
   const { data: inv } = await supabase.from('invoices' as any).select('*').eq('id', id).single() as any;
@@ -251,16 +243,20 @@ export async function buildErpPdf(
       },
     };
   }
-
-  let doc;
-  switch (type) {
-    case 'bestellung': doc = await loadBestellung(id); break;
-    case 'lieferschein': doc = await loadLieferschein(id, false); break;
-    case 'ruecklieferschein': doc = await loadLieferschein(id, true); break;
+  if (type === 'bestellung') {
+    const { renderPurchaseOverlay } = await import('./purchaseOverlay');
+    const data = await loadBestellungData(id) as any;
+    report?.('Originalvorlage anwenden', 0.65);
+    return pdfOutputAdapter(await renderPurchaseOverlay(data), `Bestellung-${data.poNo}`);
   }
-  report?.('Rendern', 0.8);
-  if (!doc) throw new Error('Unbekannter Belegtyp');
-  return doc;
+  if (type === 'lieferschein' || type === 'ruecklieferschein') {
+    const { renderDeliveryOverlay } = await import('./deliveryOverlay');
+    const data = await loadLieferscheinData(id, type === 'ruecklieferschein') as any;
+    report?.('Originalvorlage anwenden', 0.65);
+    const title = type === 'ruecklieferschein' ? 'Ruecklieferschein' : 'Lieferschein';
+    return pdfOutputAdapter(await renderDeliveryOverlay(data), `${title}-${data.deliveryNo}`);
+  }
+  throw new Error('Unbekannter Belegtyp');
 }
 
 export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
@@ -286,22 +282,31 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   }
   if (type === 'bestellung') {
     const { openPurchaseOverlayPdf } = await import('./purchaseOverlay');
-    const { data: p } = await supabase.from('purchase_orders' as any).select('*').eq('id', id).single() as any;
-    const { data: items } = await supabase.from('purchase_order_items' as any).select('*').eq('po_id', id).order('position') as any;
-    const sup = await loadSupplier(p.supplier_id);
-    const lineItems: any[] = (items || []).map((it: any) => ({
-      pos: it.position, artNr: it.art_nr, description: it.description || '',
-      quantity: it.qty_ordered, unit: 'ST', price: it.unit_price,
-      positionValue: it.unit_price != null ? Number(it.qty_ordered) * Number(it.unit_price) / 1000 : null,
-    }));
-    await openPurchaseOverlayPdf({
-      poNo: p.po_no || p.id.slice(0, 8), date: fmt.date(p.ordered_at || p.created_at),
-      expected: p.expected_at, party: sup.party, contact: sup.contact,
-      items: lineItems, currency: 'EUR', notes: p.notes,
-    } as any);
+    await openPurchaseOverlayPdf(await loadBestellungData(id) as any);
     return;
   }
   throw new Error('Unbekannter Belegtyp');
+}
+
+function pdfOutputAdapter(bytes: Uint8Array, title: string): PdfDocumentOutput {
+  const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+  return {
+    output: (outputType: 'blob') => {
+      if (outputType !== 'blob') throw new Error('Nicht unterstütztes PDF-Ausgabeformat');
+      return blob;
+    },
+    save: (fileName: string) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    },
+    internal: { getDocumentProperties: () => ({ title }) },
+  };
 }
 
 
