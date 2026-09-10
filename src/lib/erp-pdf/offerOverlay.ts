@@ -35,7 +35,7 @@ const MASKS_PX: [number, number, number, number][] = [
 ];
 
 const P = {
-  title:      { x: 335, top: 160, size: 11 },
+  title:      { x: 335, top: 160, size: 10 },
   recipient:  { x: 70,  top: 180, size: 9, lineHeight: 12 },
   metaLabel:  { x: 335, top: 180, size: 8, lineHeight: 12 },
   metaValue:  { x: 435, top: 180, size: 8, lineHeight: 12 },
@@ -44,7 +44,7 @@ const P = {
   pageValue:  { x: 500, top: 297, size: 8 },
   intro:      { x: 70,  top: 335, size: 9, lineHeight: 14 },
   headerRow:  { top: 426, size: 8 },
-  tableTop:   454,
+  tableTop:   458,
   tableBottom: 720,
   rowLine:    11,
   cols: {
@@ -58,7 +58,7 @@ const P = {
   condValue: { x: 165, size: 8, lineHeight: 12 },
   totalLabel:{ x: 420, size: 10 },
   totalValue:{ x: 560, size: 10 },
-  closing:   { x: 70, top: 730, size: 8, lineHeight: 12 },
+  closing:   { x: 70, top: 760, size: 8, lineHeight: 12 },
 };
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
@@ -235,7 +235,7 @@ export async function renderOfferOverlay(
     }
 
     // Tabellen-Header
-    page.drawRectangle({ x: 45, y: topY(441), width: 525, height: 18, color: SHADE });
+    page.drawRectangle({ x: 45, y: topY(441), width: 525, height: 16, color: SHADE });
     txt(page, 'Pos',           P.cols.pos,     P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
     txt(page, 'Art.-Nr.',      P.cols.article, P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
     txt(page, 'Menge',         P.cols.menge,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
@@ -264,7 +264,7 @@ export async function renderOfferOverlay(
 
     // Konditionen + Summe + Closing nur auf letzter Seite
     if (i === totalPages - 1) {
-      let condY = Math.max(cursor + 18, 570);
+      let condY = Math.max(cursor + 18, 650);
       const drawCond = (label: string, value: string) => {
         txt(page, label, P.condLabel.x, condY, fonts, { size: P.condLabel.size, bold: true });
         txt(page, value, P.condValue.x, condY, fonts, { size: P.condValue.size });

@@ -12,13 +12,17 @@ export type ErpDocType = 'angebot' | 'ab' | 'bestellung' | 'lieferschein' | 'rue
 
 async function loadCompanyParty(companyId: string | null | undefined, fallbackName?: string | null): Promise<Party & { customerNo?: string | null }> {
   if (!companyId) return { name: fallbackName || '', lines: [] };
-  const { data } = await supabase.from('companies' as any).select('name, street, postal_code, city, country, customer_no').eq('id', companyId).maybeSingle() as any;
+  const { data } = await supabase.from('companies' as any).select('name, address, billing_street, billing_zip, billing_city, billing_country, country, customer_no').eq('id', companyId).maybeSingle() as any;
   if (!data) return { name: fallbackName || '', lines: [] };
   const lines: string[] = [];
-  if (data.street) lines.push(data.street);
-  const cityLine = [data.postal_code, data.city].filter(Boolean).join(' ');
-  if (cityLine) lines.push(cityLine);
-  if (data.country) lines.push(data.country);
+  if (data.billing_street || data.billing_zip || data.billing_city) {
+    if (data.billing_street) lines.push(data.billing_street);
+    const cityLine = [data.billing_zip, data.billing_city].filter(Boolean).join(' ');
+    if (cityLine) lines.push(cityLine);
+  } else if (data.address) {
+    lines.push(...String(data.address).split('\n').map((line) => line.trim()).filter(Boolean));
+  }
+  if (data.billing_country || data.country) lines.push(data.billing_country || data.country);
   return { name: data.name || fallbackName || '', lines, customerNo: data.customer_no };
 }
 async function loadContact(contactId: string | null | undefined): Promise<ContactInfo> {
@@ -42,10 +46,11 @@ async function loadSupplier(supplierId: string): Promise<{ party: Party; contact
 export async function loadAngebotData(id: string) {
   const { data: o } = await supabase.from('offers' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('offer_items' as any).select('*').eq('offer_id', id).order('sort_order') as any;
+  const { data: deal } = await supabase.from('deals' as any).select('title').eq('id', o.deal_id).maybeSingle() as any;
   const party = await loadCompanyParty(o.company_id);
   const contact = await loadContact(o.primary_contact_id);
   contact.customerNo = party.customerNo;
-  contact.subject = o.subject || o.notes || undefined;
+  contact.subject = deal?.title || undefined;
   const lineItems: LineItem[] = (items || []).map((it: any, idx: number) => {
     const val = Number(it.quantity) * Number(it.unit_price) * (1 - Number(it.discount_pct || 0) / 100);
     return {
