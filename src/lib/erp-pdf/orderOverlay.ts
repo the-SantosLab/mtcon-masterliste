@@ -16,17 +16,13 @@ const WHITE = rgb(1, 1, 1);
 const SHADE = rgb(0.86, 0.86, 0.86);
 
 const MASKS_P1: [number, number, number, number][] = [
-  [335, 145, 570, 165],
-  [ 45, 165, 330, 245],
-  [335, 165, 570, 290],
-  [ 45, 310, 570, 365],
-  [ 45, 365, 570, 390],
-  [ 45, 390, 570, 755],
+  [330, 140, 575, 315],
+  [ 45, 145, 330, 300],
+  [ 45, 305, 575, 755],
 ];
 const MASKS_PX: [number, number, number, number][] = [
-  [335, 145, 570, 165],
-  [335, 165, 570, 205],
-  [ 45, 210, 570, 755],
+  [330, 140, 575, 210],
+  [ 45, 210, 575, 755],
 ];
 
 const P = {
@@ -168,9 +164,6 @@ export async function renderOrderOverlay(
     txt(page, `Auftragsbestätigung Nr. ${d.abNo}`, P.title.x, P.title.top, fonts,
       { size: P.title.size, bold: true });
 
-    txt(page, `${i + 1} von ${totalPages}`, P.pageValue.x, P.pageValue.top, fonts, { size: P.pageValue.size });
-
-
     if (isFirst) {
       const recipientLines = [d.party.name, ...d.party.lines].filter(Boolean);
       recipientLines.forEach((line, li) => {
@@ -186,9 +179,7 @@ export async function renderOrderOverlay(
         ['E-Mail',          d.contact.email],
         ['Lieferanten-Nr',  d.contact.supplierNo],
         ['USt-ID-Nr',       d.contact.vatId],
-        ['Datum',            d.date],
         ['Betreff',         d.contact.subject],
-
       ];
       let row = 0;
       for (const [label, value] of metaRows) {
@@ -208,6 +199,11 @@ export async function renderOrderOverlay(
         txt(page, l, P.intro.x, P.intro.top + li * P.intro.lineHeight, fonts, { size: P.intro.size });
       });
     }
+
+    const dateTop = isFirst ? P.dateLabel.top : 179;
+    txt(page, 'Datum', P.dateLabel.x, dateTop, fonts, { size: P.dateLabel.size, bold: true });
+    txt(page, d.date, P.dateValue.x, dateTop, fonts, { size: P.dateValue.size });
+    txt(page, `Seite ${i + 1} von ${totalPages}`, P.pageValue.x, dateTop, fonts, { size: P.pageValue.size });
 
     if (i < pagesOfBlocks.length) {
     page.drawRectangle({ x: 45, y: topY(384), width: 525, height: 18, color: SHADE });
