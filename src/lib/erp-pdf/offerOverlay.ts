@@ -58,7 +58,7 @@ const P = {
   condValue: { x: 165, size: 8, lineHeight: 12 },
   totalLabel:{ x: 420, size: 10 },
   totalValue:{ x: 560, size: 10 },
-  closing:   { x: 70, top: 760, size: 8, lineHeight: 12 },
+  closing:   { x: 70, top: 720, size: 8, lineHeight: 12 },
 };
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
@@ -235,7 +235,7 @@ export async function renderOfferOverlay(
     }
 
     // Tabellen-Header
-    page.drawRectangle({ x: 45, y: topY(441), width: 525, height: 16, color: SHADE });
+    page.drawRectangle({ x: 45, y: topY(438), width: 525, height: 18, color: SHADE });
     txt(page, 'Pos',           P.cols.pos,     P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
     txt(page, 'Art.-Nr.',      P.cols.article, P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
     txt(page, 'Menge',         P.cols.menge,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
