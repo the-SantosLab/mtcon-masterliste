@@ -3,22 +3,27 @@
 import { supabase } from '@/integrations/supabase/client';
 import { fmt } from './renderer';
 import {
-  buildAngebotPdf, buildABPdf, buildBestellungPdf,
+  buildABPdf, buildBestellungPdf,
   buildLieferscheinPdf, buildRechnungPdf, Party, ContactInfo, LineItem,
 } from './generators';
+import type { PdfDocumentOutput } from '@/lib/pdfJobs';
 
 export type ErpDocType = 'angebot' | 'ab' | 'bestellung' | 'lieferschein' | 'ruecklieferschein' | 'rechnung';
 
-async function loadCompanyParty(companyId: string | null | undefined, fallbackName?: string | null): Promise<Party> {
+async function loadCompanyParty(companyId: string | null | undefined, fallbackName?: string | null): Promise<Party & { customerNo?: string | null }> {
   if (!companyId) return { name: fallbackName || '', lines: [] };
-  const { data } = await supabase.from('companies' as any).select('name, street, postal_code, city, country').eq('id', companyId).maybeSingle() as any;
+  const { data } = await supabase.from('companies' as any).select('name, address, billing_street, billing_zip, billing_city, billing_country, country, customer_no').eq('id', companyId).maybeSingle() as any;
   if (!data) return { name: fallbackName || '', lines: [] };
   const lines: string[] = [];
-  if (data.street) lines.push(data.street);
-  const cityLine = [data.postal_code, data.city].filter(Boolean).join(' ');
-  if (cityLine) lines.push(cityLine);
-  if (data.country) lines.push(data.country);
-  return { name: data.name || fallbackName || '', lines };
+  if (data.billing_street || data.billing_zip || data.billing_city) {
+    if (data.billing_street) lines.push(data.billing_street);
+    const cityLine = [data.billing_zip, data.billing_city].filter(Boolean).join(' ');
+    if (cityLine) lines.push(cityLine);
+  } else if (data.address) {
+    lines.push(...String(data.address).split('\n').map((line) => line.trim()).filter(Boolean));
+  }
+  if (data.billing_country || data.country) lines.push(data.billing_country || data.country);
+  return { name: data.name || fallbackName || '', lines, customerNo: data.customer_no };
 }
 async function loadContact(contactId: string | null | undefined): Promise<ContactInfo> {
   if (!contactId) return {};
@@ -38,11 +43,14 @@ async function loadSupplier(supplierId: string): Promise<{ party: Party; contact
   };
 }
 
-async function loadAngebotData(id: string) {
+export async function loadAngebotData(id: string) {
   const { data: o } = await supabase.from('offers' as any).select('*').eq('id', id).single() as any;
   const { data: items } = await supabase.from('offer_items' as any).select('*').eq('offer_id', id).order('sort_order') as any;
+  const { data: deal } = await supabase.from('deals' as any).select('title').eq('id', o.deal_id).maybeSingle() as any;
   const party = await loadCompanyParty(o.company_id);
   const contact = await loadContact(o.primary_contact_id);
+  contact.customerNo = party.customerNo;
+  contact.subject = deal?.title || undefined;
   const lineItems: LineItem[] = (items || []).map((it: any, idx: number) => {
     const val = Number(it.quantity) * Number(it.unit_price) * (1 - Number(it.discount_pct || 0) / 100);
     return {
@@ -57,10 +65,6 @@ async function loadAngebotData(id: string) {
     paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
     deliveryTerms: 'ab Werk', notes: o.notes,
   };
-}
-
-async function loadAngebot(id: string) {
-  return buildAngebotPdf(await loadAngebotData(id) as any);
 }
 
 async function loadAB(id: string) {
@@ -168,11 +172,38 @@ export async function buildErpPdf(
   type: ErpDocType,
   id: string,
   report?: (phase: string, progress: number) => void,
-) {
+): Promise<PdfDocumentOutput> {
   report?.('Daten laden', 0.15);
+  if (type === 'angebot') {
+    const { renderOfferOverlay } = await import('./offerOverlay');
+    const data = await loadAngebotData(id) as any;
+    report?.('Originalvorlage anwenden', 0.65);
+    const bytes = await renderOfferOverlay(data);
+    const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+    const download = (fileName: string) => {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    };
+    return {
+      output: (outputType: 'blob') => {
+        if (outputType !== 'blob') throw new Error('Nicht unterstütztes PDF-Ausgabeformat');
+        return blob;
+      },
+      save: download,
+      internal: {
+        getDocumentProperties: () => ({ title: `Angebot-${data.offerNo}` }),
+      },
+    };
+  }
+
   let doc;
   switch (type) {
-    case 'angebot': doc = await loadAngebot(id); break;
     case 'ab': doc = await loadAB(id); break;
     case 'bestellung': doc = await loadBestellung(id); break;
     case 'lieferschein': doc = await loadLieferschein(id, false); break;
@@ -180,7 +211,8 @@ export async function buildErpPdf(
     case 'rechnung': doc = await loadRechnung(id); break;
   }
   report?.('Rendern', 0.8);
-  return doc!;
+  if (!doc) throw new Error('Unbekannter Belegtyp');
+  return doc;
 }
 
 export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
@@ -240,11 +272,7 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
     } as any);
     return;
   }
-
-
-  const doc = await buildErpPdf(type, id);
-  const url = doc.output('bloburl');
-  window.open(url as any, '_blank');
+  throw new Error('Unbekannter Belegtyp');
 }
 
 
