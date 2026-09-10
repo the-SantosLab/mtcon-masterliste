@@ -4,7 +4,7 @@
 // (DE/EN) neu gezeichnet. Logo, Briefkopf, Rahmen und Footer bleiben aus der
 // Vorlage unverändert.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
-import templateAsset from '@/assets/invoice-template.pdf.asset.json';
+import templateUrl from '@/assets/invoice-template.pdf?url';
 import { fmt } from './renderer';
 import type { RechnungData } from './generators';
 
@@ -15,6 +15,7 @@ const topY = (yFromTop: number) => PAGE_H - yFromTop;
 const COLOR_TEXT = rgb(0, 0, 0);
 const COLOR_RED = rgb(0.86, 0.08, 0.24);
 const WHITE = rgb(1, 1, 1);
+const SHADE = rgb(0.86, 0.86, 0.86);
 
 // ---- Runtime-Masken (weiße Rechtecke über alle statisch bedruckten Zonen) ----
 // [x1, yTop1, x2, yTop2]
@@ -32,8 +33,8 @@ const MASKS_P1: [number, number, number, number][] = [
 ];
 const MASKS_P2: [number, number, number, number][] = [
   [340, 128, 570, 158],   // Titel "Invoice No. …"
-  [340, 155, 570, 178],   // Date-Label + Wert + Seitenzähler
-  [ 45, 225, 570, 900],   // gesamter Factoring-/Hinweis-Block
+  [340, 155, 570, 205],   // Date-Label + Wert + Seitenzähler
+  [ 45, 195, 570, 755],   // Fälligkeits-/Factoring-/Hinweis-Block; Footer bleibt erhalten
 ];
 
 // ---- Feldpositionen (baseline ≈ yFromTop + size*0.85) ----
@@ -159,7 +160,7 @@ const FACTORING = {
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplate(): Promise<ArrayBuffer> {
-  const res = await fetch(templateAsset.url);
+  const res = await fetch(templateUrl);
   if (!res.ok) throw new Error(`Rechnungs-Vorlage konnte nicht geladen werden (${res.status})`);
   return res.arrayBuffer();
 }
@@ -237,6 +238,7 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
 
   // 2) Titel + Meta-Labels/Werte (Seite 1)
   const titleKey = d.docKind === 'credit_note' ? 'creditNoteNo' : d.docKind === 'storno' ? 'stornoNo' : 'invoiceNo';
+  page1.drawRectangle({ x: 340, y: topY(158), width: 230, height: 18, color: SHADE });
   txt(page1, `${t(titleKey, lang)} ${d.invoiceNo}`,
     P1.invoiceTitle.x, P1.invoiceTitle.top, fonts,
     { size: P1.invoiceTitle.size, bold: true });
@@ -279,6 +281,7 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
   txt(page1, introText, P1.intro.x, P1.intro.top, fonts,
     { size: P1.intro.size });
 
+  page1.drawRectangle({ x: 45, y: topY(303), width: 525, height: 20, color: SHADE });
   txt(page1, t('colDn', lang),      P1.cols.dn,      P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true });
   txt(page1, t('colArticle', lang), P1.cols.article, P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true });
   txt(page1, t('colQty', lang),     P1.cols.qty,     P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true, align: 'right' });
@@ -356,6 +359,7 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
       P1.paymentLabel.x, noteY, fonts, { size: 8.5 });
   }
   if (factoringPage) {
+    factoringPage.drawRectangle({ x: 340, y: topY(158), width: 230, height: 18, color: SHADE });
     txt(factoringPage, `${t('invoiceNo', lang)} ${d.invoiceNo}`,
       P2.invoiceTitle.x, P2.invoiceTitle.top, fonts,
       { size: P2.invoiceTitle.size, bold: true });
@@ -368,9 +372,9 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
 
     // Factoring-Block in gewählter Sprache
     let y = P2.factoring.top;
-    for (const para of FACTORING[lang]) {
+    for (const [paraIndex, para] of FACTORING[lang].entries()) {
       const lines = para === '' ? [''] : wrap(para, bold, P2.factoring.size, P2.factoring.width);
-      const isRedBlock = y < P2.factoring.top + 260; // obere Hälfte ist im Original rot/fett
+      const isRedBlock = paraIndex <= 8;
       for (const line of lines) {
         if (line !== '') {
           txt(factoringPage, line, P2.factoring.x, y, fonts, {
