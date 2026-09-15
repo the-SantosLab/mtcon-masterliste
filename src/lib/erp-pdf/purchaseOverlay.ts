@@ -5,6 +5,7 @@ import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-
 import templateUrl from '@/assets/purchase-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
+import { drawStatusStamp, type DocStatusInfo } from './statusStamp';
 import type { BestellungData } from './generators';
 
 const PAGE_H = 842;
@@ -107,7 +108,7 @@ interface PosBlock {
 
 export async function renderPurchaseOverlay(
   d: BestellungData,
-  opts: { demo?: boolean; scope?: TemplateScope } = {},
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
 ): Promise<Uint8Array> {
   const tplBytes = await loadTemplate(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
@@ -252,10 +253,12 @@ export async function renderPurchaseOverlay(
     }
   }
 
+  drawStatusStamp(pdf, regular, opts.statusInfo);
+
   return await pdf.save();
 }
 
-export async function openPurchaseOverlayPdf(data: BestellungData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<void> {
+export async function openPurchaseOverlayPdf(data: BestellungData, opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {}): Promise<void> {
   const bytes = await renderPurchaseOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);

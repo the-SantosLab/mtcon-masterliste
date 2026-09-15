@@ -6,6 +6,7 @@ import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-
 import templateUrl from '@/assets/order-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
+import { drawStatusStamp, type DocStatusInfo } from './statusStamp';
 import type { ABData } from './generators';
 
 const PAGE_H = 842;
@@ -103,7 +104,7 @@ interface PosBlock {
 
 export async function renderOrderOverlay(
   d: ABData,
-  opts: { demo?: boolean; scope?: TemplateScope } = {},
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
 ): Promise<Uint8Array> {
   const tplBytes = await loadTemplate(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
@@ -284,10 +285,12 @@ export async function renderOrderOverlay(
     }
   }
 
+  drawStatusStamp(pdf, regular, opts.statusInfo);
+
   return await pdf.save();
 }
 
-export async function openOrderOverlayPdf(data: ABData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<void> {
+export async function openOrderOverlayPdf(data: ABData, opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {}): Promise<void> {
   const bytes = await renderOrderOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
