@@ -166,6 +166,7 @@ export async function buildErpPdf(
   report?: (phase: string, progress: number) => void,
 ): Promise<PdfDocumentOutput> {
   report?.('Daten laden', 0.15);
+  void logErpPdfPrint(type, id);
   if (type === 'angebot') {
     const { renderOfferOverlay } = await import('./offerOverlay');
     const data = await loadAngebotData(id) as any;
@@ -263,7 +264,30 @@ export async function buildErpPdf(
   throw new Error('Unbekannter Belegtyp');
 }
 
+/** Protokolliert eine PDF-Erzeugung im verknüpften Vorgang (kein Statuswechsel). */
+export async function logErpPdfPrint(type: ErpDocType, id: string): Promise<void> {
+  try {
+    const labels: Record<ErpDocType, string> = {
+      angebot: 'Angebot', ab: 'Auftragsbestätigung', bestellung: 'Bestellung',
+      lieferschein: 'Lieferschein', ruecklieferschein: 'Rücklieferschein', rechnung: 'Rechnung',
+    };
+    let caseId: string | null = null;
+    if (type === 'angebot') {
+      const { data } = await supabase.from('offers' as any).select('case_id').eq('id', id).maybeSingle() as any;
+      caseId = data?.case_id ?? null;
+    } else if (type === 'ab') {
+      const { data } = await supabase.from('orders' as any).select('case_id').eq('id', id).maybeSingle() as any;
+      caseId = data?.case_id ?? null;
+    }
+    if (!caseId) return;
+    await (supabase as any).rpc('log_case_pdf_print', { _case_id: caseId, _doc_label: labels[type] });
+  } catch {
+    /* Protokollierung darf die PDF-Ausgabe nie blockieren */
+  }
+}
+
 export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
+  void logErpPdfPrint(type, id);
   if (type === 'rechnung') {
     const { openInvoiceOverlayPdf } = await import('./invoiceOverlay');
     const invData = await loadRechnungData(id) as any;

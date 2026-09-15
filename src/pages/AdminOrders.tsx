@@ -16,6 +16,7 @@ import { ErpDocPdfButton } from "@/components/ErpDocPdfButton";
 import { PartnerPicker } from "@/components/PartnerPicker";
 import { OrderDemoDialog } from "@/components/OrderDemoDialog";
 import { PurchaseDemoDialog } from "@/components/PurchaseDemoDialog";
+import { CaseLinkSelect } from "@/components/erp/CaseLinkSelect";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -169,6 +170,7 @@ export default function AdminOrders() {
         notes: selected.notes,
         status: selected.status,
         order_kind: selected.order_kind,
+        case_id: (selected as any).case_id ?? null,
       })
       .eq("id", selected.id);
     if (error) return toast.error(error.message);
@@ -373,6 +375,15 @@ export default function AdminOrders() {
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">
                     Auswählen, neu anlegen oder leeren. Freitextfelder unten werden beim Auswählen vorbefüllt.
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <CaseLinkSelect
+                    value={(selected as any).case_id ?? null}
+                    onChange={(v) => setSelected({ ...(selected as any), case_id: v })}
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Bei Abschluss des Auftrags wird der verknüpfte Vorgang automatisch abgeschlossen.
                   </p>
                 </div>
                 <div>

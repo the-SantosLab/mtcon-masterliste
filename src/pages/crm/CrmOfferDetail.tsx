@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllCompanies } from '@/lib/crmData';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
+import { CaseLinkSelect } from '@/components/erp/CaseLinkSelect';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -153,6 +154,7 @@ export default function CrmOfferDetail() {
     const total = totals.gross;
     const { error: oe } = await supabase.from('offers').update({
       company_id: offer.company_id || null,
+      case_id: offer.case_id || null,
       primary_contact_id: offer.primary_contact_id || null,
       delivery_address: offer.delivery_address || null,
       payment_terms: offer.payment_terms || null,
@@ -318,6 +320,7 @@ export default function CrmOfferDetail() {
               <SelectContent>{filteredContacts.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+          <CaseLinkSelect value={offer.case_id ?? null} onChange={(v) => setOffer({ ...offer, case_id: v })} />
           <div className="space-y-1.5 md:col-span-3">
             <Label className="text-[11px] text-muted-foreground">Lieferadresse</Label>
             <Textarea value={offer.delivery_address ?? ''} onChange={e => setOffer({ ...offer, delivery_address: e.target.value })} className="text-xs min-h-[60px]" />

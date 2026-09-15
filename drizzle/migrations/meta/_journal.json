@@ -127,6 +127,13 @@
       "when": 1789474763808,
       "tag": "0017_erp_template_assignments",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789476276319,
+      "tag": "0018_link_documents_to_cases_autostatus",
+      "breakpoints": true
     }
   ]
 }
