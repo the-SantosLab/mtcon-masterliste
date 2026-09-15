@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,132 @@ import { Download, Upload, CheckCircle2, Trash2, FileText, Pencil, Check, X, Fil
 import { toast } from 'sonner';
 import { TEMPLATE_BUCKET, TEMPLATE_DOC_TYPES, TemplateDocType, clearTemplateCache } from '@/lib/erp-pdf/templateSource';
 import { openSampleTemplatePdf } from '@/lib/erp-pdf/sampleDocs';
+
+interface CaseRow {
+  id: string;
+  case_number: string | null;
+  project_name: string;
+  client_name: string | null;
+  status: string;
+  due_at: string | null;
+  created_at: string;
+}
+
+type StatusGroup = 'alle' | 'offen' | 'in_bearbeitung' | 'abgeschlossen';
+
+const STATUS_GROUPS: { value: StatusGroup; label: string; statuses: string[] }[] = [
+  { value: 'alle', label: 'Alle', statuses: [] },
+  { value: 'offen', label: 'Offen', statuses: ['nicht_begonnen', 'in_planung'] },
+  { value: 'in_bearbeitung', label: 'In Bearbeitung', statuses: ['in_arbeit', 'in_verzug', 'blocked', 'ready_for_review'] },
+  { value: 'abgeschlossen', label: 'Abgeschlossen', statuses: ['abgeschlossen', 'verworfen', 'archiv'] },
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  nicht_begonnen: 'Nicht begonnen',
+  in_planung: 'In Planung',
+  in_arbeit: 'In Arbeit',
+  in_verzug: 'In Verzug',
+  blocked: 'Blockiert',
+  ready_for_review: 'Zur Prüfung',
+  abgeschlossen: 'Abgeschlossen',
+  verworfen: 'Verworfen',
+  archiv: 'Archiv',
+};
+
+function CasesOverview() {
+  const navigate = useNavigate();
+  const [cases, setCases] = useState<CaseRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusGroup, setStatusGroup] = useState<StatusGroup>('alle');
+  const [company, setCompany] = useState<string>('alle');
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('id, case_number, project_name, client_name, status, due_at, created_at')
+        .eq('deleted', false)
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) toast.error(error.message);
+      setCases((data || []) as CaseRow[]);
+      setLoading(false);
+    })();
+  }, []);
+
+  const companies = useMemo(() => {
+    const set = new Set<string>();
+    cases.forEach((c) => { if (c.client_name) set.add(c.client_name); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'de'));
+  }, [cases]);
+
+  const filtered = useMemo(() => {
+    const group = STATUS_GROUPS.find((g) => g.value === statusGroup);
+    return cases.filter((c) => {
+      if (group && group.statuses.length > 0 && !group.statuses.includes(c.status)) return false;
+      if (company !== 'alle' && c.client_name !== company) return false;
+      return true;
+    });
+  }, [cases, statusGroup, company]);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-col gap-3 space-y-0 md:flex-row md:items-center md:justify-between">
+        <CardTitle className="text-base">Vorgänge</CardTitle>
+        <div className="flex flex-wrap gap-2">
+          <Select value={statusGroup} onValueChange={(v) => setStatusGroup(v as StatusGroup)}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {STATUS_GROUPS.map((g) => (
+                <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={company} onValueChange={setCompany}>
+            <SelectTrigger className="w-56"><SelectValue placeholder="Firma" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alle">Alle Firmen</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Lade …</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Keine Vorgänge für diese Filter gefunden.</p>
+        ) : (
+          <div className="divide-y">
+            {filtered.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => navigate(`/cases/${c.id}`)}
+                className="flex w-full flex-wrap items-center gap-2 py-2 text-left hover:bg-muted/50 rounded px-2 -mx-2"
+              >
+                <span className="text-xs text-muted-foreground w-28 shrink-0">
+                  {c.case_number || '—'}
+                </span>
+                <span className="text-sm font-medium truncate flex-1 min-w-[10rem]">{c.project_name}</span>
+                <span className="text-xs text-muted-foreground w-44 truncate">
+                  {c.client_name || '—'}
+                </span>
+                {c.due_at && (
+                  <span className="text-xs text-muted-foreground">
+                    Fällig: {new Date(c.due_at).toLocaleDateString('de-DE')}
+                  </span>
+                )}
+                <Badge variant="outline">{STATUS_LABELS[c.status] || c.status}</Badge>
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 interface TemplateRow {
   id: string;
@@ -157,6 +284,8 @@ export default function AdminPdfTemplates() {
             Vorlagen für Angebot, Auftragsbestätigung, Bestellung, Lieferschein und Rechnung verwalten.
           </p>
         </div>
+
+        <CasesOverview />
 
         <Card>
           <CardHeader><CardTitle className="text-base">Neue Vorlage hochladen</CardTitle></CardHeader>
