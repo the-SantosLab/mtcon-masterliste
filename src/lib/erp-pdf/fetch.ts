@@ -188,7 +188,7 @@ export async function loadDocStatusInfo(type: ErpDocType, id: string): Promise<D
     if (withCase && data?.case_id) {
       const { data: c } = await supabase.from('cases' as any)
         .select('case_number, status').eq('id', data.case_id).maybeSingle() as any;
-      if (c) { info.caseNo = c.case_number; info.caseStatus = labelOfStatus(c.status); }
+      if (c) { info.caseId = data.case_id; info.caseNo = c.case_number; info.caseStatus = labelOfStatus(c.status); }
     }
     return info;
   } catch {
