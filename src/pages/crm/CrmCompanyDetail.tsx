@@ -111,6 +111,7 @@ export default function CrmCompanyDetail() {
           <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
           <TabsTrigger value="issos-auf">ISSOS-Terminaufträge</TabsTrigger>
           <TabsTrigger value="protection">Projektschutz</TabsTrigger>
+          <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
 
         </TabsList>
 
@@ -315,6 +316,10 @@ export default function CrmCompanyDetail() {
 
         <TabsContent value="protection" className="mt-4 max-w-3xl">
           <ProjectProtectionTab companyId={company.id} />
+        </TabsContent>
+
+        <TabsContent value="templates" className="mt-4 max-w-3xl">
+          <TemplateAssignment scope="company" scopeId={company.id} title="PDF-Vorlagen dieser Firma" />
         </TabsContent>
       </Tabs>
 

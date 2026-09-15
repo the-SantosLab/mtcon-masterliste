@@ -237,6 +237,7 @@ export default function CrmDealDetail() {
           <TabsTrigger value="activities">Aktivitäten</TabsTrigger>
           <TabsTrigger value="offers">Angebote</TabsTrigger>
           <TabsTrigger value="files">Dateien</TabsTrigger>
+          <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -298,6 +299,10 @@ export default function CrmDealDetail() {
 
         <TabsContent value="files" className="mt-4">
           <p className="text-xs text-muted-foreground">Datei-Anhänge: in Vorbereitung.</p>
+        </TabsContent>
+
+        <TabsContent value="templates" className="mt-4 max-w-3xl">
+          <TemplateAssignment scope="deal" scopeId={deal.id} title="PDF-Vorlagen dieses Deals" />
         </TabsContent>
       </Tabs>
 
