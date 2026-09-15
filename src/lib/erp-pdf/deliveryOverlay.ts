@@ -5,7 +5,7 @@
 // wiederholtem Lieferschein-Nr.-Kopf ab Seite 2 (BUG-2026-0139).
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/delivery-template.pdf?url';
-import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
+import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
 import type { LieferscheinData } from './generators';
 
@@ -65,8 +65,8 @@ const P = {
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
-async function loadTemplate(): Promise<ArrayBuffer> {
-  return loadErpTemplateBytes('lieferschein', templateUrl);
+async function loadTemplate(scope?: TemplateScope): Promise<ArrayBuffer> {
+  return loadErpTemplateBytes('lieferschein', templateUrl, scope);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
@@ -121,9 +121,9 @@ interface PosBlock {
 
 export async function renderDeliveryOverlay(
   d: LieferscheinData,
-  opts: { demo?: boolean } = {},
+  opts: { demo?: boolean; scope?: TemplateScope } = {},
 ): Promise<Uint8Array> {
-  const tplBytes = await loadTemplate();
+  const tplBytes = await loadTemplate(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -289,7 +289,7 @@ export async function renderDeliveryOverlay(
 /** Öffnet den Overlay-Lieferschein in einem neuen Tab (Anchor-Klick, popup-safe). */
 export async function openDeliveryOverlayPdf(
   data: LieferscheinData,
-  opts: { demo?: boolean } = {},
+  opts: { demo?: boolean; scope?: TemplateScope } = {},
 ): Promise<void> {
   const bytes = await renderDeliveryOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });

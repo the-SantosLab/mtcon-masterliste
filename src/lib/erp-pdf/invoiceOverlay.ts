@@ -5,7 +5,7 @@
 // Vorlage unverändert.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/invoice-template.pdf?url';
-import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
+import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
 import type { RechnungData } from './generators';
 
@@ -160,8 +160,8 @@ const FACTORING = {
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
-async function loadTemplate(): Promise<ArrayBuffer> {
-  return loadErpTemplateBytes('rechnung', templateUrl);
+async function loadTemplate(scope?: TemplateScope): Promise<ArrayBuffer> {
+  return loadErpTemplateBytes('rechnung', templateUrl, scope);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
@@ -219,8 +219,8 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 }
 
 /** Rechnung als PDF-Bytes; nutzt Overlay auf Original-Vorlage. */
-export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean } = {}): Promise<Uint8Array> {
-  const tplBytes = await loadTemplate();
+export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<Uint8Array> {
+  const tplBytes = await loadTemplate(opts.scope);
   const pdf = await PDFDocument.load(tplBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -414,7 +414,7 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
 /** Öffnet die Overlay-Rechnung in einem neuen Tab.
  *  Nutzt einen Anchor-Klick statt window.open, da Chrome / AdBlocker
  *  asynchron geöffnete Popups oft mit ERR_BLOCKED_BY_CLIENT blockieren. */
-export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean } = {}): Promise<void> {
+export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<void> {
   const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
