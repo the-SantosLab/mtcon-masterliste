@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fmt } from './renderer';
 import type { Party, ContactInfo, LineItem } from './generators';
 import type { PdfDocumentOutput } from '@/lib/pdfJobs';
+import type { DocStatusInfo } from './statusStamp';
 
 export type ErpDocType = 'angebot' | 'ab' | 'bestellung' | 'lieferschein' | 'ruecklieferschein' | 'rechnung';
 
@@ -160,6 +161,41 @@ export async function loadRechnungData(id: string) {
   };
 }
 
+const DOC_TABLE: Record<ErpDocType, string> = {
+  angebot: 'offers', ab: 'orders', rechnung: 'invoices',
+  lieferschein: 'deliveries', ruecklieferschein: 'deliveries', bestellung: 'purchase_orders',
+};
+const STATUS_LABEL: Record<string, string> = {
+  entwurf: 'Entwurf', versendet: 'Versendet', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt', abgelaufen: 'Abgelaufen',
+  draft: 'Entwurf', active: 'Aktiv', in_progress: 'In Bearbeitung', confirmed: 'Bestätigt',
+  partially_delivered: 'Teilgeliefert', delivered: 'Geliefert', partially_invoiced: 'Teilberechnet',
+  invoiced: 'Berechnet', completed: 'Abgeschlossen', cancelled: 'Storniert',
+  open: 'Offen', paid: 'Bezahlt', overdue: 'Überfällig', sent: 'Versendet', received: 'Eingegangen',
+  nicht_begonnen: 'Nicht begonnen', in_planung: 'In Planung', in_arbeit: 'In Arbeit', in_verzug: 'In Verzug',
+  abgeschlossen: 'Abgeschlossen', ready_for_review: 'Zur Prüfung', blocked: 'Blockiert',
+  verworfen: 'Verworfen', archiv: 'Archiv',
+};
+const labelOfStatus = (s?: string | null) => (s ? STATUS_LABEL[s] ?? s : null);
+
+/** Lädt Beleg- und Vorgangsstatus für die Statuszeile auf dem PDF. */
+export async function loadDocStatusInfo(type: ErpDocType, id: string): Promise<DocStatusInfo> {
+  try {
+    const table = DOC_TABLE[type];
+    const withCase = type === 'angebot' || type === 'ab';
+    const { data } = await supabase.from(table as any)
+      .select(withCase ? 'status, case_id' : 'status').eq('id', id).maybeSingle() as any;
+    const info: DocStatusInfo = { docStatus: labelOfStatus(data?.status) };
+    if (withCase && data?.case_id) {
+      const { data: c } = await supabase.from('cases' as any)
+        .select('case_number, status').eq('id', data.case_id).maybeSingle() as any;
+      if (c) { info.caseNo = c.case_number; info.caseStatus = labelOfStatus(c.status); }
+    }
+    return info;
+  } catch {
+    return {};
+  }
+}
+
 export async function buildErpPdf(
   type: ErpDocType,
   id: string,
@@ -171,7 +207,7 @@ export async function buildErpPdf(
     const { renderOfferOverlay } = await import('./offerOverlay');
     const data = await loadAngebotData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    const bytes = await renderOfferOverlay(data, { scope: data.scope });
+    const bytes = await renderOfferOverlay(data, { scope: data.scope, statusInfo: await loadDocStatusInfo(type, id) });
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     const download = (fileName: string) => {
       const url = URL.createObjectURL(blob);
@@ -198,7 +234,7 @@ export async function buildErpPdf(
     const { renderOrderOverlay } = await import('./orderOverlay');
     const data = await loadABData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    const bytes = await renderOrderOverlay(data, { scope: data.scope });
+    const bytes = await renderOrderOverlay(data, { scope: data.scope, statusInfo: await loadDocStatusInfo(type, id) });
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     const download = (fileName: string) => {
       const url = URL.createObjectURL(blob);
@@ -225,7 +261,7 @@ export async function buildErpPdf(
     const { renderInvoiceOverlay } = await import('./invoiceOverlay');
     const data = await loadRechnungData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    const bytes = await renderInvoiceOverlay(data, { scope: data.scope });
+    const bytes = await renderInvoiceOverlay(data, { scope: data.scope, statusInfo: await loadDocStatusInfo(type, id) });
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     const download = (fileName: string) => {
       const url = URL.createObjectURL(blob);
@@ -252,14 +288,14 @@ export async function buildErpPdf(
     const { renderPurchaseOverlay } = await import('./purchaseOverlay');
     const data = await loadBestellungData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    return pdfOutputAdapter(await renderPurchaseOverlay(data), `Bestellung-${data.poNo}`);
+    return pdfOutputAdapter(await renderPurchaseOverlay(data, { statusInfo: await loadDocStatusInfo(type, id) }), `Bestellung-${data.poNo}`);
   }
   if (type === 'lieferschein' || type === 'ruecklieferschein') {
     const { renderDeliveryOverlay } = await import('./deliveryOverlay');
     const data = await loadLieferscheinData(id, type === 'ruecklieferschein') as any;
     report?.('Originalvorlage anwenden', 0.65);
     const title = type === 'ruecklieferschein' ? 'Ruecklieferschein' : 'Lieferschein';
-    return pdfOutputAdapter(await renderDeliveryOverlay(data, { scope: data.scope }), `${title}-${data.deliveryNo}`);
+    return pdfOutputAdapter(await renderDeliveryOverlay(data, { scope: data.scope, statusInfo: await loadDocStatusInfo(type, id) }), `${title}-${data.deliveryNo}`);
   }
   throw new Error('Unbekannter Belegtyp');
 }
@@ -291,30 +327,30 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   if (type === 'rechnung') {
     const { openInvoiceOverlayPdf } = await import('./invoiceOverlay');
     const invData = await loadRechnungData(id) as any;
-    await openInvoiceOverlayPdf(invData, { scope: invData.scope });
+    await openInvoiceOverlayPdf(invData, { scope: invData.scope, statusInfo: await loadDocStatusInfo(type, id) });
     return;
   }
   if (type === 'lieferschein' || type === 'ruecklieferschein') {
     const { openDeliveryOverlayPdf } = await import('./deliveryOverlay');
     const delData = await loadLieferscheinData(id, type === 'ruecklieferschein') as any;
-    await openDeliveryOverlayPdf(delData, { scope: delData.scope });
+    await openDeliveryOverlayPdf(delData, { scope: delData.scope, statusInfo: await loadDocStatusInfo(type, id) });
     return;
   }
   if (type === 'angebot') {
     const { openOfferOverlayPdf } = await import('./offerOverlay');
     const offData = await loadAngebotData(id) as any;
-    await openOfferOverlayPdf(offData, { scope: offData.scope });
+    await openOfferOverlayPdf(offData, { scope: offData.scope, statusInfo: await loadDocStatusInfo(type, id) });
     return;
   }
   if (type === 'ab') {
     const { openOrderOverlayPdf } = await import('./orderOverlay');
     const abData = await loadABData(id) as any;
-    await openOrderOverlayPdf(abData, { scope: abData.scope });
+    await openOrderOverlayPdf(abData, { scope: abData.scope, statusInfo: await loadDocStatusInfo(type, id) });
     return;
   }
   if (type === 'bestellung') {
     const { openPurchaseOverlayPdf } = await import('./purchaseOverlay');
-    await openPurchaseOverlayPdf(await loadBestellungData(id) as any);
+    await openPurchaseOverlayPdf(await loadBestellungData(id) as any, { statusInfo: await loadDocStatusInfo(type, id) });
     return;
   }
   throw new Error('Unbekannter Belegtyp');
