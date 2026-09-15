@@ -166,6 +166,7 @@ export async function buildErpPdf(
   report?: (phase: string, progress: number) => void,
 ): Promise<PdfDocumentOutput> {
   report?.('Daten laden', 0.15);
+  void logErpPdfPrint(type, id);
   if (type === 'angebot') {
     const { renderOfferOverlay } = await import('./offerOverlay');
     const data = await loadAngebotData(id) as any;
