@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Upload, CheckCircle2, Trash2, FileText } from 'lucide-react';
+import { Download, Upload, CheckCircle2, Trash2, FileText, Pencil, Check, X, FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
 import { TEMPLATE_BUCKET, TEMPLATE_DOC_TYPES, TemplateDocType, clearTemplateCache } from '@/lib/erp-pdf/templateSource';
+import { openSampleTemplatePdf } from '@/lib/erp-pdf/sampleDocs';
 
 interface TemplateRow {
   id: string;
@@ -29,6 +30,9 @@ export default function AdminPdfTemplates() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [testing, setTesting] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -118,6 +122,30 @@ export default function AdminPdfTemplates() {
     if (error) toast.error(error.message); else { toast.success('Gelöscht'); load(); }
   };
 
+  const saveName = async (row: TemplateRow) => {
+    const next = editName.trim();
+    if (!next) { toast.error('Bezeichnung darf nicht leer sein'); return; }
+    const { error } = await supabase.from('erp_pdf_templates').update({ name: next }).eq('id', row.id);
+    if (error) { toast.error(error.message); return; }
+    setEditingId(null);
+    toast.success('Bezeichnung geändert');
+    load();
+  };
+
+  const testPdf = async (docType: TemplateDocType) => {
+    setTesting(docType);
+    try {
+      clearTemplateCache(docType);
+      await openSampleTemplatePdf(docType);
+      toast.success('Test-PDF erzeugt');
+    } catch (e: any) {
+      toast.error(e?.message || 'PDF konnte nicht erzeugt werden');
+    } finally {
+      setTesting(null);
+    }
+  };
+
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -165,7 +193,18 @@ export default function AdminPdfTemplates() {
         ) : (
           grouped.map((g) => (
             <Card key={g.value}>
-              <CardHeader><CardTitle className="text-base">{g.label}</CardTitle></CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base">{g.label}</CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={testing === g.value}
+                  onClick={() => testPdf(g.value as TemplateDocType)}
+                >
+                  <FileSearch className="h-4 w-4 mr-1" />
+                  {testing === g.value ? 'Erzeuge …' : 'Test-PDF erzeugen'}
+                </Button>
+              </CardHeader>
               <CardContent className="space-y-2">
                 {g.items.length === 0 && (
                   <p className="text-sm text-muted-foreground">
@@ -174,13 +213,43 @@ export default function AdminPdfTemplates() {
                 )}
                 {g.items.map((row) => (
                   <div key={row.id} className="flex flex-wrap items-center gap-2 rounded-md border p-2">
-                    <span className="text-sm font-medium">{row.name}</span>
+                    {editingId === row.id ? (
+                      <>
+                        <Input
+                          className="h-8 w-56 text-sm"
+                          value={editName}
+                          autoFocus
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveName(row);
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
+                        />
+                        <Button size="sm" variant="outline" onClick={() => saveName(row)}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium">{row.name}</span>
+                    )}
                     <Badge variant="outline">v{row.version}</Badge>
                     {row.is_active && <Badge>Aktiv</Badge>}
                     <span className="text-xs text-muted-foreground">
                       {new Date(row.created_at).toLocaleString('de-DE')}
                     </span>
                     <div className="ml-auto flex gap-2">
+                      {editingId !== row.id && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => { setEditingId(row.id); setEditName(row.name); }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => download(row)}>
                         <Download className="h-4 w-4" />
                       </Button>
