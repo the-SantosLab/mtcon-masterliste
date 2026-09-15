@@ -55,7 +55,7 @@ function CasesOverview() {
     (async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id, case_number, title, client_name, status, due_at, created_at')
+        .select('id, case_number, project_name, client_name, status, due_at, created_at')
         .eq('deleted', false)
         .order('created_at', { ascending: false })
         .limit(500);
@@ -120,7 +120,7 @@ function CasesOverview() {
                 <span className="text-xs text-muted-foreground w-28 shrink-0">
                   {c.case_number || '—'}
                 </span>
-                <span className="text-sm font-medium truncate flex-1 min-w-[10rem]">{c.title}</span>
+                <span className="text-sm font-medium truncate flex-1 min-w-[10rem]">{c.project_name}</span>
                 <span className="text-xs text-muted-foreground w-44 truncate">
                   {c.client_name || '—'}
                 </span>
