@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { formatEUR } from '@/lib/crm';
 import { fetchAllCompanies } from '@/lib/crmData';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
+import { CaseLinkSelect } from '@/components/erp/CaseLinkSelect';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
