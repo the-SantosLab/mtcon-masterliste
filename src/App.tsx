@@ -53,6 +53,7 @@ const AdminBackups = lazyRetry(() => import("./pages/AdminBackups"));
 const AdminDeletedCases = lazyRetry(() => import("./pages/AdminDeletedCases"));
 const AdminTrash = lazyRetry(() => import("./pages/AdminTrash"));
 const AdminTemplates = lazyRetry(() => import("./pages/AdminTemplates"));
+const AdminPdfTemplates = lazyRetry(() => import("./pages/AdminPdfTemplates"));
 const AdminSecurity = lazyRetry(() => import("./pages/AdminSecurity"));
 const AdminAnnouncements = lazyRetry(() => import("./pages/AdminAnnouncements"));
 const AdminFeedback = lazyRetry(() => import("./pages/AdminFeedback"));
@@ -257,6 +258,7 @@ function AuthenticatedApp() {
           <Route path="/admin/deleted-cases" element={<ProtectedRoute><AdminDeletedCases /></ProtectedRoute>} />
           <Route path="/admin/papierkorb" element={<ProtectedRoute><AdminTrash /></ProtectedRoute>} />
           <Route path="/admin/templates" element={<ProtectedRoute><AdminTemplates /></ProtectedRoute>} />
+          <Route path="/admin/pdf-vorlagen" element={<ProtectedRoute><AdminPdfTemplates /></ProtectedRoute>} />
           <Route path="/admin/security" element={<ProtectedRoute><AdminSecurity /></ProtectedRoute>} />
           <Route path="/admin/announcements" element={<ProtectedRoute><AdminAnnouncements /></ProtectedRoute>} />
           <Route path="/admin/feedback" element={<ProtectedRoute><AdminFeedback /></ProtectedRoute>} />
