@@ -6786,6 +6786,7 @@ export type Database = {
       offers: {
         Row: {
           accepted_at: string | null
+          case_id: string | null
           company_id: string | null
           created_at: string
           created_by: string | null
@@ -6812,6 +6813,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          case_id?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -6838,6 +6840,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          case_id?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -6863,6 +6866,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "offers_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "offers_deal_id_fkey"
             columns: ["deal_id"]
@@ -7022,6 +7032,7 @@ export type Database = {
       orders: {
         Row: {
           assigned_to: string | null
+          case_id: string | null
           company_id: string | null
           created_at: string
           created_by: string | null
@@ -7051,6 +7062,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          case_id?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -7080,6 +7092,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          case_id?: string | null
           company_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -7108,6 +7121,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_company_id_fkey"
             columns: ["company_id"]
@@ -9485,6 +9505,15 @@ export type Database = {
     }
     Functions: {
       _erp_actor_name: { Args: { uid: string }; Returns: string }
+      apply_case_status_from_doc: {
+        Args: {
+          _action: string
+          _case_id: string
+          _message: string
+          _target: Database["public"]["Enums"]["case_status"]
+        }
+        Returns: undefined
+      }
       approve_supplier_invoice: {
         Args: { _approve: boolean; _invoice_id: string; _reason?: string }
         Returns: undefined
@@ -9702,6 +9731,10 @@ export type Database = {
       lock_erp_document: {
         Args: { _id: string; _kind: string }
         Returns: boolean
+      }
+      log_case_pdf_print: {
+        Args: { _case_id: string; _doc_label: string }
+        Returns: undefined
       }
       mark_ai_messages_read: { Args: { p_vorgang_id: string }; Returns: number }
       mark_invoices_overdue: { Args: never; Returns: number }
