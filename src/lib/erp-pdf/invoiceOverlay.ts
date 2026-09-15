@@ -5,6 +5,7 @@
 // Vorlage unverändert.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/invoice-template.pdf?url';
+import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
 import { fmt } from './renderer';
 import type { RechnungData } from './generators';
 
@@ -160,9 +161,7 @@ const FACTORING = {
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplate(): Promise<ArrayBuffer> {
-  const res = await fetch(templateUrl);
-  if (!res.ok) throw new Error(`Rechnungs-Vorlage konnte nicht geladen werden (${res.status})`);
-  return res.arrayBuffer();
+  return loadErpTemplateBytes('rechnung', templateUrl);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {

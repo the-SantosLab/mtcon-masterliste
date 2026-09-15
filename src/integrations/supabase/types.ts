@@ -3701,6 +3701,42 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_pdf_templates: {
+        Row: {
+          created_at: string
+          doc_type: string
+          id: string
+          is_active: boolean
+          name: string
+          note: string | null
+          storage_path: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          doc_type: string
+          id?: string
+          is_active?: boolean
+          name: string
+          note?: string | null
+          storage_path: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          note?: string | null
+          storage_path?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
       fx_rates: {
         Row: {
           created_at: string

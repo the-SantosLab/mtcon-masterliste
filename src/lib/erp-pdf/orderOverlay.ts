@@ -4,6 +4,7 @@
 // gezeichnet. Unterstützt mehrere Seiten (Positions-Umbruch).
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/order-template.pdf?url';
+import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
 import { fmt } from './renderer';
 import type { ABData } from './generators';
 
@@ -57,9 +58,7 @@ const P = {
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplate(): Promise<ArrayBuffer> {
-  const res = await fetch(templateUrl);
-  if (!res.ok) throw new Error(`AB-Vorlage konnte nicht geladen werden (${res.status})`);
-  return res.arrayBuffer();
+  return loadErpTemplateBytes('ab', templateUrl);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
