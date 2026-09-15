@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { SortableHeader, type SortState, nextSort, sortBy } from '@/components/SortableHeader';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { WatchersSection } from '@/components/WatchersSection';
+import { TemplateAssignment } from '@/components/erp/TemplateAssignment';
 
 type PdCaseSortKey = 'status' | 'case_no' | 'project_name' | 'assignee' | 'due_at' | 'urgency';
 
