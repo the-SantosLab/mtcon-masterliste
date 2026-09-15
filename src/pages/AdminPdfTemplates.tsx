@@ -285,6 +285,8 @@ export default function AdminPdfTemplates() {
           </p>
         </div>
 
+        <CasesOverview />
+
         <Card>
           <CardHeader><CardTitle className="text-base">Neue Vorlage hochladen</CardTitle></CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-4">
