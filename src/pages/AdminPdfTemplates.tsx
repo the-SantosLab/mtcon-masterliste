@@ -16,7 +16,7 @@ import { openSampleTemplatePdf } from '@/lib/erp-pdf/sampleDocs';
 interface CaseRow {
   id: string;
   case_number: string | null;
-  title: string;
+  project_name: string;
   client_name: string | null;
   status: string;
   due_at: string | null;
