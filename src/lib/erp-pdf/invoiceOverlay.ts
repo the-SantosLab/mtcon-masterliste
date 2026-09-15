@@ -7,6 +7,7 @@ import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-
 import templateUrl from '@/assets/invoice-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
+import { drawStatusStamp, type DocStatusInfo } from './statusStamp';
 import type { RechnungData } from './generators';
 
 // PDF-Koordinaten: origin BOTTOM-LEFT. Alle Design-Koordinaten sind "top-Y".
@@ -219,7 +220,7 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
 }
 
 /** Rechnung als PDF-Bytes; nutzt Overlay auf Original-Vorlage. */
-export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<Uint8Array> {
+export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {}): Promise<Uint8Array> {
   const tplBytes = await loadTemplate(opts.scope);
   const pdf = await PDFDocument.load(tplBytes);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -408,13 +409,15 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
     }
   }
 
+  drawStatusStamp(pdf, regular, opts.statusInfo);
+
   return await pdf.save();
 }
 
 /** Öffnet die Overlay-Rechnung in einem neuen Tab.
  *  Nutzt einen Anchor-Klick statt window.open, da Chrome / AdBlocker
  *  asynchron geöffnete Popups oft mit ERR_BLOCKED_BY_CLIENT blockieren. */
-export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<void> {
+export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {}): Promise<void> {
   const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);

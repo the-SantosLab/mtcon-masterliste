@@ -6,6 +6,7 @@ import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-
 import templateUrl from '@/assets/offer-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
+import { drawStatusStamp, type DocStatusInfo } from './statusStamp';
 import type { AngebotData } from './generators';
 
 const PAGE_H = 842;
@@ -118,7 +119,7 @@ interface PosBlock {
 
 export async function renderOfferOverlay(
   d: AngebotData,
-  opts: { demo?: boolean; scope?: TemplateScope } = {},
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
 ): Promise<Uint8Array> {
   const tplBytes = await loadTemplateBytes(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
@@ -293,13 +294,15 @@ export async function renderOfferOverlay(
     }
   }
 
+  drawStatusStamp(pdf, regular, opts.statusInfo);
+
   return await pdf.save();
 }
 
 /** Öffnet das Overlay-Angebot in einem neuen Tab (Anchor-Klick, popup-safe). */
 export async function openOfferOverlayPdf(
   data: AngebotData,
-  opts: { demo?: boolean; scope?: TemplateScope } = {},
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
 ): Promise<void> {
   const bytes = await renderOfferOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });

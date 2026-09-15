@@ -7,6 +7,7 @@ import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-
 import templateUrl from '@/assets/delivery-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
+import { drawStatusStamp, type DocStatusInfo } from './statusStamp';
 import type { LieferscheinData } from './generators';
 
 const PAGE_H = 842;
@@ -121,7 +122,7 @@ interface PosBlock {
 
 export async function renderDeliveryOverlay(
   d: LieferscheinData,
-  opts: { demo?: boolean; scope?: TemplateScope } = {},
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
 ): Promise<Uint8Array> {
   const tplBytes = await loadTemplate(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
@@ -283,13 +284,15 @@ export async function renderDeliveryOverlay(
     }
   }
 
+  drawStatusStamp(pdf, regular, opts.statusInfo);
+
   return await pdf.save();
 }
 
 /** Öffnet den Overlay-Lieferschein in einem neuen Tab (Anchor-Klick, popup-safe). */
 export async function openDeliveryOverlayPdf(
   data: LieferscheinData,
-  opts: { demo?: boolean; scope?: TemplateScope } = {},
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
 ): Promise<void> {
   const bytes = await renderDeliveryOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
