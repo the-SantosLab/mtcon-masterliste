@@ -4,7 +4,7 @@
 // gezeichnet. Unterstützt mehrere Seiten (Positions-Umbruch).
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/order-template.pdf?url';
-import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
+import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
 import type { ABData } from './generators';
 
@@ -57,8 +57,8 @@ const P = {
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
-async function loadTemplate(): Promise<ArrayBuffer> {
-  return loadErpTemplateBytes('ab', templateUrl);
+async function loadTemplate(scope?: TemplateScope): Promise<ArrayBuffer> {
+  return loadErpTemplateBytes('ab', templateUrl, scope);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
@@ -103,9 +103,9 @@ interface PosBlock {
 
 export async function renderOrderOverlay(
   d: ABData,
-  opts: { demo?: boolean } = {},
+  opts: { demo?: boolean; scope?: TemplateScope } = {},
 ): Promise<Uint8Array> {
-  const tplBytes = await loadTemplate();
+  const tplBytes = await loadTemplate(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -287,7 +287,7 @@ export async function renderOrderOverlay(
   return await pdf.save();
 }
 
-export async function openOrderOverlayPdf(data: ABData, opts: { demo?: boolean } = {}): Promise<void> {
+export async function openOrderOverlayPdf(data: ABData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<void> {
   const bytes = await renderOrderOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);

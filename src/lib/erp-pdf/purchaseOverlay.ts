@@ -3,7 +3,7 @@
 // Kein Totals-Block.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/purchase-template.pdf?url';
-import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
+import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
 import type { BestellungData } from './generators';
 
@@ -61,8 +61,8 @@ const P = {
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
-async function loadTemplate(): Promise<ArrayBuffer> {
-  return loadErpTemplateBytes('bestellung', templateUrl);
+async function loadTemplate(scope?: TemplateScope): Promise<ArrayBuffer> {
+  return loadErpTemplateBytes('bestellung', templateUrl, scope);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
@@ -107,9 +107,9 @@ interface PosBlock {
 
 export async function renderPurchaseOverlay(
   d: BestellungData,
-  opts: { demo?: boolean } = {},
+  opts: { demo?: boolean; scope?: TemplateScope } = {},
 ): Promise<Uint8Array> {
-  const tplBytes = await loadTemplate();
+  const tplBytes = await loadTemplate(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -255,7 +255,7 @@ export async function renderPurchaseOverlay(
   return await pdf.save();
 }
 
-export async function openPurchaseOverlayPdf(data: BestellungData, opts: { demo?: boolean } = {}): Promise<void> {
+export async function openPurchaseOverlayPdf(data: BestellungData, opts: { demo?: boolean; scope?: TemplateScope } = {}): Promise<void> {
   const bytes = await renderPurchaseOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);

@@ -61,6 +61,7 @@ export async function loadAngebotData(id: string) {
     party, contact, items: lineItems, currency: 'EUR',
     paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
     deliveryTerms: 'ab Werk', notes: o.notes,
+    scope: { companyId: o.company_id, dealId: o.deal_id },
   };
 }
 
@@ -84,6 +85,7 @@ export async function loadABData(id: string) {
     paymentTerms: o.payment_terms || '14 Tage 2%, 30 Tage netto',
     deliveryTerms: 'ab Werk',
     isFrame: o.order_kind === 'frame' || o.order_kind === 'rahmen',
+    scope: { companyId: o.company_id },
   };
 }
 
@@ -124,6 +126,7 @@ export async function loadLieferscheinData(id: string, isReturn = false) {
     contact: { customerNo: d.orders?.customer_no },
     items: lineItems, deliveryTerms: 'ab Werk', notes: d.notes,
     isReturn,
+    scope: { companyId },
   };
 }
 
@@ -153,6 +156,7 @@ export async function loadRechnungData(id: string) {
     taxMode: inv.tax_mode || 'standard',
     skontoPercent: inv.skonto_percent, skontoDays: inv.skonto_days,
     docKind: inv.doc_kind || 'invoice',
+    scope: { companyId: inv.company_id },
   };
 }
 
@@ -166,7 +170,7 @@ export async function buildErpPdf(
     const { renderOfferOverlay } = await import('./offerOverlay');
     const data = await loadAngebotData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    const bytes = await renderOfferOverlay(data);
+    const bytes = await renderOfferOverlay(data, { scope: data.scope });
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     const download = (fileName: string) => {
       const url = URL.createObjectURL(blob);
@@ -193,7 +197,7 @@ export async function buildErpPdf(
     const { renderOrderOverlay } = await import('./orderOverlay');
     const data = await loadABData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    const bytes = await renderOrderOverlay(data);
+    const bytes = await renderOrderOverlay(data, { scope: data.scope });
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     const download = (fileName: string) => {
       const url = URL.createObjectURL(blob);
@@ -220,7 +224,7 @@ export async function buildErpPdf(
     const { renderInvoiceOverlay } = await import('./invoiceOverlay');
     const data = await loadRechnungData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    const bytes = await renderInvoiceOverlay(data);
+    const bytes = await renderInvoiceOverlay(data, { scope: data.scope });
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     const download = (fileName: string) => {
       const url = URL.createObjectURL(blob);
@@ -254,7 +258,7 @@ export async function buildErpPdf(
     const data = await loadLieferscheinData(id, type === 'ruecklieferschein') as any;
     report?.('Originalvorlage anwenden', 0.65);
     const title = type === 'ruecklieferschein' ? 'Ruecklieferschein' : 'Lieferschein';
-    return pdfOutputAdapter(await renderDeliveryOverlay(data), `${title}-${data.deliveryNo}`);
+    return pdfOutputAdapter(await renderDeliveryOverlay(data, { scope: data.scope }), `${title}-${data.deliveryNo}`);
   }
   throw new Error('Unbekannter Belegtyp');
 }
@@ -262,22 +266,26 @@ export async function buildErpPdf(
 export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   if (type === 'rechnung') {
     const { openInvoiceOverlayPdf } = await import('./invoiceOverlay');
-    await openInvoiceOverlayPdf(await loadRechnungData(id) as any);
+    const invData = await loadRechnungData(id) as any;
+    await openInvoiceOverlayPdf(invData, { scope: invData.scope });
     return;
   }
   if (type === 'lieferschein' || type === 'ruecklieferschein') {
     const { openDeliveryOverlayPdf } = await import('./deliveryOverlay');
-    await openDeliveryOverlayPdf(await loadLieferscheinData(id, type === 'ruecklieferschein') as any);
+    const delData = await loadLieferscheinData(id, type === 'ruecklieferschein') as any;
+    await openDeliveryOverlayPdf(delData, { scope: delData.scope });
     return;
   }
   if (type === 'angebot') {
     const { openOfferOverlayPdf } = await import('./offerOverlay');
-    await openOfferOverlayPdf(await loadAngebotData(id) as any);
+    const offData = await loadAngebotData(id) as any;
+    await openOfferOverlayPdf(offData, { scope: offData.scope });
     return;
   }
   if (type === 'ab') {
     const { openOrderOverlayPdf } = await import('./orderOverlay');
-    await openOrderOverlayPdf(await loadABData(id) as any);
+    const abData = await loadABData(id) as any;
+    await openOrderOverlayPdf(abData, { scope: abData.scope });
     return;
   }
   if (type === 'bestellung') {

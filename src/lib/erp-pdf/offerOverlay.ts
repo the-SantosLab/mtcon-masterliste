@@ -4,7 +4,7 @@
 // Die Originaldatei enthält eine erste Seite und passende Folgeseiten.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/offer-template.pdf?url';
-import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
+import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
 import { fmt } from './renderer';
 import type { AngebotData } from './generators';
 
@@ -64,8 +64,8 @@ const P = {
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
-async function loadTemplateBytes(): Promise<ArrayBuffer> {
-  return loadErpTemplateBytes('angebot', templateUrl);
+async function loadTemplateBytes(scope?: TemplateScope): Promise<ArrayBuffer> {
+  return loadErpTemplateBytes('angebot', templateUrl, scope);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
@@ -118,9 +118,9 @@ interface PosBlock {
 
 export async function renderOfferOverlay(
   d: AngebotData,
-  opts: { demo?: boolean } = {},
+  opts: { demo?: boolean; scope?: TemplateScope } = {},
 ): Promise<Uint8Array> {
-  const tplBytes = await loadTemplateBytes();
+  const tplBytes = await loadTemplateBytes(opts.scope);
   const tplDoc = await PDFDocument.load(tplBytes);
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -299,7 +299,7 @@ export async function renderOfferOverlay(
 /** Öffnet das Overlay-Angebot in einem neuen Tab (Anchor-Klick, popup-safe). */
 export async function openOfferOverlayPdf(
   data: AngebotData,
-  opts: { demo?: boolean } = {},
+  opts: { demo?: boolean; scope?: TemplateScope } = {},
 ): Promise<void> {
   const bytes = await renderOfferOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });

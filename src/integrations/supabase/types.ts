@@ -3737,6 +3737,47 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_template_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doc_type: string
+          id: string
+          scope: string
+          scope_id: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doc_type: string
+          id?: string
+          scope: string
+          scope_id: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string
+          id?: string
+          scope?: string
+          scope_id?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_template_assignments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "erp_pdf_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fx_rates: {
         Row: {
           created_at: string

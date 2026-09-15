@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TemplateAssignment } from '@/components/erp/TemplateAssignment';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, ArrowLeft, Save } from 'lucide-react';
@@ -237,6 +238,7 @@ export default function CrmDealDetail() {
           <TabsTrigger value="activities">Aktivitäten</TabsTrigger>
           <TabsTrigger value="offers">Angebote</TabsTrigger>
           <TabsTrigger value="files">Dateien</TabsTrigger>
+          <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -298,6 +300,10 @@ export default function CrmDealDetail() {
 
         <TabsContent value="files" className="mt-4">
           <p className="text-xs text-muted-foreground">Datei-Anhänge: in Vorbereitung.</p>
+        </TabsContent>
+
+        <TabsContent value="templates" className="mt-4 max-w-3xl">
+          <TemplateAssignment scope="deal" scopeId={deal.id} title="PDF-Vorlagen dieses Deals" />
         </TabsContent>
       </Tabs>
 
