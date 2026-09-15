@@ -3,6 +3,7 @@
 // Kein Totals-Block.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/purchase-template.pdf?url';
+import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
 import { fmt } from './renderer';
 import type { BestellungData } from './generators';
 
@@ -61,9 +62,7 @@ const P = {
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplate(): Promise<ArrayBuffer> {
-  const res = await fetch(templateUrl);
-  if (!res.ok) throw new Error(`Bestellungs-Vorlage konnte nicht geladen werden (${res.status})`);
-  return res.arrayBuffer();
+  return loadErpTemplateBytes('bestellung', templateUrl);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {

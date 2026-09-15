@@ -4,6 +4,7 @@
 // Die Originaldatei enthält eine erste Seite und passende Folgeseiten.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/offer-template.pdf?url';
+import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
 import { fmt } from './renderer';
 import type { AngebotData } from './generators';
 
@@ -64,9 +65,7 @@ const P = {
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplateBytes(): Promise<ArrayBuffer> {
-  const res = await fetch(templateUrl);
-  if (!res.ok) throw new Error(`Angebots-Vorlage konnte nicht geladen werden (${res.status})`);
-  return res.arrayBuffer();
+  return loadErpTemplateBytes('angebot', templateUrl);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {

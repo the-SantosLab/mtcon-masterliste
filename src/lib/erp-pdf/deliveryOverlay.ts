@@ -5,6 +5,7 @@
 // wiederholtem Lieferschein-Nr.-Kopf ab Seite 2 (BUG-2026-0139).
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/delivery-template.pdf?url';
+import { loadTemplateBytes as loadErpTemplateBytes } from './templateSource';
 import { fmt } from './renderer';
 import type { LieferscheinData } from './generators';
 
@@ -65,9 +66,7 @@ const P = {
 interface Fonts { regular: PDFFont; bold: PDFFont; }
 
 async function loadTemplate(): Promise<ArrayBuffer> {
-  const res = await fetch(templateUrl);
-  if (!res.ok) throw new Error(`Lieferschein-Vorlage konnte nicht geladen werden (${res.status})`);
-  return res.arrayBuffer();
+  return loadErpTemplateBytes('lieferschein', templateUrl);
 }
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
