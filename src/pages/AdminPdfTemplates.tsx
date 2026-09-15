@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Upload, CheckCircle2, Trash2, FileText } from 'lucide-react';
+import { Download, Upload, CheckCircle2, Trash2, FileText, Pencil, Check, X, FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
 import { TEMPLATE_BUCKET, TEMPLATE_DOC_TYPES, TemplateDocType, clearTemplateCache } from '@/lib/erp-pdf/templateSource';
+import { openSampleTemplatePdf } from '@/lib/erp-pdf/sampleDocs';
 
 interface TemplateRow {
   id: string;
