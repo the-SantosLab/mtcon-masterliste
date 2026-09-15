@@ -30,6 +30,9 @@ export default function AdminPdfTemplates() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [testing, setTesting] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
