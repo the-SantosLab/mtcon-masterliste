@@ -122,6 +122,30 @@ export default function AdminPdfTemplates() {
     if (error) toast.error(error.message); else { toast.success('Gelöscht'); load(); }
   };
 
+  const saveName = async (row: TemplateRow) => {
+    const next = editName.trim();
+    if (!next) { toast.error('Bezeichnung darf nicht leer sein'); return; }
+    const { error } = await supabase.from('erp_pdf_templates').update({ name: next }).eq('id', row.id);
+    if (error) { toast.error(error.message); return; }
+    setEditingId(null);
+    toast.success('Bezeichnung geändert');
+    load();
+  };
+
+  const testPdf = async (docType: TemplateDocType) => {
+    setTesting(docType);
+    try {
+      clearTemplateCache(docType);
+      await openSampleTemplatePdf(docType);
+      toast.success('Test-PDF erzeugt');
+    } catch (e: any) {
+      toast.error(e?.message || 'PDF konnte nicht erzeugt werden');
+    } finally {
+      setTesting(null);
+    }
+  };
+
+
   return (
     <AppLayout>
       <div className="space-y-6">
