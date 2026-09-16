@@ -17,11 +17,13 @@ const WHITE = rgb(1, 1, 1);
 const SHADE = rgb(0.86, 0.86, 0.86);
 
 const MASKS_P1: [number, number, number, number][] = [
+  [  0, 170,  35, 210],
   [330, 140, 575, 315],
   [ 45, 145, 330, 300],
   [ 45, 288, 575, 755],
 ];
 const MASKS_PX: [number, number, number, number][] = [
+  [  0, 170,  35, 210],
   [330, 140, 575, 210],
   [ 45, 210, 575, 755],
 ];
