@@ -348,7 +348,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="flex-1 text-left">Suche</span>
             <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-sidebar-border px-1 py-0.5 text-[9px] font-mono text-muted-foreground">⌘K</kbd>
           </button>
-          <div className="border-t border-sidebar-border/60 my-2" />
+          
           {visibleGroups.map(group => {
             const expanded = openGroup === group.id;
             const primaryItems = group.items.filter(item => !item.secondary);
