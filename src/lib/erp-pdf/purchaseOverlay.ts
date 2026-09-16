@@ -1,6 +1,6 @@
 // Bestellung (PO an Lieferant) via Overlay auf pixelgleiche Original-Vorlage.
-// Layout analog zum Angebot; Kopf-Meta enthält Lieferanten-Nr / Bearbeiter etc.
-// Kein Totals-Block.
+// Layout exakt wie Angebot / Auftragsbestätigung / Rechnung: gleiche Titelleiste,
+// gleiche Meta-Spalte, identische Tabellengeometrie, Totals-Block und Fußtext.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/purchase-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
@@ -14,38 +14,31 @@ const topY = (yFromTop: number) => PAGE_H - yFromTop;
 const COLOR_TEXT = rgb(0, 0, 0);
 const COLOR_RED = rgb(0.86, 0.08, 0.24);
 const WHITE = rgb(1, 1, 1);
+const SHADE = rgb(0.86, 0.86, 0.86);
 
 const MASKS_P1: [number, number, number, number][] = [
-  [340, 128, 570, 158],
-  [ 45, 155, 335, 235],
-  [340, 155, 570, 235],
-  [340, 235, 570, 260],
-  [ 45, 253, 570, 305],
-  [ 45, 305, 570, 330],
-  [ 45, 330, 570, 700],
-  [ 45, 700, 570, 760],
+  [330, 140, 575, 315],
+  [ 45, 145, 330, 300],
+  [ 45, 288, 575, 755],
 ];
 const MASKS_PX: [number, number, number, number][] = [
-  [340, 128, 570, 158],
-  [ 45, 155, 570, 260],
-  [ 45, 253, 570, 305],
-  [ 45, 305, 570, 330],
-  [ 45, 330, 570, 700],
-  [ 45, 700, 570, 760],
+  [330, 140, 575, 210],
+  [ 45, 210, 575, 755],
 ];
 
 const P = {
-  title:      { x: 358, top: 134, size: 11 },
-  recipient:  { x: 71,  top: 158, size: 10, lineHeight: 13 },
-  metaLabel:  { x: 358, top: 160, size: 9,  lineHeight: 12 },
-  metaValue:  { x: 456, top: 160, size: 9,  lineHeight: 12 },
-  dateLabel:  { x: 358, top: 240, size: 9 },
-  dateValue:  { x: 456, top: 240, size: 9 },
-  pageValue:  { x: 505, top: 240, size: 9 },
-  intro:      { x: 66,  top: 262, size: 9, lineHeight: 12 },
-  headerRow:  { top: 312, size: 9 },
-  tableTop:   328,
-  tableBottom: 680,
+  title:      { x: 335, top: 150, size: 10 },
+  recipient:  { x: 70,  top: 170, size: 9, lineHeight: 12 },
+  metaLabel:  { x: 335, top: 170, size: 8,  lineHeight: 11 },
+  metaValue:  { x: 435, top: 170, size: 8,  lineHeight: 11 },
+  dateLabel:  { x: 335, top: 294, size: 8 },
+  dateValue:  { x: 435, top: 294, size: 8 },
+  pageValue:  { x: 500, top: 294, size: 8 },
+
+  intro:      { x: 70,  top: 323, size: 9, lineHeight: 13 },
+  headerRow:  { top: 369, size: 8 },
+  tableTop:   400,
+  tableBottom: 715,
   rowLine:    11,
   cols: {
     pos:     66,
@@ -55,9 +48,11 @@ const P = {
     preis:   455,
     value:   560,
   },
-  condLabel: { x: 66,  size: 9, lineHeight: 14 },
-  condValue: { x: 165, size: 9, lineHeight: 14 },
-  closing:   { x: 66, top: 740, size: 9, lineHeight: 12 },
+  totalLabel:{ x: 365, lineHeight: 13, size: 9 },
+  totalValue:{ x: 560, lineHeight: 13, size: 9 },
+  condLabel: { x: 70,  size: 9, lineHeight: 14 },
+  condValue: { x: 180, size: 9, lineHeight: 14 },
+  closing:   { x: 70, top: 520, size: 9, lineHeight: 12 },
 };
 
 interface Fonts { regular: PDFFont; bold: PDFFont; }
@@ -122,7 +117,7 @@ export async function renderPurchaseOverlay(
     const posNo = it.pos != null && it.pos !== '' ? String(it.pos) : String((idx + 1) * 10);
     const qtyStr = it.quantity != null ? `${fmt.qty(it.quantity)} ${it.unit || 'ST'}` : '';
     const priceStr = it.price != null
-      ? `${fmt.currency(it.price, d.currency)}${it.unit && it.unit !== 'ST' ? ` / ${it.unit}` : ' / 1000'}` : '';
+      ? `${fmt.currency(it.price, d.currency)} / ${it.unit || '1000'}` : '';
     const valueStr = it.positionValue != null ? fmt.currency(it.positionValue, d.currency) : '';
     const descLines: string[] = [];
     if (it.description) for (const l of it.description.split('\n')) descLines.push(...wrap(l, regular, 9, beschWidth));
@@ -139,6 +134,12 @@ export async function renderPurchaseOverlay(
     };
   });
 
+  // Summen analog Auftragsbestätigung / Rechnung.
+  const subtotal = d.items.reduce((s, it) => s + (it.positionValue ?? 0), 0);
+  const taxRate = 19;
+  const tax = subtotal * (taxRate / 100);
+  const total = subtotal + tax;
+
   const usable = P.tableBottom - P.tableTop;
   const pagesOfBlocks: PosBlock[][] = [];
   let current: PosBlock[] = []; let used = 0;
@@ -148,11 +149,12 @@ export async function renderPurchaseOverlay(
   }
   if (current.length) pagesOfBlocks.push(current);
   if (pagesOfBlocks.length === 0) pagesOfBlocks.push([]);
-  const totalPages = pagesOfBlocks.length;
+  const totalPages = pagesOfBlocks.length + 1;
 
   const drawnPages: PDFPage[] = [];
   for (let i = 0; i < totalPages; i++) {
-    const [copied] = await pdf.copyPages(tplDoc, [0]);
+    const templatePageIndex = i === 0 ? 0 : Math.min(1, tplDoc.getPageCount() - 1);
+    const [copied] = await pdf.copyPages(tplDoc, [templatePageIndex]);
     pdf.addPage(copied);
     drawnPages.push(copied);
   }
@@ -163,12 +165,9 @@ export async function renderPurchaseOverlay(
     const isLast = i === totalPages - 1;
     mask(page, isFirst ? MASKS_P1 : MASKS_PX);
 
+    page.drawRectangle({ x: 335, y: topY(165), width: 225, height: 20, color: SHADE });
     txt(page, `Bestellung Nr. ${d.poNo}`, P.title.x, P.title.top, fonts,
       { size: P.title.size, bold: true });
-
-    txt(page, 'Bestelldatum', P.dateLabel.x, P.dateLabel.top, fonts, { size: P.dateLabel.size, bold: true });
-    txt(page, d.date, P.dateValue.x, P.dateValue.top, fonts, { size: P.dateValue.size, bold: true });
-    txt(page, `Seite ${i + 1} von ${totalPages}`, P.pageValue.x, P.pageValue.top, fonts, { size: P.pageValue.size });
 
     if (isFirst) {
       const recipientLines = [d.party.name, ...d.party.lines].filter(Boolean);
@@ -179,11 +178,11 @@ export async function renderPurchaseOverlay(
 
       const metaRows: Array<[string, string | undefined | null]> = [
         ['Lieferanten-Nr',  d.contact.supplierNo || (d.contact.customerNo ? String(d.contact.customerNo) : undefined)],
-        ['Bearbeiter',      d.contact.contactName],
+        ['Ansprechpartner', d.contact.contactName],
         ['Telefon',         d.contact.phone],
         ['Fax',             d.contact.fax],
-        ['Email',           d.contact.email],
-        ['Bearbeiter',      'Bestellungen'],
+        ['E-Mail',          d.contact.email],
+        ['USt-ID-Nr',       d.contact.vatId],
         ['Betreff',         d.contact.subject],
       ];
       let row = 0;
@@ -191,12 +190,13 @@ export async function renderPurchaseOverlay(
         if (!value) continue;
         const y = P.metaLabel.top + row * P.metaLabel.lineHeight;
         txt(page, label, P.metaLabel.x, y, fonts, { size: P.metaLabel.size, bold: true });
-        txt(page, value, P.metaValue.x, y, fonts, { size: P.metaValue.size });
-        row++;
+        const valueLines = wrap(String(value), regular, P.metaValue.size, 120);
+        valueLines.forEach((line, lineIndex) => txt(page, line, P.metaValue.x, y + lineIndex * P.metaLabel.lineHeight, fonts, { size: P.metaValue.size }));
+        row += Math.max(1, valueLines.length);
       }
 
       const introLines = [
-        'Wir bestellen gemäß unseren allgemeinen Geschäftsbedingungen wie folgt:',
+        'Wir bestellen gemäß unseren allgemeinen Einkaufsbedingungen wie folgt:',
         'siehe www.mtcon.eu/power2pcb/aeb/',
       ];
       introLines.forEach((l, li) => {
@@ -204,29 +204,52 @@ export async function renderPurchaseOverlay(
       });
     }
 
-    txt(page, 'Pos',           P.cols.pos,     P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
-    txt(page, 'Artikel-Nr',    P.cols.article, P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
-    txt(page, 'Liefertermin',  P.cols.termin,  P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
-    txt(page, 'Menge',         P.cols.menge,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
-    txt(page, 'Preis',         P.cols.preis,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
-    txt(page, 'Positionswert', P.cols.value,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+    const dateTop = isFirst ? P.dateLabel.top : 179;
+    txt(page, 'Datum', P.dateLabel.x, dateTop, fonts, { size: P.dateLabel.size, bold: true });
+    txt(page, d.date, P.dateValue.x, dateTop, fonts, { size: P.dateValue.size });
+    txt(page, `Seite ${i + 1} von ${totalPages}`, P.pageValue.x, dateTop, fonts, { size: P.pageValue.size });
 
-    let cursor = P.tableTop;
-    for (const b of pagesOfBlocks[i]) {
-      txt(page, b.header.pos,    P.cols.pos,     cursor, fonts, { size: 9, bold: true });
-      if (b.header.artNr)  txt(page, b.header.artNr,  P.cols.article, cursor, fonts, { size: 9, bold: true });
-      if (b.header.termin) txt(page, b.header.termin, P.cols.termin,  cursor, fonts, { size: 9 });
-      if (b.header.qty)    txt(page, b.header.qty,    P.cols.menge,   cursor, fonts, { size: 9, align: 'right' });
-      if (b.header.price)  txt(page, b.header.price,  P.cols.preis,   cursor, fonts, { size: 9, align: 'right' });
-      if (b.header.value)  txt(page, b.header.value,  P.cols.value,   cursor, fonts, { size: 9, align: 'right' });
-      cursor += P.rowLine;
-      for (const l of b.descriptionLines) { txt(page, l, P.cols.article, cursor, fonts, { size: 9 }); cursor += P.rowLine; }
-      for (const l of b.extraLines)       { txt(page, l, P.cols.article, cursor, fonts, { size: 9 }); cursor += P.rowLine; }
-      cursor += 6;
+    if (i < pagesOfBlocks.length) {
+      page.drawRectangle({ x: 45, y: topY(384), width: 525, height: 18, color: SHADE });
+      txt(page, 'Pos',           P.cols.pos,     P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
+      txt(page, 'Art.-Nr.',      P.cols.article, P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
+      txt(page, 'Termin',        P.cols.termin,  P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
+      txt(page, 'Menge',         P.cols.menge,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+      txt(page, 'Preis',         P.cols.preis,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+      txt(page, 'Positionswert', P.cols.value,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+
+      let cursor = P.tableTop;
+      for (const b of pagesOfBlocks[i] || []) {
+        txt(page, b.header.pos,    P.cols.pos,     cursor, fonts, { size: 9, bold: true });
+        if (b.header.artNr)  txt(page, b.header.artNr,  P.cols.article, cursor, fonts, { size: 9, bold: true });
+        if (b.header.termin) txt(page, b.header.termin, P.cols.termin,  cursor, fonts, { size: 9 });
+        if (b.header.qty)    txt(page, b.header.qty,    P.cols.menge,   cursor, fonts, { size: 9, align: 'right' });
+        if (b.header.price)  txt(page, b.header.price,  P.cols.preis,   cursor, fonts, { size: 9, align: 'right' });
+        if (b.header.value)  txt(page, b.header.value,  P.cols.value,   cursor, fonts, { size: 9, align: 'right' });
+        cursor += P.rowLine;
+        for (const l of b.descriptionLines) { txt(page, l, P.cols.article, cursor, fonts, { size: 9 }); cursor += P.rowLine; }
+        for (const l of b.extraLines)       { txt(page, l, P.cols.article, cursor, fonts, { size: 9 }); cursor += P.rowLine; }
+        cursor += 6;
+      }
     }
 
     if (isLast) {
-      let condY = Math.max(cursor + 18, 700);
+      // Totals-Block
+      page.drawLine({ start: { x: 70, y: topY(222) }, end: { x: 560, y: topY(222) }, thickness: 0.6, color: COLOR_TEXT });
+      let totalsY = 238;
+      const totals: Array<[string, string, boolean]> = [
+        ['Nettobetrag', fmt.currency(subtotal, d.currency), false],
+        [`MwSt ${taxRate.toFixed(2).replace('.', ',')}%`, fmt.currency(tax, d.currency), false],
+        ['Gesamtbetrag', fmt.currency(total, d.currency), true],
+      ];
+      for (const [label, value, boldRow] of totals) {
+        txt(page, label, P.totalLabel.x, totalsY, fonts, { size: P.totalLabel.size, bold: true });
+        txt(page, value, P.totalValue.x, totalsY, fonts, { size: P.totalValue.size, bold: boldRow, align: 'right' });
+        totalsY += P.totalLabel.lineHeight;
+      }
+
+      // Konditionen
+      let condY = 315;
       const drawCond = (label: string, value: string) => {
         const lines = value.split('\n');
         txt(page, label, P.condLabel.x, condY, fonts, { size: P.condLabel.size, bold: true });
@@ -237,12 +260,23 @@ export async function renderPurchaseOverlay(
       };
       if (d.expected) drawCond('Wunschtermin', fmt.date(d.expected));
       if (d.notes)    drawCond('Anmerkungen', d.notes);
+
+      let noteY = condY + 18;
       if (d.isFrame) {
         txt(page, 'R=Rahmen  A=Abruf  F=Feinabruf  V=Vorschau  M=Materialfreigabe',
-          P.condLabel.x, condY + 6, fonts, { size: 8 });
-        condY += 20;
+          P.condLabel.x, noteY, fonts, { size: 8 });
+        noteY += 14;
       }
-      const closingY = Math.max(condY + 12, P.closing.top - 20);
+      const notices = [
+        'Bitte bestätigen Sie uns diese Bestellung mit verbindlichem Liefertermin.',
+        '',
+        'Es gelten ausschließlich unsere Einkaufsbedingungen. Abweichende Bedingungen des Lieferanten',
+        'werden nur wirksam, wenn wir ihnen schriftlich zugestimmt haben.',
+        '',
+        'Bitte geben Sie auf allen Lieferpapieren und Rechnungen unsere Bestellnummer an.',
+      ];
+      notices.forEach((line, lineIndex) => txt(page, line, P.condLabel.x, noteY + lineIndex * 12, fonts, { size: 8 }));
+      const closingY = Math.max(noteY + notices.length * 12 + 8, P.closing.top);
       txt(page, 'Mit freundlichen Grüßen', P.closing.x, closingY, fonts, { size: P.closing.size });
       txt(page, 'MTCONNECTIVITY power2pcb GmbH', P.closing.x, closingY + P.closing.lineHeight, fonts, { size: P.closing.size });
     }
