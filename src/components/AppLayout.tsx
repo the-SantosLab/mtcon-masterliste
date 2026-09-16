@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedDepartments } from '@/hooks/useDeptLead';
@@ -38,7 +38,6 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { usePresenceHeartbeat } from '@/hooks/usePresenceHeartbeat';
 import { MtiqWidget } from '@/components/mtiq/MtiqWidget';
 import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
-import { SortableNavList } from '@/components/SortableNavList';
 import { PerfPanel, PerfProfiler } from '@/components/PerfPanel';
 import { PdfJobToaster } from '@/components/PdfJobToaster';
 import { SatisfactionSurveyBanner } from '@/components/SatisfactionSurveyBanner';
@@ -125,88 +124,89 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const mslItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/cases/kanban', label: 'Kanban', icon: ClipboardList },
-  { href: '/cases', label: 'Vorgänge', icon: ClipboardList },
-  { href: '/projects', label: 'Projekte / Vorgänge +', icon: FolderKanban },
-  { href: '/notes', label: 'Notizen', icon: StickyNote },
-  { href: '/cockpit', label: 'Cockpit (Beta)', icon: LayoutDashboard },
-];
+type NavAccess = 'all' | 'crm' | 'erp' | 'admin' | 'lead' | 'master';
+type ProcessNavItem = { href: string; label: string; icon: any; access?: NavAccess; badge?: 'cases' | 'container'; secondary?: boolean };
+type ProcessNavGroup = { id: string; label: string; icon: any; items: ProcessNavItem[] };
 
-const navItems: { href: string; label: string; icon: any }[] = [];
-
-
-const systemItems = [
-  { href: '/support', label: 'Support', icon: Headphones },
-  { href: '/docs', label: 'Dokumentation', icon: BookOpen },
-];
-const adminItems = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/users', label: 'Mitarbeiter', icon: Users },
-  { href: '/admin/departments', label: 'Abteilungen', icon: Building2 },
-  { href: '/admin/master-data', label: 'Stammdaten', icon: Database },
-  { href: '/admin/api-explorer', label: 'API-Explorer', icon: TerminalSquare },
-  
-  
-  
-  { href: '/admin/templates', label: 'Standard Vorgänge', icon: FileText },
-  { href: '/admin/pdf-vorlagen', label: 'PDF-Vorlagen', icon: FileText },
-  { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone },
-  { href: '/admin/feedback', label: 'Feedback', icon: Star },
-  { href: '/products/requests', label: 'Produktvorschläge', icon: Package },
-  { href: '/admin/workflows', label: 'Workflows', icon: Workflow },
-  { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles },
-  { href: '/admin/document-types', label: 'Dokumenttypen', icon: FileText },
-  { href: '/admin/action-rules', label: 'Aktions-Regeln', icon: Workflow },
-  { href: '/admin/inbox-stats', label: 'Inbox-Statistik', icon: LayoutDashboard },
-  { href: '/admin/duplicate-scan', label: 'MTIQ Duplikat-Scan', icon: Sparkles },
-  { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck },
-  { href: '/admin/container-access', label: 'Container-Zugriff', icon: Lock },
-  { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
-  { href: '/admin/folder-templates', label: 'Ordner-Vorlagen', icon: FolderTree },
-  { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2 },
-  { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, masterOnly: true },
-];
-
-const crmItems = [
-  { href: '/crm/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/crm/deals', label: 'Deals', icon: Briefcase },
-  { href: '/crm/companies', label: 'Geschäftspartner', icon: Building2 },
-  { href: '/crm/contacts', label: 'Kontakte', icon: Users },
-  { href: '/crm/offers', label: 'Angebote', icon: FileText },
-  { href: '/crm/activities', label: 'Aktivitäten', icon: Activity },
-  { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar },
-  { href: '/crm/analytics', label: 'Auswertungen', icon: TrendingUp },
-  { href: '/crm/outbound', label: 'Outbound', icon: Send },
-  { href: '/crm/outbound/leads', label: 'Leads', icon: Target },
-  { href: '/crm/wiki', label: 'Wiki', icon: BookOpen },
- { href: '/crm/settings/routing', label: 'Auto-Routing', icon: Workflow },
- { href: '/crm/settings/webformulare', label: 'Webformulare', icon: Globe },
- 
- { href: '/crm/settings', label: 'Einstellungen', icon: Settings },
-];
-
-const erpItems = [
-  { href: '/admin/inventory', label: 'Lager', icon: Package },
-  
-  { href: '/admin/disposition', label: 'Disposition', icon: Activity },
-  { href: '/admin/lots', label: 'Chargen', icon: Package },
-  { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock },
-  { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
-  { href: '/orders', label: 'Aufträge', icon: ClipboardList },
-  { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart },
-  { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
-  { href: '/rechnungen', label: 'Rechnungen', icon: Receipt },
-  { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
-  { href: '/admin/erp-export', label: 'Mahnwesen & DATEV', icon: Receipt },
-  { href: '/reporting/einkauf', label: 'Reporting Einkauf', icon: Receipt },
-  { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange },
-  { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText },
-  { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star },
-  { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp },
-  { href: '/ki-artikel', label: 'KI-Artikelanlage', icon: Sparkles },
-  { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package },
+const processNavGroups: ProcessNavGroup[] = [
+  { id: 'overview', label: 'Übersicht', icon: LayoutDashboard, items: [
+    { href: '/', label: 'Mein Dashboard', icon: LayoutDashboard },
+    { href: '/cases', label: 'Meine Vorgänge', icon: ClipboardList, badge: 'cases' },
+    { href: '/cases/kanban', label: 'Kanban', icon: Workflow },
+    { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar, access: 'crm' },
+    { href: '/cockpit', label: 'Cockpit (Beta)', icon: LayoutDashboard },
+  ]},
+  { id: 'sales', label: 'Kunden gewinnen', icon: Target, items: [
+    { href: '/crm/dashboard', label: 'Vertriebsübersicht', icon: LayoutDashboard, access: 'crm' },
+    { href: '/crm/outbound/leads', label: 'Leads', icon: Target, access: 'crm' },
+    { href: '/crm/outbound', label: 'Outbound', icon: Send, access: 'crm' },
+    { href: '/crm/companies', label: 'Geschäftspartner', icon: Building2, access: 'crm' },
+    { href: '/crm/contacts', label: 'Kontakte', icon: Users, access: 'crm' },
+    { href: '/crm/deals', label: 'Deals', icon: Briefcase, access: 'crm' },
+    { href: '/crm/offers', label: 'Angebote', icon: FileText, access: 'crm' },
+    { href: '/crm/activities', label: 'Aktivitäten', icon: Activity, access: 'crm' },
+  ]},
+  { id: 'fulfillment', label: 'Aufträge abwickeln', icon: ClipboardList, items: [
+    { href: '/orders', label: 'Aufträge', icon: ClipboardList, access: 'erp' },
+    { href: '/admin/disposition', label: 'Disposition', icon: Activity, access: 'erp' },
+    { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange, access: 'erp' },
+    { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck, access: 'erp' },
+    { href: '/admin/templates', label: 'Standard Vorgänge', icon: FileText, access: 'admin' },
+  ]},
+  { id: 'procurement', label: 'Einkaufen & lagern', icon: ShoppingCart, items: [
+    { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart, access: 'erp' },
+    { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart, access: 'erp' },
+    { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp' },
+    { href: '/admin/lots', label: 'Chargen', icon: Package, access: 'erp' },
+    { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock, access: 'erp' },
+    { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt, access: 'erp' },
+    { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star, access: 'erp' },
+    { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp, access: 'erp' },
+    { href: '/ki-artikel', label: 'KI-Artikelanlage', icon: Sparkles, access: 'erp' },
+    { href: '/admin/articles', label: 'Artikel (ISSOS)', icon: Package, access: 'erp' },
+  ]},
+  { id: 'finance', label: 'Abrechnen & auswerten', icon: Receipt, items: [
+    { href: '/rechnungen', label: 'Rechnungen', icon: Receipt, access: 'erp' },
+    { href: '/admin/erp-export', label: 'Mahnwesen & DATEV', icon: Receipt, access: 'erp' },
+    { href: '/crm/analytics', label: 'CRM-Auswertungen', icon: TrendingUp, access: 'crm' },
+    { href: '/reporting/einkauf', label: 'Einkaufsreporting', icon: TrendingUp, access: 'erp' },
+  ]},
+  { id: 'knowledge', label: 'Wissen & Zusammenarbeit', icon: BookOpen, items: [
+    { href: '/projects', label: 'Projekte', icon: FolderKanban },
+    { href: '/notes', label: 'Notizen', icon: StickyNote },
+    { href: '/crm/wiki', label: 'Wiki', icon: BookOpen, access: 'crm' },
+    { href: '/zeichnungen', label: 'Zeichnungen', icon: FileText, access: 'erp' },
+    { href: '/container', label: '3D Container', icon: FolderArchive, badge: 'container' },
+    { href: '/support', label: 'Support', icon: Headphones },
+    { href: '/docs', label: 'Dokumentation', icon: BookOpen },
+    { href: '/map', label: 'Business Map', icon: Network, access: 'admin' },
+  ]},
+  { id: 'admin', label: 'Verwaltung', icon: Settings, items: [
+    { href: '/admin/dashboard', label: 'Verwaltungsübersicht', icon: LayoutDashboard, access: 'lead' },
+    { href: '/admin/users', label: 'Mitarbeiter', icon: Users, access: 'admin' },
+    { href: '/admin/departments', label: 'Abteilungen', icon: Building2, access: 'lead' },
+    { href: '/admin/master-data', label: 'Stammdaten', icon: Database, access: 'admin' },
+    { href: '/admin/pdf-vorlagen', label: 'PDF-Vorlagen', icon: FileText, access: 'admin' },
+    { href: '/crm/settings', label: 'CRM-Einstellungen', icon: Settings, access: 'crm' },
+    { href: '/crm/settings/routing', label: 'Auto-Routing', icon: Workflow, access: 'crm', secondary: true },
+    { href: '/crm/settings/webformulare', label: 'Webformulare', icon: Globe, access: 'crm', secondary: true },
+    { href: '/admin/workflows', label: 'Workflows', icon: Workflow, access: 'admin', secondary: true },
+    { href: '/admin/document-types', label: 'Dokumenttypen', icon: FileText, access: 'admin', secondary: true },
+    { href: '/admin/action-rules', label: 'Aktions-Regeln', icon: Workflow, access: 'admin', secondary: true },
+    { href: '/admin/security', label: 'Sicherheit', icon: ShieldCheck, access: 'admin', secondary: true },
+    { href: '/admin/backups', label: 'Backups', icon: DatabaseBackup, access: 'admin', secondary: true },
+    { href: '/admin/api-explorer', label: 'API-Explorer', icon: TerminalSquare, access: 'admin', secondary: true },
+    { href: '/admin/announcements', label: 'Mitteilungen', icon: Megaphone, access: 'admin', secondary: true },
+    { href: '/admin/feedback', label: 'Feedback', icon: Star, access: 'admin', secondary: true },
+    { href: '/products/requests', label: 'Produktvorschläge', icon: Package, access: 'admin', secondary: true },
+    { href: '/admin/ai-prompts', label: 'KI-Prompts', icon: Sparkles, access: 'admin', secondary: true },
+    { href: '/admin/inbox-stats', label: 'Inbox-Statistik', icon: LayoutDashboard, access: 'admin', secondary: true },
+    { href: '/admin/duplicate-scan', label: 'MTIQ Duplikat-Scan', icon: Sparkles, access: 'admin', secondary: true },
+    { href: '/admin/container-access', label: 'Container-Zugriff', icon: Lock, access: 'admin', secondary: true },
+    { href: '/admin/folder-templates', label: 'Ordner-Vorlagen', icon: FolderTree, access: 'admin', secondary: true },
+    { href: '/admin/deleted-cases', label: 'Gelöschte Vorgänge', icon: Trash2, access: 'admin', secondary: true },
+    { href: '/admin/papierkorb', label: 'Papierkorb', icon: Trash2, access: 'master', secondary: true },
+  ]},
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
