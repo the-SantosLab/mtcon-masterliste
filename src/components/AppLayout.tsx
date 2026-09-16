@@ -224,20 +224,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const sbWidth = sidebarCompact ? 'w-56' : 'w-64';
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'));
-  const [crmOpen, setCrmOpen] = useState(location.pathname.startsWith('/crm'));
-  const [mslOpen, setMslOpen] = useState(
-    location.pathname === '/' ||
-    location.pathname.startsWith('/cases') ||
-    location.pathname.startsWith('/projects') ||
-    location.pathname.startsWith('/notes')
-  );
-  const [erpOpen, setErpOpen] = useState(
-    ['/admin/inventory', '/admin/storage-locations', '/admin/disposition', '/admin/lots', '/admin/sperrlager', '/admin/purchasing', '/orders', '/bestellungen', '/lieferscheine', '/rechnungen', '/eingangsrechnungen', '/admin/erp-export', '/reporting/einkauf', '/kapazitaet', '/zeichnungen', '/lieferantenbewertung', '/preismanagement', '/ki-artikel', '/admin/articles'].some(p => location.pathname.startsWith(p))
-  );
-  const [systemOpen, setSystemOpen] = useState(
-    ['/support', '/docs', '/feedback'].some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
-  );
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [moreAdminOpen, setMoreAdminOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
   const [oldPw, setOldPw] = useState('');
@@ -247,6 +235,38 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [pwLoading, setPwLoading] = useState(false);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
   usePresenceHeartbeat();
+
+  const canAccessNavItem = (access: NavAccess = 'all') => {
+    if (access === 'crm') return showCrm;
+    if (access === 'erp') return showErp;
+    if (access === 'admin') return isAdmin;
+    if (access === 'lead') return isAdmin || isLead;
+    if (access === 'master') return isAdmin && isMaster;
+    return true;
+  };
+
+  const visibleGroups = useMemo(
+    () => processNavGroups
+      .map(group => ({ ...group, items: group.items.filter(item => canAccessNavItem(item.access)) }))
+      .filter(group => group.items.length > 0),
+    [showCrm, showErp, isAdmin, isLead, isMaster],
+  );
+
+  const pathMatches = (href: string) => href === '/'
+    ? location.pathname === '/'
+    : location.pathname === href || location.pathname.startsWith(`${href}/`);
+
+  const activeHref = visibleGroups
+    .flatMap(group => group.items)
+    .filter(item => pathMatches(item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+
+  const routeGroup = visibleGroups.find(group => group.items.some(item => item.href === activeHref))?.id ?? 'overview';
+
+  useEffect(() => {
+    setOpenGroup(routeGroup);
+    setMoreAdminOpen(visibleGroups.find(group => group.id === routeGroup)?.items.some(item => item.href === activeHref && item.secondary) ?? false);
+  }, [routeGroup, activeHref]);
 
   const handleChangePassword = async () => {
     if (!newPw || newPw.length < 8) { toast.error('Neues Passwort muss mindestens 8 Zeichen lang sein'); return; }
@@ -277,14 +297,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const active = (href: string) => {
-    if (href === '/') return location.pathname === '/';
-    if (href === '/cases') {
-      if (location.pathname.startsWith('/cases/kanban')) return false;
-      return location.pathname === '/cases' || /^\/cases\/[^\/]+$/.test(location.pathname);
-    }
-    return location.pathname === href || location.pathname.startsWith(href + '/');
-  };
+  const active = (href: string) => href === activeHref;
 
   const linkClass = (href: string) => cn(
     'relative flex items-center gap-2.5 px-3 rounded transition-all duration-150 ease-out',
@@ -335,139 +348,72 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="flex-1 text-left">Suche</span>
             <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-sidebar-border px-1 py-0.5 text-[9px] font-mono text-muted-foreground">⌘K</kbd>
           </button>
-          <div className="border-t border-sidebar-border my-1" />
-          <button
-            onClick={() => setMslOpen(!mslOpen)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
-          >
-            <ClipboardList className="h-4 w-4" />MSL
-            <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', mslOpen && 'rotate-180')} />
-          </button>
-          {mslOpen && (
-            <SortableNavList
-              storageKey="mtcon.sidebar.order.msl"
-              items={mslItems.map(i => ({ ...i, trailing: i.href === '/cases' ? <CasesUnreadBadge /> : null }))}
-              linkClass={linkClass}
-              onItemClick={() => setOpen(false)}
-              itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
-            />
-          )}
-          {navItems.map(item => (
-            <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={linkClass(item.href)}>
-              <item.icon className="h-4 w-4" />
-              <span className="flex-1">{item.label}</span>
+          <div className="border-t border-sidebar-border/60 my-2" />
+          {visibleGroups.map(group => {
+            const expanded = openGroup === group.id;
+            const primaryItems = group.items.filter(item => !item.secondary);
+            const secondaryItems = group.items.filter(item => item.secondary);
+            return (
+              <div key={group.id} className="py-0.5">
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  onClick={() => setOpenGroup(expanded ? null : group.id)}
+                  className={cn(
+                    'flex items-center gap-2.5 px-3 py-2 rounded text-[13px] w-full transition-colors',
+                    expanded ? 'text-foreground bg-sidebar-accent/35 font-medium' : 'text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/40',
+                  )}
+                >
+                  <group.icon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 text-left truncate">{group.label}</span>
+                  <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', expanded && 'rotate-180')} />
+                </button>
+                {expanded && (
+                  <div className="mt-0.5 mb-1">
+                    {primaryItems.map(item => (
+                      <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5')}>
+                        <item.icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="flex-1 truncate">{item.label}</span>
+                        {item.badge === 'cases' && <CasesUnreadBadge />}
+                        {item.badge === 'container' && <ContainerUnreadBadge />}
+                      </Link>
+                    ))}
+                    {secondaryItems.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setMoreAdminOpen(value => !value)}
+                          className="flex items-center gap-2.5 w-full pl-9 pr-3 py-1.5 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/40 transition-colors"
+                        >
+                          <Settings className="h-3.5 w-3.5" />
+                          <span className="flex-1 text-left">Weitere Einstellungen</span>
+                          <ChevronDown className={cn('h-3 w-3 transition-transform', moreAdminOpen && 'rotate-180')} />
+                        </button>
+                        {moreAdminOpen && secondaryItems.map(item => (
+                          <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-14 !text-[11px] !py-1')}>
+                            <item.icon className="h-3 w-3 shrink-0" />
+                            <span className="flex-1 truncate">{item.label}</span>
+                          </Link>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className="border-t border-sidebar-border/60 mt-2 pt-2">
+            <button
+              onClick={() => setBugDialogOpen(true)}
+              className="flex items-center gap-2.5 w-full px-3 py-1.5 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/40 transition-colors"
+            >
+              <Bug className="h-3.5 w-3.5" />
+              <span className="flex-1 text-left">Bug / Feedback melden</span>
+            </button>
+            <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-9 !text-[11px] !py-1')}>
+              <span>Meine Meldungen</span>
             </Link>
-          ))}
-
-          {showErp && (
-            <>
-              <div className="border-t border-sidebar-border my-1" />
-              <button
-                onClick={() => setErpOpen(!erpOpen)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
-              >
-                <Package className="h-4 w-4" />ERP
-                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', erpOpen && 'rotate-180')} />
-              </button>
-              {erpOpen && (
-                <SortableNavList
-                  storageKey="mtcon.sidebar.order.erp"
-                  items={erpItems}
-                  linkClass={linkClass}
-                  onItemClick={() => setOpen(false)}
-                  itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
-                />
-              )}
-            </>
-          )}
-
-          {showCrm && (
-            <>
-              <div className="border-t border-sidebar-border my-1" />
-              <button
-                onClick={() => setCrmOpen(!crmOpen)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
-              >
-                <Briefcase className="h-4 w-4" />CRM
-                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', crmOpen && 'rotate-180')} />
-              </button>
-              {crmOpen && (
-                <SortableNavList
-                  storageKey="mtcon.sidebar.order.crm"
-                  items={crmItems}
-                  linkClass={linkClass}
-                  onItemClick={() => setOpen(false)}
-                  itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
-                />
-              )}
-            </>
-          )}
-
-          <div className="border-t border-sidebar-border my-1" />
-          <Link to="/container" onClick={() => setOpen(false)} className={linkClass('/container')}>
-            <FolderArchive className="h-4 w-4" />
-            <span className="flex-1">3D Container</span>
-            <ContainerUnreadBadge />
-          </Link>
-
-          {isAdmin && (
-            <Link to="/map" onClick={() => setOpen(false)} className={linkClass('/map')}>
-              <Network className="h-4 w-4" />
-              <span className="flex-1">Business Map</span>
-            </Link>
-          )}
-
-          {(isAdmin || isLead) && (
-            <>
-              <div className="border-t border-sidebar-border my-1" />
-              <button
-                onClick={() => setAdminOpen(!adminOpen)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
-              >
-                <Settings className="h-4 w-4" />Verwaltung
-                <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', adminOpen && 'rotate-180')} />
-              </button>
-              {adminOpen && (
-                <SortableNavList
-                  storageKey="mtcon.sidebar.order.admin"
-                  items={adminItems.filter(i => isAdmin ? (!(i as any).masterOnly || isMaster) : (i.href === '/admin/departments' || i.href === '/admin/dashboard'))}
-                  linkClass={linkClass}
-                  onItemClick={() => setOpen(false)}
-                  itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
-                />
-              )}
-            </>
-          )}
-
-          <div className="border-t border-sidebar-border my-1" />
-          <button
-            onClick={() => setSystemOpen(!systemOpen)}
-            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 w-full transition-colors"
-          >
-            <Settings className="h-4 w-4" />System
-            <ChevronDown className={cn('h-[18px] w-[18px] ml-auto transition-transform', systemOpen && 'rotate-180')} />
-          </button>
-          {systemOpen && (
-            <>
-              <SortableNavList
-                storageKey="mtcon.sidebar.order.system"
-                items={systemItems.map(i => ({ ...i, trailing: i.href === '/container' ? <ContainerUnreadBadge /> : null }))}
-                linkClass={linkClass}
-                onItemClick={() => setOpen(false)}
-                itemClassName="pl-9 !text-xs !py-1 [&>svg]:!h-3.5 [&>svg]:!w-3.5"
-              />
-              <button
-                onClick={() => setBugDialogOpen(true)}
-                className="flex items-center gap-2.5 w-full px-3 py-2 pl-9 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
-              >
-                <Bug className="h-4 w-4" />
-                <span className="flex-1 text-left">Bug / Feedback melden</span>
-              </button>
-              <Link to="/feedback" onClick={() => setOpen(false)} className={cn(linkClass('/feedback'), 'pl-14 text-[12px]')}>
-                <span>Meine Meldungen</span>
-              </Link>
-            </>
-          )}
+          </div>
         </nav>
 
         <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-between gap-2">
