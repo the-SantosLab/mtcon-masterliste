@@ -1,8 +1,5 @@
 // Rechnungs-PDF via Overlay auf pixelgleiche Original-Vorlage.
-// Nutzt pdf-lib: (1) weiße Masken über alle statisch gedruckten Textzonen der
-// Vorlage (Labels + Werte), (2) Labels + Werte in der gewählten Sprache
-// (DE/EN) neu gezeichnet. Logo, Briefkopf, Rahmen und Footer bleiben aus der
-// Vorlage unverändert.
+// Design identisch zu Angebot / Auftragsbestätigung / Bestellung.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/invoice-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
@@ -10,7 +7,6 @@ import { fmt } from './renderer';
 import { drawStatusStamp, type DocStatusInfo } from './statusStamp';
 import type { RechnungData } from './generators';
 
-// PDF-Koordinaten: origin BOTTOM-LEFT. Alle Design-Koordinaten sind "top-Y".
 const PAGE_H = 842;
 const topY = (yFromTop: number) => PAGE_H - yFromTop;
 
@@ -19,9 +15,6 @@ const COLOR_RED = rgb(0.86, 0.08, 0.24);
 const WHITE = rgb(1, 1, 1);
 const SHADE = rgb(0.86, 0.86, 0.86);
 
-// ---- Runtime-Masken (weiße Rechtecke über alle statisch bedruckten Zonen) ----
-// [x1, yTop1, x2, yTop2]
-// Geometrie identisch zu Angebot / Auftragsbestätigung / Bestellung.
 const MASKS_P1: [number, number, number, number][] = [
   [330, 140, 575, 315],
   [ 45, 145, 330, 300],
@@ -32,34 +25,33 @@ const MASKS_PX: [number, number, number, number][] = [
   [ 45, 195, 575, 755],
 ];
 
-// ---- Feldpositionen (baseline ≈ yFromTop + size*0.85) ----
-const P1 = {
-  invoiceTitle: { x: 335, top: 150, size: 10 },
-  recipient:    { x: 70,  top: 170, size: 9, lineHeight: 12 },
-  metaLabel:    { x: 335, top: 170, size: 8,  lineHeight: 11 },
-  metaValue:    { x: 435, top: 170, size: 8,  lineHeight: 11 },
-  dateLabel:    { x: 335, top: 294, size: 8 },
-  dateValue:    { x: 435, top: 294, size: 8 },
-  pageValue:    { x: 500, top: 294, size: 8 },
-  intro:        { x: 70,  top: 323, size: 9, lineHeight: 13 },
-  headerRow:    { top: 369, size: 8 },
-  tableTop:     400,
-  tableBottom:  715,
-  rowLine:      11,
+const P = {
+  title:      { x: 335, top: 150, size: 10 },
+  recipient:  { x: 70,  top: 170, size: 9, lineHeight: 12 },
+  metaLabel:  { x: 335, top: 170, size: 8,  lineHeight: 11 },
+  metaValue:  { x: 435, top: 170, size: 8,  lineHeight: 11 },
+  dateLabel:  { x: 335, top: 294, size: 8 },
+  dateValue:  { x: 435, top: 294, size: 8 },
+  pageValue:  { x: 500, top: 294, size: 8 },
+
+  intro:      { x: 70,  top: 323, size: 9, lineHeight: 13 },
+  headerRow:  { top: 369, size: 8 },
+  tableTop:   400,
+  tableBottom: 715,
+  rowLine:    11,
   cols: {
-    dn:      66,
-    article: 190,
-    qty:     360,   // right-align
-    price:   455,   // right-align
-    value:   560,   // right-align
+    pos:     66,
+    article: 100,
+    dn:      225,
+    menge:   360,
+    preis:   455,
+    value:   560,
   },
-  totalLabel:   { x: 365, lineHeight: 13, size: 9 },
-  totalValue:   { x: 560, lineHeight: 13, size: 9 },
-  condLabel:    { x: 70,  size: 9, lineHeight: 14 },
-  condValue:    { x: 180, size: 9, lineHeight: 14 },
-};
-const P2 = {
-  factoring:    { x: 70,  size: 8, lineHeight: 11, width: 490 },
+  totalLabel: { x: 365, lineHeight: 13, size: 9 },
+  totalValue: { x: 560, lineHeight: 13, size: 9 },
+  condLabel:  { x: 70,  size: 9, lineHeight: 14 },
+  condValue:  { x: 180, size: 9, lineHeight: 14 },
+  factoring:  { x: 70,  size: 8, lineHeight: 11, width: 490 },
 };
 
 // ---- Beschriftungen DE/EN ----
@@ -68,11 +60,13 @@ const L = {
   invoiceNo:     { de: 'Rechnung Nr.',     en: 'Invoice No.' },
   creditNoteNo:  { de: 'Gutschrift Nr.',   en: 'Credit note No.' },
   stornoNo:      { de: 'Storno Nr.',       en: 'Cancellation No.' },
-  custNo:        { de: 'Kd.-Nr.',          en: 'Cust.no' },
+  custNo:        { de: 'Kunden-Nr',        en: 'Cust.no' },
   contact:       { de: 'Ansprechpartner',  en: 'Contact person' },
   phone:         { de: 'Telefon',          en: 'Phone' },
   fax:           { de: 'Fax',              en: 'Fax' },
   email:         { de: 'E-Mail',           en: 'Email' },
+  vatId:         { de: 'USt-ID-Nr',        en: 'VAT ID' },
+  subject:       { de: 'Betreff',          en: 'Subject' },
   date:          { de: 'Datum',            en: 'Date' },
   page:          { de: 'Seite',            en: 'Page' },
   of:            { de: 'von',              en: 'of' },
@@ -81,13 +75,16 @@ const L = {
                    en: 'we will charge you the following positions:' },
   introCredit:   { de: 'wir schreiben Ihnen folgende Positionen gut:',
                    en: 'we credit you for the following positions:' },
+  colPos:        { de: 'Pos',              en: 'Pos' },
   colDn:         { de: 'LS-Nr.',           en: 'DN no' },
-  colArticle:    { de: 'Artikel-Nr.',      en: 'Article No' },
+  colArticle:    { de: 'Art.-Nr.',         en: 'Article No' },
   colQty:        { de: 'Menge',            en: 'Qty' },
   colPrice:      { de: 'Preis',            en: 'Price' },
   colValue:      { de: 'Positionswert',    en: 'Item value' },
+  net:           { de: 'Nettobetrag',      en: 'Net amount' },
   total:         { de: 'Gesamtbetrag',     en: 'Total amount' },
   payment:       { de: 'Zahlungsbedingung', en: 'Payment term' },
+  dueDate:       { de: 'Fällig am',        en: 'Due date' },
   currencyUsd:   { de: 'Währung in USD / US$', en: 'Currency in USD / US$' },
   unitPcs:       { de: 'Stk',              en: 'Pcs' },
   taxReverse:    { de: 'Steuerschuldnerschaft des Leistungsempfängers (§ 13b UStG / Reverse charge).',
@@ -103,7 +100,6 @@ const L = {
 };
 const t = (key: keyof typeof L, lang: Lang) => L[key][lang] as string;
 
-// ---- Factoring-Text (Seite 2) ----
 const FACTORING = {
   de: [
     'Aufgrund einer Factoring-Vereinbarung sind unsere Forderungen an die SüdFactoring GmbH, Pariser Platz 7, 70173 Stuttgart abgetreten. Zahlungen mit schuldbefreiender Wirkung können ausschließlich auf folgendes Konto geleistet werden:',
@@ -112,18 +108,10 @@ const FACTORING = {
     'IBAN: DE42 6005 0101 7482 0107 83',
     'BIC: SOLADEST600',
     '',
-    'Bitte geben Sie bei der Überweisung die Kundennummer und die vollständige Rechnungsnummer ohne Leerzeichen oder Sonderzeichen, getrennt durch ein Komma, im Verwendungszweck an. Bei mehr als 5 Rechnungsnummern senden Sie bitte eine Benachrichtigung an debitoren@suedfactoring.de.',
-    '',
-    'Die Datenschutzhinweise der SüdFactoring GmbH finden Sie unter https://www.suedfactoring.de/Datenschutz/.',
-    '',
+    'Bitte geben Sie bei der Überweisung die Kundennummer und die vollständige Rechnungsnummer ohne Leerzeichen oder Sonderzeichen, getrennt durch ein Komma, im Verwendungszweck an.',
     '',
     'Beanstandungen können nur innerhalb der folgenden 8 Tage berücksichtigt werden.',
-    '',
-    'Lieferung gemäß unseren allgemeinen Geschäftsbedingungen:',
-    'siehe www.mtcon.eu/de/power2pcb/agb/',
-    '',
-    'Mit freundlichen Grüßen',
-    'MTCONNECTIVITY power2pcb GmbH',
+    'Lieferung gemäß unseren allgemeinen Geschäftsbedingungen: siehe www.mtcon.eu/de/power2pcb/agb/',
   ],
   en: [
     'Under a factoring agreement, our receivables have been transferred to SüdFactoring GmbH, Pariser Platz 7, 70173 Stuttgart, Germany. Payment with debt-discharging effect can only be made to their account:',
@@ -132,18 +120,10 @@ const FACTORING = {
     'IBAN: DE42 6005 0101 7482 0107 83',
     'BIC: SOLADEST600',
     '',
-    'When making the transfer, please state the customer number and the complete invoice number without spaces or special characters, separated by a comma, in the reference field. If there are more than 5 invoice numbers, please send a notification to debitoren@suedfactoring.de.',
-    '',
-    'The data protection information of SüdFactoring GmbH can be found at https://www.suedfactoring.de/Datenschutz/.',
-    '',
+    'When making the transfer, please state the customer number and the complete invoice number without spaces or special characters, separated by a comma, in the reference field.',
     '',
     'Complaints can only be considered within the following 8 days.',
-    '',
-    'Delivery according to our general terms and conditions of trade:',
-    'see www.mtcon.eu/en/power2pcb/gcs/',
-    '',
-    'Best regards',
-    'MTCONNECTIVITY power2pcb GmbH',
+    'Delivery according to our general terms and conditions of trade: see www.mtcon.eu/en/power2pcb/gcs/',
   ],
 };
 
@@ -155,22 +135,12 @@ async function loadTemplate(scope?: TemplateScope): Promise<ArrayBuffer> {
 
 function mask(page: PDFPage, boxes: [number, number, number, number][]) {
   for (const [x1, y1, x2, y2] of boxes) {
-    page.drawRectangle({
-      x: x1,
-      y: topY(y2),
-      width: x2 - x1,
-      height: y2 - y1,
-      color: WHITE,
-    });
+    page.drawRectangle({ x: x1, y: topY(y2), width: x2 - x1, height: y2 - y1, color: WHITE });
   }
 }
 
 function txt(
-  page: PDFPage,
-  text: string,
-  x: number,
-  yTop: number,
-  fonts: Fonts,
+  page: PDFPage, text: string, x: number, yTop: number, fonts: Fonts,
   opts: { size?: number; bold?: boolean; red?: boolean; align?: 'left' | 'right' | 'center' } = {},
 ) {
   const size = opts.size ?? 9;
@@ -179,16 +149,9 @@ function txt(
   let drawX = x;
   if (opts.align === 'right') drawX = x - font.widthOfTextAtSize(text, size);
   else if (opts.align === 'center') drawX = x - font.widthOfTextAtSize(text, size) / 2;
-  page.drawText(text, {
-    x: drawX,
-    y: topY(yTop + size * 0.85),
-    size,
-    font,
-    color,
-  });
+  page.drawText(text, { x: drawX, y: topY(yTop + size * 0.85), size, font, color });
 }
 
-/** Bricht Text auf gegebene Breite (px) um, gibt die Zeilen zurück. */
 function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   if (!text) return [''];
   const words = text.split(/\s+/);
@@ -196,204 +159,217 @@ function wrap(text: string, font: PDFFont, size: number, maxWidth: number): stri
   let line = '';
   for (const w of words) {
     const test = line ? `${line} ${w}` : w;
-    if (font.widthOfTextAtSize(test, size) <= maxWidth) {
-      line = test;
-    } else {
-      if (line) lines.push(line);
-      line = w;
-    }
+    if (font.widthOfTextAtSize(test, size) <= maxWidth) line = test;
+    else { if (line) lines.push(line); line = w; }
   }
   if (line) lines.push(line);
   return lines;
 }
 
+interface PosBlock {
+  header: { pos: string; artNr: string; dn: string; qty: string; price: string; value: string };
+  descriptionLines: string[];
+  extraLines: string[];
+  height: number;
+}
+
 /** Rechnung als PDF-Bytes; nutzt Overlay auf Original-Vorlage. */
-export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {}): Promise<Uint8Array> {
+export async function renderInvoiceOverlay(
+  d: RechnungData,
+  opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {},
+): Promise<Uint8Array> {
   const tplBytes = await loadTemplate(opts.scope);
-  const pdf = await PDFDocument.load(tplBytes);
+  const tplDoc = await PDFDocument.load(tplBytes);
+  const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const fonts: Fonts = { regular, bold };
 
   const lang: Lang = (d.language ?? 'de') === 'en' ? 'en' : 'de';
-  const pages = pdf.getPages();
-  const page1 = pages[0];
-  const factoringPage = pages[1];
-
-  // 1) Masken
-  mask(page1, MASKS_P1);
-  if (factoringPage) mask(factoringPage, MASKS_P2);
-
-  // 2) Titel + Meta-Labels/Werte (Seite 1)
-  const titleKey = d.docKind === 'credit_note' ? 'creditNoteNo' : d.docKind === 'storno' ? 'stornoNo' : 'invoiceNo';
-  page1.drawRectangle({ x: 340, y: topY(158), width: 230, height: 18, color: SHADE });
-  txt(page1, `${t(titleKey, lang)} ${d.invoiceNo}`,
-    P1.invoiceTitle.x, P1.invoiceTitle.top, fonts,
-    { size: P1.invoiceTitle.size, bold: true });
-
-  const recipientLines = [d.party.name, ...d.party.lines].filter(Boolean);
-  recipientLines.forEach((line, i) => {
-    txt(page1, line, P1.recipient.x, P1.recipient.top + i * P1.recipient.lineHeight, fonts,
-      { size: P1.recipient.size });
-  });
-
-  // Meta: Label + Wert paarweise
-  const metaRows: Array<[string, string | undefined | null]> = [
-    [t('custNo', lang),  d.contact.customerNo ? String(d.contact.customerNo) : undefined],
-    [t('contact', lang), d.contact.contactName],
-    [t('phone', lang),   d.contact.phone],
-    [t('fax', lang),     d.contact.fax],
-    [t('email', lang),   d.contact.email],
-  ];
-  let metaRow = 0;
-  for (const [label, value] of metaRows) {
-    if (!value) continue;
-    const y = P1.metaLabel.top + metaRow * P1.metaLabel.lineHeight;
-    txt(page1, label, P1.metaLabel.x, y, fonts, { size: P1.metaLabel.size, bold: true });
-    txt(page1, value, P1.metaValue.x, y, fonts, { size: P1.metaValue.size });
-    metaRow++;
-  }
-
-  // Datum + Seitenzahl
-  txt(page1, t('date', lang), P1.dateLabel.x, P1.dateLabel.top, fonts,
-    { size: P1.dateLabel.size, bold: true });
-  txt(page1, d.date, P1.dateValue.x, P1.dateValue.top, fonts,
-    { size: P1.dateValue.size, bold: true });
-
-  const totalPages = factoringPage ? 2 : 1;
-  txt(page1, `${t('page', lang)} 1 ${t('of', lang)} ${totalPages}`,
-    P1.pageValue.x, P1.pageValue.top, fonts, { size: P1.pageValue.size });
-
-  // 3) Intro + Tabellen-Header
-  const introText = d.docKind === 'credit_note' || d.docKind === 'storno' ? t('introCredit', lang) : t('intro', lang);
-  txt(page1, introText, P1.intro.x, P1.intro.top, fonts,
-    { size: P1.intro.size });
-
-  page1.drawRectangle({ x: 45, y: topY(303), width: 525, height: 20, color: SHADE });
-  txt(page1, t('colDn', lang),      P1.cols.dn,      P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true });
-  txt(page1, t('colArticle', lang), P1.cols.article, P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true });
-  txt(page1, t('colQty', lang),     P1.cols.qty,     P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true, align: 'right' });
-  txt(page1, t('colPrice', lang),   P1.cols.price,   P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true, align: 'right' });
-  txt(page1, t('colValue', lang),   P1.cols.value,   P1.headerRow.top, fonts, { size: P1.headerRow.size, bold: true, align: 'right' });
-
-  // 4) Positionen
   const unitWord = t('unitPcs', lang);
-  const perUnit = (u?: string | null) => u || '1000';
-  let cursorTop = P1.tableTop;
+  const beschWidth = P.cols.value - 20 - P.cols.article;
 
-  for (const it of d.items) {
-    if (cursorTop > P1.tableBottom) break;
-    const dnLine = it.deliveryNo
+  const blocks: PosBlock[] = d.items.map((it, idx) => {
+    const posNo = it.pos != null && it.pos !== '' ? String(it.pos) : String((idx + 1) * 10);
+    const qtyStr = it.quantity != null ? `${fmt.qty(it.quantity)} ${it.unit || unitWord}` : '';
+    const priceStr = it.price != null
+      ? `${fmt.currency(it.price, d.currency)} / ${it.unit || '1000'}` : '';
+    const valueStr = it.positionValue != null ? fmt.currency(it.positionValue, d.currency) : '';
+    const dn = it.deliveryNo
       ? `${it.deliveryNo}${it.deliveryDate ? ` ${t('from', lang)} ${fmt.date(it.deliveryDate, lang)}` : ''}`
       : '';
-    const qtyStr = it.quantity != null ? `${fmt.qty(it.quantity)} ${unitWord}` : '';
-    const priceStr = it.price != null ? `${fmt.currency(it.price, d.currency)} / ${perUnit(it.unit)}` : '';
-    const valueStr = it.positionValue != null ? fmt.currency(it.positionValue, d.currency) : '';
+    const descLines: string[] = [];
+    if (it.description) for (const l of it.description.split('\n')) descLines.push(...wrap(l, regular, 9, beschWidth));
+    const extraLines: string[] = [];
+    for (const ex of it.extraLines || []) for (const l of String(ex).split('\n')) extraLines.push(...wrap(l, regular, 9, beschWidth));
+    const height = (1 + descLines.length + extraLines.length) * P.rowLine + 6;
+    return {
+      header: { pos: posNo, artNr: it.artNr || '', dn, qty: qtyStr, price: priceStr, value: valueStr },
+      descriptionLines: descLines, extraLines, height,
+    };
+  });
 
-    if (dnLine) txt(page1, dnLine, P1.cols.dn, cursorTop, fonts, { size: 9 });
-    if (it.artNr) txt(page1, it.artNr, P1.cols.article, cursorTop, fonts, { size: 9 });
-    if (qtyStr) txt(page1, qtyStr, P1.cols.qty, cursorTop, fonts, { size: 9, align: 'right' });
-    if (priceStr) txt(page1, priceStr, P1.cols.price, cursorTop, fonts, { size: 9, align: 'right' });
-    if (valueStr) txt(page1, valueStr, P1.cols.value, cursorTop, fonts, { size: 9, align: 'right' });
-    cursorTop += P1.rowLine;
+  const usable = P.tableBottom - P.tableTop;
+  const pagesOfBlocks: PosBlock[][] = [];
+  let current: PosBlock[] = []; let used = 0;
+  for (const b of blocks) {
+    if (used + b.height > usable && current.length) { pagesOfBlocks.push(current); current = []; used = 0; }
+    current.push(b); used += b.height;
+  }
+  if (current.length) pagesOfBlocks.push(current);
+  if (pagesOfBlocks.length === 0) pagesOfBlocks.push([]);
+  const totalPages = pagesOfBlocks.length + 1;
 
-    if (it.description) {
-      txt(page1, it.description, P1.cols.article, cursorTop, fonts, { size: 9 });
-      cursorTop += P1.rowLine;
-    }
-    for (const ex of it.extraLines ?? []) {
-      txt(page1, ex, P1.cols.article, cursorTop, fonts, { size: 9 });
-      cursorTop += P1.rowLine;
-    }
-    cursorTop += 4;
-  }
-
-  // 5) Summen / Zahlung
-  if (d.total != null) {
-    txt(page1, t('total', lang), P1.totalLabel.x, P1.totalLabel.top, fonts,
-      { size: P1.totalLabel.size, bold: true });
-    txt(page1, fmt.currency(d.total, d.currency), P1.totalValue.x, P1.totalValue.top, fonts,
-      { size: P1.totalValue.size, bold: true, align: 'right' });
-  }
-  if (d.currency === 'USD') {
-    txt(page1, t('currencyUsd', lang),
-      P1.currencyLine.x, P1.currencyLine.top, fonts,
-      { size: P1.currencyLine.size, bold: true, red: true });
-  }
-  if (d.paymentTerms) {
-    txt(page1, t('payment', lang), P1.paymentLabel.x, P1.paymentLabel.top, fonts,
-      { size: P1.paymentLabel.size, bold: true });
-    txt(page1, d.paymentTerms, P1.paymentValue.x, P1.paymentValue.top, fonts,
-      { size: P1.paymentValue.size });
+  const drawnPages: PDFPage[] = [];
+  for (let i = 0; i < totalPages; i++) {
+    const templatePageIndex = i === 0 ? 0 : Math.min(1, tplDoc.getPageCount() - 1);
+    const [copied] = await pdf.copyPages(tplDoc, [templatePageIndex]);
+    pdf.addPage(copied);
+    drawnPages.push(copied);
   }
 
-  // Steuer-Hinweis (Reverse-Charge, EU-steuerfrei, Kleinunternehmer, Ausfuhr)
-  const taxNoteKey: keyof typeof L | null =
-    d.taxMode === 'reverse_charge' ? 'taxReverse' :
-    d.taxMode === 'tax_free_eu' ? 'taxFreeEu' :
-    d.taxMode === 'tax_free_third_country' ? 'taxFreeThird' :
-    d.taxMode === 'small_business' ? 'taxSmall' : null;
-  let noteY = P1.paymentLabel.top + 12;
-  if (taxNoteKey) {
-    const lines = wrap(t(taxNoteKey, lang), bold, 8.5, 480);
-    for (const line of lines) {
-      txt(page1, line, P1.paymentLabel.x, noteY, fonts, { size: 8.5, bold: true });
-      noteY += 10;
-    }
-  }
-  if (d.skontoPercent && d.skontoDays) {
-    const skontoFn = L.skonto[lang] as (p: string, d: string) => string;
-    txt(page1, skontoFn(Number(d.skontoPercent).toFixed(2).replace('.', lang === 'de' ? ',' : '.'), String(d.skontoDays)),
-      P1.paymentLabel.x, noteY, fonts, { size: 8.5 });
-  }
-  if (factoringPage) {
-    factoringPage.drawRectangle({ x: 340, y: topY(158), width: 230, height: 18, color: SHADE });
-    txt(factoringPage, `${t('invoiceNo', lang)} ${d.invoiceNo}`,
-      P2.invoiceTitle.x, P2.invoiceTitle.top, fonts,
-      { size: P2.invoiceTitle.size, bold: true });
-    txt(factoringPage, t('date', lang), P2.dateLabel.x, P2.dateLabel.top, fonts,
-      { size: P2.dateLabel.size, bold: true });
-    txt(factoringPage, d.date, P2.dateValue.x, P2.dateValue.top, fonts,
-      { size: P2.dateValue.size, bold: true });
-    txt(factoringPage, `${t('page', lang)} 2 ${t('of', lang)} 2`,
-      P2.pageValue.x, P2.pageValue.top, fonts, { size: P2.pageValue.size });
+  const titleKey = d.docKind === 'credit_note' ? 'creditNoteNo' : d.docKind === 'storno' ? 'stornoNo' : 'invoiceNo';
 
-    // Factoring-Block in gewählter Sprache
-    let y = P2.factoring.top;
-    for (const [paraIndex, para] of FACTORING[lang].entries()) {
-      const lines = para === '' ? [''] : wrap(para, bold, P2.factoring.size, P2.factoring.width);
-      const isRedBlock = paraIndex <= 8;
-      for (const line of lines) {
-        if (line !== '') {
-          txt(factoringPage, line, P2.factoring.x, y, fonts, {
-            size: P2.factoring.size,
-            bold: isRedBlock,
-            red: isRedBlock,
-          });
-        }
-        y += P2.factoring.lineHeight;
+  for (let i = 0; i < totalPages; i++) {
+    const page = drawnPages[i];
+    const isFirst = i === 0;
+    const isLast = i === totalPages - 1;
+    mask(page, isFirst ? MASKS_P1 : MASKS_PX);
+
+    page.drawRectangle({ x: 335, y: topY(165), width: 225, height: 20, color: SHADE });
+    txt(page, `${t(titleKey, lang)} ${d.invoiceNo}`, P.title.x, P.title.top, fonts,
+      { size: P.title.size, bold: true });
+
+    if (isFirst) {
+      const recipientLines = [d.party.name, ...d.party.lines].filter(Boolean);
+      recipientLines.forEach((line, li) => {
+        txt(page, line, P.recipient.x, P.recipient.top + li * P.recipient.lineHeight, fonts,
+          { size: P.recipient.size });
+      });
+
+      const metaRows: Array<[string, string | undefined | null]> = [
+        [t('custNo', lang),  d.contact.customerNo ? String(d.contact.customerNo) : undefined],
+        [t('contact', lang), d.contact.contactName],
+        [t('phone', lang),   d.contact.phone],
+        [t('fax', lang),     d.contact.fax],
+        [t('email', lang),   d.contact.email],
+        [t('vatId', lang),   d.contact.vatId],
+        [t('subject', lang), d.contact.subject],
+      ];
+      let row = 0;
+      for (const [label, value] of metaRows) {
+        if (!value) continue;
+        const y = P.metaLabel.top + row * P.metaLabel.lineHeight;
+        txt(page, label, P.metaLabel.x, y, fonts, { size: P.metaLabel.size, bold: true });
+        const valueLines = wrap(String(value), regular, P.metaValue.size, 120);
+        valueLines.forEach((line, li) => txt(page, line, P.metaValue.x, y + li * P.metaLabel.lineHeight, fonts, { size: P.metaValue.size }));
+        row += Math.max(1, valueLines.length);
+      }
+
+      const introText = d.docKind === 'credit_note' || d.docKind === 'storno'
+        ? t('introCredit', lang) : t('intro', lang);
+      txt(page, introText, P.intro.x, P.intro.top, fonts, { size: P.intro.size });
+      if (d.currency === 'USD') {
+        txt(page, t('currencyUsd', lang), P.intro.x, P.intro.top + P.intro.lineHeight, fonts,
+          { size: P.intro.size, bold: true, red: true });
       }
     }
-  }
 
-  // 7) DEMO-Wasserzeichen
-  if (opts.demo) {
-    for (const page of pages) {
-      page.drawText('DEMO', {
-        x: 90, y: 240,
-        size: 180,
-        font: bold,
-        color: COLOR_RED,
-        opacity: 0.18,
-        rotate: degrees(35),
-      });
-      page.drawText(lang === 'en' ? 'DEMO — not legally valid' : 'DEMO — nicht rechtsgültig', {
-        x: 48, y: topY(60),
-        size: 8,
-        font: bold,
-        color: COLOR_RED,
-        opacity: 0.9,
-      });
+    const dateTop = isFirst ? P.dateLabel.top : 179;
+    txt(page, t('date', lang), P.dateLabel.x, dateTop, fonts, { size: P.dateLabel.size, bold: true });
+    txt(page, d.date, P.dateValue.x, dateTop, fonts, { size: P.dateValue.size });
+    txt(page, `${t('page', lang)} ${i + 1} ${t('of', lang)} ${totalPages}`,
+      P.pageValue.x, dateTop, fonts, { size: P.pageValue.size });
+
+    if (i < pagesOfBlocks.length) {
+      page.drawRectangle({ x: 45, y: topY(384), width: 525, height: 18, color: SHADE });
+      txt(page, t('colPos', lang),     P.cols.pos,     P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
+      txt(page, t('colArticle', lang), P.cols.article, P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
+      txt(page, t('colDn', lang),      P.cols.dn,      P.headerRow.top, fonts, { size: P.headerRow.size, bold: true });
+      txt(page, t('colQty', lang),     P.cols.menge,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+      txt(page, t('colPrice', lang),   P.cols.preis,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+      txt(page, t('colValue', lang),   P.cols.value,   P.headerRow.top, fonts, { size: P.headerRow.size, bold: true, align: 'right' });
+
+      let cursor = P.tableTop;
+      for (const b of pagesOfBlocks[i] || []) {
+        txt(page, b.header.pos, P.cols.pos, cursor, fonts, { size: 9, bold: true });
+        if (b.header.artNr) txt(page, b.header.artNr, P.cols.article, cursor, fonts, { size: 9, bold: true });
+        if (b.header.dn)    txt(page, b.header.dn,    P.cols.dn,      cursor, fonts, { size: 9 });
+        if (b.header.qty)   txt(page, b.header.qty,   P.cols.menge,   cursor, fonts, { size: 9, align: 'right' });
+        if (b.header.price) txt(page, b.header.price, P.cols.preis,   cursor, fonts, { size: 9, align: 'right' });
+        if (b.header.value) txt(page, b.header.value, P.cols.value,   cursor, fonts, { size: 9, align: 'right' });
+        cursor += P.rowLine;
+        for (const l of b.descriptionLines) { txt(page, l, P.cols.article, cursor, fonts, { size: 9 }); cursor += P.rowLine; }
+        for (const l of b.extraLines)       { txt(page, l, P.cols.article, cursor, fonts, { size: 9 }); cursor += P.rowLine; }
+        cursor += 6;
+      }
+    }
+
+    if (isLast) {
+      page.drawLine({ start: { x: 70, y: topY(222) }, end: { x: 560, y: topY(222) }, thickness: 0.6, color: COLOR_TEXT });
+      let totalsY = 238;
+      const taxRate = d.taxRate ?? 19;
+      const totals: Array<[string, string, boolean]> = [
+        [t('net', lang), fmt.currency(d.subtotal ?? 0, d.currency), false],
+        [`${lang === 'de' ? 'MwSt' : 'VAT'} ${taxRate.toFixed(2).replace('.', lang === 'de' ? ',' : '.')}%`,
+          fmt.currency(d.tax ?? 0, d.currency), false],
+        [t('total', lang), fmt.currency(d.total ?? 0, d.currency), true],
+      ];
+      for (const [label, value, boldRow] of totals) {
+        txt(page, label, P.totalLabel.x, totalsY, fonts, { size: P.totalLabel.size, bold: true });
+        txt(page, value, P.totalValue.x, totalsY, fonts, { size: P.totalValue.size, bold: boldRow, align: 'right' });
+        totalsY += P.totalLabel.lineHeight;
+      }
+
+      let condY = 315;
+      const drawCond = (label: string, value: string) => {
+        const lines = String(value).split('\n');
+        txt(page, label, P.condLabel.x, condY, fonts, { size: P.condLabel.size, bold: true });
+        lines.forEach((l, li) => txt(page, l, P.condValue.x, condY + li * P.condLabel.lineHeight, fonts, { size: P.condValue.size }));
+        condY += P.condLabel.lineHeight * lines.length;
+      };
+      if (d.paymentTerms) drawCond(t('payment', lang), d.paymentTerms);
+      if (d.dueDate) drawCond(t('dueDate', lang), fmt.date(d.dueDate, lang));
+
+      let noteY = condY + 16;
+      const taxNoteKey: keyof typeof L | null =
+        d.taxMode === 'reverse_charge' ? 'taxReverse' :
+        d.taxMode === 'tax_free_eu' ? 'taxFreeEu' :
+        d.taxMode === 'tax_free_third_country' ? 'taxFreeThird' :
+        d.taxMode === 'small_business' ? 'taxSmall' : null;
+      if (taxNoteKey) {
+        for (const line of wrap(t(taxNoteKey, lang), bold, 8, 480)) {
+          txt(page, line, P.condLabel.x, noteY, fonts, { size: 8, bold: true });
+          noteY += 11;
+        }
+      }
+      if (d.skontoPercent && d.skontoDays) {
+        const skontoFn = L.skonto[lang] as (p: string, d: string) => string;
+        txt(page, skontoFn(Number(d.skontoPercent).toFixed(2).replace('.', lang === 'de' ? ',' : '.'), String(d.skontoDays)),
+          P.condLabel.x, noteY, fonts, { size: 8 });
+        noteY += 11;
+      }
+
+      let y = noteY + 14;
+      for (const [paraIndex, para] of FACTORING[lang].entries()) {
+        const lines = para === '' ? [''] : wrap(para, bold, P.factoring.size, P.factoring.width);
+        const isRedBlock = paraIndex <= 6;
+        for (const line of lines) {
+          if (line !== '') {
+            txt(page, line, P.factoring.x, y, fonts, { size: P.factoring.size, bold: isRedBlock, red: isRedBlock });
+          }
+          y += P.factoring.lineHeight;
+        }
+      }
+      y += 8;
+      txt(page, lang === 'de' ? 'Mit freundlichen Grüßen' : 'Best regards', P.condLabel.x, y, fonts, { size: 9 });
+      txt(page, 'MTCONNECTIVITY power2pcb GmbH', P.condLabel.x, y + 12, fonts, { size: 9 });
+    }
+
+    if (opts.demo) {
+      page.drawText('DEMO', { x: 90, y: 240, size: 180, font: bold, color: COLOR_RED, opacity: 0.18, rotate: degrees(35) });
+      page.drawText(lang === 'en' ? 'DEMO — not legally valid' : 'DEMO — nicht rechtsgültig',
+        { x: 48, y: topY(60), size: 8, font: bold, color: COLOR_RED, opacity: 0.9 });
     }
   }
 
@@ -402,9 +378,7 @@ export async function renderInvoiceOverlay(d: RechnungData, opts: { demo?: boole
   return await pdf.save();
 }
 
-/** Öffnet die Overlay-Rechnung in einem neuen Tab.
- *  Nutzt einen Anchor-Klick statt window.open, da Chrome / AdBlocker
- *  asynchron geöffnete Popups oft mit ERR_BLOCKED_BY_CLIENT blockieren. */
+/** Öffnet die Overlay-Rechnung in einem neuen Tab. */
 export async function openInvoiceOverlayPdf(data: RechnungData, opts: { demo?: boolean; scope?: TemplateScope; statusInfo?: DocStatusInfo } = {}): Promise<void> {
   const bytes = await renderInvoiceOverlay(data, opts);
   const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
