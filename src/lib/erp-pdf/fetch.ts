@@ -103,6 +103,8 @@ export async function loadBestellungData(id: string) {
     poNo: p.po_no || p.id.slice(0, 8), date: fmt.date(p.ordered_at || p.created_at),
     expected: p.expected_at, party: sup.party, contact: sup.contact,
     items: lineItems, currency: 'EUR', notes: p.notes,
+    paymentTerms: '14 Tage 2%, 30 Tage Netto', deliveryTerms: 'ab Werk',
+    scope: { companyId: p.company_id },
   };
 }
 
@@ -288,7 +290,7 @@ export async function buildErpPdf(
     const { renderPurchaseOverlay } = await import('./purchaseOverlay');
     const data = await loadBestellungData(id) as any;
     report?.('Originalvorlage anwenden', 0.65);
-    return pdfOutputAdapter(await renderPurchaseOverlay(data, { statusInfo: await loadDocStatusInfo(type, id) }), `Bestellung-${data.poNo}`);
+    return pdfOutputAdapter(await renderPurchaseOverlay(data, { scope: data.scope, statusInfo: await loadDocStatusInfo(type, id) }), `Bestellung-${data.poNo}`);
   }
   if (type === 'lieferschein' || type === 'ruecklieferschein') {
     const { renderDeliveryOverlay } = await import('./deliveryOverlay');
@@ -350,7 +352,8 @@ export async function openErpPdf(type: ErpDocType, id: string): Promise<void> {
   }
   if (type === 'bestellung') {
     const { openPurchaseOverlayPdf } = await import('./purchaseOverlay');
-    await openPurchaseOverlayPdf(await loadBestellungData(id) as any, { statusInfo: await loadDocStatusInfo(type, id) });
+    const purchaseData = await loadBestellungData(id) as any;
+    await openPurchaseOverlayPdf(purchaseData, { scope: purchaseData.scope, statusInfo: await loadDocStatusInfo(type, id) });
     return;
   }
   throw new Error('Unbekannter Belegtyp');

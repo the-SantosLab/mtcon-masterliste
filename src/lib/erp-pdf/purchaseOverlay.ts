@@ -1,6 +1,6 @@
 // Bestellung (PO an Lieferant) via Overlay auf pixelgleiche Original-Vorlage.
-// Layout exakt wie Angebot / Auftragsbestätigung / Rechnung: gleiche Titelleiste,
-// gleiche Meta-Spalte, identische Tabellengeometrie, Totals-Block und Fußtext.
+// Layout der originalen MTCON-Bestellung: Positionsseite(n) plus Schlussseite
+// mit Gesamtbetrag, Konditionen, Einkaufshinweisen und Lieferadresse.
 import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb, degrees } from 'pdf-lib';
 import templateUrl from '@/assets/purchase-template.pdf?url';
 import { loadTemplateBytes as loadErpTemplateBytes, type TemplateScope } from './templateSource';
@@ -17,11 +17,13 @@ const WHITE = rgb(1, 1, 1);
 const SHADE = rgb(0.86, 0.86, 0.86);
 
 const MASKS_P1: [number, number, number, number][] = [
+  [  0, 200,  35, 240],
   [330, 140, 575, 315],
   [ 45, 145, 330, 300],
   [ 45, 288, 575, 755],
 ];
 const MASKS_PX: [number, number, number, number][] = [
+  [  0, 200,  35, 240],
   [330, 140, 575, 210],
   [ 45, 210, 575, 755],
 ];
@@ -134,11 +136,8 @@ export async function renderPurchaseOverlay(
     };
   });
 
-  // Summen analog Auftragsbestätigung / Rechnung.
-  const subtotal = d.items.reduce((s, it) => s + (it.positionValue ?? 0), 0);
-  const taxRate = 19;
-  const tax = subtotal * (taxRate / 100);
-  const total = subtotal + tax;
+  // Bestellungen weisen im Original nur den Gesamtbetrag (netto) aus.
+  const total = d.items.reduce((s, it) => s + (it.positionValue ?? 0), 0);
 
   const usable = P.tableBottom - P.tableTop;
   const pagesOfBlocks: PosBlock[][] = [];
@@ -178,7 +177,7 @@ export async function renderPurchaseOverlay(
 
       const metaRows: Array<[string, string | undefined | null]> = [
         ['Lieferanten-Nr',  d.contact.supplierNo || (d.contact.customerNo ? String(d.contact.customerNo) : undefined)],
-        ['Ansprechpartner', d.contact.contactName],
+        ['Bearbeiter',      d.contact.contactName],
         ['Telefon',         d.contact.phone],
         ['Fax',             d.contact.fax],
         ['E-Mail',          d.contact.email],
@@ -196,7 +195,7 @@ export async function renderPurchaseOverlay(
       }
 
       const introLines = [
-        'Wir bestellen gemäß unseren allgemeinen Einkaufsbedingungen wie folgt:',
+        'Wir bestellen gemäß unseren allgemeinen Geschäftsbedingungen wie folgt:',
         'siehe www.mtcon.eu/power2pcb/aeb/',
       ];
       introLines.forEach((l, li) => {
@@ -205,7 +204,7 @@ export async function renderPurchaseOverlay(
     }
 
     const dateTop = isFirst ? P.dateLabel.top : 179;
-    txt(page, 'Datum', P.dateLabel.x, dateTop, fonts, { size: P.dateLabel.size, bold: true });
+    txt(page, 'Bestelldatum', P.dateLabel.x, dateTop, fonts, { size: P.dateLabel.size, bold: true });
     txt(page, d.date, P.dateValue.x, dateTop, fonts, { size: P.dateValue.size });
     txt(page, `Seite ${i + 1} von ${totalPages}`, P.pageValue.x, dateTop, fonts, { size: P.pageValue.size });
 
@@ -234,22 +233,13 @@ export async function renderPurchaseOverlay(
     }
 
     if (isLast) {
-      // Totals-Block
+      // Schlussseite der Originalbestellung: nur Gesamtbetrag, keine MwSt.-Zeilen.
       page.drawLine({ start: { x: 70, y: topY(222) }, end: { x: 560, y: topY(222) }, thickness: 0.6, color: COLOR_TEXT });
-      let totalsY = 238;
-      const totals: Array<[string, string, boolean]> = [
-        ['Nettobetrag', fmt.currency(subtotal, d.currency), false],
-        [`MwSt ${taxRate.toFixed(2).replace('.', ',')}%`, fmt.currency(tax, d.currency), false],
-        ['Gesamtbetrag', fmt.currency(total, d.currency), true],
-      ];
-      for (const [label, value, boldRow] of totals) {
-        txt(page, label, P.totalLabel.x, totalsY, fonts, { size: P.totalLabel.size, bold: true });
-        txt(page, value, P.totalValue.x, totalsY, fonts, { size: P.totalValue.size, bold: boldRow, align: 'right' });
-        totalsY += P.totalLabel.lineHeight;
-      }
+      txt(page, 'Gesamtbetrag', P.totalLabel.x, 238, fonts, { size: P.totalLabel.size, bold: true });
+      txt(page, fmt.currency(total, d.currency), P.totalValue.x, 238, fonts, { size: P.totalValue.size, align: 'right' });
 
       // Konditionen
-      let condY = 315;
+      let condY = 264;
       const drawCond = (label: string, value: string) => {
         const lines = value.split('\n');
         txt(page, label, P.condLabel.x, condY, fonts, { size: P.condLabel.size, bold: true });
@@ -258,6 +248,8 @@ export async function renderPurchaseOverlay(
         });
         condY += P.condLabel.lineHeight * lines.length;
       };
+      if (d.paymentTerms) drawCond('Zahlung', d.paymentTerms);
+      if (d.deliveryTerms) drawCond('Lieferung', d.deliveryTerms);
       if (d.expected) drawCond('Wunschtermin', fmt.date(d.expected));
       if (d.notes)    drawCond('Anmerkungen', d.notes);
 
@@ -268,12 +260,21 @@ export async function renderPurchaseOverlay(
         noteY += 14;
       }
       const notices = [
-        'Bitte bestätigen Sie uns diese Bestellung mit verbindlichem Liefertermin.',
+        'Wir erbitten Ihre Auftragsbestätigung innerhalb von 24 Stunden.',
         '',
-        'Es gelten ausschließlich unsere Einkaufsbedingungen. Abweichende Bedingungen des Lieferanten',
-        'werden nur wirksam, wenn wir ihnen schriftlich zugestimmt haben.',
+        'Die Bestellung (Termin, Preis, Menge) gilt als angenommen, wenn nicht spätestens 3 Werktage nach',
+        'Bestellung eine anderslautende Auftragsbestätigung bei uns eingegangen ist.',
         '',
-        'Bitte geben Sie auf allen Lieferpapieren und Rechnungen unsere Bestellnummer an.',
+        'Bei Erstlieferung von Zeichnungsteilen sind Erstmusterprüfberichte beizulegen.',
+        '',
+        'Bitte beachten Sie bei Palettenanlieferungen, dass wir keine Laderampe haben und Sie geeignete',
+        'Transportmittel (Hebebühne, Hubwagen o.ä.) benötigen.',
+        '',
+        'Bitte beachten Sie unsere Lieferadresse:',
+        'MTCONNECTIVITY power2pcb GmbH',
+        'Office Center One',
+        'Rathausgässle 5',
+        '74676 Niedernhall',
       ];
       notices.forEach((line, lineIndex) => txt(page, line, P.condLabel.x, noteY + lineIndex * 12, fonts, { size: 8 }));
       const closingY = Math.max(noteY + notices.length * 12 + 8, P.closing.top);

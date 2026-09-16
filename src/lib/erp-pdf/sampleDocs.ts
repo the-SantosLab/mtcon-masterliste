@@ -61,7 +61,7 @@ export async function openSampleTemplatePdf(docType: TemplateDocType): Promise<v
         poNo: 'MUSTER-001', date: today, expected: null,
         party: { name: 'Muster Lieferant GmbH', lines: ['Lieferstrasse 1', '74676 Niedernhall', 'DEUTSCHLAND'] },
         contact: { ...contact, customerNo: null, supplierNo: '70012' },
-        items, currency: 'EUR',
+        items, currency: 'EUR', paymentTerms: '14 Tage 2%, 30 Tage Netto', deliveryTerms: 'ab Werk',
       }, { demo: true });
     case 'lieferschein':
       return openDeliveryOverlayPdf({
