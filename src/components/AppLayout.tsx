@@ -457,7 +457,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </div>
 
-        <div className="border-t border-sidebar-border px-3 py-3 shrink-0">
+        <div className="px-3 py-3 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2.5 w-full rounded px-1 py-1 hover:bg-sidebar-accent/60 transition-colors">
