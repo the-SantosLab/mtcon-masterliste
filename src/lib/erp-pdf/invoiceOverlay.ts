@@ -21,57 +21,45 @@ const SHADE = rgb(0.86, 0.86, 0.86);
 
 // ---- Runtime-Masken (weiße Rechtecke über alle statisch bedruckten Zonen) ----
 // [x1, yTop1, x2, yTop2]
+// Geometrie identisch zu Angebot / Auftragsbestätigung / Bestellung.
 const MASKS_P1: [number, number, number, number][] = [
-  [340, 128, 570, 158],   // Titel "Invoice No. …"
-  [ 45, 155, 335, 220],   // Empfänger-Block
-  [340, 155, 570, 225],   // Meta-Labels + Werte (Cust.no/Contact/Phone/Fax/Email)
-  [340, 225, 570, 252],   // Date-Label + Wert + Seitenzähler
-  [ 45, 253, 570, 275],   // Intro-Zeile "we will charge you…"
-  [ 45, 278, 570, 305],   // Tabellen-Header (DN no/Article No/Qty/Price/Item value)
-  [ 45, 305, 570, 668],   // Positionen-Tabelle
-  [340, 672, 570, 694],   // Total-Label + Wert
-  [ 45, 683, 340, 702],   // Currency Notice (Label + Wert)
-  [ 45, 702, 340, 722],   // Payment-term-Zeile (Label + Wert)
+  [330, 140, 575, 315],
+  [ 45, 145, 330, 300],
+  [ 45, 288, 575, 755],
 ];
-const MASKS_P2: [number, number, number, number][] = [
-  [340, 128, 570, 158],   // Titel "Invoice No. …"
-  [340, 155, 570, 205],   // Date-Label + Wert + Seitenzähler
-  [ 45, 195, 570, 755],   // Fälligkeits-/Factoring-/Hinweis-Block; Footer bleibt erhalten
+const MASKS_PX: [number, number, number, number][] = [
+  [330, 140, 575, 210],
+  [ 45, 195, 575, 755],
 ];
 
 // ---- Feldpositionen (baseline ≈ yFromTop + size*0.85) ----
 const P1 = {
-  invoiceTitle: { x: 358, top: 134, size: 11 },
-  recipient:    { x: 71,  top: 158, size: 10, lineHeight: 13 },
-  metaLabel:    { x: 358, top: 160, size: 9,  lineHeight: 12 },
-  metaValue:    { x: 456, top: 160, size: 9,  lineHeight: 12 },
-  dateLabel:    { x: 358, top: 233, size: 9 },
-  dateValue:    { x: 456, top: 233, size: 9 },
-  pageValue:    { x: 505, top: 233, size: 9 },
-  intro:        { x: 66,  top: 262, size: 9 },
-  headerRow:    { top: 287, size: 9 },
-  tableTop:     310,
-  tableBottom:  660,
+  invoiceTitle: { x: 335, top: 150, size: 10 },
+  recipient:    { x: 70,  top: 170, size: 9, lineHeight: 12 },
+  metaLabel:    { x: 335, top: 170, size: 8,  lineHeight: 11 },
+  metaValue:    { x: 435, top: 170, size: 8,  lineHeight: 11 },
+  dateLabel:    { x: 335, top: 294, size: 8 },
+  dateValue:    { x: 435, top: 294, size: 8 },
+  pageValue:    { x: 500, top: 294, size: 8 },
+  intro:        { x: 70,  top: 323, size: 9, lineHeight: 13 },
+  headerRow:    { top: 369, size: 8 },
+  tableTop:     400,
+  tableBottom:  715,
   rowLine:      11,
   cols: {
     dn:      66,
     article: 190,
     qty:     360,   // right-align
-    price:   470,   // right-align
+    price:   455,   // right-align
     value:   560,   // right-align
   },
-  totalLabel:   { x: 420, top: 683, size: 10 },
-  totalValue:   { x: 560, top: 683, size: 10 },
-  currencyLine: { x: 66,  top: 685, size: 9 },
-  paymentLabel: { x: 66,  top: 706, size: 9 },
-  paymentValue: { x: 208, top: 706, size: 9 },
+  totalLabel:   { x: 365, lineHeight: 13, size: 9 },
+  totalValue:   { x: 560, lineHeight: 13, size: 9 },
+  condLabel:    { x: 70,  size: 9, lineHeight: 14 },
+  condValue:    { x: 180, size: 9, lineHeight: 14 },
 };
 const P2 = {
-  invoiceTitle: { x: 358, top: 134, size: 11 },
-  dateLabel:    { x: 358, top: 160, size: 9 },
-  dateValue:    { x: 456, top: 160, size: 9 },
-  pageValue:    { x: 505, top: 160, size: 9 },
-  factoring:    { x: 70,  top: 232, size: 9, lineHeight: 12, width: 485 },
+  factoring:    { x: 70,  size: 8, lineHeight: 11, width: 490 },
 };
 
 // ---- Beschriftungen DE/EN ----
