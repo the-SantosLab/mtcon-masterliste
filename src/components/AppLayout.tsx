@@ -402,7 +402,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             );
           })}
-          <div className="border-t border-sidebar-border/60 mt-2 pt-2">
+          <div className="mt-1">
             <button
               onClick={() => setBugDialogOpen(true)}
               className="flex items-center gap-2.5 w-full px-3 py-1.5 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/40 transition-colors"
@@ -416,7 +416,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="px-4 pb-3 pt-1 shrink-0 flex items-center justify-between gap-2">
+        <div className="px-4 pb-3 pt-3 mt-1 border-t border-sidebar-border/60 shrink-0 flex items-center justify-between gap-2">
           <img
             src={isDark ? mtconErpLabel : mtconErpLabelLight}
             alt="MTCON goes ERP"
