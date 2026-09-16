@@ -19,7 +19,7 @@ const SHADE = rgb(0.86, 0.86, 0.86);
 const MASKS_P1: [number, number, number, number][] = [
   [330, 140, 575, 315],
   [ 45, 145, 330, 300],
-  [ 45, 305, 575, 755],
+  [ 45, 288, 575, 755],
 ];
 const MASKS_PX: [number, number, number, number][] = [
   [330, 140, 575, 210],
