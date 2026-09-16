@@ -73,6 +73,8 @@ export function PurchaseDemoDialog({ open, onClose }: { open: boolean; onClose: 
         }),
         currency: f.currency || 'EUR',
         notes: f.notes || undefined,
+        paymentTerms: '14 Tage 2%, 30 Tage Netto',
+        deliveryTerms: 'ab Werk',
       };
       await openPurchaseOverlayPdf(data, { demo: true });
       toast.success('Demo-PDF geöffnet');

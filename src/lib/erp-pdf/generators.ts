@@ -154,6 +154,7 @@ export interface BestellungData {
   poNo: string; date: string; expected?: string | null;
   party: Party; contact: ContactInfo; items: LineItem[]; currency: string;
   notes?: string; isFrame?: boolean;
+  paymentTerms?: string; deliveryTerms?: string;
 }
 export function buildBestellungPdf(d: BestellungData): jsPDF {
   const meta = buildMeta('Bestellung Nr.', d.poNo, d.date, d.party, d.contact, 'de',
