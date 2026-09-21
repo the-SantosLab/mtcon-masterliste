@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RefreshCw, Boxes, AlertTriangle, Calendar } from 'lucide-react';
+import { RefreshCw, Boxes, AlertTriangle, Calendar, Route } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { LotTraceDialog, type TraceLot } from '@/components/erp/LotTraceDialog';
 
 type Lot = {
   id: string;
@@ -40,6 +41,7 @@ export function LotsPanel() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'all' | 'active' | 'blocked' | 'consumed'>('active');
   const [expiry, setExpiry] = useState<'any' | 'soon' | 'expired'>('any');
+  const [trace, setTrace] = useState<TraceLot | null>(null);
 
   const load = async () => {
     setBusy(true);
