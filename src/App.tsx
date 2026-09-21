@@ -19,7 +19,7 @@ import { lazyRetry } from "@/lib/lazyRetry";
 // Auth-Seiten eager (immer benötigt bei Kaltstart, klein)
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import AdminInvoices from "./pages/AdminInvoices";
+const AdminInvoices = lazyRetry(() => import("./pages/AdminInvoices"));
 const AdminErpExport = lazyRetry(() => import("./pages/AdminErpExport"));
 
 // Alle übrigen Seiten lazy — Route-basiertes Code-Splitting
