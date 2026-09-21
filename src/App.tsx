@@ -19,7 +19,7 @@ import { lazyRetry } from "@/lib/lazyRetry";
 // Auth-Seiten eager (immer benötigt bei Kaltstart, klein)
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import AdminInvoices from "./pages/AdminInvoices";
+const AdminInvoices = lazyRetry(() => import("./pages/AdminInvoices"));
 const AdminErpExport = lazyRetry(() => import("./pages/AdminErpExport"));
 
 // Alle übrigen Seiten lazy — Route-basiertes Code-Splitting
@@ -127,7 +127,17 @@ const CrmNoAccess = lazyRetry(() => import("./pages/crm/CrmNoAccess"));
 const CrmWebForms = lazyRetry(() => import("./pages/crm/CrmWebForms"));
 const PublicOffer = lazyRetry(() => import("./pages/public/PublicOffer"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Vermeidet Doppel-Ladevorgänge beim Wechseln zwischen Seiten/Tabs
+      staleTime: 60_000,
+      gcTime: 10 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function RouteFallback() {
   return (

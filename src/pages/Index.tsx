@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { DashboardClock } from '@/components/DashboardClock';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
@@ -69,11 +70,13 @@ export default function Dashboard() {
   const [activeFilters, setActiveFilters] = useState<FilterKey[]>([]);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
-  const [now, setNow] = useState(new Date());
+  // Basiszeit für Auswertungen: bewusst grob getaktet (10 Min),
+  // damit Charts/Listen nicht sekündlich neu berechnet werden.
+  const [now, setNow] = useState(() => new Date());
   const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    const timer = setInterval(() => setNow(new Date()), 600_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -116,16 +119,15 @@ export default function Dashboard() {
     return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
-  const hour = now.getHours();
-  const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
   const firstName = profile?.display_name?.split(' ')[0] ?? '';
   const initials = (profile?.display_name ?? '?').split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
-  const timeString = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  const dateString = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  const today = new Date().toISOString().split('T')[0];
-  const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-  const active = cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status));
+  const today = useMemo(() => new Date(now).toISOString().split('T')[0], [now]);
+  const weekEnd = useMemo(() => new Date(now.getTime() + 7 * 86400000).toISOString().split('T')[0], [now]);
+  const active = useMemo(
+    () => cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)),
+    [cases],
+  );
   const scopedActive = scope === 'mine' ? active.filter(c => c.assignee_id === user?.id) : active;
   const counts: Record<FilterKey, number> = {
     open: scopedActive.filter(c => c.status === 'nicht_begonnen').length,
@@ -180,9 +182,10 @@ export default function Dashboard() {
   }, [user?.id, prefsLoaded, activeFilters, chartRange]);
 
   // Welche Status werden im Chart als Säulen-Segmente gezeigt
-  const visibleStatuses: FilterKey[] = activeFilters.length > 0
-    ? activeFilters
-    : (Object.keys(FILTER_LABELS) as FilterKey[]);
+  const visibleStatuses: FilterKey[] = useMemo(
+    () => (activeFilters.length > 0 ? activeFilters : (Object.keys(FILTER_LABELS) as FilterKey[])),
+    [activeFilters],
+  );
 
   const getDateRangeBounds = (filter: DateRangeFilter) => {
     const now = new Date();
@@ -361,13 +364,7 @@ export default function Dashboard() {
 
             {/* Greeting (top) */}
             <div className="absolute top-0 left-0 right-0 p-6 lg:p-8 z-10 flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/70">{dateString}</p>
-                <h1 className="mt-2 text-2xl lg:text-3xl font-semibold text-foreground drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
-                  {greeting}{firstName ? `, ${firstName}` : ''}
-                </h1>
-                <p className="mt-1 text-sm tabular-nums text-foreground/70">{timeString} Uhr</p>
-              </div>
+              <DashboardClock firstName={firstName} />
 
               {/* Mein / Alle Umschalter — steuert die KPI-Anzeige */}
               <div
