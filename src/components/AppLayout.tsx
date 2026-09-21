@@ -120,7 +120,7 @@ interface AppLayoutProps {
 }
 
 type NavAccess = 'all' | 'crm' | 'erp' | 'admin' | 'lead' | 'master';
-type ProcessNavItem = { href: string; label: string; icon: any; access?: NavAccess; badge?: 'cases' | 'container'; secondary?: boolean };
+type ProcessNavItem = { href: string; label: string; icon: any; access?: NavAccess; badge?: 'cases' | 'container'; secondary?: boolean; children?: ProcessNavItem[] };
 type ProcessNavGroup = { id: string; label: string; icon: any; items: ProcessNavItem[] };
 
 const processNavGroups: ProcessNavGroup[] = [
@@ -151,9 +151,10 @@ const processNavGroups: ProcessNavGroup[] = [
   { id: 'procurement', label: 'Einkaufen & lagern', icon: ShoppingCart, items: [
     { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart, access: 'erp' },
     { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart, access: 'erp' },
-    { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp' },
-    { href: '/admin/lots', label: 'Chargen', icon: Package, access: 'erp' },
-    { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock, access: 'erp' },
+    { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp', children: [
+      { href: '/admin/lots', label: 'Chargen', icon: Package, access: 'erp' },
+      { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock, access: 'erp' },
+    ]},
     { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt, access: 'erp' },
     { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star, access: 'erp' },
     { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp, access: 'erp' },
@@ -242,7 +243,12 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const visibleGroups = useMemo(
     () => processNavGroups
-      .map(group => ({ ...group, items: group.items.filter(item => canAccessNavItem(item.access)) }))
+      .map(group => ({ ...group, items: group.items
+        .filter(item => canAccessNavItem(item.access))
+        .map(item => item.children
+          ? { ...item, children: item.children.filter(child => canAccessNavItem(child.access)) }
+          : item)
+        .filter(item => !item.children || item.children.length > 0) }))
       .filter(group => group.items.length > 0),
     [showCrm, showErp, isAdmin, isLead, isMaster],
   );
@@ -253,10 +259,13 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const activeHref = visibleGroups
     .flatMap(group => group.items)
+    .flatMap(item => item.children ? [item, ...item.children] : [item])
     .filter(item => pathMatches(item.href))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
-  const routeGroup = visibleGroups.find(group => group.items.some(item => item.href === activeHref))?.id ?? 'overview';
+  const routeGroup = visibleGroups.find(group => group.items
+    .flatMap(item => item.children ? [item, ...item.children] : [item])
+    .some(item => item.href === activeHref))?.id ?? 'overview';
 
   useEffect(() => {
     setOpenGroup(routeGroup);
@@ -366,12 +375,20 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {expanded && (
                   <div className="mt-0.5 mb-1">
                     {primaryItems.map(item => (
-                      <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5')}>
-                        <item.icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="flex-1 truncate">{item.label}</span>
-                        {item.badge === 'cases' && <CasesUnreadBadge />}
-                        {item.badge === 'container' && <ContainerUnreadBadge />}
-                      </Link>
+                      <div key={item.href}>
+                        <Link to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5')}>
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="flex-1 truncate">{item.label}</span>
+                          {item.badge === 'cases' && <CasesUnreadBadge />}
+                          {item.badge === 'container' && <ContainerUnreadBadge />}
+                        </Link>
+                        {item.children?.map(child => (
+                          <Link key={child.href} to={child.href} onClick={() => setOpen(false)} className={cn(linkClass(child.href), 'pl-14 !text-[11px] !py-1')}>
+                            <child.icon className="h-3 w-3 shrink-0" />
+                            <span className="flex-1 truncate">{child.label}</span>
+                          </Link>
+                        ))}
+                      </div>
                     ))}
                     {secondaryItems.length > 0 && (
                       <>
