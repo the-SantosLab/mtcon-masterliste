@@ -180,7 +180,6 @@ export function SperrlagerPanel() {
             </div>
           )}
         </div>
-      </div>
 
       <Dialog open={!!sel} onOpenChange={(o) => !o && setSel(null)}>
         <DialogContent>
