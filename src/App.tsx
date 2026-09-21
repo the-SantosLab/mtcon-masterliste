@@ -37,6 +37,7 @@ const AdminMasterData = lazyRetry(() => import("./pages/AdminMasterData"));
 const AdminApiExplorer = lazyRetry(() => import("./pages/AdminApiExplorer"));
 const AdminArticles = lazyRetry(() => import("./pages/AdminArticles"));
 const AdminInventory = lazyRetry(() => import("./pages/AdminInventory"));
+const AdminProduction = lazyRetry(() => import("./pages/AdminProduction"));
 
 const AdminPurchasing = lazyRetry(() => import("./pages/AdminPurchasing"));
 const AdminDisposition = lazyRetry(() => import("./pages/AdminDisposition"));

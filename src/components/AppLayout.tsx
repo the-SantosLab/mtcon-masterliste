@@ -145,6 +145,7 @@ const processNavGroups: ProcessNavGroup[] = [
     { href: '/orders', label: 'Aufträge', icon: ClipboardList, access: 'erp' },
     { href: '/admin/disposition', label: 'Disposition', icon: Activity, access: 'erp' },
     { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange, access: 'erp' },
+    { href: '/admin/production', label: 'Werkstattaufträge', icon: Wrench, access: 'erp' },
     { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck, access: 'erp' },
     { href: '/admin/templates', label: 'Standard Vorgänge', icon: FileText, access: 'admin' },
   ]},
