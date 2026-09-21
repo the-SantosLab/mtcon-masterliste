@@ -106,10 +106,31 @@ export function MtiqScanUpload({ onClose }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-2" style={{ borderBottom: '1px solid #1a1a1a' }}>
+      <div className="px-3 py-2 space-y-2" style={{ borderBottom: '1px solid #1a1a1a' }}>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => setMode('analyze')}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-md"
+            style={mode === 'analyze'
+              ? { background: '#0a1a24', border: '1px solid #0ea5e9', color: '#7dd3fc' }
+              : { background: '#0f0f0f', border: '1px solid #222', color: '#888' }}
+          >
+            <ScanLine className="h-3 w-3" /> Analysieren
+          </button>
+          <button
+            onClick={() => setMode('translate')}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-md"
+            style={mode === 'translate'
+              ? { background: '#0a1a24', border: '1px solid #0ea5e9', color: '#7dd3fc' }
+              : { background: '#0f0f0f', border: '1px solid #222', color: '#888' }}
+          >
+            <Languages className="h-3 w-3" /> PDF übersetzen
+          </button>
+        </div>
         <div className="text-[11px]" style={{ color: '#888' }}>
-          Dokument oder Scan hochladen – MTIQ erkennt Typ (Versicherung, Lieferschein, Anfrage, Bestellung)
-          und schlägt Vorgang oder Ablage vor.
+          {mode === 'analyze'
+            ? 'Dokument oder Scan hochladen – MTIQ erkennt Typ (Versicherung, Lieferschein, Anfrage, Bestellung) und schlägt Vorgang oder Ablage vor.'
+            : 'PDF hochladen (z. B. englisch) – MTIQ übersetzt den Inhalt vollständig nach Deutsch und erzeugt ein neues PDF zum Herunterladen.'}
         </div>
       </div>
 
