@@ -186,6 +186,7 @@ function CreateDialog({ open, warehouses, onClose, onCreated }:
   const [note, setNote] = useState('');
   const [bom, setBom] = useState<BomRow[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [infoArt, setInfoArt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) { setArtNr(''); setQty('1'); setNote(''); setBom(null); }
