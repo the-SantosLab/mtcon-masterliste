@@ -24,7 +24,7 @@ export function usePresenceHeartbeat() {
       const payload = {
         user_id: user.id,
         last_seen_at: now,
-        current_path: location.pathname,
+        current_path: pathRef.current,
         updated_at: now,
         ...(markActive ? { last_active_at: now } : {}),
       };
@@ -63,5 +63,5 @@ export function usePresenceHeartbeat() {
       events.forEach(e => window.removeEventListener(e, onActivity));
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [user?.id, location.pathname]);
+  }, [user?.id]);
 }
