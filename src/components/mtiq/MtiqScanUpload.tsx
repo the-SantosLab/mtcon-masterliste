@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Upload, FileText, ScanLine, X } from 'lucide-react';
+import { Loader2, Upload, FileText, ScanLine, X, Languages } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { buildTranslatedPdf, translatedFileName, type TranslatedDoc } from '@/lib/translated-pdf';
 
 interface Props {
   onClose: () => void;
