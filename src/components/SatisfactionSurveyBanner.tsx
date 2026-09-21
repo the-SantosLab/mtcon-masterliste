@@ -34,14 +34,17 @@ export function SatisfactionSurveyBanner() {
         }
       } catch { void 0; }
 
-      const { data } = await supabase
-        .from('user_satisfaction_surveys' as any)
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle();
+      const done = await cachedFetch<boolean>(`survey-done:${user.id}`, async () => {
+        const { data } = await supabase
+          .from('user_satisfaction_surveys' as any)
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle();
+        return Boolean(data);
+      }, { ttl: 600_000 }).catch(() => true);
 
-      if (!cancelled && !data) setVisible(true);
+      if (!cancelled && !done) setVisible(true);
     })();
 
     return () => { cancelled = true; };

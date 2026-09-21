@@ -19,19 +19,25 @@ interface Notification {
 export function NotificationBell() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const cacheKey = `notifications:${user?.id ?? ''}`;
+  const [notifications, setNotifications] = useState<Notification[]>(() => getCached<Notification[]>(cacheKey) ?? []);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (force = true) => {
     if (!user) return;
-    const { data } = await supabase
-      .from('notifications')
-      .select('id, type, title, body, href, read, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(30);
-    setNotifications((data as Notification[]) || []);
+    try {
+      const rows = await cachedFetch<Notification[]>(cacheKey, async () => {
+        const { data } = await supabase
+          .from('notifications')
+          .select('id, type, title, body, href, read, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        return (data as Notification[]) || [];
+      }, { force });
+      setNotifications(rows);
+    } catch { /* noop */ }
   };
 
   useEffect(() => {
