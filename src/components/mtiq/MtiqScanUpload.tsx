@@ -14,11 +14,13 @@ const ACCEPT = 'application/pdf,image/png,image/jpeg,image/webp,image/heic';
 
 export function MtiqScanUpload({ onClose }: Props) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [hint, setHint] = useState('');
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [mode, setMode] = useState<'analyze' | 'translate'>('analyze');
 
   const pick = (f: File | null) => {
     if (!f) return;
@@ -26,7 +28,45 @@ export function MtiqScanUpload({ onClose }: Props) {
       toast.error('Datei zu groß (max. 20 MB)');
       return;
     }
+    if (mode === 'translate' && f.type !== 'application/pdf') {
+      toast.error('Zum Übersetzen bitte eine PDF-Datei wählen.');
+      return;
+    }
     setFile(f);
+  };
+
+  const submitTranslate = async () => {
+    if (!file) {
+      toast.error('Bitte PDF-Datei auswählen.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const url = `${(supabase as any).supabaseUrl ?? import.meta.env.VITE_SUPABASE_URL}/functions/v1/mtiq-translate-pdf`;
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('target_lang', 'Deutsch');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) throw new Error(data?.error ?? `HTTP ${res.status}`);
+
+      const translated = data as TranslatedDoc;
+      const doc = buildTranslatedPdf(translated, file.name, user?.email ?? null);
+      doc.save(translatedFileName(translated, file.name));
+      toast.success(`Übersetzt (${translated.source_language ?? 'Original'} → Deutsch) und heruntergeladen`);
+      setFile(null);
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Übersetzung fehlgeschlagen');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submit = async () => {
