@@ -243,7 +243,12 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const visibleGroups = useMemo(
     () => processNavGroups
-      .map(group => ({ ...group, items: group.items.filter(item => canAccessNavItem(item.access)) }))
+      .map(group => ({ ...group, items: group.items
+        .filter(item => canAccessNavItem(item.access))
+        .map(item => item.children
+          ? { ...item, children: item.children.filter(child => canAccessNavItem(child.access)) }
+          : item)
+        .filter(item => !item.children || item.children.length > 0) }))
       .filter(group => group.items.length > 0),
     [showCrm, showErp, isAdmin, isLead, isMaster],
   );
@@ -254,6 +259,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const activeHref = visibleGroups
     .flatMap(group => group.items)
+    .flatMap(item => item.children ? [item, ...item.children] : [item])
     .filter(item => pathMatches(item.href))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
