@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { cachedFetch, getCached } from '@/lib/shellCache';
 
 /**
  * Returns the department IDs the current user leads (either via
@@ -8,8 +9,10 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 export function useLedDepartments() {
   const { user } = useAuth();
-  const [ledIds, setLedIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `led-departments:${user?.id ?? ''}`;
+  const cached = getCached<string[]>(cacheKey);
+  const [ledIds, setLedIds] = useState<string[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,7 +21,7 @@ export function useLedDepartments() {
       setLoading(false);
       return;
     }
-    (async () => {
+    void cachedFetch<string[]>(cacheKey, async () => {
       const [memRes, mgrRes] = await Promise.all([
         (supabase as any)
           .from('department_members')
@@ -30,17 +33,17 @@ export function useLedDepartments() {
           .select('id')
           .eq('manager_user_id', user.id),
       ]);
-      if (cancelled) return;
       const ids = new Set<string>();
       ((memRes as any).data || []).forEach((r: any) => ids.add(r.department_id));
       ((mgrRes as any).data || []).forEach((r: any) => ids.add(r.id));
-      setLedIds(Array.from(ids));
-      setLoading(false);
-    })();
+      return Array.from(ids);
+    }, { ttl: 300_000 })
+      .then(ids => { if (!cancelled) { setLedIds(ids); setLoading(false); } })
+      .catch(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, cacheKey]);
 
   return { ledIds, isLead: ledIds.length > 0, loading };
 }

@@ -41,6 +41,7 @@ import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
 import { PerfPanel, PerfProfiler } from '@/components/PerfPanel';
 import { PdfJobToaster } from '@/components/PdfJobToaster';
 import { SatisfactionSurveyBanner } from '@/components/SatisfactionSurveyBanner';
+import { cachedFetch, getCached } from '@/lib/shellCache';
 
 
 function MtiqPendingBadge() {
@@ -71,35 +72,29 @@ function MtiqPendingBadge() {
 
 function CasesUnreadBadge() {
   const { user } = useAuth();
-  const [count, setCount] = useState(0);
+  const cacheKey = `cases-unread-total:${user?.id ?? ''}`;
+  const [count, setCount] = useState(() => getCached<number>(cacheKey) ?? 0);
 
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
 
-    const load = async () => {
-      // Fetch all accessible case ids (RLS restricts to visible ones)
-      const { data: cs, error: csErr } = await supabase
-        .from('cases')
-        .select('id')
-        .eq('deleted', false)
-        .limit(1000);
-      if (csErr || !cs?.length) { if (!cancelled) setCount(0); return; }
-      const ids = cs.map((c: any) => c.id);
-      const { data, error } = await (supabase as any).rpc('get_case_chat_unread', { p_case_ids: ids });
-      if (error) { if (!cancelled) setCount(0); return; }
-      const total = ((data as any[]) || []).reduce((s, r) => s + (r.unread_count || 0), 0);
-      if (!cancelled) setCount(total);
+    const load = (force = false) => {
+      void cachedFetch<number>(cacheKey, async () => {
+        const { data, error } = await (supabase as any).rpc('get_case_chat_unread_total');
+        if (error) return 0;
+        return Number(data) || 0;
+      }, { force }).then(total => { if (!cancelled) setCount(total); }).catch(() => { /* noop */ });
     };
 
     load();
     const ch = supabase
       .channel(`sidebar-cases-unread-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_messages' }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_reads', filter: `user_id=eq.${user.id}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_messages' }, () => load(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'case_chat_reads', filter: `user_id=eq.${user.id}` }, () => load(true))
       .subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
-  }, [user?.id]);
+  }, [user?.id, cacheKey]);
 
   if (count === 0) return null;
   return (

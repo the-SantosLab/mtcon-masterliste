@@ -141,6 +141,13 @@
       "when": 1789970455899,
       "tag": "0019_reset_urgency_on_case_completion",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1789977419021,
+      "tag": "0020_optimize_case_chat_unread",
+      "breakpoints": true
     }
   ]
 }

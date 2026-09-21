@@ -9637,6 +9637,7 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_case_chat_unread_total: { Args: never; Returns: number }
       get_disposition_overview: {
         Args: never
         Returns: {
