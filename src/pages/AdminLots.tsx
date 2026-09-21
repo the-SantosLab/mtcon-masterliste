@@ -180,7 +180,10 @@ export function LotsPanel() {
                         {r.status === 'active' ? 'Aktiv' : r.status === 'blocked' ? 'Gesperrt' : 'Verbraucht'}
                       </Badge>
                     </td>
-                    <td className="px-2 py-1.5 text-right">
+                    <td className="px-2 py-1.5 text-right whitespace-nowrap">
+                      <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setTrace(r as TraceLot)}>
+                        <Route className="h-3 w-3 mr-1" /> Rückverfolgung
+                      </Button>
                       {r.status === 'active' && (
                         <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setLotStatus(r.id, 'blocked')}>Sperren</Button>
                       )}
