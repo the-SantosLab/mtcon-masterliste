@@ -437,10 +437,21 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                   <p className="text-muted-foreground">
                     Bucht alle offenen Stücklisten-Mengen als Abgang aus dem Lager ({fmtN(openQty)} offen).
                   </p>
-                  <Button size="sm" className="h-8 text-xs w-full" onClick={issue} disabled={working || allIssued || items.length === 0}>
+                  {shortItems.length > 0 && !allIssued && (
+                    <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+                      Zu wenig Bestand bei {shortItems.length} Position(en). Vollständige Entnahme ist gesperrt –
+                      möglich sind {fmtN(issuableQty)} von {fmtN(openQty)}.
+                    </div>
+                  )}
+                  <Button size="sm" className="h-8 text-xs w-full" onClick={() => issue(false)} disabled={working || allIssued || items.length === 0 || shortItems.length > 0}>
                     {working && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
                     {allIssued ? 'Bereits ausgebucht' : 'Material entnehmen'}
                   </Button>
+                  {shortItems.length > 0 && !allIssued && (
+                    <Button size="sm" variant="outline" className="h-8 text-xs w-full" onClick={() => issue(true)} disabled={working || issuableQty <= 0}>
+                      Nur verfügbare Mengen entnehmen
+                    </Button>
+                  )}
                 </Card>
 
                 <Card className="p-3 space-y-2">
