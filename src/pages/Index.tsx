@@ -69,11 +69,13 @@ export default function Dashboard() {
   const [activeFilters, setActiveFilters] = useState<FilterKey[]>([]);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [scope, setScope] = useState<'mine' | 'all'>('mine');
-  const [now, setNow] = useState(new Date());
+  // Basiszeit für Auswertungen: bewusst grob getaktet (10 Min),
+  // damit Charts/Listen nicht sekündlich neu berechnet werden.
+  const [now, setNow] = useState(() => new Date());
   const { unreadMap } = useChatUnread(cases.map(c => c.id));
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    const timer = setInterval(() => setNow(new Date()), 600_000);
     return () => clearInterval(timer);
   }, []);
 
