@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { DashboardClock } from '@/components/DashboardClock';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
