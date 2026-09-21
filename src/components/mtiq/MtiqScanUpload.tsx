@@ -188,24 +188,27 @@ export function MtiqScanUpload({ onClose }: Props) {
           </div>
         )}
 
-        <div>
-          <label className="text-[10px] uppercase tracking-wide" style={{ color: '#666' }}>
-            Hinweis / Kontext (optional)
-          </label>
-          <textarea
-            value={hint}
-            onChange={(e) => setHint(e.target.value)}
-            disabled={loading}
-            rows={4}
-            placeholder={'z. B. „Lieferschein zur Bestellung B-2026-0123“ oder „Versicherungsschein KFZ“.'}
-            className="mt-1 w-full px-2.5 py-2 text-[12px] outline-none resize-none"
-            style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 10, color: '#e0e0e0' }}
-          />
-        </div>
+        {mode === 'analyze' && (
+          <div>
+            <label className="text-[10px] uppercase tracking-wide" style={{ color: '#666' }}>
+              Hinweis / Kontext (optional)
+            </label>
+            <textarea
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              disabled={loading}
+              rows={4}
+              placeholder={'z. B. „Lieferschein zur Bestellung B-2026-0123“ oder „Versicherungsschein KFZ“.'}
+              className="mt-1 w-full px-2.5 py-2 text-[12px] outline-none resize-none"
+              style={{ background: '#0f0f0f', border: '1px solid #222', borderRadius: 10, color: '#e0e0e0' }}
+            />
+          </div>
+        )}
 
         <div className="text-[10px] leading-relaxed" style={{ color: '#555' }}>
-          Erkannte Klassen: Versicherung · Lieferschein · Anfrage · Bestellung · Sonstiges.
-          Versicherungen werden zur zentralen Ablage vorgeschlagen, Bestellungen/Anfragen als Vorgang.
+          {mode === 'analyze'
+            ? 'Erkannte Klassen: Versicherung · Lieferschein · Anfrage · Bestellung · Sonstiges. Versicherungen werden zur zentralen Ablage vorgeschlagen, Bestellungen/Anfragen als Vorgang.'
+            : 'Das Original-Layout wird nicht übernommen: Die Übersetzung wird als neu gesetztes, mehrseitiges PDF ausgegeben (Text, Tabellen und Aufzählungen als Absätze). Bitte Fachinhalte stichprobenartig prüfen.'}
         </div>
       </div>
 
