@@ -296,12 +296,16 @@ function CreateDialog({ open, warehouses, onClose, onCreated }:
   );
 }
 
+type Avail = { item_id: string; qty_open: number; qty_available: number; shortage: number };
+
 function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () => void; onChanged: () => void }) {
   const [items, setItems] = useState<WoItem[]>([]);
+  const [avail, setAvail] = useState<Record<string, Avail>>({});
   const [loading, setLoading] = useState(false);
   const [working, setWorking] = useState(false);
   const [doneQty, setDoneQty] = useState('');
   const [lotNo, setLotNo] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!wo) return;
@@ -310,26 +314,40 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await (supabase as any)
-        .from('production_order_items').select('*').eq('production_order_id', wo.id).order('pos');
+      const [{ data, error }, av] = await Promise.all([
+        (supabase as any).from('production_order_items').select('*').eq('production_order_id', wo.id).order('pos'),
+        (supabase as any).rpc('production_order_availability', { _id: wo.id }),
+      ]);
       setLoading(false);
       if (cancelled) return;
       if (error) { toast.error('Positionen konnten nicht geladen werden'); return; }
       setItems((data || []) as WoItem[]);
+      const map: Record<string, Avail> = {};
+      for (const r of ((av?.data || []) as Avail[])) map[r.item_id] = r;
+      setAvail(map);
     })();
     return () => { cancelled = true; };
-  }, [wo]);
+  }, [wo, reloadKey]);
 
   const openQty = items.reduce((s, i) => s + Math.max(0, i.qty_required - i.qty_issued), 0);
   const allIssued = items.length > 0 && openQty === 0;
+  const shortItems = items.filter(i => (avail[i.id]?.shortage || 0) > 0);
+  const issuableQty = items.reduce((s, i) => {
+    const a = avail[i.id];
+    const open = Math.max(0, i.qty_required - i.qty_issued);
+    return s + (a ? Math.min(open, Math.max(0, a.qty_available)) : open);
+  }, 0);
 
-  const issue = async () => {
+  const issue = async (allowPartial = false) => {
     if (!wo) return;
     setWorking(true);
-    const { error } = await (supabase as any).rpc('production_order_issue', { _id: wo.id });
+    const { data, error } = await (supabase as any).rpc('production_order_issue', { _id: wo.id, _allow_partial: allowPartial });
     setWorking(false);
     if (error) { toast.error(error.message || 'Ausbuchen fehlgeschlagen'); return; }
-    toast.success('Einzelteile ausgebucht');
+    const short = (data as any)?.short_positions || 0;
+    if (short > 0) toast.warning(`Teilentnahme gebucht · ${short} Position(en) weiterhin offen`);
+    else toast.success('Einzelteile ausgebucht');
+    setReloadKey(k => k + 1);
     onChanged();
   };
 
