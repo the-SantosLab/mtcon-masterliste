@@ -152,7 +152,7 @@ export function MtiqScanUpload({ onClose }: Props) {
           >
             <ScanLine className="h-7 w-7 mx-auto mb-2" style={{ color: '#0ea5e9' }} />
             <div className="text-[12px]" style={{ color: '#cbd5e1' }}>
-              PDF oder Bild hier ablegen
+              {mode === 'translate' ? 'PDF hier ablegen' : 'PDF oder Bild hier ablegen'}
             </div>
             <div className="text-[10px] mt-1" style={{ color: '#666' }}>
               oder klicken zum Auswählen · max. 20 MB
@@ -160,7 +160,7 @@ export function MtiqScanUpload({ onClose }: Props) {
             <input
               ref={inputRef}
               type="file"
-              accept={ACCEPT}
+              accept={mode === 'translate' ? 'application/pdf' : ACCEPT}
               className="hidden"
               onChange={(e) => pick(e.target.files?.[0] ?? null)}
             />
