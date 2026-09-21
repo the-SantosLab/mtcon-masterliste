@@ -373,12 +373,20 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {expanded && (
                   <div className="mt-0.5 mb-1">
                     {primaryItems.map(item => (
-                      <Link key={item.href} to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5')}>
-                        <item.icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="flex-1 truncate">{item.label}</span>
-                        {item.badge === 'cases' && <CasesUnreadBadge />}
-                        {item.badge === 'container' && <ContainerUnreadBadge />}
-                      </Link>
+                      <div key={item.href}>
+                        <Link to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5')}>
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="flex-1 truncate">{item.label}</span>
+                          {item.badge === 'cases' && <CasesUnreadBadge />}
+                          {item.badge === 'container' && <ContainerUnreadBadge />}
+                        </Link>
+                        {item.children?.map(child => (
+                          <Link key={child.href} to={child.href} onClick={() => setOpen(false)} className={cn(linkClass(child.href), 'pl-14 !text-[11px] !py-1')}>
+                            <child.icon className="h-3 w-3 shrink-0" />
+                            <span className="flex-1 truncate">{child.label}</span>
+                          </Link>
+                        ))}
+                      </div>
                     ))}
                     {secondaryItems.length > 0 && (
                       <>
