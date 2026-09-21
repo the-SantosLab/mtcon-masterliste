@@ -17,23 +17,22 @@ const COLOR_RED = rgb(0.86, 0.08, 0.24);
 const WHITE = rgb(1, 1, 1);
 const SHADE = rgb(0.86, 0.86, 0.86);
 
-// Seite 1: alle bedruckten dynamischen Zonen der Vorlage überdecken
+// Seite 1: alle bedruckten dynamischen Zonen der Vorlage überdecken.
+// Zusammenhängende Flächen statt Einzelstreifen — sonst blitzen Reste der
+// Vorlage (z. B. der Tabellenkopf-Balken) neben den neu gezeichneten
+// Elementen durch und wirken doppelt (BUG-2026-0154).
 const MASKS_P1: [number, number, number, number][] = [
-  [335, 155, 570, 175],   // Titel "Angebot Nr. …"
-  [ 45, 175, 330, 255],   // Empfänger-Block
-  [335, 175, 570, 285],   // Meta-Labels + Werte
-  [335, 285, 570, 310],   // Datum + Seitenzähler
-  [ 45, 315, 570, 410],   // Intro
-  [ 45, 420, 570, 445],   // Tabellen-Header
-  [ 45, 445, 570, 755],   // Positionen
+  [335, 148, 575, 312],   // Titel, Meta-Block, Datum/Seitenzähler
+  [ 45, 175, 330, 305],   // Empfänger-Block
+  [  6, 288, 44, 316],    // Farbrest am linken Rand der Vorlage
+  [ 45, 312, 575, 758],   // Intro, Tabellenkopf, Positionen, Fußtexte
 ];
 // Folge-Seiten: Empfängerblock & Meta gehören dort nicht mehr hin → auch maskieren
 const MASKS_PX: [number, number, number, number][] = [
-  [335, 155, 570, 175],
-  [335, 175, 570, 230],
-  [ 45, 240, 570, 285],
-  [ 45, 285, 570, 310],
-  [ 45, 310, 570, 755],
+  [335, 148, 575, 312],
+  [ 45, 175, 330, 305],
+  [  6, 288, 44, 316],
+  [ 45, 312, 575, 758],
 ];
 
 const P = {
