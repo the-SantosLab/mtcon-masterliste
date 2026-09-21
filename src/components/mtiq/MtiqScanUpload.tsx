@@ -215,7 +215,7 @@ export function MtiqScanUpload({ onClose }: Props) {
       <div className="px-3 py-2.5 flex items-center gap-2" style={{ borderTop: '1px solid #1a1a1a' }}>
         <div className="flex-1" />
         <button
-          onClick={submit}
+          onClick={mode === 'translate' ? submitTranslate : submit}
           disabled={loading || !file}
           className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg disabled:opacity-50"
           style={{
@@ -224,8 +224,8 @@ export function MtiqScanUpload({ onClose }: Props) {
             border: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-          Analysieren & Entwurf erstellen
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : mode === 'translate' ? <Languages className="h-3.5 w-3.5" /> : <Upload className="h-3.5 w-3.5" />}
+          {mode === 'translate' ? 'Übersetzen & PDF herunterladen' : 'Analysieren & Entwurf erstellen'}
         </button>
       </div>
     </div>
