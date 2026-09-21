@@ -127,7 +127,17 @@ const CrmNoAccess = lazyRetry(() => import("./pages/crm/CrmNoAccess"));
 const CrmWebForms = lazyRetry(() => import("./pages/crm/CrmWebForms"));
 const PublicOffer = lazyRetry(() => import("./pages/public/PublicOffer"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Vermeidet Doppel-Ladevorgänge beim Wechseln zwischen Seiten/Tabs
+      staleTime: 60_000,
+      gcTime: 10 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function RouteFallback() {
   return (
