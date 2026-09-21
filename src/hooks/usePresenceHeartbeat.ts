@@ -11,6 +11,8 @@ export function usePresenceHeartbeat() {
   const location = useLocation();
   const lastActiveRef = useRef<number>(0);
   const lastPushedActiveRef = useRef<number>(0);
+  const pathRef = useRef(location.pathname);
+  pathRef.current = location.pathname;
 
   useEffect(() => {
     if (!user?.id) return;

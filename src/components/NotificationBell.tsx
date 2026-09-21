@@ -43,7 +43,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     if (!user) return;
-    fetchNotifications();
+    fetchNotifications(false);
 
     // Realtime subscription
     const channel = supabase
