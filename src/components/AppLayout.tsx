@@ -151,10 +151,7 @@ const processNavGroups: ProcessNavGroup[] = [
   { id: 'procurement', label: 'Einkaufen & lagern', icon: ShoppingCart, items: [
     { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart, access: 'erp' },
     { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart, access: 'erp' },
-    { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp', children: [
-      { href: '/admin/lots', label: 'Chargen', icon: Package, access: 'erp' },
-      { href: '/admin/sperrlager', label: 'Sperrlager', icon: Lock, access: 'erp' },
-    ]},
+    { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp' },
     { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt, access: 'erp' },
     { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star, access: 'erp' },
     { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp, access: 'erp' },

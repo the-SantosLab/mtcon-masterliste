@@ -28,7 +28,8 @@ type Stock = {
 
 type Sperr = { id: string; lager: string; lagerpl: string; behaelter: string };
 
-export default function AdminSperrlager() {
+/** Sperrlager-Inhalt ohne AppLayout/Kopfzeile – nutzbar als Tab auf der Lager-Seite. */
+export function SperrlagerPanel() {
   const [rows, setRows] = useState<Stock[]>([]);
   const [sperrRows, setSperrRows] = useState<Stock[]>([]);
   const [sperrLocs, setSperrLocs] = useState<Sperr[]>([]);
@@ -97,22 +98,14 @@ export default function AdminSperrlager() {
   };
 
   return (
-    <AppLayout>
-      <div className="p-6 space-y-6">
+    <div className="space-y-4 mt-3">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-              <Lock className="h-5 w-5" /> Sperrlager
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Statusumbuchung: Bestand auf 0 setzen und in Sperrlager überführen. Einkauf + Konstruktion werden automatisch benachrichtigt.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Artikel / Charge / Lager…" className="pl-8 w-72" />
-            </div>
+          <p className="text-xs text-muted-foreground">
+            Statusumbuchung: Bestand auf 0 setzen und in Sperrlager überführen. Einkauf + Konstruktion werden automatisch benachrichtigt.
+          </p>
+          <div className="relative">
+            <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Artikel / Charge / Lager…" className="pl-8 w-72 h-8 text-xs" />
           </div>
         </div>
 
@@ -187,7 +180,6 @@ export default function AdminSperrlager() {
             </div>
           )}
         </div>
-      </div>
 
       <Dialog open={!!sel} onOpenChange={(o) => !o && setSel(null)}>
         <DialogContent>
@@ -234,6 +226,22 @@ export default function AdminSperrlager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+export default function AdminSperrlager() {
+  return (
+    <AppLayout>
+      <div className="space-y-4 max-w-[1400px]">
+        <div>
+          <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Lock className="h-4 w-4" /> Sperrlager
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Gesperrte Bestände und Sperrbuchungen</p>
+        </div>
+        <SperrlagerPanel />
+      </div>
     </AppLayout>
   );
 }

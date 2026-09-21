@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArticlePicker } from '@/components/ArticlePicker';
 import { Plus, Trash2, AlertTriangle, Package, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Repeat, Undo2, Link as LinkIcon, MapPin } from 'lucide-react';
 import { StorageLocationsPanel } from './AdminStorageLocations';
+import { LotsPanel } from './AdminLots';
+import { SperrlagerPanel } from './AdminSperrlager';
 
 import { toast } from 'sonner';
 
@@ -105,12 +107,16 @@ export default function AdminInventory() {
             <TabsTrigger value="reservations" className="text-xs">Reservierungen</TabsTrigger>
             <TabsTrigger value="warehouses" className="text-xs">Lager</TabsTrigger>
             <TabsTrigger value="locations" className="text-xs">Lagerplätze</TabsTrigger>
+            <TabsTrigger value="lots" className="text-xs">Chargen</TabsTrigger>
+            <TabsTrigger value="sperrlager" className="text-xs">Sperrlager</TabsTrigger>
           </TabsList>
           <TabsContent value="stock"><StockTab canWrite={canWrite} /></TabsContent>
           <TabsContent value="movements"><MovementsTab canWrite={canWrite} isAdmin={!!isAdmin} /></TabsContent>
           <TabsContent value="reservations"><ReservationsTab canWrite={canWrite} /></TabsContent>
           <TabsContent value="warehouses"><WarehousesTab isAdmin={!!isAdmin} /></TabsContent>
           <TabsContent value="locations"><StorageLocationsPanel /></TabsContent>
+          <TabsContent value="lots"><LotsPanel /></TabsContent>
+          <TabsContent value="sperrlager"><SperrlagerPanel /></TabsContent>
         </Tabs>
 
       </div>
