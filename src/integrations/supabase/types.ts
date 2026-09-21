@@ -7586,6 +7586,144 @@ export type Database = {
         }
         Relationships: []
       }
+      production_order_items: {
+        Row: {
+          component_art_nr: string
+          created_at: string
+          description: string | null
+          id: string
+          lot_no: string | null
+          me: string | null
+          pos: string | null
+          production_order_id: string
+          qty_issued: number
+          qty_per_unit: number
+          qty_required: number
+        }
+        Insert: {
+          component_art_nr: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lot_no?: string | null
+          me?: string | null
+          pos?: string | null
+          production_order_id: string
+          qty_issued?: number
+          qty_per_unit?: number
+          qty_required?: number
+        }
+        Update: {
+          component_art_nr?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lot_no?: string | null
+          me?: string | null
+          pos?: string | null
+          production_order_id?: string
+          qty_issued?: number
+          qty_per_unit?: number
+          qty_required?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_order_items_production_order_id_fkey"
+            columns: ["production_order_id"]
+            isOneToOne: false
+            referencedRelation: "production_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_orders: {
+        Row: {
+          art_nr: string
+          case_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          issued_at: string | null
+          lot_no: string | null
+          note: string | null
+          order_id: string | null
+          planned_end: string | null
+          planned_start: string | null
+          quantity: number
+          quantity_done: number
+          status: string
+          updated_at: string
+          warehouse_id: string
+          wo_no: string | null
+        }
+        Insert: {
+          art_nr: string
+          case_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          issued_at?: string | null
+          lot_no?: string | null
+          note?: string | null
+          order_id?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
+          quantity?: number
+          quantity_done?: number
+          status?: string
+          updated_at?: string
+          warehouse_id: string
+          wo_no?: string | null
+        }
+        Update: {
+          art_nr?: string
+          case_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          issued_at?: string | null
+          lot_no?: string | null
+          note?: string | null
+          order_id?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
+          quantity?: number
+          quantity_done?: number
+          status?: string
+          updated_at?: string
+          warehouse_id?: string
+          wo_no?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_orders_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           code: string
@@ -9600,6 +9738,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_production_order: {
+        Args: {
+          _art_nr: string
+          _case_id?: string
+          _note?: string
+          _order_id?: string
+          _quantity: number
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       current_user_email: { Args: never; Returns: string }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_member_role: {
@@ -9748,6 +9897,11 @@ export type Database = {
         Returns: string
       }
       policy_category: { Args: { p_policy_id: string }; Returns: string }
+      production_order_complete: {
+        Args: { _id: string; _lot_no?: string; _qty?: number }
+        Returns: Json
+      }
+      production_order_issue: { Args: { _id: string }; Returns: Json }
       purge_old_trashed_boards: { Args: never; Returns: undefined }
       purge_old_trashed_notes: { Args: never; Returns: undefined }
       purge_trashed_cases: { Args: never; Returns: number }

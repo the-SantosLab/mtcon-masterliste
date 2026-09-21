@@ -15,6 +15,7 @@ import {
   LayoutDashboard, ClipboardList, Settings, Users, Database, TerminalSquare,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
   FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp, FolderTree, Globe, PlugZap,
+  Wrench,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -145,6 +146,7 @@ const processNavGroups: ProcessNavGroup[] = [
     { href: '/orders', label: 'Aufträge', icon: ClipboardList, access: 'erp' },
     { href: '/admin/disposition', label: 'Disposition', icon: Activity, access: 'erp' },
     { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange, access: 'erp' },
+    { href: '/admin/production', label: 'Werkstattaufträge', icon: Wrench, access: 'erp' },
     { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck, access: 'erp' },
     { href: '/admin/templates', label: 'Standard Vorgänge', icon: FileText, access: 'admin' },
   ]},
