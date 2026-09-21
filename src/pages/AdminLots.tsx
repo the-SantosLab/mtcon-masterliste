@@ -33,10 +33,8 @@ const fmtN = (n: number | null | undefined, d = 0) =>
   n == null ? '–' : Number(n).toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtD = (d: string | null) => (d ? new Date(d).toLocaleDateString('de-DE') : '–');
 
-export default function AdminLots() {
-  const { isAdmin, loading, role } = useAuth();
-  const canUse = isAdmin || role === 'staff';
-
+/** Chargen-Inhalt ohne AppLayout/Kopfzeile – nutzbar als Tab auf der Lager-Seite. */
+export function LotsPanel() {
   const [rows, setRows] = useState<Lot[]>([]);
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
@@ -55,7 +53,7 @@ export default function AdminLots() {
     setRows((data || []) as Lot[]);
   };
 
-  useEffect(() => { if (canUse) load(); }, [canUse]);
+  useEffect(() => { load(); }, []);
 
   const today = new Date(); today.setHours(0,0,0,0);
   const in30 = new Date(today); in30.setDate(in30.getDate() + 30);
@@ -92,120 +90,128 @@ export default function AdminLots() {
     load();
   };
 
+  return (
+    <div className="space-y-3 mt-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi icon={<Boxes className="h-4 w-4 text-muted-foreground" />} label="Chargen gesamt" value={fmtN(kpi.total)} />
+        <Kpi icon={<Boxes className="h-4 w-4 text-emerald-500" />} label="Aktiv" value={fmtN(kpi.active)} />
+        <Kpi icon={<Calendar className="h-4 w-4 text-amber-500" />} label="MHD < 30 Tage" value={fmtN(kpi.soon)} />
+        <Kpi icon={<AlertTriangle className="h-4 w-4 text-destructive" />} label="MHD abgelaufen" value={fmtN(kpi.expired)} />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Suche Art-Nr, Chargen-Nr, Lieferant…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-8 max-w-sm text-xs"
+        />
+        <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+          <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Status</SelectItem>
+            <SelectItem value="active">Aktiv</SelectItem>
+            <SelectItem value="blocked">Gesperrt</SelectItem>
+            <SelectItem value="consumed">Verbraucht</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={expiry} onValueChange={(v) => setExpiry(v as any)}>
+          <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">MHD: alle</SelectItem>
+            <SelectItem value="soon">MHD: ≤ 30 Tage</SelectItem>
+            <SelectItem value="expired">MHD: abgelaufen</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-[11px] text-muted-foreground ml-auto">{filtered.length} Chargen</span>
+        <Button size="sm" variant="outline" onClick={load} disabled={busy} className="h-8 text-xs">
+          <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', busy && 'animate-spin')} /> Aktualisieren
+        </Button>
+      </div>
+
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-2 py-2 text-left">Artikel</th>
+                <th className="px-2 py-2 text-left">Charge</th>
+                <th className="px-2 py-2 text-left">Ext.</th>
+                <th className="px-2 py-2 text-left">Lieferant</th>
+                <th className="px-2 py-2 text-right">Bestand</th>
+                <th className="px-2 py-2 text-right">Σ Zugang</th>
+                <th className="px-2 py-2 text-right">Eing.</th>
+                <th className="px-2 py-2 text-left">Erst</th>
+                <th className="px-2 py-2 text-left">Letzt</th>
+                <th className="px-2 py-2 text-left">MHD</th>
+                <th className="px-2 py-2 text-left">Status</th>
+                <th className="px-2 py-2"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.length === 0 && (
+                <tr><td colSpan={12} className="px-3 py-8 text-center text-muted-foreground">Keine Chargen</td></tr>
+              )}
+              {filtered.map(r => {
+                const exp = r.expiry_date ? new Date(r.expiry_date) : null;
+                const expired = exp && exp < today;
+                const soon = exp && !expired && exp <= in30;
+                return (
+                  <tr key={r.id} className={cn(r.status === 'blocked' && 'bg-destructive/5', expired && 'bg-amber-500/5')}>
+                    <td className="px-2 py-1.5 font-mono">{r.art_nr}</td>
+                    <td className="px-2 py-1.5 font-mono font-medium text-foreground">{r.lot_no}</td>
+                    <td className="px-2 py-1.5 font-mono text-muted-foreground">{r.lot_no_ext || '–'}</td>
+                    <td className="px-2 py-1.5">{r.supplier_name || r.supplier_lief_nr || '–'}</td>
+                    <td className="px-2 py-1.5 text-right tabular-nums font-medium">{fmtN(r.current_qty, 3)}</td>
+                    <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{fmtN(r.total_received, 3)}</td>
+                    <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{r.receipt_count}</td>
+                    <td className="px-2 py-1.5 text-muted-foreground">{fmtD(r.first_received_at)}</td>
+                    <td className="px-2 py-1.5 text-muted-foreground">{fmtD(r.last_received_at)}</td>
+                    <td className={cn('px-2 py-1.5',
+                      expired && 'text-destructive font-medium',
+                      soon && 'text-amber-600 dark:text-amber-400')}>
+                      {fmtD(r.expiry_date)}
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <Badge variant={r.status === 'blocked' ? 'destructive' : r.status === 'consumed' ? 'secondary' : 'outline'}
+                        className="text-[10px] h-4 px-1.5">
+                        {r.status === 'active' ? 'Aktiv' : r.status === 'blocked' ? 'Gesperrt' : 'Verbraucht'}
+                      </Badge>
+                    </td>
+                    <td className="px-2 py-1.5 text-right">
+                      {r.status === 'active' && (
+                        <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setLotStatus(r.id, 'blocked')}>Sperren</Button>
+                      )}
+                      {r.status === 'blocked' && (
+                        <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setLotStatus(r.id, 'active')}>Freigeben</Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export default function AdminLots() {
+  const { isAdmin, loading, role } = useAuth();
+  const canUse = isAdmin || role === 'staff';
+
   if (loading) return <AppLayout><div className="p-6">Laden…</div></AppLayout>;
   if (!canUse) return <Navigate to="/" replace />;
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Chargen</h1>
-            <p className="text-xs text-muted-foreground">Chargenverwaltung mit automatischer Duplikatsprüfung beim Wareneingang.</p>
-          </div>
-          <Button size="sm" variant="outline" onClick={load} disabled={busy}>
-            <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', busy && 'animate-spin')} /> Aktualisieren
-          </Button>
+      <div className="space-y-4 max-w-[1400px]">
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">Chargen</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Chargenverwaltung mit automatischer Duplikatsprüfung beim Wareneingang.</p>
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi icon={<Boxes className="h-4 w-4 text-muted-foreground" />} label="Chargen gesamt" value={fmtN(kpi.total)} />
-          <Kpi icon={<Boxes className="h-4 w-4 text-emerald-500" />} label="Aktiv" value={fmtN(kpi.active)} />
-          <Kpi icon={<Calendar className="h-4 w-4 text-amber-500" />} label="MHD < 30 Tage" value={fmtN(kpi.soon)} />
-          <Kpi icon={<AlertTriangle className="h-4 w-4 text-destructive" />} label="MHD abgelaufen" value={fmtN(kpi.expired)} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Input
-            placeholder="Suche Art-Nr, Chargen-Nr, Lieferant…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 max-w-sm text-xs"
-          />
-          <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-            <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alle Status</SelectItem>
-              <SelectItem value="active">Aktiv</SelectItem>
-              <SelectItem value="blocked">Gesperrt</SelectItem>
-              <SelectItem value="consumed">Verbraucht</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={expiry} onValueChange={(v) => setExpiry(v as any)}>
-            <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="any">MHD: alle</SelectItem>
-              <SelectItem value="soon">MHD: ≤ 30 Tage</SelectItem>
-              <SelectItem value="expired">MHD: abgelaufen</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-[11px] text-muted-foreground ml-auto">{filtered.length} Chargen</span>
-        </div>
-
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-2 py-2 text-left">Artikel</th>
-                  <th className="px-2 py-2 text-left">Charge</th>
-                  <th className="px-2 py-2 text-left">Ext.</th>
-                  <th className="px-2 py-2 text-left">Lieferant</th>
-                  <th className="px-2 py-2 text-right">Bestand</th>
-                  <th className="px-2 py-2 text-right">Σ Zugang</th>
-                  <th className="px-2 py-2 text-right">Eing.</th>
-                  <th className="px-2 py-2 text-left">Erst</th>
-                  <th className="px-2 py-2 text-left">Letzt</th>
-                  <th className="px-2 py-2 text-left">MHD</th>
-                  <th className="px-2 py-2 text-left">Status</th>
-                  <th className="px-2 py-2"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filtered.length === 0 && (
-                  <tr><td colSpan={12} className="px-3 py-8 text-center text-muted-foreground">Keine Chargen</td></tr>
-                )}
-                {filtered.map(r => {
-                  const exp = r.expiry_date ? new Date(r.expiry_date) : null;
-                  const expired = exp && exp < today;
-                  const soon = exp && !expired && exp <= in30;
-                  return (
-                    <tr key={r.id} className={cn(r.status === 'blocked' && 'bg-destructive/5', expired && 'bg-amber-500/5')}>
-                      <td className="px-2 py-1.5 font-mono">{r.art_nr}</td>
-                      <td className="px-2 py-1.5 font-mono font-medium text-foreground">{r.lot_no}</td>
-                      <td className="px-2 py-1.5 font-mono text-muted-foreground">{r.lot_no_ext || '–'}</td>
-                      <td className="px-2 py-1.5">{r.supplier_name || r.supplier_lief_nr || '–'}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums font-medium">{fmtN(r.current_qty, 3)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{fmtN(r.total_received, 3)}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-muted-foreground">{r.receipt_count}</td>
-                      <td className="px-2 py-1.5 text-muted-foreground">{fmtD(r.first_received_at)}</td>
-                      <td className="px-2 py-1.5 text-muted-foreground">{fmtD(r.last_received_at)}</td>
-                      <td className={cn('px-2 py-1.5',
-                        expired && 'text-destructive font-medium',
-                        soon && 'text-amber-600 dark:text-amber-400')}>
-                        {fmtD(r.expiry_date)}
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <Badge variant={r.status === 'blocked' ? 'destructive' : r.status === 'consumed' ? 'secondary' : 'outline'}
-                          className="text-[10px] h-4 px-1.5">
-                          {r.status === 'active' ? 'Aktiv' : r.status === 'blocked' ? 'Gesperrt' : 'Verbraucht'}
-                        </Badge>
-                      </td>
-                      <td className="px-2 py-1.5 text-right">
-                        {r.status === 'active' && (
-                          <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setLotStatus(r.id, 'blocked')}>Sperren</Button>
-                        )}
-                        {r.status === 'blocked' && (
-                          <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setLotStatus(r.id, 'active')}>Freigeben</Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        <LotsPanel />
       </div>
     </AppLayout>
   );
