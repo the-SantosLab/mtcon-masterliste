@@ -41,6 +41,7 @@ import { MtiqWriter } from '@/components/mtiq/MtiqWriter';
 import { PerfPanel, PerfProfiler } from '@/components/PerfPanel';
 import { PdfJobToaster } from '@/components/PdfJobToaster';
 import { SatisfactionSurveyBanner } from '@/components/SatisfactionSurveyBanner';
+import { cachedFetch, getCached } from '@/lib/shellCache';
 
 
 function MtiqPendingBadge() {
