@@ -274,7 +274,12 @@ function CreateDialog({ open, warehouses, onClose, onCreated }:
                     {bom.map((b, i) => (
                       <tr key={i}>
                         <td className="px-2 py-1 text-muted-foreground">{b.pos || '–'}</td>
-                        <td className="px-2 py-1 font-mono">{b.component_art_nr}</td>
+                        <td className="px-2 py-1 font-mono">
+                          <button type="button" className="hover:underline underline-offset-2 cursor-pointer"
+                            onClick={() => setInfoArt(b.component_art_nr)} title="Artikel-Infos anzeigen">
+                            {b.component_art_nr}
+                          </button>
+                        </td>
                         <td className="px-2 py-1 text-muted-foreground">{b.component_bezeichnung || b.component_matchcode || '–'}</td>
                         <td className="px-2 py-1 text-right tabular-nums">{fmtN(b.menge ?? 1)}</td>
                         <td className="px-2 py-1 text-right tabular-nums font-medium">{fmtN((Number(b.menge) || 1) * factor)}</td>
@@ -293,6 +298,7 @@ function CreateDialog({ open, warehouses, onClose, onCreated }:
           </Button>
         </DialogFooter>
       </DialogContent>
+      <ArticleInfoDialog artNr={infoArt} onClose={() => setInfoArt(null)} />
     </Dialog>
   );
 }
