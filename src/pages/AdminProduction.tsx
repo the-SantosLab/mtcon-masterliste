@@ -296,12 +296,16 @@ function CreateDialog({ open, warehouses, onClose, onCreated }:
   );
 }
 
+type Avail = { item_id: string; qty_open: number; qty_available: number; shortage: number };
+
 function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () => void; onChanged: () => void }) {
   const [items, setItems] = useState<WoItem[]>([]);
+  const [avail, setAvail] = useState<Record<string, Avail>>({});
   const [loading, setLoading] = useState(false);
   const [working, setWorking] = useState(false);
   const [doneQty, setDoneQty] = useState('');
   const [lotNo, setLotNo] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!wo) return;
@@ -310,26 +314,40 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await (supabase as any)
-        .from('production_order_items').select('*').eq('production_order_id', wo.id).order('pos');
+      const [{ data, error }, av] = await Promise.all([
+        (supabase as any).from('production_order_items').select('*').eq('production_order_id', wo.id).order('pos'),
+        (supabase as any).rpc('production_order_availability', { _id: wo.id }),
+      ]);
       setLoading(false);
       if (cancelled) return;
       if (error) { toast.error('Positionen konnten nicht geladen werden'); return; }
       setItems((data || []) as WoItem[]);
+      const map: Record<string, Avail> = {};
+      for (const r of ((av?.data || []) as Avail[])) map[r.item_id] = r;
+      setAvail(map);
     })();
     return () => { cancelled = true; };
-  }, [wo]);
+  }, [wo, reloadKey]);
 
   const openQty = items.reduce((s, i) => s + Math.max(0, i.qty_required - i.qty_issued), 0);
   const allIssued = items.length > 0 && openQty === 0;
+  const shortItems = items.filter(i => (avail[i.id]?.shortage || 0) > 0);
+  const issuableQty = items.reduce((s, i) => {
+    const a = avail[i.id];
+    const open = Math.max(0, i.qty_required - i.qty_issued);
+    return s + (a ? Math.min(open, Math.max(0, a.qty_available)) : open);
+  }, 0);
 
-  const issue = async () => {
+  const issue = async (allowPartial = false) => {
     if (!wo) return;
     setWorking(true);
-    const { error } = await (supabase as any).rpc('production_order_issue', { _id: wo.id });
+    const { data, error } = await (supabase as any).rpc('production_order_issue', { _id: wo.id, _allow_partial: allowPartial });
     setWorking(false);
     if (error) { toast.error(error.message || 'Ausbuchen fehlgeschlagen'); return; }
-    toast.success('Einzelteile ausgebucht');
+    const short = (data as any)?.short_positions || 0;
+    if (short > 0) toast.warning(`Teilentnahme gebucht · ${short} Position(en) weiterhin offen`);
+    else toast.success('Einzelteile ausgebucht');
+    setReloadKey(k => k + 1);
     onChanged();
   };
 
@@ -378,13 +396,18 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                       <th className="px-2 py-1.5 text-right">je Stück</th>
                       <th className="px-2 py-1.5 text-right">Bedarf</th>
                       <th className="px-2 py-1.5 text-right">ausgebucht</th>
+                      <th className="px-2 py-1.5 text-right">Bestand</th>
+                      <th className="px-2 py-1.5 text-right">fehlt</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {loading && <tr><td colSpan={6} className="px-2 py-4 text-center text-muted-foreground">Laden…</td></tr>}
-                    {!loading && items.length === 0 && <tr><td colSpan={6} className="px-2 py-4 text-center text-muted-foreground">Keine Positionen</td></tr>}
-                    {items.map(i => (
-                      <tr key={i.id}>
+                    {loading && <tr><td colSpan={8} className="px-2 py-4 text-center text-muted-foreground">Laden…</td></tr>}
+                    {!loading && items.length === 0 && <tr><td colSpan={8} className="px-2 py-4 text-center text-muted-foreground">Keine Positionen</td></tr>}
+                    {items.map(i => {
+                      const a = avail[i.id];
+                      const short = a?.shortage || 0;
+                      return (
+                      <tr key={i.id} className={cn(short > 0 && 'bg-destructive/5')}>
                         <td className="px-2 py-1 text-muted-foreground">{i.pos || '–'}</td>
                         <td className="px-2 py-1 font-mono">{i.component_art_nr}</td>
                         <td className="px-2 py-1 text-muted-foreground">{i.description || '–'}</td>
@@ -393,8 +416,13 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                         <td className={cn('px-2 py-1 text-right tabular-nums', i.qty_issued >= i.qty_required ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
                           {fmtN(i.qty_issued)}
                         </td>
+                        <td className="px-2 py-1 text-right tabular-nums text-muted-foreground">{a ? fmtN(a.qty_available) : '–'}</td>
+                        <td className={cn('px-2 py-1 text-right tabular-nums', short > 0 ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+                          {short > 0 ? fmtN(short) : '–'}
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -409,10 +437,21 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                   <p className="text-muted-foreground">
                     Bucht alle offenen Stücklisten-Mengen als Abgang aus dem Lager ({fmtN(openQty)} offen).
                   </p>
-                  <Button size="sm" className="h-8 text-xs w-full" onClick={issue} disabled={working || allIssued || items.length === 0}>
+                  {shortItems.length > 0 && !allIssued && (
+                    <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive">
+                      Zu wenig Bestand bei {shortItems.length} Position(en). Vollständige Entnahme ist gesperrt –
+                      möglich sind {fmtN(issuableQty)} von {fmtN(openQty)}.
+                    </div>
+                  )}
+                  <Button size="sm" className="h-8 text-xs w-full" onClick={() => issue(false)} disabled={working || allIssued || items.length === 0 || shortItems.length > 0}>
                     {working && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
                     {allIssued ? 'Bereits ausgebucht' : 'Material entnehmen'}
                   </Button>
+                  {shortItems.length > 0 && !allIssued && (
+                    <Button size="sm" variant="outline" className="h-8 text-xs w-full" onClick={() => issue(true)} disabled={working || issuableQty <= 0}>
+                      Nur verfügbare Mengen entnehmen
+                    </Button>
+                  )}
                 </Card>
 
                 <Card className="p-3 space-y-2">
