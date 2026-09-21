@@ -134,6 +134,13 @@
       "when": 1789476276319,
       "tag": "0018_link_documents_to_cases_autostatus",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789970455899,
+      "tag": "0019_reset_urgency_on_case_completion",
+      "breakpoints": true
     }
   ]
 }
