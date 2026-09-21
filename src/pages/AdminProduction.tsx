@@ -396,13 +396,18 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                       <th className="px-2 py-1.5 text-right">je Stück</th>
                       <th className="px-2 py-1.5 text-right">Bedarf</th>
                       <th className="px-2 py-1.5 text-right">ausgebucht</th>
+                      <th className="px-2 py-1.5 text-right">Bestand</th>
+                      <th className="px-2 py-1.5 text-right">fehlt</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {loading && <tr><td colSpan={6} className="px-2 py-4 text-center text-muted-foreground">Laden…</td></tr>}
-                    {!loading && items.length === 0 && <tr><td colSpan={6} className="px-2 py-4 text-center text-muted-foreground">Keine Positionen</td></tr>}
-                    {items.map(i => (
-                      <tr key={i.id}>
+                    {loading && <tr><td colSpan={8} className="px-2 py-4 text-center text-muted-foreground">Laden…</td></tr>}
+                    {!loading && items.length === 0 && <tr><td colSpan={8} className="px-2 py-4 text-center text-muted-foreground">Keine Positionen</td></tr>}
+                    {items.map(i => {
+                      const a = avail[i.id];
+                      const short = a?.shortage || 0;
+                      return (
+                      <tr key={i.id} className={cn(short > 0 && 'bg-destructive/5')}>
                         <td className="px-2 py-1 text-muted-foreground">{i.pos || '–'}</td>
                         <td className="px-2 py-1 font-mono">{i.component_art_nr}</td>
                         <td className="px-2 py-1 text-muted-foreground">{i.description || '–'}</td>
@@ -411,8 +416,13 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                         <td className={cn('px-2 py-1 text-right tabular-nums', i.qty_issued >= i.qty_required ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
                           {fmtN(i.qty_issued)}
                         </td>
+                        <td className="px-2 py-1 text-right tabular-nums text-muted-foreground">{a ? fmtN(a.qty_available) : '–'}</td>
+                        <td className={cn('px-2 py-1 text-right tabular-nums', short > 0 ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+                          {short > 0 ? fmtN(short) : '–'}
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
