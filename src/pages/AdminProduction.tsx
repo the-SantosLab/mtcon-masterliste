@@ -313,6 +313,7 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
   const [doneQty, setDoneQty] = useState('');
   const [lotNo, setLotNo] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const [infoArt, setInfoArt] = useState<string | null>(null);
 
   useEffect(() => {
     if (!wo) return;
@@ -416,7 +417,12 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                       return (
                       <tr key={i.id} className={cn(short > 0 && 'bg-destructive/5')}>
                         <td className="px-2 py-1 text-muted-foreground">{i.pos || '–'}</td>
-                        <td className="px-2 py-1 font-mono">{i.component_art_nr}</td>
+                        <td className="px-2 py-1 font-mono">
+                          <button type="button" className="hover:underline underline-offset-2 cursor-pointer"
+                            onClick={(e) => { e.stopPropagation(); setInfoArt(i.component_art_nr); }} title="Artikel-Infos anzeigen">
+                            {i.component_art_nr}
+                          </button>
+                        </td>
                         <td className="px-2 py-1 text-muted-foreground">{i.description || '–'}</td>
                         <td className="px-2 py-1 text-right tabular-nums">{fmtN(i.qty_per_unit)}</td>
                         <td className="px-2 py-1 text-right tabular-nums">{fmtN(i.qty_required)}</td>
