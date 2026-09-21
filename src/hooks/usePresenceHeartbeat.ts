@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const HEARTBEAT_MS = 30_000;
 const ACTIVITY_THROTTLE_MS = 15_000;
+// Der App-Rahmen wird bei jedem Seitenwechsel neu aufgebaut; ohne diese
+// prozessweite Sperre würde bei jedem Wechsel ein Präsenz-Schreibvorgang laufen.
+let lastMountPush = 0;
 
 export function usePresenceHeartbeat() {
   const { user } = useAuth();
