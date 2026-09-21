@@ -32,10 +32,11 @@ export function usePresenceHeartbeat() {
         ...(markActive ? { last_active_at: now } : {}),
       };
       if (markActive) lastPushedActiveRef.current = Date.now();
+      lastMountPush = Date.now();
       await supabase.from('user_presence').upsert(payload, { onConflict: 'user_id' });
     };
 
-    void push(true);
+    if (Date.now() - lastMountPush > ACTIVITY_THROTTLE_MS) void push(true);
 
     const interval = setInterval(() => {
       if (cancelled) return;
