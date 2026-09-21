@@ -491,6 +491,142 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
           </div>
         )}
       </DialogContent>
+      <ArticleInfoDialog artNr={infoArt} onClose={() => setInfoArt(null)} />
+    </Dialog>
+  );
+}
+
+type ArticleStockRow = { quantity: number | null; min_quantity: number | null; warehouses: { code: string; name: string } | null };
+
+function ArticleInfoDialog({ artNr, onClose }: { artNr: string | null; onClose: () => void }) {
+  const [article, setArticle] = useState<Record<string, any> | null>(null);
+  const [stock, setStock] = useState<ArticleStockRow[]>([]);
+  const [bomCount, setBomCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!artNr) return;
+    let cancelled = false;
+    setLoading(true);
+    setArticle(null); setStock([]); setBomCount(null);
+    (async () => {
+      const sb = supabase as any;
+      const [a, s, b] = await Promise.all([
+        sb.from('articles').select('*').eq('art_nr', artNr).maybeSingle(),
+        sb.from('inventory_stock').select('quantity, min_quantity, warehouses(code, name)').eq('art_nr', artNr),
+        sb.from('article_bom').select('pos', { count: 'exact', head: true }).eq('parent_art_nr', artNr),
+      ]);
+      if (cancelled) return;
+      setArticle(a.data || null);
+      setStock((s.data || []) as ArticleStockRow[]);
+      setBomCount(b.count ?? 0);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [artNr]);
+
+  const totalQty = stock.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+  const row = (label: string, value: any) => (
+    <div className="flex items-baseline justify-between gap-3 border-b border-border/40 py-1">
+      <span className="text-muted-foreground shrink-0">{label}</span>
+      <span className="text-right font-medium break-words">{value == null || value === '' ? '–' : String(value)}</span>
+    </div>
+  );
+
+  return (
+    <Dialog open={!!artNr} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-sm flex items-center gap-2">
+            <PackageSearch className="h-4 w-4 text-muted-foreground" /> Komponente
+            <span className="font-mono">{artNr}</span>
+          </DialogTitle>
+        </DialogHeader>
+        {loading && <div className="text-xs text-muted-foreground py-4">Laden…</div>}
+        {!loading && !article && <div className="text-xs text-muted-foreground py-4">Keine Artikel-Stammdaten zu dieser Nummer gefunden.</div>}
+        {!loading && article && (
+          <div className="space-y-4 text-xs">
+            <div>
+              <div className="text-[11px] font-medium text-foreground mb-1">Stammdaten</div>
+              {row('Bezeichnung', article.bezeich_1)}
+              {row('Bezeichnung 2', article.bezeich_2)}
+              {row('Matchcode', article.matchcode)}
+              {row('Mengeneinheit', article.me)}
+              {row('Packeinheit', article.pe)}
+              {article.is_blocked && (
+                <div className="mt-1.5"><Badge variant="destructive" className="text-[10px] h-4 px-1.5">Gesperrt</Badge></div>
+              )}
+            </div>
+
+            <div>
+              <div className="text-[11px] font-medium text-foreground mb-1">Technische Daten</div>
+              {row('Material', article.material)}
+              {row('Ausführung', article.ausfuehrung)}
+              {row('Körper', article.koerper)}
+              {row('Pins', article.pins)}
+              {row('Rastermaß', article.rastermass)}
+              {row('Pinlänge', article.pinlaenge)}
+              {row('Höhe', article.hoehe)}
+              {row('Gewinde', article.gewinde)}
+              {row('Nutzgewinde', article.nutz_gewinde)}
+              {row('Galvanik', article.galvanik)}
+              {row('Dichtring', article.dichtring)}
+            </div>
+
+            <div>
+              <div className="text-[11px] font-medium text-foreground mb-1">Verwaltung</div>
+              {row('Artikelgruppe', article.art_gr)}
+              {row('Materialart', article.mat_art)}
+              {row('Dispo-Kennzeichen', article.dispo_kz_label || article.dispo_kz)}
+              {row('Status', article.art_stat_label || article.art_stat)}
+              {row('Kennung', article.kennung_label || article.kennung)}
+              {row('Zolltarif-Nr.', article.zolltarif_nr)}
+              {row('Zeichnungs-Nr.', article.zeichnung_nr)}
+              {row('Bautyp', article.bautyp)}
+            </div>
+
+            <div>
+              <div className="text-[11px] font-medium text-foreground mb-1">Bestand je Lager</div>
+              {stock.length === 0 && <div className="text-muted-foreground py-1">Kein Bestand gebucht.</div>}
+              {stock.length > 0 && (
+                <div className="rounded-md border border-border/60 overflow-hidden">
+                  <table className="w-full text-[11px]">
+                    <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      <tr>
+                        <th className="px-2 py-1 text-left">Lager</th>
+                        <th className="px-2 py-1 text-right">Bestand</th>
+                        <th className="px-2 py-1 text-right">Mindestbestand</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {stock.map((s, i) => (
+                        <tr key={i}>
+                          <td className="px-2 py-1 text-muted-foreground">{s.warehouses?.name || s.warehouses?.code || '–'}</td>
+                          <td className={cn('px-2 py-1 text-right tabular-nums font-medium', (Number(s.quantity) || 0) <= 0 && 'text-destructive')}>
+                            {fmtN(s.quantity ?? 0)}
+                          </td>
+                          <td className="px-2 py-1 text-right tabular-nums text-muted-foreground">{fmtN(s.min_quantity ?? 0)}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-muted/30">
+                        <td className="px-2 py-1 font-medium">Gesamt</td>
+                        <td className="px-2 py-1 text-right tabular-nums font-medium">{fmtN(totalQty)}</td>
+                        <td />
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="text-muted-foreground">
+              {bomCount && bomCount > 0
+                ? <>Diese Komponente hat eine eigene Stückliste ({bomCount} Position{bomCount === 1 ? '' : 'en'}).</>
+                : <>Keine eigene Stückliste hinterlegt.</>}
+            </div>
+          </div>
+        )}
+      </DialogContent>
     </Dialog>
   );
 }
