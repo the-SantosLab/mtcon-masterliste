@@ -263,7 +263,9 @@ export function AppLayout({ children }: AppLayoutProps) {
     .filter(item => pathMatches(item.href))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
-  const routeGroup = visibleGroups.find(group => group.items.some(item => item.href === activeHref))?.id ?? 'overview';
+  const routeGroup = visibleGroups.find(group => group.items
+    .flatMap(item => item.children ? [item, ...item.children] : [item])
+    .some(item => item.href === activeHref))?.id ?? 'overview';
 
   useEffect(() => {
     setOpenGroup(routeGroup);
