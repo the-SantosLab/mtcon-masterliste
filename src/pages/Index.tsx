@@ -118,16 +118,15 @@ export default function Dashboard() {
     return () => { supabase.removeChannel(ch); };
   }, [user?.id]);
 
-  const hour = now.getHours();
-  const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
   const firstName = profile?.display_name?.split(' ')[0] ?? '';
   const initials = (profile?.display_name ?? '?').split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
-  const timeString = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  const dateString = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  const today = new Date().toISOString().split('T')[0];
-  const weekEnd = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
-  const active = cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status));
+  const today = useMemo(() => new Date(now).toISOString().split('T')[0], [now]);
+  const weekEnd = useMemo(() => new Date(now.getTime() + 7 * 86400000).toISOString().split('T')[0], [now]);
+  const active = useMemo(
+    () => cases.filter(c => !['abgeschlossen', 'verworfen', 'archiv'].includes(c.status)),
+    [cases],
+  );
   const scopedActive = scope === 'mine' ? active.filter(c => c.assignee_id === user?.id) : active;
   const counts: Record<FilterKey, number> = {
     open: scopedActive.filter(c => c.status === 'nicht_begonnen').length,
