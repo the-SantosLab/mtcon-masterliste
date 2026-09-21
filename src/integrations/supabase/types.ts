@@ -9897,11 +9897,25 @@ export type Database = {
         Returns: string
       }
       policy_category: { Args: { p_policy_id: string }; Returns: string }
+      production_order_availability: {
+        Args: { _id: string }
+        Returns: {
+          component_art_nr: string
+          description: string
+          item_id: string
+          pos: string
+          qty_available: number
+          qty_open: number
+          shortage: number
+        }[]
+      }
       production_order_complete: {
         Args: { _id: string; _lot_no?: string; _qty?: number }
         Returns: Json
       }
-      production_order_issue: { Args: { _id: string }; Returns: Json }
+      production_order_issue:
+        | { Args: { _id: string }; Returns: Json }
+        | { Args: { _allow_partial?: boolean; _id: string }; Returns: Json }
       purge_old_trashed_boards: { Args: never; Returns: undefined }
       purge_old_trashed_notes: { Args: never; Returns: undefined }
       purge_trashed_cases: { Args: never; Returns: number }
