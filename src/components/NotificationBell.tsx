@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatRelativeTime } from '@/lib/case-utils';
+import { cachedFetch, getCached } from '@/lib/shellCache';
 
 interface Notification {
   id: string;

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sparkles, X } from 'lucide-react';
 import { SatisfactionSurveyDialog } from './SatisfactionSurveyDialog';
+import { cachedFetch } from '@/lib/shellCache';
 
 const DISMISS_KEY = 'mtcon.survey.dismissedUntil';
 const EXCLUDED_PREFIXES = ['/portal', '/auth', '/reset-password', '/mfa-challenge', '/print/'];
