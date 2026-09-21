@@ -182,9 +182,10 @@ export default function Dashboard() {
   }, [user?.id, prefsLoaded, activeFilters, chartRange]);
 
   // Welche Status werden im Chart als Säulen-Segmente gezeigt
-  const visibleStatuses: FilterKey[] = activeFilters.length > 0
-    ? activeFilters
-    : (Object.keys(FILTER_LABELS) as FilterKey[]);
+  const visibleStatuses: FilterKey[] = useMemo(
+    () => (activeFilters.length > 0 ? activeFilters : (Object.keys(FILTER_LABELS) as FilterKey[])),
+    [activeFilters],
+  );
 
   const getDateRangeBounds = (filter: DateRangeFilter) => {
     const now = new Date();
