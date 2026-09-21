@@ -198,6 +198,8 @@ export function LotsPanel() {
           </table>
         </div>
       </Card>
+
+      <LotTraceDialog lot={trace} onClose={() => setTrace(null)} />
     </div>
   );
 }
