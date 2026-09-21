@@ -257,6 +257,7 @@ function AuthenticatedApp() {
           <Route path="/admin/partners" element={<Navigate to="/crm/companies" replace />} />
           <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
           <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />
+          <Route path="/admin/production" element={<ProtectedRoute><AdminProduction /></ProtectedRoute>} />
           <Route path="/admin/storage-locations" element={<Navigate to="/admin/inventory" replace />} />
           <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />
           <Route path="/admin/disposition" element={<ProtectedRoute><AdminDisposition /></ProtectedRoute>} />
