@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -102,5 +101,3 @@ export function NextActivityDialog({ open, onOpenChange, deal, reason, onSaved }
   );
 }
 
-// Keep the Select import tree-shaken friendly (used by consumers wanting a type picker)
-export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };
