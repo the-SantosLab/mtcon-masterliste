@@ -27,9 +27,10 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [confirmTakeover, setConfirmTakeover] = useState<{ userId: string } | null>(null);
+  const [sessionToken, setSessionToken] = useState(() => getLocalSessionToken());
 
   const isBlockedSession = isCurrentTabSessionBlocked();
-  const hasTabSessionToken = !!getLocalSessionToken();
+  const hasTabSessionToken = !!sessionToken;
 
   // Ziel-URL nach erfolgreichem Login (z. B. via E-Mail-Deeplink)
   const fromState = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
@@ -57,6 +58,7 @@ export default function Auth() {
     const { error } = await supabase.from('users_profile').update({ active_session_token: token }).eq('id', userId);
     if (error) throw error;
     setLocalSessionToken(token);
+    setSessionToken(token);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +74,7 @@ export default function Auth() {
         }
         const { data: u } = await supabase.auth.getUser();
         const userId = u.user?.id;
-        if (!userId) return;
+        if (!userId) throw new Error('Die Anmeldung konnte nicht abgeschlossen werden. Bitte erneut versuchen.');
         const { data: prof } = await supabase
           .from('users_profile').select('active_session_token').eq('id', userId).maybeSingle();
         const existing = prof?.active_session_token;
@@ -98,6 +100,7 @@ export default function Auth() {
       }
     } catch (err) {
       if (err instanceof z.ZodError) toast.error(err.errors[0].message);
+      else toast.error(err instanceof Error ? err.message : 'Die Anmeldung konnte nicht abgeschlossen werden.');
     } finally {
       setSubmitting(false);
     }
@@ -116,6 +119,7 @@ export default function Auth() {
   const confirmTakeoverNo = async () => {
     setConfirmTakeover(null);
     setLocalSessionToken(null);
+    setSessionToken(null);
     if (!isBlockedSession) await supabase.auth.signOut();
   };
 
