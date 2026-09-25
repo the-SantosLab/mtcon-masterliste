@@ -44,6 +44,25 @@ export default function CrmDealDetail() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [planOpen, setPlanOpen] = useState(false);
+  const [actForm, setActForm] = useState<any>({ type: 'note', subject: '', body: '', due_at: '', done: true, done_at: '' });
+  const [actSaving, setActSaving] = useState(false);
+
+  const addActivity = async () => {
+    if (!deal || !actForm.subject.trim()) { toast.error('Titel erforderlich'); return; }
+    setActSaving(true);
+    const doneAt = actForm.done ? (actForm.done_at ? new Date(actForm.done_at).toISOString() : new Date().toISOString()) : null;
+    const { error } = await supabase.from('crm_activities').insert({
+      type: actForm.type, subject: actForm.subject.trim(), body: actForm.body || null,
+      due_at: actForm.due_at ? new Date(actForm.due_at).toISOString() : null,
+      completed_at: doneAt, completed_by: doneAt ? user?.id : null,
+      deal_id: deal.id, company_id: deal.company_id, owner_id: user?.id, auto_generated: false,
+    });
+    setActSaving(false);
+    if (error) { toast.error(error.message); return; }
+    setActForm({ type: 'note', subject: '', body: '', due_at: '', done: true, done_at: '' });
+    toast.success('Aktivität angelegt');
+    void load();
+  };
   useEffect(() => { void load(); }, [id]);
   useEffect(() => {
     const st = searchParams.get('stage');
@@ -289,6 +308,40 @@ export default function CrmDealDetail() {
         </TabsContent>
 
         <TabsContent value="activities" className="mt-4">
+          <div className="mb-4 p-3 rounded border border-border bg-card/40 max-w-3xl space-y-2">
+            <p className="text-[11px] uppercase text-muted-foreground">Aktivität erfassen</p>
+            <div className="grid md:grid-cols-3 gap-2">
+              <Select value={actForm.type} onValueChange={v => setActForm({ ...actForm, type: v })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="note">Notiz</SelectItem>
+                  <SelectItem value="call">Anruf</SelectItem>
+                  <SelectItem value="email">E-Mail</SelectItem>
+                  <SelectItem value="meeting">Meeting</SelectItem>
+                  <SelectItem value="task">Task</SelectItem>
+                  <SelectItem value="followup">Follow-up</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input placeholder="Titel *" value={actForm.subject} onChange={e => setActForm({ ...actForm, subject: e.target.value })} className="h-8 text-xs md:col-span-2" />
+            </div>
+            <Textarea placeholder="Notiz / Gesprächsprotokoll …" value={actForm.body} onChange={e => setActForm({ ...actForm, body: e.target.value })} className="text-xs min-h-[60px]" />
+            <div className="flex items-end gap-3 flex-wrap">
+              <label className="flex items-center gap-2 text-xs cursor-pointer pb-1.5">
+                <input type="checkbox" checked={!!actForm.done} onChange={e => setActForm({ ...actForm, done: e.target.checked })} className="accent-primary" />
+                Bereits erledigt
+              </label>
+              {actForm.done ? (
+                <div className="space-y-1"><Label className="text-[11px]">Erledigt am</Label>
+                  <Input type="datetime-local" value={actForm.done_at} onChange={e => setActForm({ ...actForm, done_at: e.target.value })} className="h-8 text-xs" /></div>
+              ) : (
+                <div className="space-y-1"><Label className="text-[11px]">Fällig am</Label>
+                  <Input type="datetime-local" value={actForm.due_at} onChange={e => setActForm({ ...actForm, due_at: e.target.value })} className="h-8 text-xs" /></div>
+              )}
+              <Button size="sm" onClick={addActivity} disabled={actSaving} className="h-8 text-xs gap-1.5 ml-auto">
+                {actSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Anlegen
+              </Button>
+            </div>
+          </div>
           {activities.length === 0 ? (
             <p className="text-xs text-muted-foreground">Noch keine Aktivitäten.</p>
           ) : (
