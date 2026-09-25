@@ -22,11 +22,14 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
-  if (userErr || !userData?.user?.id) {
+  if (!token || token === 'undefined' || token === 'null') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-  const userId = userData.user.id;
+  const { data: claimsData, error: claimsErr } = await supabaseAdmin.auth.getClaims(token);
+  const userId = claimsData?.claims?.sub as string | undefined;
+  if (claimsErr || !userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
 
   const { data: roleData } = await supabaseAdmin
     .from('user_roles')
