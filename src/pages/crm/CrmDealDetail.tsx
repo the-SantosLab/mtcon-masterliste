@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { NextActivityDialog } from '@/components/crm/NextActivityDialog';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,7 +41,17 @@ export default function CrmDealDetail() {
   const [creatingPo, setCreatingPo] = useState<string | null>(null);
   const [createdCaseId, setCreatedCaseId] = useState<string | null>(null);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [planOpen, setPlanOpen] = useState(false);
   useEffect(() => { void load(); }, [id]);
+  useEffect(() => {
+    const st = searchParams.get('stage');
+    if (deal && (st === 'won' || st === 'lost') && deal.stage !== st) {
+      setSearchParams({}, { replace: true });
+      requestStageChange(st as StageKey);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deal, searchParams]);
 
   const load = async () => {
     if (!id) return;
@@ -231,6 +242,14 @@ export default function CrmDealDetail() {
           </button>
         ))}
       </div>
+
+      {['anfrage','qualifikation','angebot_versendet','verhandlung'].includes(deal.stage) && !activities.some(a => !a.completed_at) && (
+        <div className="mb-4 p-3 rounded border border-destructive/40 bg-destructive/10 flex items-center justify-between gap-3">
+          <p className="text-xs text-foreground">Für diesen Deal ist keine nächste Aktivität geplant.</p>
+          <Button size="sm" className="h-7 text-xs" onClick={() => setPlanOpen(true)}>Nächste Aktivität planen</Button>
+        </div>
+      )}
+      <NextActivityDialog open={planOpen} onOpenChange={setPlanOpen} deal={deal} onSaved={() => void load()} />
 
       <Tabs defaultValue="overview">
         <TabsList>

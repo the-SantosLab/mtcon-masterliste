@@ -121,6 +121,7 @@ const CrmCalendar = lazyRetry(() => import("./pages/crm/CrmCalendar"));
 const CrmAnalytics = lazyRetry(() => import("./pages/crm/CrmAnalytics"));
 const CrmForecast = lazyRetry(() => import("./pages/crm/CrmForecast"));
 const CrmSalesGoals = lazyRetry(() => import("./pages/crm/CrmSalesGoals"));
+const CrmAutomations = lazyRetry(() => import("./pages/crm/CrmAutomations"));
 const CrmLeadScoring = lazyRetry(() => import("./pages/crm/CrmLeadScoring"));
 const CrmRoles = lazyRetry(() => import("./pages/crm/CrmRoles"));
 const CrmAccess = lazyRetry(() => import("./pages/crm/CrmAccess"));
@@ -324,6 +325,7 @@ function AuthenticatedApp() {
           <Route path="/crm/activities/calendar" element={<CrmProtectedRoute><CrmCalendar /></CrmProtectedRoute>} />
           <Route path="/crm/analytics" element={<CrmProtectedRoute><CrmAnalytics /></CrmProtectedRoute>} />
           <Route path="/crm/forecast" element={<CrmProtectedRoute><CrmForecast /></CrmProtectedRoute>} />
+          <Route path="/crm/settings/automationen" element={<CrmProtectedRoute><CrmAutomations /></CrmProtectedRoute>} />
           <Route path="/crm/settings/ziele" element={<CrmProtectedRoute><CrmSalesGoals /></CrmProtectedRoute>} />
           <Route path="/crm/settings/scoring" element={<CrmProtectedRoute><CrmLeadScoring /></CrmProtectedRoute>} />
           <Route path="/crm/settings/webformulare" element={<CrmProtectedRoute><CrmWebForms /></CrmProtectedRoute>} />

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 const TABS = [
   { href: '/crm/settings', label: 'Preislisten' },
   { href: '/crm/settings/ziele', label: 'Vertriebsziele' },
+  { href: '/crm/settings/automationen', label: 'Automatisierungen' },
   { href: '/crm/settings/scoring', label: 'Lead-Scoring' },
   { href: '/crm/settings/routing', label: 'Routing' },
   { href: '/crm/settings/roles', label: 'Rollen' },

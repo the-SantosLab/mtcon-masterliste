@@ -176,6 +176,13 @@
       "when": 1790330612635,
       "tag": "0024_users_profile_self_update_keep_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790337826447,
+      "tag": "0025_crm_pipeline_automations_goals",
+      "breakpoints": true
     }
   ]
 }
