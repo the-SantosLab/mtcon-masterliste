@@ -162,6 +162,13 @@
       "when": 1790007200168,
       "tag": "0022_production_order_stock_check",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790330332312,
+      "tag": "0023_secure_own_session_token_update",
+      "breakpoints": true
     }
   ]
 }
