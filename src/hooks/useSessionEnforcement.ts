@@ -81,12 +81,15 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
         const remote = data.active_session_token;
 
         if (!local) {
-          if (remote) {
-            blockCurrentTab();
-            toast.error('Diese Sitzung ist bereits in einem anderen Tab aktiv. Bitte melde dich hier erneut an, um sie zu übernehmen.');
-            goToAuth();
+          // Gleicher Browser (neuer Tab / Neustart): vorhandenen Token übernehmen.
+          if (remote && getBrowserSessionToken() === remote) {
+            setLocalSessionToken(remote);
             return;
           }
+          // Ansonsten übernimmt diese gültig angemeldete Sitzung. Eine alte,
+          // verwaiste Markierung darf den Nutzer nicht dauerhaft aussperren;
+          // die andere Sitzung wird beim nächsten Check abgemeldet.
+
 
           const token = crypto.randomUUID();
           const { error: updateError } = await supabase
