@@ -46,7 +46,7 @@ export default function CrmActivities() {
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from('crm_activities')
-      .select('*, deals(id, title), companies(id, name)')
+      .select('*, deals(id, title), companies(id, name), leads(id, company_name, contact_name)')
       .order('due_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
     setRows(data ?? []);
@@ -141,6 +141,7 @@ export default function CrmActivities() {
                       </div>
                       <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-2 flex-wrap">
                         {a.deals && <Link to={`/crm/deals/${a.deal_id}`} className="hover:text-primary">→ {a.deals.title}</Link>}
+                        {a.leads && <Link to={`/crm/leads/${a.lead_id}`} className="hover:text-primary">→ Lead: {a.leads.company_name || a.leads.contact_name}</Link>}
                         {a.companies && <span>· {a.companies.name}</span>}
                         {a.due_at && <span>· Fällig {new Date(a.due_at).toLocaleDateString('de-DE')}</span>}
                       </div>
