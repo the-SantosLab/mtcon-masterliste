@@ -25,7 +25,21 @@ export default function CrmActivities() {
   const [tab, setTab] = useState('mine');
   const [typeF, setTypeF] = useState('all');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<any>({ type: 'task', subject: '', body: '', due_at: '' });
+  const [form, setForm] = useState<any>({ type: 'task', subject: '', body: '', due_at: '', deal_id: '', lead_id: '' });
+  const [deals, setDeals] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    void (async () => {
+      const [{ data: d }, { data: l }] = await Promise.all([
+        supabase.from('deals').select('id, title').not('stage', 'in', '("won","lost")').order('created_at', { ascending: false }).limit(200),
+        supabase.from('leads').select('id, company_name, contact_name').order('created_at', { ascending: false }).limit(200),
+      ]);
+      setDeals(d ?? []);
+      setLeads(l ?? []);
+    })();
+  }, [open]);
 
   useEffect(() => { void load(); }, []);
 
@@ -71,6 +85,7 @@ export default function CrmActivities() {
     const { error } = await supabase.from('crm_activities').insert({
       type: form.type, subject: form.subject, body: form.body || null,
       due_at: form.due_at ? new Date(form.due_at).toISOString() : null,
+      deal_id: form.deal_id || null, lead_id: form.lead_id || null,
       completed_at: doneAt, completed_by: doneAt ? user?.id : null,
       owner_id: user?.id, auto_generated: false,
     });
