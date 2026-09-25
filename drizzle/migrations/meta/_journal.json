@@ -169,6 +169,13 @@
       "when": 1790330332312,
       "tag": "0023_secure_own_session_token_update",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790330612635,
+      "tag": "0024_users_profile_self_update_keep_flags",
+      "breakpoints": true
     }
   ]
 }

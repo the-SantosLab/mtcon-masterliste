@@ -102,7 +102,7 @@ export default function Auth() {
       }
     } catch (err) {
       if (err instanceof z.ZodError) toast.error(err.errors[0].message);
-      else toast.error(err instanceof Error ? err.message : 'Die Anmeldung konnte nicht abgeschlossen werden.');
+      else toast.error((err as { message?: string })?.message || 'Die Anmeldung konnte nicht abgeschlossen werden.');
     } finally {
       setSubmitting(false);
     }
