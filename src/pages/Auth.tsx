@@ -55,7 +55,9 @@ export default function Auth() {
 
   const writeToken = async (userId: string) => {
     const token = crypto.randomUUID();
-    const { error } = await supabase.from('users_profile').update({ active_session_token: token }).eq('id', userId);
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (currentUser.user?.id !== userId) throw new Error('Die Anmeldung konnte nicht bestätigt werden.');
+    const { error } = await supabase.rpc('set_own_active_session_token', { _token: token });
     if (error) throw error;
     setLocalSessionToken(token);
     setSessionToken(token);

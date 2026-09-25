@@ -93,9 +93,7 @@ export function useSessionEnforcement(enabled: boolean, userId: string | undefin
 
           const token = crypto.randomUUID();
           const { error: updateError } = await supabase
-            .from('users_profile')
-            .update({ active_session_token: token })
-            .eq('id', userId);
+            .rpc('set_own_active_session_token', { _token: token });
           if (!updateError && !cancelled) setLocalSessionToken(token);
           return;
         }
