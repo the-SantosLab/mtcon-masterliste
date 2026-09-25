@@ -9892,6 +9892,7 @@ export type Database = {
       next_counter: { Args: { p_key: string }; Returns: number }
       next_partner_customer_no: { Args: never; Returns: string }
       next_partner_supplier_code: { Args: never; Returns: string }
+      own_profile_is_manager: { Args: { _uid: string }; Returns: boolean }
       po_effective_due: {
         Args: { _po: Database["public"]["Tables"]["purchase_orders"]["Row"] }
         Returns: string
