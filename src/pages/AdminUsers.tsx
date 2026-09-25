@@ -105,14 +105,22 @@ export default function AdminUsers() {
     // Fetch emails from edge function
     let emailMap: Record<string, string> = {};
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-user-emails`, {
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-      });
-      if (res.ok) emailMap = await res.json();
+      let { data: { session } } = await supabase.auth.getSession();
+      const expSoon = session?.expires_at ? session.expires_at * 1000 < Date.now() + 30_000 : false;
+      if (!session || expSoon) {
+        const { data } = await supabase.auth.refreshSession();
+        session = data.session;
+      }
+      if (session?.access_token) {
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-user-emails`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        });
+        if (res.ok) emailMap = await res.json();
+        else await res.text();
+      }
     } catch { /* ignore */ }
 
     setUsers(profiles.map((p: any) => {
