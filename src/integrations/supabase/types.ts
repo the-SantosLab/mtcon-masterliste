@@ -9937,6 +9937,10 @@ export type Database = {
         Returns: undefined
       }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
+      set_own_active_session_token: {
+        Args: { _token: string }
+        Returns: undefined
+      }
       suggest_po_from_deal: {
         Args: { _deal_id: string }
         Returns: {
