@@ -2305,6 +2305,67 @@ export type Database = {
           },
         ]
       }
+      crm_automations: {
+        Row: {
+          action_type: string
+          activity_type: Database["public"]["Enums"]["crm_activity_type"] | null
+          assignee_id: string | null
+          body: string | null
+          created_at: string
+          created_by: string | null
+          due_in_days: number
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          name: string
+          run_count: number
+          subject: string
+          trigger_event: string
+          trigger_stage: Database["public"]["Enums"]["deal_stage"] | null
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          activity_type?:
+            | Database["public"]["Enums"]["crm_activity_type"]
+            | null
+          assignee_id?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_in_days?: number
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name: string
+          run_count?: number
+          subject: string
+          trigger_event: string
+          trigger_stage?: Database["public"]["Enums"]["deal_stage"] | null
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          activity_type?:
+            | Database["public"]["Enums"]["crm_activity_type"]
+            | null
+          assignee_id?: string | null
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_in_days?: number
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name?: string
+          run_count?: number
+          subject?: string
+          trigger_event?: string
+          trigger_stage?: Database["public"]["Enums"]["deal_stage"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_consent_log: {
         Row: {
           action: string
@@ -2517,18 +2578,21 @@ export type Database = {
       crm_stage_probabilities: {
         Row: {
           probability: number
+          rotting_days: number | null
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           probability: number
+          rotting_days?: number | null
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           probability?: number
+          rotting_days?: number | null
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           updated_by?: string | null
