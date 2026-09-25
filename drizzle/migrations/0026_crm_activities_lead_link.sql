@@ -1,0 +1,2 @@
+ALTER TABLE public.crm_activities ADD COLUMN lead_id uuid REFERENCES public.leads(id) ON DELETE SET NULL;
+CREATE INDEX idx_crm_activities_lead ON public.crm_activities(lead_id) WHERE lead_id IS NOT NULL;

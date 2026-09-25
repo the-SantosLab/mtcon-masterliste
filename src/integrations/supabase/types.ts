@@ -2247,6 +2247,7 @@ export type Database = {
           deal_id: string | null
           due_at: string | null
           id: string
+          lead_id: string | null
           owner_id: string | null
           subject: string
           type: Database["public"]["Enums"]["crm_activity_type"]
@@ -2262,6 +2263,7 @@ export type Database = {
           deal_id?: string | null
           due_at?: string | null
           id?: string
+          lead_id?: string | null
           owner_id?: string | null
           subject: string
           type: Database["public"]["Enums"]["crm_activity_type"]
@@ -2277,6 +2279,7 @@ export type Database = {
           deal_id?: string | null
           due_at?: string | null
           id?: string
+          lead_id?: string | null
           owner_id?: string | null
           subject?: string
           type?: Database["public"]["Enums"]["crm_activity_type"]
@@ -2301,6 +2304,13 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
