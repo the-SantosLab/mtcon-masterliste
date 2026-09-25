@@ -67,13 +67,15 @@ export default function CrmActivities() {
 
   const create = async () => {
     if (!form.subject) { toast.error('Titel erforderlich'); return; }
+    const doneAt = form.done ? (form.done_at ? new Date(form.done_at).toISOString() : new Date().toISOString()) : null;
     const { error } = await supabase.from('crm_activities').insert({
       type: form.type, subject: form.subject, body: form.body || null,
       due_at: form.due_at ? new Date(form.due_at).toISOString() : null,
+      completed_at: doneAt, completed_by: doneAt ? user?.id : null,
       owner_id: user?.id, auto_generated: false,
     });
     if (error) { toast.error(error.message); return; }
-    setOpen(false); setForm({ type: 'task', subject: '', body: '', due_at: '' });
+    setOpen(false); setForm({ type: 'task', subject: '', body: '', due_at: '', done: false, done_at: '' });
     void load();
   };
 
@@ -153,6 +155,14 @@ export default function CrmActivities() {
               <Textarea value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} className="text-xs min-h-[60px]" /></div>
             <div className="space-y-1.5"><Label className="text-xs">Fällig am</Label>
               <Input type="datetime-local" value={form.due_at} onChange={e => setForm({ ...form, due_at: e.target.value })} className="h-8 text-xs" /></div>
+            <label className="flex items-center gap-2 text-xs cursor-pointer">
+              <Checkbox checked={!!form.done} onCheckedChange={v => setForm({ ...form, done: !!v })} />
+              Bereits erledigt (z. B. Anruf nachtragen)
+            </label>
+            {form.done && (
+              <div className="space-y-1.5"><Label className="text-xs">Erledigt am</Label>
+                <Input type="datetime-local" value={form.done_at} onChange={e => setForm({ ...form, done_at: e.target.value })} className="h-8 text-xs" /></div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="h-8 text-xs">Abbrechen</Button>
