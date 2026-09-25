@@ -183,6 +183,13 @@
       "when": 1790337826447,
       "tag": "0025_crm_pipeline_automations_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790338716255,
+      "tag": "0026_crm_activities_lead_link",
+      "breakpoints": true
     }
   ]
 }

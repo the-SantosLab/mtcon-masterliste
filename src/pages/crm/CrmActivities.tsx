@@ -25,14 +25,28 @@ export default function CrmActivities() {
   const [tab, setTab] = useState('mine');
   const [typeF, setTypeF] = useState('all');
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<any>({ type: 'task', subject: '', body: '', due_at: '' });
+  const [form, setForm] = useState<any>({ type: 'task', subject: '', body: '', due_at: '', deal_id: '', lead_id: '' });
+  const [deals, setDeals] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    void (async () => {
+      const [{ data: d }, { data: l }] = await Promise.all([
+        supabase.from('deals').select('id, title').not('stage', 'in', '("won","lost")').order('created_at', { ascending: false }).limit(200),
+        supabase.from('leads').select('id, company_name, contact_name').order('created_at', { ascending: false }).limit(200),
+      ]);
+      setDeals(d ?? []);
+      setLeads(l ?? []);
+    })();
+  }, [open]);
 
   useEffect(() => { void load(); }, []);
 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from('crm_activities')
-      .select('*, deals(id, title), companies(id, name)')
+      .select('*, deals(id, title), companies(id, name), leads(id, company_name, contact_name)')
       .order('due_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
     setRows(data ?? []);
@@ -71,11 +85,12 @@ export default function CrmActivities() {
     const { error } = await supabase.from('crm_activities').insert({
       type: form.type, subject: form.subject, body: form.body || null,
       due_at: form.due_at ? new Date(form.due_at).toISOString() : null,
+      deal_id: form.deal_id || null, lead_id: form.lead_id || null,
       completed_at: doneAt, completed_by: doneAt ? user?.id : null,
       owner_id: user?.id, auto_generated: false,
     });
     if (error) { toast.error(error.message); return; }
-    setOpen(false); setForm({ type: 'task', subject: '', body: '', due_at: '', done: false, done_at: '' });
+    setOpen(false); setForm({ type: 'task', subject: '', body: '', due_at: '', done: false, done_at: '', deal_id: '', lead_id: '' });
     void load();
   };
 
@@ -126,6 +141,7 @@ export default function CrmActivities() {
                       </div>
                       <div className="text-[11px] text-muted-foreground mt-0.5 flex gap-2 flex-wrap">
                         {a.deals && <Link to={`/crm/deals/${a.deal_id}`} className="hover:text-primary">→ {a.deals.title}</Link>}
+                        {a.leads && <Link to={`/crm/leads/${a.lead_id}`} className="hover:text-primary">→ Lead: {a.leads.company_name || a.leads.contact_name}</Link>}
                         {a.companies && <span>· {a.companies.name}</span>}
                         {a.due_at && <span>· Fällig {new Date(a.due_at).toLocaleDateString('de-DE')}</span>}
                       </div>
@@ -153,6 +169,22 @@ export default function CrmActivities() {
               <Input value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} className="h-8 text-xs" /></div>
             <div className="space-y-1.5"><Label className="text-xs">Notiz</Label>
               <Textarea value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} className="text-xs min-h-[60px]" /></div>
+            <div className="space-y-1.5"><Label className="text-xs">Deal (optional)</Label>
+              <Select value={form.deal_id || 'none'} onValueChange={v => setForm({ ...form, deal_id: v === 'none' ? '' : v })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Kein Deal —</SelectItem>
+                  {deals.map(d => <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>)}
+                </SelectContent>
+              </Select></div>
+            <div className="space-y-1.5"><Label className="text-xs">Lead (optional)</Label>
+              <Select value={form.lead_id || 'none'} onValueChange={v => setForm({ ...form, lead_id: v === 'none' ? '' : v })}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Kein Lead —</SelectItem>
+                  {leads.map(l => <SelectItem key={l.id} value={l.id}>{l.company_name || l.contact_name || l.id.slice(0, 8)}</SelectItem>)}
+                </SelectContent>
+              </Select></div>
             <div className="space-y-1.5"><Label className="text-xs">Fällig am</Label>
               <Input type="datetime-local" value={form.due_at} onChange={e => setForm({ ...form, due_at: e.target.value })} className="h-8 text-xs" /></div>
             <label className="flex items-center gap-2 text-xs cursor-pointer">
