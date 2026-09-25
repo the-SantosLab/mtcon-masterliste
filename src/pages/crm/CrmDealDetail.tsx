@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { DealTimeline } from '@/components/crm/DealTimeline';
 import { NextActivityDialog } from '@/components/crm/NextActivityDialog';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -251,14 +252,17 @@ export default function CrmDealDetail() {
       )}
       <NextActivityDialog open={planOpen} onOpenChange={setPlanOpen} deal={deal} onSaved={() => void load()} />
 
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue="timeline">
         <TabsList>
+          <TabsTrigger value="timeline">Historie</TabsTrigger>
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="activities">Aktivitäten</TabsTrigger>
           <TabsTrigger value="offers">Angebote</TabsTrigger>
           <TabsTrigger value="files">Dateien</TabsTrigger>
           <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="timeline" className="mt-4"><DealTimeline deal={deal} /></TabsContent>
 
         <TabsContent value="overview" className="mt-4">
           <div className="grid md:grid-cols-2 gap-3 max-w-3xl">

@@ -27,7 +27,7 @@ export function DealTimeline({ deal }: { deal: any }) {
       setLoading(true);
       const [acts, offers] = await Promise.all([
         supabase.from('crm_activities').select('*').eq('deal_id', deal.id),
-        supabase.from('offers').select('id, offer_no, status, total_net, created_at, sent_at').eq('deal_id', deal.id),
+        supabase.from('offers').select('id, offer_no, status, created_at, sent_at').eq('deal_id', deal.id),
       ]);
       const actList = (acts.data ?? []) as any[];
       const offerList = (offers.data ?? []) as any[];
