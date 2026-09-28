@@ -359,6 +359,35 @@ export default function CrmLeads() {
         </DialogContent>
       </Dialog>
 
+      {/* Fäulnis-Grenzen */}
+      <Dialog open={rotOpen} onOpenChange={setRotOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Fäulnis-Grenzen (Interessenten)</DialogTitle></DialogHeader>
+          <p className="text-[11px] text-muted-foreground">Ein Interessent wird rot markiert, wenn er länger als die angegebenen Tage ohne Statuswechsel und ohne erledigte Aktivität in seiner Stufe bleibt.</p>
+          <div className="space-y-2">
+            {rotForm.map((f, i) => (
+              <div key={f.stage} className="flex items-center justify-between gap-3">
+                <span className="text-xs text-foreground">{STATUS_LABEL[f.stage]}</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={f.days}
+                    onChange={e => setRotForm(rotForm.map((x, j) => j === i ? { ...x, days: parseInt(e.target.value) || 0 } : x))}
+                    className="h-8 text-xs w-24"
+                  />
+                  <span className="text-[11px] text-muted-foreground">Tage</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRotOpen(false)} className="h-8 text-xs">Abbrechen</Button>
+            <Button size="sm" onClick={saveRotConfig} className="h-8 text-xs">Speichern</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <CsvImportDialog open={csvOpen} onClose={() => { setCsvOpen(false); void load(); }} userId={user?.id} />
     </CrmLayout>
   );
