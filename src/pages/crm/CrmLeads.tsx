@@ -181,6 +181,7 @@ export default function CrmLeads() {
             <Button size="sm" variant={view === 'board' ? 'default' : 'ghost'} onClick={() => setView('board')} className="h-8 text-xs gap-1.5 rounded-none"><LayoutGrid className="h-3.5 w-3.5" />Board</Button>
             <Button size="sm" variant={view === 'liste' ? 'default' : 'ghost'} onClick={() => setView('liste')} className="h-8 text-xs gap-1.5 rounded-none"><List className="h-3.5 w-3.5" />Liste</Button>
           </div>
+          <Button size="sm" variant="outline" onClick={openRotDialog} className="h-8 text-xs gap-1.5"><Settings2 className="h-3.5 w-3.5" />Fäulnis</Button>
           <Button size="sm" variant="outline" onClick={() => setCsvOpen(true)} className="h-8 text-xs gap-1.5"><Upload className="h-3.5 w-3.5" />CSV-Import</Button>
           <Button size="sm" onClick={() => setOpen(true)} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" />Neuer Lead</Button>
         </div>
