@@ -50,6 +50,10 @@ export default function CrmLeads() {
   const [form, setForm] = useState({ company_name: '', website: '', country: '', industry: '', contact_name: '', email: '', phone: '', notes: '' });
   const [selected, setSelected] = useState<any>(null);
   const [view, setView] = useState<'liste' | 'board'>('board');
+  const [rotConfig, setRotConfig] = useState<Record<string, number>>({});
+  const [lastActAt, setLastActAt] = useState<Record<string, string>>({});
+  const [rotOpen, setRotOpen] = useState(false);
+  const [rotForm, setRotForm] = useState<{ stage: string; days: number }[]>([]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
