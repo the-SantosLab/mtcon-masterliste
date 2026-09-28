@@ -53,7 +53,7 @@ function DraggableCard({ id, children, onClick }: { id: string; children: React.
 export default function CrmDeals() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [nextActs, setNextActs] = useState<Record<string, NextAct>>({});
   const [lastActs, setLastActs] = useState<Record<string, string>>({});
@@ -89,8 +89,11 @@ export default function CrmDeals() {
 
   useEffect(() => { void load(); }, []);
   useEffect(() => {
-    if (searchParams.get('action') === 'new') setOpen(true);
-  }, [searchParams]);
+    if (searchParams.get('action') === 'new') {
+      setOpen(true);
+      const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const loadActivities = async () => {
     const [{ data: openActs }, { data: doneActs }] = await Promise.all([
