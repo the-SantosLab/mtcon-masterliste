@@ -205,6 +205,7 @@ export default function CrmLeads() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {BOARD_STAGES.map(stage => {
               const list = filtered.filter(r => r.status === stage);
+              const rottenCount = list.filter(r => rottenDays(r)).length;
               return (
                 <div key={stage} className="crm-column flex flex-col min-h-[420px]">
                   <div className="px-3 py-2.5 border-b border-border/40">
@@ -213,27 +214,45 @@ export default function CrmLeads() {
                         <span className="h-2 w-2 rounded-full" style={{ background: STATUS_DOT[stage], boxShadow: `0 0 8px ${STATUS_DOT[stage]}` }} />
                         <p className="text-[11px] font-semibold text-foreground uppercase tracking-wide">{STATUS_LABEL[stage]}</p>
                       </div>
-                      <span className="text-[10px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted/50">{list.length}</span>
+                      <span className="flex items-center gap-1.5">
+                        {rottenCount > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums text-destructive">
+                            <Flame className="h-3 w-3" />{rottenCount}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted/50">{list.length}</span>
+                      </span>
                     </div>
                   </div>
                   <LeadDroppableColumn id={stage}>
-                    {list.map(r => (
-                      <LeadDraggableCard key={r.id} id={r.id} onClick={() => setSelected(r)}>
-                        <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1">{r.company_name}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{r.contact_name ?? '–'}</p>
-                        <div className="mt-1.5 flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground truncate">{[r.country, r.industry].filter(Boolean).join(' · ') || '–'}</span>
-                          <span className={cn(
-                            'inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums shrink-0',
-                            (r.score ?? 0) >= 50 ? 'bg-emerald-500/15 text-emerald-400'
-                              : (r.score ?? 0) >= 20 ? 'bg-amber-500/15 text-amber-400'
-                              : (r.score ?? 0) > 0 ? 'bg-blue-500/15 text-blue-400'
-                              : (r.score ?? 0) < 0 ? 'bg-destructive/15 text-destructive'
-                              : 'bg-muted text-muted-foreground',
-                          )}>{r.score ?? 0}</span>
-                        </div>
-                      </LeadDraggableCard>
-                    ))}
+                    {list.map(r => {
+                      const rot = rottenDays(r);
+                      return (
+                        <LeadDraggableCard key={r.id} id={r.id} onClick={() => setSelected(r)}>
+                          <div className={cn(rot && 'rounded-md ring-1 ring-destructive/60 bg-destructive/5 -m-1 p-1')}>
+                            <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1 flex items-start gap-1">
+                              <span className="flex-1">{r.company_name}</span>
+                              {rot && <Flame className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">{r.contact_name ?? '–'}</p>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className="text-[10px] text-muted-foreground truncate">{[r.country, r.industry].filter(Boolean).join(' · ') || '–'}</span>
+                              <span className="flex items-center gap-1 shrink-0">
+                                {rot && <span className="text-[10px] font-semibold text-destructive tabular-nums">{rot} T.</span>}
+                                <span className={cn(
+                                  'inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums',
+                                  (r.score ?? 0) >= 50 ? 'bg-emerald-500/15 text-emerald-400'
+                                    : (r.score ?? 0) >= 20 ? 'bg-amber-500/15 text-amber-400'
+                                    : (r.score ?? 0) > 0 ? 'bg-blue-500/15 text-blue-400'
+                                    : (r.score ?? 0) < 0 ? 'bg-destructive/15 text-destructive'
+                                    : 'bg-muted text-muted-foreground',
+                                )}>{r.score ?? 0}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </LeadDraggableCard>
+                      );
+                    })}
                     {list.length === 0 && <p className="text-[11px] text-muted-foreground/70 text-center py-4 italic">leer</p>}
                   </LeadDroppableColumn>
                 </div>
