@@ -296,7 +296,7 @@ export default function CrmLeads() {
                   <td className="p-2 text-muted-foreground">{r.email ?? '—'}</td>
                   <td className="p-2">
                     <span className="inline-flex items-center gap-1.5">
-                      {rottenDays(r) && <Flame className="h-3 w-3 text-destructive" title={`Seit ${rottenDays(r)} Tagen ohne Fortschritt`} />}
+                      {rottenDays(r) && <span title={`Seit ${rottenDays(r)} Tagen ohne Fortschritt`}><Flame className="h-3 w-3 text-destructive" /></span>}
                       <span className={cn('text-[10px] px-1.5 py-0.5 rounded', STATUS_COLOR[r.status])}>{STATUS_LABEL[r.status]}</span>
                     </span>
                   </td>
