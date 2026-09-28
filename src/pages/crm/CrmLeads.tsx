@@ -294,7 +294,12 @@ export default function CrmLeads() {
                   <td className="p-2 text-muted-foreground">{r.industry ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">{r.contact_name ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">{r.email ?? '—'}</td>
-                  <td className="p-2"><span className={cn('text-[10px] px-1.5 py-0.5 rounded', STATUS_COLOR[r.status])}>{STATUS_LABEL[r.status]}</span></td>
+                  <td className="p-2">
+                    <span className="inline-flex items-center gap-1.5">
+                      {rottenDays(r) && <Flame className="h-3 w-3 text-destructive" title={`Seit ${rottenDays(r)} Tagen ohne Fortschritt`} />}
+                      <span className={cn('text-[10px] px-1.5 py-0.5 rounded', STATUS_COLOR[r.status])}>{STATUS_LABEL[r.status]}</span>
+                    </span>
+                  </td>
                   <td className="p-2 text-muted-foreground capitalize">{r.source}</td>
                 </tr>
               ))}
