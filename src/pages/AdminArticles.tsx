@@ -520,7 +520,7 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
         {loading && <div className="text-xs text-muted-foreground py-6 text-center">Lade…</div>}
         {!loading && article && (
           <Tabs defaultValue="stamm">
-            <TabsList className="bg-secondary flex-wrap h-auto">
+            <TabsList className="bg-secondary">
               <TabsTrigger value="stamm" className="text-xs">Stamm</TabsTrigger>
               <TabsTrigger value="stock" className="text-xs">Lagerbestand</TabsTrigger>
               <TabsTrigger value="attr" className="text-xs">Sachmerkmale ({attributes.length})</TabsTrigger>

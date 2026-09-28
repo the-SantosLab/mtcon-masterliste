@@ -105,21 +105,19 @@ export default function CrmCompanyDetail() {
       </div>
 
       <Tabs defaultValue="overview">
-        <div className="w-full overflow-x-auto pb-1">
-          <TabsList className="w-max min-w-full justify-start">
-            <TabsTrigger value="overview">Übersicht</TabsTrigger>
-            <TabsTrigger value="master">Stammdaten</TabsTrigger>
-            <TabsTrigger value="documents">Belege <span className="ml-1.5 text-[10px] opacity-70">{orders.length + deliveries.length + invoices.length}</span></TabsTrigger>
-            <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
-            <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
-            <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
-            <TabsTrigger value="issos-auf">ISSOS-Terminaufträge</TabsTrigger>
-            <TabsTrigger value="structure">Struktur & Standorte</TabsTrigger>
-            <TabsTrigger value="visits">Besuchsberichte</TabsTrigger>
-            <TabsTrigger value="protection">Projektschutz</TabsTrigger>
-            <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList>
+          <TabsTrigger value="overview">Übersicht</TabsTrigger>
+          <TabsTrigger value="master">Stammdaten</TabsTrigger>
+          <TabsTrigger value="documents">Belege <span className="ml-1.5 text-[10px] opacity-70">{orders.length + deliveries.length + invoices.length}</span></TabsTrigger>
+          <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
+          <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
+          <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
+          <TabsTrigger value="issos-auf">ISSOS-Terminaufträge</TabsTrigger>
+          <TabsTrigger value="structure">Struktur & Standorte</TabsTrigger>
+          <TabsTrigger value="visits">Besuchsberichte</TabsTrigger>
+          <TabsTrigger value="protection">Projektschutz</TabsTrigger>
+          <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="overview" className="mt-4">
           <div className="grid lg:grid-cols-3 gap-4">
