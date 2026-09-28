@@ -49,6 +49,9 @@ export default function CrmLeads() {
   const [filter, setFilter] = useState<{ status: string; industry: string; country: string }>({ status: 'all', industry: '', country: '' });
   const [form, setForm] = useState({ company_name: '', website: '', country: '', industry: '', contact_name: '', email: '', phone: '', notes: '' });
   const [selected, setSelected] = useState<any>(null);
+  const [view, setView] = useState<'liste' | 'board'>('board');
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => { void load(); }, []);
   const load = async () => {
@@ -95,6 +98,33 @@ export default function CrmLeads() {
     if (!reason) return;
     await supabase.from('leads').update({ status: 'abgelehnt', rejection_reason: reason }).eq('id', l.id);
     setSelected(null); void load();
+  };
+
+  const onDragEnd = async (e: DragEndEvent) => {
+    const leadId = String(e.active.id);
+    const target = e.over?.id as string | undefined;
+    const lead = rows.find(r => r.id === leadId);
+    if (!lead || !target || target === lead.status) return;
+    if (target === 'konvertiert') {
+      toast.info('Bitte die Konvertierung im Lead bestätigen (Unternehmen + Kontakt).');
+      setSelected(lead);
+      return;
+    }
+    if (target === 'abgelehnt') {
+      const reason = prompt('Ablehnungsgrund:');
+      if (!reason) return;
+      const prev = rows;
+      setRows(rs => rs.map(r => r.id === leadId ? { ...r, status: 'abgelehnt', rejection_reason: reason } : r));
+      const { error } = await supabase.from('leads').update({ status: 'abgelehnt', rejection_reason: reason }).eq('id', leadId);
+      if (error) { setRows(prev); toast.error(error.message); return; }
+      toast.success('Lead abgelehnt');
+      return;
+    }
+    const prev = rows;
+    setRows(rs => rs.map(r => r.id === leadId ? { ...r, status: target } : r));
+    const { error } = await supabase.from('leads').update({ status: target as any }).eq('id', leadId);
+    if (error) { setRows(prev); toast.error(error.message); return; }
+    toast.success(`Verschoben nach „${STATUS_LABEL[target]}"`);
   };
 
   return (
