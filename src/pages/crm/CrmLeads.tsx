@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LeadPartnerLock } from '@/components/crm/LeadPartnerLock';
-import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List } from 'lucide-react';
+import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List, Flame, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
