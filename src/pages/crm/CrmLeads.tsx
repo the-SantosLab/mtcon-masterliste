@@ -60,9 +60,47 @@ export default function CrmLeads() {
   useEffect(() => { void load(); }, []);
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+    const [{ data }, cfgRes, actRes] = await Promise.all([
+      supabase.from('leads').select('*').order('created_at', { ascending: false }),
+      supabase.from('lead_rotting_config').select('stage,rotting_days'),
+      supabase.from('crm_activities').select('lead_id,completed_at').not('lead_id', 'is', null).not('completed_at', 'is', null),
+    ]);
     setRows(data ?? []);
+    const cfg: Record<string, number> = {};
+    (cfgRes.data ?? []).forEach((c: any) => { cfg[c.stage] = c.rotting_days; });
+    setRotConfig(cfg);
+    const actMap: Record<string, string> = {};
+    (actRes.data ?? []).forEach((a: any) => {
+      if (a.completed_at && (!actMap[a.lead_id] || a.completed_at > actMap[a.lead_id])) actMap[a.lead_id] = a.completed_at;
+    });
+    setLastActAt(actMap);
     setLoading(false);
+  };
+
+  const rottenDays = (r: any): number | null => {
+    const limit = rotConfig[r.status];
+    if (!limit) return null;
+    const candidates = [r.status_changed_at, lastActAt[r.id], r.created_at].filter(Boolean);
+    if (candidates.length === 0) return null;
+    const ref = candidates.sort()[candidates.length - 1];
+    const days = Math.floor((Date.now() - new Date(ref).getTime()) / 86_400_000);
+    return days > limit ? days : null;
+  };
+
+  const openRotDialog = () => {
+    setRotForm(['neu', 'qualifiziert', 'eingeschrieben'].map(s => ({ stage: s, days: rotConfig[s] ?? 14 })));
+    setRotOpen(true);
+  };
+
+  const saveRotConfig = async () => {
+    const { error } = await supabase.from('lead_rotting_config').upsert(
+      rotForm.map(f => ({ stage: f.stage, rotting_days: f.days })),
+      { onConflict: 'stage' },
+    );
+    if (error) { toast.error(error.message); return; }
+    toast.success('Fäulnis-Grenzen gespeichert');
+    setRotOpen(false);
+    void load();
   };
 
   const filtered = useMemo(() => rows.filter(r => {
