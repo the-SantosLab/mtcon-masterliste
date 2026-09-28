@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,7 @@ function LeadDraggableCard({ id, children, onClick }: { id: string; children: Re
 }
 
 export default function CrmLeads() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,16 @@ export default function CrmLeads() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const status = searchParams.get('status');
+    const requestedView = searchParams.get('view');
+    if (action === 'new') setOpen(true);
+    if (action === 'import') setCsvOpen(true);
+    if (status && (status === 'all' || BOARD_STAGES.includes(status))) setFilter(current => ({ ...current, status }));
+    if (requestedView === 'liste' || requestedView === 'board') setView(requestedView);
+    if (action) { const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true }); }
+  }, [searchParams, setSearchParams]);
   const load = async () => {
     setLoading(true);
     const [{ data }, cfgRes, actRes] = await Promise.all([

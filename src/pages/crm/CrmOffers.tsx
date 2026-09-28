@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function CrmOffers() {
   const nav = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusF, setStatusF] = useState<string>('all');
@@ -42,6 +43,14 @@ export default function CrmOffers() {
   const [demoOpen, setDemoOpen] = useState(false);
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status && (status === 'all' || STATUS_LABEL[status])) setStatusF(status);
+    if (searchParams.get('action') === 'new') {
+      void openCreate();
+      const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const load = async () => {
     setLoading(true);

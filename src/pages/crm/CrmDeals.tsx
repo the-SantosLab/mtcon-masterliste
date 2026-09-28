@@ -88,6 +88,9 @@ export default function CrmDeals() {
   };
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    if (searchParams.get('action') === 'new') setOpen(true);
+  }, [searchParams]);
 
   const loadActivities = async () => {
     const [{ data: openActs }, { data: doneActs }] = await Promise.all([

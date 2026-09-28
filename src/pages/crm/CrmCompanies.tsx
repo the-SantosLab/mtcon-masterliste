@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Loader2, Send, Upload, Search, Download, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BulkEnrollDialog } from '@/components/crm/BulkEnrollDialog';
 import { CrmCsvImport, type CrmImportConfig } from '@/components/crm/CrmCsvImport';
 import { SavedViewsBar } from '@/components/crm/SavedViewsBar';
@@ -63,6 +63,7 @@ const ROLE_COLOR: Record<string, string> = {
 
 export default function CrmCompanies() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<any[]>([]);
   const [tab, setTab] = useState<Tab>('all');
   const [q, setQ] = useState('');
@@ -76,6 +77,14 @@ export default function CrmCompanies() {
   const toggle = (id: string) => setSelected(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const requestedTab = searchParams.get('tab') as Tab | null;
+    if (action === 'new') setOpen(true);
+    if (action === 'import') setImportOpen(true);
+    if (requestedTab && ['all', 'lead', 'customer', 'supplier', 'distributor', 'mitbewerber'].includes(requestedTab)) setTab(requestedTab);
+    if (action) { const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true }); }
+  }, [searchParams, setSearchParams]);
   const load = async () => {
     setLoading(true);
     const PAGE = 1000;
