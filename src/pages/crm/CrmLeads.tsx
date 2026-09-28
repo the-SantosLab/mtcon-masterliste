@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LeadPartnerLock } from '@/components/crm/LeadPartnerLock';
-import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List } from 'lucide-react';
+import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List, Flame, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
@@ -50,15 +50,57 @@ export default function CrmLeads() {
   const [form, setForm] = useState({ company_name: '', website: '', country: '', industry: '', contact_name: '', email: '', phone: '', notes: '' });
   const [selected, setSelected] = useState<any>(null);
   const [view, setView] = useState<'liste' | 'board'>('board');
+  const [rotConfig, setRotConfig] = useState<Record<string, number>>({});
+  const [lastActAt, setLastActAt] = useState<Record<string, string>>({});
+  const [rotOpen, setRotOpen] = useState(false);
+  const [rotForm, setRotForm] = useState<{ stage: string; days: number }[]>([]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   useEffect(() => { void load(); }, []);
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+    const [{ data }, cfgRes, actRes] = await Promise.all([
+      supabase.from('leads').select('*').order('created_at', { ascending: false }),
+      supabase.from('lead_rotting_config').select('stage,rotting_days'),
+      supabase.from('crm_activities').select('lead_id,completed_at').not('lead_id', 'is', null).not('completed_at', 'is', null),
+    ]);
     setRows(data ?? []);
+    const cfg: Record<string, number> = {};
+    (cfgRes.data ?? []).forEach((c: any) => { cfg[c.stage] = c.rotting_days; });
+    setRotConfig(cfg);
+    const actMap: Record<string, string> = {};
+    (actRes.data ?? []).forEach((a: any) => {
+      if (a.completed_at && (!actMap[a.lead_id] || a.completed_at > actMap[a.lead_id])) actMap[a.lead_id] = a.completed_at;
+    });
+    setLastActAt(actMap);
     setLoading(false);
+  };
+
+  const rottenDays = (r: any): number | null => {
+    const limit = rotConfig[r.status];
+    if (!limit) return null;
+    const candidates = [r.status_changed_at, lastActAt[r.id], r.created_at].filter(Boolean);
+    if (candidates.length === 0) return null;
+    const ref = candidates.sort()[candidates.length - 1];
+    const days = Math.floor((Date.now() - new Date(ref).getTime()) / 86_400_000);
+    return days > limit ? days : null;
+  };
+
+  const openRotDialog = () => {
+    setRotForm(['neu', 'qualifiziert', 'eingeschrieben'].map(s => ({ stage: s, days: rotConfig[s] ?? 14 })));
+    setRotOpen(true);
+  };
+
+  const saveRotConfig = async () => {
+    const { error } = await supabase.from('lead_rotting_config').upsert(
+      rotForm.map(f => ({ stage: f.stage, rotting_days: f.days })),
+      { onConflict: 'stage' },
+    );
+    if (error) { toast.error(error.message); return; }
+    toast.success('Fäulnis-Grenzen gespeichert');
+    setRotOpen(false);
+    void load();
   };
 
   const filtered = useMemo(() => rows.filter(r => {
@@ -139,6 +181,7 @@ export default function CrmLeads() {
             <Button size="sm" variant={view === 'board' ? 'default' : 'ghost'} onClick={() => setView('board')} className="h-8 text-xs gap-1.5 rounded-none"><LayoutGrid className="h-3.5 w-3.5" />Board</Button>
             <Button size="sm" variant={view === 'liste' ? 'default' : 'ghost'} onClick={() => setView('liste')} className="h-8 text-xs gap-1.5 rounded-none"><List className="h-3.5 w-3.5" />Liste</Button>
           </div>
+          <Button size="sm" variant="outline" onClick={openRotDialog} className="h-8 text-xs gap-1.5"><Settings2 className="h-3.5 w-3.5" />Fäulnis</Button>
           <Button size="sm" variant="outline" onClick={() => setCsvOpen(true)} className="h-8 text-xs gap-1.5"><Upload className="h-3.5 w-3.5" />CSV-Import</Button>
           <Button size="sm" onClick={() => setOpen(true)} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" />Neuer Lead</Button>
         </div>
@@ -163,6 +206,7 @@ export default function CrmLeads() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {BOARD_STAGES.map(stage => {
               const list = filtered.filter(r => r.status === stage);
+              const rottenCount = list.filter(r => rottenDays(r)).length;
               return (
                 <div key={stage} className="crm-column flex flex-col min-h-[420px]">
                   <div className="px-3 py-2.5 border-b border-border/40">
@@ -171,27 +215,45 @@ export default function CrmLeads() {
                         <span className="h-2 w-2 rounded-full" style={{ background: STATUS_DOT[stage], boxShadow: `0 0 8px ${STATUS_DOT[stage]}` }} />
                         <p className="text-[11px] font-semibold text-foreground uppercase tracking-wide">{STATUS_LABEL[stage]}</p>
                       </div>
-                      <span className="text-[10px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted/50">{list.length}</span>
+                      <span className="flex items-center gap-1.5">
+                        {rottenCount > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums text-destructive">
+                            <Flame className="h-3 w-3" />{rottenCount}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted/50">{list.length}</span>
+                      </span>
                     </div>
                   </div>
                   <LeadDroppableColumn id={stage}>
-                    {list.map(r => (
-                      <LeadDraggableCard key={r.id} id={r.id} onClick={() => setSelected(r)}>
-                        <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1">{r.company_name}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{r.contact_name ?? '–'}</p>
-                        <div className="mt-1.5 flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground truncate">{[r.country, r.industry].filter(Boolean).join(' · ') || '–'}</span>
-                          <span className={cn(
-                            'inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums shrink-0',
-                            (r.score ?? 0) >= 50 ? 'bg-emerald-500/15 text-emerald-400'
-                              : (r.score ?? 0) >= 20 ? 'bg-amber-500/15 text-amber-400'
-                              : (r.score ?? 0) > 0 ? 'bg-blue-500/15 text-blue-400'
-                              : (r.score ?? 0) < 0 ? 'bg-destructive/15 text-destructive'
-                              : 'bg-muted text-muted-foreground',
-                          )}>{r.score ?? 0}</span>
-                        </div>
-                      </LeadDraggableCard>
-                    ))}
+                    {list.map(r => {
+                      const rot = rottenDays(r);
+                      return (
+                        <LeadDraggableCard key={r.id} id={r.id} onClick={() => setSelected(r)}>
+                          <div className={cn(rot && 'rounded-md ring-1 ring-destructive/60 bg-destructive/5 -m-1 p-1')}>
+                            <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1 flex items-start gap-1">
+                              <span className="flex-1">{r.company_name}</span>
+                              {rot && <Flame className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">{r.contact_name ?? '–'}</p>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className="text-[10px] text-muted-foreground truncate">{[r.country, r.industry].filter(Boolean).join(' · ') || '–'}</span>
+                              <span className="flex items-center gap-1 shrink-0">
+                                {rot && <span className="text-[10px] font-semibold text-destructive tabular-nums">{rot} T.</span>}
+                                <span className={cn(
+                                  'inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums',
+                                  (r.score ?? 0) >= 50 ? 'bg-emerald-500/15 text-emerald-400'
+                                    : (r.score ?? 0) >= 20 ? 'bg-amber-500/15 text-amber-400'
+                                    : (r.score ?? 0) > 0 ? 'bg-blue-500/15 text-blue-400'
+                                    : (r.score ?? 0) < 0 ? 'bg-destructive/15 text-destructive'
+                                    : 'bg-muted text-muted-foreground',
+                                )}>{r.score ?? 0}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </LeadDraggableCard>
+                      );
+                    })}
                     {list.length === 0 && <p className="text-[11px] text-muted-foreground/70 text-center py-4 italic">leer</p>}
                   </LeadDroppableColumn>
                 </div>
@@ -232,7 +294,12 @@ export default function CrmLeads() {
                   <td className="p-2 text-muted-foreground">{r.industry ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">{r.contact_name ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">{r.email ?? '—'}</td>
-                  <td className="p-2"><span className={cn('text-[10px] px-1.5 py-0.5 rounded', STATUS_COLOR[r.status])}>{STATUS_LABEL[r.status]}</span></td>
+                  <td className="p-2">
+                    <span className="inline-flex items-center gap-1.5">
+                      {rottenDays(r) && <span title={`Seit ${rottenDays(r)} Tagen ohne Fortschritt`}><Flame className="h-3 w-3 text-destructive" /></span>}
+                      <span className={cn('text-[10px] px-1.5 py-0.5 rounded', STATUS_COLOR[r.status])}>{STATUS_LABEL[r.status]}</span>
+                    </span>
+                  </td>
                   <td className="p-2 text-muted-foreground capitalize">{r.source}</td>
                 </tr>
               ))}
@@ -288,6 +355,35 @@ export default function CrmLeads() {
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="h-8 text-xs">Abbrechen</Button>
             <Button size="sm" onClick={create} className="h-8 text-xs">Anlegen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fäulnis-Grenzen */}
+      <Dialog open={rotOpen} onOpenChange={setRotOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Fäulnis-Grenzen (Interessenten)</DialogTitle></DialogHeader>
+          <p className="text-[11px] text-muted-foreground">Ein Interessent wird rot markiert, wenn er länger als die angegebenen Tage ohne Statuswechsel und ohne erledigte Aktivität in seiner Stufe bleibt.</p>
+          <div className="space-y-2">
+            {rotForm.map((f, i) => (
+              <div key={f.stage} className="flex items-center justify-between gap-3">
+                <span className="text-xs text-foreground">{STATUS_LABEL[f.stage]}</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={f.days}
+                    onChange={e => setRotForm(rotForm.map((x, j) => j === i ? { ...x, days: parseInt(e.target.value) || 0 } : x))}
+                    className="h-8 text-xs w-24"
+                  />
+                  <span className="text-[11px] text-muted-foreground">Tage</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRotOpen(false)} className="h-8 text-xs">Abbrechen</Button>
+            <Button size="sm" onClick={saveRotConfig} className="h-8 text-xs">Speichern</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
