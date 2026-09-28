@@ -6146,6 +6146,24 @@ export type Database = {
           },
         ]
       }
+      lead_rotting_config: {
+        Row: {
+          rotting_days: number
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          rotting_days: number
+          stage: string
+          updated_at?: string
+        }
+        Update: {
+          rotting_days?: number
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           assigned_to: string | null
@@ -6169,6 +6187,7 @@ export type Database = {
           score_calculated_at: string | null
           source: Database["public"]["Enums"]["lead_source"]
           status: Database["public"]["Enums"]["lead_status"]
+          status_changed_at: string | null
           updated_at: string
           website: string | null
         }
@@ -6194,6 +6213,7 @@ export type Database = {
           score_calculated_at?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
+          status_changed_at?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -6219,6 +6239,7 @@ export type Database = {
           score_calculated_at?: string | null
           source?: Database["public"]["Enums"]["lead_source"]
           status?: Database["public"]["Enums"]["lead_status"]
+          status_changed_at?: string | null
           updated_at?: string
           website?: string | null
         }
