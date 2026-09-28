@@ -20,6 +20,8 @@ import { IssosOffersTab } from '@/components/IssosOffersTab';
 import { IssosOrdersTab } from '@/components/IssosOrdersTab';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TagPicker } from '@/components/crm/TagPicker';
+import { CompanyStructureTab } from '@/components/crm/CompanyStructureTab';
+import { VisitReports } from '@/components/crm/VisitReports';
 import { toast } from 'sonner';
 
 
@@ -111,6 +113,8 @@ export default function CrmCompanyDetail() {
           <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
           <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
           <TabsTrigger value="issos-auf">ISSOS-Terminaufträge</TabsTrigger>
+          <TabsTrigger value="structure">Struktur & Standorte</TabsTrigger>
+          <TabsTrigger value="visits">Besuchsberichte</TabsTrigger>
           <TabsTrigger value="protection">Projektschutz</TabsTrigger>
           <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
 
@@ -314,6 +318,9 @@ export default function CrmCompanyDetail() {
         </TabsContent>
 
 
+
+        <TabsContent value="structure" className="mt-4"><CompanyStructureTab companyId={company.id} /></TabsContent>
+        <TabsContent value="visits" className="mt-4"><VisitReports companyId={company.id} /></TabsContent>
 
         <TabsContent value="protection" className="mt-4 max-w-3xl">
           <ProjectProtectionTab companyId={company.id} />

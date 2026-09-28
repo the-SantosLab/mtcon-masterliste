@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { DealTimeline } from '@/components/crm/DealTimeline';
+import { DealCompetitors } from '@/components/crm/DealCompetitors';
+import { VisitReports } from '@/components/crm/VisitReports';
 import { NextActivityDialog } from '@/components/crm/NextActivityDialog';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -276,6 +278,7 @@ export default function CrmDealDetail() {
           <TabsTrigger value="timeline">Historie</TabsTrigger>
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="activities">Aktivitäten</TabsTrigger>
+          <TabsTrigger value="visits">Besuchsberichte</TabsTrigger>
           <TabsTrigger value="offers">Angebote</TabsTrigger>
           <TabsTrigger value="files">Dateien</TabsTrigger>
           <TabsTrigger value="templates">PDF-Vorlagen</TabsTrigger>
@@ -305,7 +308,10 @@ export default function CrmDealDetail() {
               Vorgang in Masterliste: <a href={`/cases/${deal.won_case_id}`} className="text-primary hover:underline">öffnen →</a>
             </div>
           )}
+          <div className="mt-5 max-w-3xl"><DealCompetitors dealId={deal.id} /></div>
         </TabsContent>
+
+        <TabsContent value="visits" className="mt-4"><VisitReports dealId={deal.id} companyId={deal.company_id} /></TabsContent>
 
         <TabsContent value="activities" className="mt-4">
           <div className="mb-4 p-3 rounded border border-border bg-card/40 max-w-3xl space-y-2">
