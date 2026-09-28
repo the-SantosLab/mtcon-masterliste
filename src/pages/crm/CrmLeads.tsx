@@ -9,12 +9,36 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LeadPartnerLock } from '@/components/crm/LeadPartnerLock';
-import { Plus, Loader2, Upload, ArrowRight, X } from 'lucide-react';
+import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 
 const STATUS_LABEL: Record<string, string> = { neu: 'Neu', qualifiziert: 'Qualifiziert', eingeschrieben: 'Eingeschrieben', konvertiert: 'Konvertiert', abgelehnt: 'Abgelehnt' };
 const STATUS_COLOR: Record<string, string> = { neu: 'bg-blue-500/15 text-blue-400', qualifiziert: 'bg-amber-500/15 text-amber-400', eingeschrieben: 'bg-purple-500/15 text-purple-400', konvertiert: 'bg-emerald-500/15 text-emerald-400', abgelehnt: 'bg-muted text-muted-foreground' };
+const STATUS_DOT: Record<string, string> = { neu: '#3b82f6', qualifiziert: '#f59e0b', eingeschrieben: '#a855f7', konvertiert: '#10b981', abgelehnt: '#6b7280' };
+const BOARD_STAGES = ['neu', 'qualifiziert', 'eingeschrieben', 'konvertiert', 'abgelehnt'];
+
+function LeadDroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return <div ref={setNodeRef} className={cn('p-2 space-y-2 flex-1 overflow-y-auto rounded-b transition-colors', isOver && 'bg-primary/10')}>{children}</div>;
+}
+
+function LeadDraggableCard({ id, children, onClick }: { id: string; children: React.ReactNode; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onClick}
+      style={transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 50 } : undefined}
+      className={cn('crm-deal-card w-full text-left cursor-grab active:cursor-grabbing select-none', isDragging && 'opacity-80 shadow-xl')}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function CrmLeads() {
   const { user } = useAuth();
