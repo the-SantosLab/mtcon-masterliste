@@ -68,6 +68,13 @@ export default function CrmContacts() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'new') openNew();
+    if (action === 'import') setImportOpen(true);
+    if (action) { const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true }); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const load = async () => {
     setLoading(true);
     const [{ data }, { data: c }] = await Promise.all([

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ const TYPE_ICON: Record<string, any> = { call: Phone, email: Mail, meeting: Cale
 const TYPE_LABEL: Record<string, string> = { call: 'Anruf', email: 'E-Mail', meeting: 'Meeting', note: 'Notiz', task: 'Task', followup: 'Follow-up' };
 
 export default function CrmActivities() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [rows, setRows] = useState<any[]>([]);
   const [tracking, setTracking] = useState<Record<string, any>>({});
@@ -42,6 +43,17 @@ export default function CrmActivities() {
   }, [open]);
 
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab');
+    const action = searchParams.get('action');
+    const type = searchParams.get('type');
+    if (requestedTab && ['mine', 'all', 'overdue'].includes(requestedTab)) setTab(requestedTab);
+    if (action === 'new') {
+      setForm(current => ({ ...current, type: type && TYPE_LABEL[type] ? type : current.type }));
+      setOpen(true);
+      const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const load = async () => {
     setLoading(true);

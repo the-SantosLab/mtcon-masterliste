@@ -15,7 +15,7 @@ import {
   LayoutDashboard, ClipboardList, Settings, Users, Database, TerminalSquare,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
   FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp, FolderTree, Globe, PlugZap,
-  Wrench,
+  Wrench, ChevronRight, Trophy, CalendarClock, Mail, Phone, Plus, Upload, Pencil, Check,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
 
@@ -133,14 +133,82 @@ const processNavGroups: ProcessNavGroup[] = [
     { href: '/cockpit', label: 'Cockpit (Beta)', icon: LayoutDashboard },
   ]},
   { id: 'sales', label: 'Kunden gewinnen', icon: Target, items: [
-    { href: '/crm/dashboard', label: 'Vertriebsübersicht', icon: LayoutDashboard, access: 'crm' },
-    { href: '/crm/outbound', label: 'Kundenakquise', icon: Send, access: 'crm' },
-    { href: '/crm/outbound/leads', label: 'Neue Interessenten', icon: Target, access: 'crm' },
-    { href: '/crm/companies', label: 'Kundenfirmen & Partner', icon: Building2, access: 'crm' },
-    { href: '/crm/contacts', label: 'Ansprechpartner', icon: Users, access: 'crm' },
-    { href: '/crm/activities', label: 'Kommunikation & Aufgaben', icon: Activity, access: 'crm' },
-    { href: '/crm/deals', label: 'Verkaufschancen', icon: Briefcase, access: 'crm' },
-    { href: '/crm/offers', label: 'Angebote', icon: FileText, access: 'crm' },
+    { href: '/crm/dashboard', label: 'Vertriebsübersicht', icon: LayoutDashboard, access: 'crm', children: [
+      { href: '/crm/outbound/leads', label: 'Offene Interessenten', icon: Target },
+      { href: '/crm/deals', label: 'Aktuelle Verkaufschancen', icon: Briefcase },
+      { href: '/crm/offers', label: 'Angebotsstatus', icon: FileText },
+      { href: '/crm/forecast', label: 'Umsatz-Pipeline & Forecast', icon: TrendingUp },
+      { href: '/crm/settings/ziele', label: 'Vertriebsziele', icon: Trophy },
+      { href: '/crm/activities', label: 'Aktivitätenübersicht', icon: Activity },
+      { href: '/crm/activities?tab=overdue', label: 'Wiedervorlagen', icon: CalendarClock },
+    ] },
+    { href: '/crm/outbound', label: 'Kundenakquise', icon: Send, access: 'crm', children: [
+      { href: '/crm/companies', label: 'Zielkunden recherchieren', icon: Search },
+      { href: '/crm/contacts?action=new', label: 'Ansprechpartner identifizieren', icon: Users },
+      { href: '/crm/activities?action=new&type=email', label: 'Erstkontakt per E-Mail', icon: Mail },
+      { href: '/crm/activities?action=new&type=call', label: 'Erstkontakt per Telefon', icon: Phone },
+      { href: '/crm/contacts', label: 'LinkedIn / Xing', icon: Globe },
+      { href: '/crm/activities?action=new&type=followup', label: 'Messekontakt nachverfolgen', icon: CalendarClock },
+      { href: '/crm/activities?action=new&type=meeting', label: 'Besuchstermin vereinbaren', icon: Calendar },
+      { href: '/crm/outbound?tab=campaigns', label: 'Akquisekampagnen', icon: Megaphone },
+    ] },
+    { href: '/crm/outbound/leads', label: 'Neue Interessenten', icon: Target, access: 'crm', children: [
+      { href: '/crm/outbound/leads?action=new', label: 'Interessent anlegen', icon: Plus },
+      { href: '/crm/outbound/leads?action=import', label: 'Interessenten importieren', icon: Upload },
+      { href: '/crm/outbound/leads?status=qualifiziert', label: 'Qualifizieren & schützen', icon: ShieldCheck },
+      { href: '/crm/settings/scoring', label: 'Interessenten bewerten', icon: Star },
+      { href: '/crm/outbound/leads?view=board', label: 'Geschäftsprozess zuweisen', icon: Workflow },
+      { href: '/crm/outbound/leads?status=konvertiert', label: 'In Kunde umwandeln', icon: Building2 },
+      { href: '/crm/outbound/leads?status=abgelehnt', label: 'Archivierte Interessenten', icon: FolderArchive },
+      { href: '/crm/outbound/leads?view=liste', label: 'Interessenten-Historie', icon: Activity },
+    ] },
+    { href: '/crm/companies', label: 'Kundenfirmen & Partner', icon: Building2, access: 'crm', children: [
+      { href: '/crm/companies?action=new', label: 'Firma / Partner anlegen', icon: Plus },
+      { href: '/crm/companies', label: 'Firmen bearbeiten', icon: Building2 },
+      { href: '/crm/companies?focus=addresses', label: 'Adressen & Standorte', icon: MapPin },
+      { href: '/crm/companies?focus=groups', label: 'Kundengruppen', icon: Users },
+      { href: '/crm/companies?tab=supplier', label: 'Lieferanten', icon: Truck },
+      { href: '/crm/companies?focus=documents', label: 'Dokumente', icon: FileText },
+      { href: '/crm/companies?focus=history', label: 'Firmenhistorie', icon: Activity },
+    ] },
+    { href: '/crm/contacts', label: 'Ansprechpartner', icon: Users, access: 'crm', children: [
+      { href: '/crm/contacts?action=new', label: 'Kontakt anlegen', icon: Plus },
+      { href: '/crm/contacts?focus=owner', label: 'Intern zuweisen', icon: Users },
+      { href: '/crm/contacts', label: 'Kontaktdaten pflegen', icon: Pencil },
+      { href: '/crm/contacts?focus=responsibility', label: 'Verantwortlichkeiten', icon: Briefcase },
+      { href: '/crm/contacts?focus=email', label: 'E-Mail-Adressen', icon: Mail },
+      { href: '/crm/contacts?focus=phone', label: 'Telefonverzeichnis', icon: Phone },
+      { href: '/crm/activities', label: 'Kontaktverlauf', icon: Activity },
+      { href: '/crm/contacts?status=inactive', label: 'Inaktive Kontakte', icon: EyeOff },
+    ] },
+    { href: '/crm/activities', label: 'Kommunikation & Aufgaben', icon: Activity, access: 'crm', children: [
+      { href: '/crm/activities?action=new&type=task', label: 'Aufgabe anlegen', icon: ClipboardList },
+      { href: '/crm/activities?action=new&type=call', label: 'Telefonat dokumentieren', icon: Phone },
+      { href: '/crm/activities?action=new&type=email', label: 'E-Mail protokollieren', icon: Mail },
+      { href: '/crm/activities?action=new&type=meeting', label: 'Termin planen', icon: Calendar },
+      { href: '/crm/activities?action=new&type=meeting&visit=1', label: 'Besuchsbericht erfassen', icon: FileText },
+      { href: '/crm/activities?action=new&type=followup', label: 'Wiedervorlage erstellen', icon: CalendarClock },
+      { href: '/crm/activities?action=new&type=note', label: 'Notiz hinterlegen', icon: StickyNote },
+      { href: '/crm/activities', label: 'Aktivitäten abschließen', icon: Check },
+    ] },
+    { href: '/crm/deals', label: 'Verkaufschancen', icon: Briefcase, access: 'crm', children: [
+      { href: '/crm/deals?action=new', label: 'Verkaufschance anlegen', icon: Plus },
+      { href: '/crm/deals', label: 'Bewerten & Umsatzpotenzial', icon: TrendingUp },
+      { href: '/crm/settings/automationen', label: 'Wahrscheinlichkeiten', icon: Settings },
+      { href: '/crm/deals', label: 'Deal-Phase ändern', icon: Workflow },
+      { href: '/crm/deals?focus=competitors', label: 'Mitbewerber erfassen', icon: Users },
+      { href: '/crm/deals?focus=project', label: 'Projektinformationen', icon: FolderKanban },
+      { href: '/crm/deals?stages=won,lost', label: 'Abgeschlossene Chancen', icon: Trophy },
+    ] },
+    { href: '/crm/offers', label: 'Angebote', icon: FileText, access: 'crm', children: [
+      { href: '/crm/offers?action=new', label: 'Angebot erstellen', icon: Plus },
+      { href: '/crm/offers?status=entwurf', label: 'Kalkulation & Positionen', icon: Receipt },
+      { href: '/crm/offers?status=versendet', label: 'Versand & Nachverfolgung', icon: Send },
+      { href: '/crm/offers?focus=versions', label: 'Angebotsversionen', icon: FileText },
+      { href: '/crm/offers?status=angenommen', label: 'Freigegebene Angebote', icon: ShieldCheck },
+      { href: '/crm/offers?status=angenommen&focus=orders', label: 'Aufträge erzeugen', icon: ClipboardList },
+      { href: '/crm/offers?focus=process', label: 'Punkt / Linie / Dreieck / Quadrat', icon: Workflow },
+    ] },
   ]},
   { id: 'fulfillment', label: 'Aufträge abwickeln', icon: ClipboardList, items: [
     { href: '/orders', label: 'Aufträge', icon: ClipboardList, access: 'erp' },
@@ -220,6 +288,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [openNavItem, setOpenNavItem] = useState<string | null>(null);
   const [moreAdminOpen, setMoreAdminOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
@@ -375,18 +444,29 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <div className="mt-0.5 mb-1">
                     {primaryItems.map(item => (
                       <div key={item.href}>
-                        <Link to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5')}>
-                          <item.icon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="flex-1 truncate">{item.label}</span>
-                          {item.badge === 'cases' && <CasesUnreadBadge />}
-                          {item.badge === 'container' && <ContainerUnreadBadge />}
-                        </Link>
-                        {item.children?.map(child => (
-                          <Link key={child.href} to={child.href} onClick={() => setOpen(false)} className={cn(linkClass(child.href), 'pl-14 !text-[11px] !py-1')}>
-                            <child.icon className="h-3 w-3 shrink-0" />
-                            <span className="flex-1 truncate">{child.label}</span>
+                        <div className="flex items-center">
+                          <Link to={item.href} onClick={() => setOpen(false)} className={cn(linkClass(item.href), 'pl-9 !text-xs !py-1.5 flex-1')}>
+                            <item.icon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="flex-1 truncate">{item.label}</span>
+                            {item.badge === 'cases' && <CasesUnreadBadge />}
+                            {item.badge === 'container' && <ContainerUnreadBadge />}
                           </Link>
-                        ))}
+                          {item.children && (
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={`${item.label} Unterpunkte`} onClick={() => setOpenNavItem(openNavItem === item.href ? null : item.href)}>
+                              <ChevronRight className={cn('h-3 w-3 transition-transform', openNavItem === item.href && 'rotate-90')} />
+                            </Button>
+                          )}
+                        </div>
+                        {item.children && openNavItem === item.href && (
+                          <div className="mb-1 border-l border-sidebar-border ml-10">
+                            {item.children.map(child => (
+                              <Link key={`${child.href}-${child.label}`} to={child.href} onClick={() => setOpen(false)} className="flex items-center gap-2 pl-3 pr-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/40 rounded-r">
+                                <child.icon className="h-3 w-3 shrink-0" />
+                                <span className="flex-1 leading-tight">{child.label}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                     {secondaryItems.length > 0 && (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 export default function CrmOutbound() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [seqs, setSeqs] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +61,7 @@ export default function CrmOutbound() {
         </div>
       </div>
 
-      <Tabs defaultValue="sequences">
+      <Tabs defaultValue={searchParams.get('tab') === 'campaigns' ? 'campaigns' : searchParams.get('tab') === 'contacts' ? 'contacts' : 'sequences'}>
         <TabsList>
           <TabsTrigger value="sequences">Sequenzen</TabsTrigger>
           <TabsTrigger value="campaigns">Kampagnen</TabsTrigger>
