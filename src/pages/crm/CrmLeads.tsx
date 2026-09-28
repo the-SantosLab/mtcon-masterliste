@@ -158,7 +158,48 @@ export default function CrmLeads() {
 
       {loading ? <div className="flex justify-center py-10"><Loader2 className="h-4 w-4 animate-spin" /></div>
       : filtered.length === 0 ? <p className="text-xs text-muted-foreground py-8 text-center">Keine Leads.</p>
-      : (
+      : view === 'board' ? (
+        <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {BOARD_STAGES.map(stage => {
+              const list = filtered.filter(r => r.status === stage);
+              return (
+                <div key={stage} className="crm-column flex flex-col min-h-[420px]">
+                  <div className="px-3 py-2.5 border-b border-border/40">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full" style={{ background: STATUS_DOT[stage], boxShadow: `0 0 8px ${STATUS_DOT[stage]}` }} />
+                        <p className="text-[11px] font-semibold text-foreground uppercase tracking-wide">{STATUS_LABEL[stage]}</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground tabular-nums px-1.5 py-0.5 rounded bg-muted/50">{list.length}</span>
+                    </div>
+                  </div>
+                  <LeadDroppableColumn id={stage}>
+                    {list.map(r => (
+                      <LeadDraggableCard key={r.id} id={r.id} onClick={() => setSelected(r)}>
+                        <p className="text-xs font-semibold text-foreground line-clamp-2 mb-1">{r.company_name}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{r.contact_name ?? '–'}</p>
+                        <div className="mt-1.5 flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground truncate">{[r.country, r.industry].filter(Boolean).join(' · ') || '–'}</span>
+                          <span className={cn(
+                            'inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded text-[10px] font-semibold tabular-nums shrink-0',
+                            (r.score ?? 0) >= 50 ? 'bg-emerald-500/15 text-emerald-400'
+                              : (r.score ?? 0) >= 20 ? 'bg-amber-500/15 text-amber-400'
+                              : (r.score ?? 0) > 0 ? 'bg-blue-500/15 text-blue-400'
+                              : (r.score ?? 0) < 0 ? 'bg-destructive/15 text-destructive'
+                              : 'bg-muted text-muted-foreground',
+                          )}>{r.score ?? 0}</span>
+                        </div>
+                      </LeadDraggableCard>
+                    ))}
+                    {list.length === 0 && <p className="text-[11px] text-muted-foreground/70 text-center py-4 italic">leer</p>}
+                  </LeadDroppableColumn>
+                </div>
+              );
+            })}
+          </div>
+        </DndContext>
+      ) : (
         <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-hidden">
           <table className="w-full text-xs">
             <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground tracking-wider">
