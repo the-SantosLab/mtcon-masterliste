@@ -1998,6 +1998,7 @@ export type Database = {
           name: string
           notes: string | null
           owner_id: string | null
+          parent_company_id: string | null
           partner_role: Database["public"]["Enums"]["partner_role"]
           payment_terms_days: number | null
           payment_terms_text: string | null
@@ -2039,6 +2040,7 @@ export type Database = {
           name: string
           notes?: string | null
           owner_id?: string | null
+          parent_company_id?: string | null
           partner_role?: Database["public"]["Enums"]["partner_role"]
           payment_terms_days?: number | null
           payment_terms_text?: string | null
@@ -2080,6 +2082,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owner_id?: string | null
+          parent_company_id?: string | null
           partner_role?: Database["public"]["Enums"]["partner_role"]
           payment_terms_days?: number | null
           payment_terms_text?: string | null
@@ -2094,6 +2097,97 @@ export type Database = {
           type?: Database["public"]["Enums"]["company_type"]
           updated_at?: string
           vat_id?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_parent_company_id_fkey"
+            columns: ["parent_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_locations: {
+        Row: {
+          city: string | null
+          company_id: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          location_type: string
+          name: string
+          notes: string | null
+          phone: string | null
+          street: string | null
+          zip: string | null
+        }
+        Insert: {
+          city?: string | null
+          company_id: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          location_type?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          street?: string | null
+          zip?: string | null
+        }
+        Update: {
+          city?: string | null
+          company_id?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          location_type?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          street?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_locations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitors: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
           website?: string | null
         }
         Relationships: []
@@ -2698,6 +2792,70 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_visit_reports: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          id: string
+          location_id: string | null
+          next_steps: string | null
+          participants: string | null
+          purpose: string | null
+          result: string | null
+          visit_date: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          location_id?: string | null
+          next_steps?: string | null
+          participants?: string | null
+          purpose?: string | null
+          result?: string | null
+          visit_date?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          location_id?: string | null
+          next_steps?: string | null
+          participants?: string | null
+          purpose?: string | null
+          result?: string | null
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_visit_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_visit_reports_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_visit_reports_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "company_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_web_form_endpoints: {
         Row: {
           allowed_origins: string[] | null
@@ -2769,6 +2927,51 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      deal_competitors: {
+        Row: {
+          competitor_id: string
+          created_at: string
+          deal_id: string
+          id: string
+          strengths: string | null
+          their_price: number | null
+          weaknesses: string | null
+        }
+        Insert: {
+          competitor_id: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          strengths?: string | null
+          their_price?: number | null
+          weaknesses?: string | null
+        }
+        Update: {
+          competitor_id?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          strengths?: string | null
+          their_price?: number | null
+          weaknesses?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_competitors_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_competitors_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       deal_items: {
         Row: {
@@ -5956,7 +6159,10 @@ export type Database = {
           id: string
           industry: string | null
           notes: string | null
+          partner_company_id: string | null
           phone: string | null
+          protected_project: string | null
+          protected_until: string | null
           rejection_reason: string | null
           routed_by_rule_id: string | null
           score: number
@@ -5978,7 +6184,10 @@ export type Database = {
           id?: string
           industry?: string | null
           notes?: string | null
+          partner_company_id?: string | null
           phone?: string | null
+          protected_project?: string | null
+          protected_until?: string | null
           rejection_reason?: string | null
           routed_by_rule_id?: string | null
           score?: number
@@ -6000,7 +6209,10 @@ export type Database = {
           id?: string
           industry?: string | null
           notes?: string | null
+          partner_company_id?: string | null
           phone?: string | null
+          protected_project?: string | null
+          protected_until?: string | null
           rejection_reason?: string | null
           routed_by_rule_id?: string | null
           score?: number
@@ -6010,7 +6222,15 @@ export type Database = {
           updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_partner_company_id_fkey"
+            columns: ["partner_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lost_reasons: {
         Row: {

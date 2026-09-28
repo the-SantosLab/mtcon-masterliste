@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { LeadPartnerLock } from '@/components/crm/LeadPartnerLock';
 import { Plus, Loader2, Upload, ArrowRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -157,6 +158,7 @@ export default function CrmLeads() {
               <Detail label="Status" value={STATUS_LABEL[selected.status]} />
               {selected.notes && <Detail label="Notizen" value={selected.notes} />}
               {selected.rejection_reason && <Detail label="Ablehnungsgrund" value={selected.rejection_reason} />}
+              <LeadPartnerLock lead={selected} onSaved={async () => { const { data } = await supabase.from('leads').select('*').eq('id', selected.id).single(); if (data) setSelected(data as any); void load(); }} />
             </div>
           )}
           <DialogFooter className="flex-wrap gap-2">
