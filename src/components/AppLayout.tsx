@@ -341,8 +341,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, []);
 
   const effectiveLogoSize = Math.min(logoSize, logoMax);
-  // Buttons neben dem Logo skalieren proportional mit (gedeckelt, damit sie klickbar bleiben)
-  const logoBtnScale = Math.min(1.6, Math.max(0.7, effectiveLogoSize / 120));
+  // Leisten-Höhe folgt dem Regler; Logo und Symbole wachsen nur moderat mit
+  const logoImgSize = Math.min(170, Math.max(56, Math.round(effectiveLogoSize * 0.55)));
+  const logoBtnScale = Math.min(1.3, Math.max(0.8, effectiveLogoSize / 140));
 
   const startLogoResize = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -578,13 +579,13 @@ export function AppLayout({ children }: AppLayoutProps) {
           >
             <span className="h-1 w-14 rounded-full bg-muted-foreground/30 group-hover:bg-muted-foreground/60 transition-colors" />
           </div>
-          <div className="pl-4 pt-3 pb-1 overflow-hidden" style={{ height: effectiveLogoSize + 16 }}>
+          <div className="pl-4 pt-3 pb-1 overflow-hidden flex items-center" style={{ height: effectiveLogoSize + 16 }}>
             <img
               src={isDark ? mtconErpLabel : mtconErpLabelLight}
               alt="MTCON goes ERP"
               draggable={false}
               className="object-contain opacity-90"
-              style={{ width: effectiveLogoSize, height: effectiveLogoSize }}
+              style={{ width: logoImgSize, height: logoImgSize }}
             />
           </div>
         </div>
