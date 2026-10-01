@@ -308,11 +308,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     const startY = e.clientY;
     const startSize = logoSize;
     const onMove = (ev: PointerEvent) => {
-      const next = Math.min(200, Math.max(48, Math.round(startSize + (ev.clientY - startY))));
+      const next = Math.min(200, Math.max(48, Math.round(startSize - (ev.clientY - startY))));
       setLogoSize(next);
     };
     const onUp = (ev: PointerEvent) => {
-      const next = Math.min(200, Math.max(48, Math.round(startSize + (ev.clientY - startY))));
+      const next = Math.min(200, Math.max(48, Math.round(startSize - (ev.clientY - startY))));
       localStorage.setItem('mtcon.sidebarLogoSize', String(next));
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
