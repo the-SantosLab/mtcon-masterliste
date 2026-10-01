@@ -642,11 +642,11 @@ export default function Dashboard() {
 
         {/* Mitteilungen vom Admin-Team + Kalender */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 min-w-0">
             <AnnouncementsWidget />
             <ChatUnreadWidget caseIds={cases.map(c => c.id)} />
           </div>
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 min-w-0">
             <CalendarWidget />
           </div>
         </div>
