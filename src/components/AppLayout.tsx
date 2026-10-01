@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedDepartments } from '@/hooks/useDeptLead';
@@ -298,22 +298,52 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const LOGO_MIN = 48;
+  const LOGO_MAX = 200;
+  const logoRowRef = useRef<HTMLDivElement | null>(null);
+  const logoBtnsRef = useRef<HTMLDivElement | null>(null);
+  const logoMaxRef = useRef<number>(LOGO_MAX);
+  const [logoMax, setLogoMax] = useState<number>(LOGO_MAX);
   const [logoSize, setLogoSize] = useState<number>(() => {
     const stored = typeof window !== 'undefined' ? Number(localStorage.getItem('mtcon.sidebarLogoSize')) : NaN;
-    return Number.isFinite(stored) && stored >= 48 && stored <= 200 ? stored : 120;
+    return Number.isFinite(stored) && stored >= LOGO_MIN && stored <= LOGO_MAX ? stored : 120;
   });
+
+  // Obergrenze ist der wirklich freie Platz in der Leiste (Breite der Leiste
+  // abzüglich der Buttons), damit das Logo nie über die Kartenkante hinausragt.
+  const clampLogo = (n: number) =>
+    Math.min(Math.max(LOGO_MIN, Math.round(n)), Math.max(LOGO_MIN, logoMaxRef.current));
+
+  useEffect(() => {
+    const measure = () => {
+      const row = logoRowRef.current;
+      if (!row) return;
+      const btns = logoBtnsRef.current?.getBoundingClientRect().width ?? 0;
+      const avail = Math.floor(row.clientWidth - btns - 8);
+      const next = Math.max(LOGO_MIN, Math.min(LOGO_MAX, avail));
+      logoMaxRef.current = next;
+      setLogoMax(next);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (logoRowRef.current) ro.observe(logoRowRef.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  const effectiveLogoSize = Math.min(logoSize, logoMax);
 
   const startLogoResize = (e: React.PointerEvent) => {
     e.preventDefault();
     const startY = e.clientY;
-    const startSize = logoSize;
-    const onMove = (ev: PointerEvent) => {
-      const next = Math.min(200, Math.max(48, Math.round(startSize - (ev.clientY - startY))));
-      setLogoSize(next);
-    };
+    const startSize = clampLogo(logoSize);
+    const nextFrom = (clientY: number) => clampLogo(startSize - (clientY - startY));
+    const onMove = (ev: PointerEvent) => setLogoSize(nextFrom(ev.clientY));
     const onUp = (ev: PointerEvent) => {
-      const next = Math.min(200, Math.max(48, Math.round(startSize - (ev.clientY - startY))));
-      localStorage.setItem('mtcon.sidebarLogoSize', String(next));
+      localStorage.setItem('mtcon.sidebarLogoSize', String(nextFrom(ev.clientY)));
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
@@ -529,7 +559,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="relative px-4 pb-3 pt-3 mt-1 shrink-0 flex items-center justify-between gap-2">
+        <div
+          ref={logoRowRef}
+          className="relative px-4 pb-3 pt-3 mt-1 shrink-0 flex items-center justify-between gap-2 overflow-hidden"
+        >
           <div
             role="separator"
             aria-orientation="horizontal"
@@ -542,10 +575,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           <img
             src={isDark ? mtconErpLabel : mtconErpLabelLight}
             alt="MTCON goes ERP"
-            style={{ maxWidth: logoSize }}
-            className="w-full h-auto opacity-90"
+            style={{ maxWidth: effectiveLogoSize }}
+            className="w-full min-w-0 h-auto opacity-90"
           />
-          <div className="flex items-center gap-1 shrink-0">
+          <div ref={logoBtnsRef} className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
