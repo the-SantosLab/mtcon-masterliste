@@ -48,6 +48,23 @@ type IssosOrderPosition = {
 const fmtNum = (n: number | null | undefined, d = 2) =>
   n == null ? "—" : Number(n).toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
 
+type PosFilter = "alle" | "offen" | "teilerledigt" | "erledigt";
+
+const posStatus = (p: IssosOrderPosition): Exclude<PosFilter, "alle"> => {
+  const auf = p.auf_menge ?? 0;
+  const gel = p.gel_menge ?? 0;
+  if (p.kz_erl_p || (auf > 0 && gel >= auf)) return "erledigt";
+  if (gel > 0) return "teilerledigt";
+  return "offen";
+};
+
+const POS_FILTERS: { key: PosFilter; label: string }[] = [
+  { key: "alle", label: "Alle" },
+  { key: "offen", label: "Offen" },
+  { key: "teilerledigt", label: "Teilerledigt" },
+  { key: "erledigt", label: "Erledigt" },
+];
+
 export function IssosOrdersTab({ companyId, companyName }: { companyId?: string; companyName?: string }) {
   const { session } = useAuth();
   const [rows, setRows] = useState<IssosOrder[]>([]);
@@ -56,6 +73,7 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
   const [expanded, setExpanded] = useState<string | null>(null);
   const [positions, setPositions] = useState<Record<number, IssosOrderPosition[]>>({});
   const [importOpen, setImportOpen] = useState(false);
+  const [posFilter, setPosFilter] = useState<PosFilter>("alle");
 
   const load = async () => {
     setLoading(true);
