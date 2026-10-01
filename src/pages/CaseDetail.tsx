@@ -865,7 +865,7 @@ export default function CaseDetail() {
                   </div>
                   <Select value={c.assignee_id || '_none'} onValueChange={assignCase}>
                     <SelectTrigger className="w-[240px] h-8 text-xs"><SelectValue placeholder="Mitarbeiter wählen" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent sortable>
                       <SelectItem value="_none">Niemand – freigeben</SelectItem>
                       {(() => {
                         const deptId = c.department_id;
@@ -938,7 +938,7 @@ export default function CaseDetail() {
                   </div>
                   <Select value={c.department_id || '_none'} onValueChange={changeDepartment}>
                     <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Abteilung wählen" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent sortable>
                       <SelectItem value="_none">Keine Abteilung</SelectItem>
                       {departments.filter(d => !d.parent_id).map(d => {
                         const children = departments.filter(ch => ch.parent_id === d.id);
@@ -984,7 +984,7 @@ export default function CaseDetail() {
 
                   <Select value={c.project_id || '_none'} onValueChange={changeProject}>
                     <SelectTrigger className="w-[280px] h-8 text-xs"><SelectValue placeholder="Projekt wählen" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent sortable>
                       <SelectItem value="_none">Kein Projekt</SelectItem>
                       {projectOptions
                         .filter(p => p.status !== 'archived' || p.id === c.project_id)
