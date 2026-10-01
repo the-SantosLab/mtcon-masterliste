@@ -361,13 +361,21 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
 
   const approve = async () => {
     if (!edit) return;
+    if (!edit.draft_department && !edit.draft_team_id) {
+      toast.error('Abteilung fehlt', { description: 'Bitte zuerst oben eine Abteilung auswählen, dann freigeben.' });
+      return;
+    }
     setApproving(true);
     try {
       await persistAll();
       const { data, error } = await supabase.functions.invoke('mtiq-approve-draft', {
         body: { draft_id: edit.id },
       });
-      if (error) throw error;
+      if (error) {
+        let msg = error.message;
+        try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch {}
+        throw new Error(msg);
+      }
       const id = (data as any)?.vorgang_id;
       if (id) {
         toast.success('Vorgang angelegt');

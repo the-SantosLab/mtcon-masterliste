@@ -69,6 +69,13 @@ Deno.serve(async (req) => {
         .limit(1);
       if (deptMatches && deptMatches[0]) department_id = deptMatches[0].id;
     }
+    if (!department_id) {
+      return new Response(
+        JSON.stringify({ error: "Bitte zuerst eine Abteilung auswählen – ohne Abteilung kann kein Vorgang angelegt werden." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
 
 
     const urgency = PRIORITY_TO_URGENCY[draft.draft_priority ?? "Mittel"] ?? 2;
