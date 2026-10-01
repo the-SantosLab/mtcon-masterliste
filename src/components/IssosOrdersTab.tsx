@@ -48,6 +48,23 @@ type IssosOrderPosition = {
 const fmtNum = (n: number | null | undefined, d = 2) =>
   n == null ? "—" : Number(n).toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
 
+type PosFilter = "alle" | "offen" | "teilerledigt" | "erledigt";
+
+const posStatus = (p: IssosOrderPosition): Exclude<PosFilter, "alle"> => {
+  const auf = p.auf_menge ?? 0;
+  const gel = p.gel_menge ?? 0;
+  if (p.kz_erl_p || (auf > 0 && gel >= auf)) return "erledigt";
+  if (gel > 0) return "teilerledigt";
+  return "offen";
+};
+
+const POS_FILTERS: { key: PosFilter; label: string }[] = [
+  { key: "alle", label: "Alle" },
+  { key: "offen", label: "Offen" },
+  { key: "teilerledigt", label: "Teilerledigt" },
+  { key: "erledigt", label: "Erledigt" },
+];
+
 export function IssosOrdersTab({ companyId, companyName }: { companyId?: string; companyName?: string }) {
   const { session } = useAuth();
   const [rows, setRows] = useState<IssosOrder[]>([]);
@@ -56,6 +73,7 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
   const [expanded, setExpanded] = useState<string | null>(null);
   const [positions, setPositions] = useState<Record<number, IssosOrderPosition[]>>({});
   const [importOpen, setImportOpen] = useState(false);
+  const [posFilter, setPosFilter] = useState<PosFilter>("alle");
 
   const load = async () => {
     setLoading(true);
@@ -187,7 +205,30 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
                           <Field label="Bes-Dat 2">{r.bes_dat_2 || "—"}</Field>
                           <Field label="Kz-Preis">{r.kz_preis ? "Ja" : "—"}</Field>
                         </div>
-                        <div className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Positionen</div>
+                        <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Positionen</div>
+                          <div className="flex items-center gap-1">
+                            {POS_FILTERS.map((f) => {
+                              const list = positions[r.auf_nr] || [];
+                              const count = f.key === "alle" ? list.length : list.filter((p) => posStatus(p) === f.key).length;
+                              const active = posFilter === f.key;
+                              return (
+                                <button
+                                  key={f.key}
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPosFilter(f.key); }}
+                                  className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                                    active
+                                      ? "bg-primary text-primary-foreground border-primary"
+                                      : "border-border/50 text-muted-foreground hover:bg-muted/30"
+                                  }`}
+                                >
+                                  {f.label} <span className="tabular-nums">{count}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs">
                             <thead className="bg-muted/20 text-[10px] uppercase text-muted-foreground">
@@ -205,9 +246,13 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
                               </tr>
                             </thead>
                             <tbody>
-                              {(positions[r.auf_nr] || []).length === 0 ? (
-                                <tr><td colSpan={10} className="p-3 text-center text-muted-foreground">Keine Positionen</td></tr>
-                              ) : positions[r.auf_nr].map((p) => (
+                              {(() => {
+                                const all = positions[r.auf_nr] || [];
+                                const shown = posFilter === "alle" ? all : all.filter((p) => posStatus(p) === posFilter);
+                                if (shown.length === 0) {
+                                  return <tr><td colSpan={10} className="p-3 text-center text-muted-foreground">{all.length === 0 ? "Keine Positionen" : "Keine Positionen in dieser Rubrik"}</td></tr>;
+                                }
+                                return shown.map((p) => (
                                 <tr key={p.id} className="border-t border-border/30">
                                   <td className="p-2 tabular-nums">{p.aufpos ?? "—"}</td>
                                   <td className="p-2 font-mono">{p.art_nr || "—"}</td>
@@ -220,7 +265,8 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
                                   <td className="p-2 text-muted-foreground">{p.mat_art_text || "—"}</td>
                                   <td className="p-2">{p.kz_erl_p ? <Badge variant="secondary" className="text-[9px]">erledigt</Badge> : "—"}</td>
                                 </tr>
-                              ))}
+                                ));
+                              })()}
                             </tbody>
                           </table>
                         </div>
