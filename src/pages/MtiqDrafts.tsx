@@ -21,6 +21,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { DocumentRouteSection } from '@/components/mtiq/DocumentRouteSection';
+import { looksLikeMeeting, createMeetingMinutesForCase } from '@/lib/auto-meeting-minutes';
 
 type TaskItem = {
   title: string;
@@ -370,6 +371,19 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
       const id = (data as any)?.vorgang_id;
       if (id) {
         toast.success('Vorgang angelegt');
+        const body = edit.source_email_body ?? '';
+        if (user?.id && body.trim().length > 80 && looksLikeMeeting(edit.source_email_subject, body)) {
+          const tId = toast.loading('Besprechung erkannt – Protokoll wird erstellt …');
+          try {
+            await createMeetingMinutesForCase({
+              vorgangId: id, transcript: body, meetingDate: edit.draft_received_at ?? edit.created_at,
+              userId: user.id, userEmail: user.email ?? null,
+            });
+            toast.success('Protokoll erstellt und im Vorgang abgelegt', { id: tId });
+          } catch (e: any) {
+            toast.error(`Protokoll konnte nicht erstellt werden: ${e?.message ?? 'Fehler'} – im Vorgang über MTIQ erneut möglich.`, { id: tId });
+          }
+        }
         navigate(`/cases/${id}`);
       } else {
         toast.error('Vorgang-ID fehlt in Antwort');
