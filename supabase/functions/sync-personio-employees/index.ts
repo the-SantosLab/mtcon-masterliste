@@ -105,8 +105,10 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
 
-  const { data: { user } } = await admin.auth.getUser(authHeader.replace('Bearer ', ''));
-  if (!user) return j(401, { error: 'Unauthorized' });
+  const { data: claimsData, error: claimsErr } = await admin.auth.getClaims(authHeader.replace('Bearer ', ''));
+  const sub = claimsData?.claims?.sub as string | undefined;
+  if (claimsErr || !sub) return j(401, { error: 'Sitzung abgelaufen – bitte neu anmelden.' });
+  const user = { id: sub };
   const { data: roleRow } = await admin
     .from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
   if (!roleRow) return j(403, { error: 'Forbidden – Admins only' });
