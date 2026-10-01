@@ -298,6 +298,28 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const [logoSize, setLogoSize] = useState<number>(() => {
+    const stored = typeof window !== 'undefined' ? Number(localStorage.getItem('mtcon.sidebarLogoSize')) : NaN;
+    return Number.isFinite(stored) && stored >= 48 && stored <= 200 ? stored : 120;
+  });
+
+  const startLogoResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startSize = logoSize;
+    const onMove = (ev: PointerEvent) => {
+      const next = Math.min(200, Math.max(48, Math.round(startSize + (ev.clientY - startY))));
+      setLogoSize(next);
+    };
+    const onUp = (ev: PointerEvent) => {
+      const next = Math.min(200, Math.max(48, Math.round(startSize + (ev.clientY - startY))));
+      localStorage.setItem('mtcon.sidebarLogoSize', String(next));
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
   usePresenceHeartbeat();
 
   const canAccessNavItem = (access: NavAccess = 'all') => {
