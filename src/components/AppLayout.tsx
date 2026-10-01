@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLedDepartments } from '@/hooks/useDeptLead';
@@ -298,22 +298,58 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const LOGO_MIN = 48;
+  const LOGO_CAP = 400;
+  const asideRef = useRef<HTMLElement | null>(null);
+  const logoCtlRowRef = useRef<HTMLDivElement | null>(null);
+  const logoBtnsRef = useRef<HTMLDivElement | null>(null);
+  const logoMaxRef = useRef<number>(LOGO_CAP);
+  const [logoMax, setLogoMax] = useState<number>(LOGO_CAP);
+  const [logoBottom, setLogoBottom] = useState<number>(0);
   const [logoSize, setLogoSize] = useState<number>(() => {
     const stored = typeof window !== 'undefined' ? Number(localStorage.getItem('mtcon.sidebarLogoSize')) : NaN;
-    return Number.isFinite(stored) && stored >= 48 && stored <= 200 ? stored : 120;
+    return Number.isFinite(stored) && stored >= LOGO_MIN && stored <= LOGO_CAP ? stored : 120;
   });
+
+  // Das Logo liegt als Overlay über dem Menü. Wächst kann es bis zur Breite der
+  // Leiste und bis knapp unter die Kopfzeile – nie aber über die Kartenkante.
+  const clampLogo = (n: number) =>
+    Math.min(Math.max(LOGO_MIN, Math.round(n)), Math.max(LOGO_MIN, logoMaxRef.current));
+
+  useEffect(() => {
+    const measure = () => {
+      const el = asideRef.current;
+      if (!el) return;
+      const ar = el.getBoundingClientRect();
+      const ctlTop = logoCtlRowRef.current?.getBoundingClientRect().top ?? ar.bottom;
+      const availH = Math.floor(ctlTop - ar.top - 64);
+      const availW = Math.floor(el.clientWidth - 24);
+      const next = Math.max(LOGO_MIN, Math.min(LOGO_CAP, availW, availH));
+      logoMaxRef.current = next;
+      setLogoMax(next);
+      setLogoBottom(Math.max(0, Math.round(ar.bottom - ctlTop)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (asideRef.current) ro.observe(asideRef.current);
+    if (logoCtlRowRef.current) ro.observe(logoCtlRowRef.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  const effectiveLogoSize = Math.min(logoSize, logoMax);
 
   const startLogoResize = (e: React.PointerEvent) => {
     e.preventDefault();
     const startY = e.clientY;
-    const startSize = logoSize;
-    const onMove = (ev: PointerEvent) => {
-      const next = Math.min(200, Math.max(48, Math.round(startSize - (ev.clientY - startY))));
-      setLogoSize(next);
-    };
+    const startSize = clampLogo(logoSize);
+    const nextFrom = (clientY: number) => clampLogo(startSize - (clientY - startY));
+    const onMove = (ev: PointerEvent) => setLogoSize(nextFrom(ev.clientY));
     const onUp = (ev: PointerEvent) => {
-      const next = Math.min(200, Math.max(48, Math.round(startSize - (ev.clientY - startY))));
-      localStorage.setItem('mtcon.sidebarLogoSize', String(next));
+      localStorage.setItem('mtcon.sidebarLogoSize', String(nextFrom(ev.clientY)));
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
@@ -410,9 +446,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside
+        ref={asideRef}
         data-sidebar-density={sidebarCompact ? 'compact' : 'comfortable'}
         className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200',
+          'fixed lg:relative inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200 overflow-hidden',
           sbWidth,
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
@@ -529,23 +566,37 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="relative px-4 pb-3 pt-3 mt-1 shrink-0 flex items-center justify-between gap-2">
+        <div
+          className="pointer-events-none absolute left-0 z-20 pl-4"
+          style={{ bottom: logoBottom }}
+        >
           <div
-            role="separator"
-            aria-orientation="horizontal"
-            title="Ziehen: Logo-Größe anpassen"
-            onPointerDown={startLogoResize}
-            className="absolute -top-1 left-2 right-2 h-3 cursor-ns-resize group flex items-start justify-center touch-none"
+            className="relative"
+            style={{ width: effectiveLogoSize, height: effectiveLogoSize }}
           >
-            <span className="mt-0.5 h-1 w-10 rounded-full bg-muted-foreground/20 group-hover:bg-muted-foreground/50 transition-colors" />
+            <img
+              src={isDark ? mtconErpLabel : mtconErpLabelLight}
+              alt="MTCON goes ERP"
+              draggable={false}
+              className="w-full h-full object-contain opacity-90"
+            />
+            <div
+              role="separator"
+              aria-orientation="horizontal"
+              title="Ziehen: Logo-Größe anpassen"
+              onPointerDown={startLogoResize}
+              className="pointer-events-auto absolute -top-2 left-0 right-0 h-3 cursor-ns-resize group flex items-start justify-center touch-none"
+            >
+              <span className="mt-0.5 h-1 w-10 rounded-full bg-muted-foreground/20 group-hover:bg-muted-foreground/50 transition-colors" />
+            </div>
           </div>
-          <img
-            src={isDark ? mtconErpLabel : mtconErpLabelLight}
-            alt="MTCON goes ERP"
-            style={{ maxWidth: logoSize }}
-            className="w-full h-auto opacity-90"
-          />
-          <div className="flex items-center gap-1 shrink-0">
+        </div>
+
+        <div
+          ref={logoCtlRowRef}
+          className="relative z-30 shrink-0 px-4 pt-2 pb-1 flex justify-end"
+        >
+          <div ref={logoBtnsRef} className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
@@ -580,7 +631,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </div>
 
-        <div className="px-3 py-3 shrink-0">
+        <div className="relative z-30 px-3 py-3 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2.5 w-full rounded px-1 py-1 hover:bg-sidebar-accent/60 transition-colors">
