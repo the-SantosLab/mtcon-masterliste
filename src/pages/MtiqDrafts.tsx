@@ -362,7 +362,7 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
   const approve = async () => {
     if (!edit) return;
     if (!edit.draft_department && !edit.draft_team_id) {
-      toast({ title: 'Abteilung fehlt', description: 'Bitte zuerst oben eine Abteilung auswählen, dann freigeben.', variant: 'destructive' });
+      toast.error('Abteilung fehlt', { description: 'Bitte zuerst oben eine Abteilung auswählen, dann freigeben.' });
       return;
     }
     setApproving(true);
