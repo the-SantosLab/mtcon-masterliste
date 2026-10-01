@@ -569,7 +569,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </nav>
 
         <div
-          className="pointer-events-none absolute left-0 z-20 pl-4"
+          className="pointer-events-none absolute left-0 right-0 z-20 pl-4"
           style={{ bottom: logoBottom }}
         >
           <div
@@ -582,15 +582,15 @@ export function AppLayout({ children }: AppLayoutProps) {
               draggable={false}
               className="w-full h-full object-contain opacity-90"
             />
-            <div
-              role="separator"
-              aria-orientation="horizontal"
-              title="Ziehen: Logo-Größe anpassen"
-              onPointerDown={startLogoResize}
-              className="pointer-events-auto absolute -top-2 left-0 right-0 h-3 cursor-ns-resize group flex items-start justify-center touch-none"
-            >
-              <span className="mt-0.5 h-1 w-10 rounded-full bg-muted-foreground/20 group-hover:bg-muted-foreground/50 transition-colors" />
-            </div>
+          </div>
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            title="Ziehen: Leiste größer/kleiner machen"
+            onPointerDown={startLogoResize}
+            className="pointer-events-auto absolute -top-2 left-0 right-0 h-4 cursor-ns-resize group flex items-center justify-center touch-none"
+          >
+            <span className="h-1 w-14 rounded-full bg-muted-foreground/30 group-hover:bg-muted-foreground/60 transition-colors" />
           </div>
         </div>
 
