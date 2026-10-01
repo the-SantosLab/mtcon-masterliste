@@ -358,7 +358,7 @@ export default function CasesList() {
           </div>
           <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
             <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Bearbeiter" /></SelectTrigger>
-            <SelectContent>
+            <SelectContent sortable>
               <SelectItem value="all">Alle</SelectItem>
               <SelectItem value="unassigned">Nicht zugewiesen</SelectItem>
               {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.short_code}</SelectItem>)}
@@ -366,7 +366,7 @@ export default function CasesList() {
           </Select>
           <Select value={projectFilter} onValueChange={setProjectFilter}>
             <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Projekt" /></SelectTrigger>
-            <SelectContent>
+            <SelectContent sortable>
               <SelectItem value="all">Alle Projekte</SelectItem>
               <SelectItem value="_none">Ohne Projekt</SelectItem>
               {projects.map(p => (
@@ -378,7 +378,7 @@ export default function CasesList() {
           </Select>
           <Select value={deptFilter} onValueChange={setDeptFilter}>
             <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Abteilung" /></SelectTrigger>
-            <SelectContent>
+            <SelectContent sortable>
               <SelectItem value="all">Alle Abteilungen</SelectItem>
               <SelectItem value="_none">Ohne Abteilung</SelectItem>
               {departments.filter(d => !d.parent_id).map(d => (
