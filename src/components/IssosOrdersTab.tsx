@@ -205,7 +205,30 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
                           <Field label="Bes-Dat 2">{r.bes_dat_2 || "—"}</Field>
                           <Field label="Kz-Preis">{r.kz_preis ? "Ja" : "—"}</Field>
                         </div>
-                        <div className="text-[10px] uppercase text-muted-foreground tracking-wider mb-1">Positionen</div>
+                        <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wider">Positionen</div>
+                          <div className="flex items-center gap-1">
+                            {POS_FILTERS.map((f) => {
+                              const list = positions[r.auf_nr] || [];
+                              const count = f.key === "alle" ? list.length : list.filter((p) => posStatus(p) === f.key).length;
+                              const active = posFilter === f.key;
+                              return (
+                                <button
+                                  key={f.key}
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setPosFilter(f.key); }}
+                                  className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                                    active
+                                      ? "bg-primary text-primary-foreground border-primary"
+                                      : "border-border/50 text-muted-foreground hover:bg-muted/30"
+                                  }`}
+                                >
+                                  {f.label} <span className="tabular-nums">{count}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs">
                             <thead className="bg-muted/20 text-[10px] uppercase text-muted-foreground">
