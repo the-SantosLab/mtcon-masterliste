@@ -568,7 +568,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="relative z-20 shrink-0 bg-sidebar border-t border-sidebar-border">
+        <div className="relative z-20 shrink-0 bg-background border-t border-sidebar-border">
           <div
             role="separator"
             aria-orientation="horizontal"
