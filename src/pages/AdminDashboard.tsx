@@ -103,7 +103,14 @@ export default function AdminDashboard() {
       const { data, error } = await supabase.functions.invoke('sync-personio-employees', {
         body: { dry_run: false, deactivate_missing: true, default_role: 'staff', send_invite: false },
       });
-      if (error) throw error;
+      if (error) {
+        let detail = error.message;
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) detail = body.hint ? `${body.error} – ${body.hint}` : body.error;
+        } catch { /* ignore */ }
+        throw new Error(detail);
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       toast({ title: 'Mitarbeitende synchronisiert' });
       try {
