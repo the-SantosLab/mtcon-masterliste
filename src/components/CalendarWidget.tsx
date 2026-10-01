@@ -98,7 +98,7 @@ export function CalendarWidget() {
   }, [cursor]);
 
   return (
-    <div className="glass-card p-4 lg:p-5">
+    <div className="glass-card p-4 lg:p-5 min-w-0 max-w-full overflow-hidden">
       <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
         <h2 className="text-sm font-medium text-foreground flex items-center gap-2 min-w-0">
           <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
