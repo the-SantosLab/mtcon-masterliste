@@ -99,13 +99,13 @@ export function CalendarWidget() {
 
   return (
     <div className="glass-card p-4 lg:p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-          Kalender
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-normal">BW</span>
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h2 className="text-sm font-medium text-foreground flex items-center gap-2 min-w-0">
+          <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="truncate">Kalender</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-normal shrink-0">BW</span>
         </h2>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={() => setCursor(c => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
