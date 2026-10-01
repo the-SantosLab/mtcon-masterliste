@@ -507,11 +507,21 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="px-4 pb-3 pt-3 mt-1 shrink-0 flex items-center justify-between gap-2">
+        <div className="relative px-4 pb-3 pt-3 mt-1 shrink-0 flex items-center justify-between gap-2">
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            title="Ziehen: Logo-Größe anpassen"
+            onPointerDown={startLogoResize}
+            className="absolute -top-1 left-2 right-2 h-3 cursor-ns-resize group flex items-start justify-center touch-none"
+          >
+            <span className="mt-0.5 h-1 w-10 rounded-full bg-muted-foreground/20 group-hover:bg-muted-foreground/50 transition-colors" />
+          </div>
           <img
             src={isDark ? mtconErpLabel : mtconErpLabelLight}
             alt="MTCON goes ERP"
-            className="w-full max-w-[120px] h-auto opacity-90"
+            style={{ maxWidth: logoSize }}
+            className="w-full h-auto opacity-90"
           />
           <div className="flex items-center gap-1 shrink-0">
             <button
