@@ -19,6 +19,7 @@ import { lazyRetry } from "@/lib/lazyRetry";
 // Auth-Seiten eager (immer benötigt bei Kaltstart, klein)
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+const LogoTestHarness = lazyRetry(() => import("./LogoTestHarness"));
 const AdminInvoices = lazyRetry(() => import("./pages/AdminInvoices"));
 const AdminErpExport = lazyRetry(() => import("./pages/AdminErpExport"));
 
@@ -225,6 +226,7 @@ function AuthenticatedApp() {
           <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/mfa-challenge" element={<MfaChallenge />} />
+          <Route path="/logo-test" element={<LogoTestHarness />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/cockpit" element={<ProtectedRoute><Cockpit /></ProtectedRoute>} />
           <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
