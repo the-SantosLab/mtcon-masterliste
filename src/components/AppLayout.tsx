@@ -298,67 +298,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [pwShowNew, setPwShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [bugDialogOpen, setBugDialogOpen] = useState(false);
-  const LOGO_MIN = 48;
-  const LOGO_CAP = 400;
-  const asideRef = useRef<HTMLElement | null>(null);
-  const logoCtlRowRef = useRef<HTMLDivElement | null>(null);
-  const logoBtnsRef = useRef<HTMLDivElement | null>(null);
-  const logoMaxRef = useRef<number>(LOGO_CAP);
-  const [logoMax, setLogoMax] = useState<number>(LOGO_CAP);
-  const [logoBottom, setLogoBottom] = useState<number>(0);
-  const [logoSize, setLogoSize] = useState<number>(() => {
-    const stored = typeof window !== 'undefined' ? Number(localStorage.getItem('mtcon.sidebarLogoSize')) : NaN;
-    return Number.isFinite(stored) && stored >= LOGO_MIN && stored <= LOGO_CAP ? stored : 120;
-  });
-
-  // Das Logo liegt als Overlay über dem Menü. Wächst kann es bis zur Breite der
-  // Leiste und bis knapp unter die Kopfzeile – nie aber über die Kartenkante.
-  const clampLogo = (n: number) =>
-    Math.min(Math.max(LOGO_MIN, Math.round(n)), Math.max(LOGO_MIN, logoMaxRef.current));
-
-  useEffect(() => {
-    const measure = () => {
-      const el = asideRef.current;
-      if (!el) return;
-      const ar = el.getBoundingClientRect();
-      const ctlTop = logoCtlRowRef.current?.getBoundingClientRect().top ?? ar.bottom;
-      const availH = Math.floor(ctlTop - ar.top - 64);
-      const availW = Math.floor(el.clientWidth - 24);
-      const next = Math.max(LOGO_MIN, Math.min(LOGO_CAP, availW, availH));
-      logoMaxRef.current = next;
-      setLogoMax(next);
-      setLogoBottom(Math.max(0, Math.round(ar.bottom - ctlTop)));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (asideRef.current) ro.observe(asideRef.current);
-    if (logoCtlRowRef.current) ro.observe(logoCtlRowRef.current);
-    window.addEventListener('resize', measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, []);
-
-  const effectiveLogoSize = Math.min(logoSize, logoMax);
-  // Leisten-Höhe folgt dem Regler; Logo und Symbole wachsen nur moderat mit
-  const logoImgSize = Math.min(170, Math.max(56, Math.round(effectiveLogoSize * 0.55)));
-  const logoBtnScale = Math.min(1.3, Math.max(0.8, effectiveLogoSize / 140));
-
-  const startLogoResize = (e: React.PointerEvent) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const startSize = clampLogo(logoSize);
-    const nextFrom = (clientY: number) => clampLogo(startSize - (clientY - startY));
-    const onMove = (ev: PointerEvent) => setLogoSize(nextFrom(ev.clientY));
-    const onUp = (ev: PointerEvent) => {
-      localStorage.setItem('mtcon.sidebarLogoSize', String(nextFrom(ev.clientY)));
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-    };
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-  };
   usePresenceHeartbeat();
 
   const canAccessNavItem = (access: NavAccess = 'all') => {
@@ -449,10 +388,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside
-        ref={asideRef}
         data-sidebar-density={sidebarCompact ? 'compact' : 'comfortable'}
         className={cn(
-          'fixed lg:relative inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200 overflow-hidden',
+          'fixed lg:static inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200',
           sbWidth,
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         )}
@@ -569,36 +507,13 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div className="relative z-20 shrink-0 bg-background border-t border-sidebar-border">
-          <div
-            role="separator"
-            aria-orientation="horizontal"
-            title="Ziehen: Leiste größer/kleiner machen"
-            onPointerDown={startLogoResize}
-            className="absolute -top-2 left-0 right-0 h-4 cursor-ns-resize group flex items-center justify-center touch-none z-10"
-          >
-            <span className="h-1 w-14 rounded-full bg-muted-foreground/30 group-hover:bg-muted-foreground/60 transition-colors" />
-          </div>
-          <div className="pl-4 pt-3 pb-1 overflow-hidden flex items-center" style={{ height: effectiveLogoSize + 16 }}>
-            <img
-              src={isDark ? mtconErpLabel : mtconErpLabelLight}
-              alt="MTCON goes ERP"
-              draggable={false}
-              className="object-contain opacity-90"
-              style={{ width: logoImgSize, height: logoImgSize }}
-            />
-          </div>
-        </div>
-
-        <div
-          ref={logoCtlRowRef}
-          className="relative z-30 shrink-0 px-4 pt-2 pb-1 flex justify-end"
-        >
-          <div
-            ref={logoBtnsRef}
-            className="flex items-center gap-1 shrink-0"
-            style={{ transform: `scale(${logoBtnScale})`, transformOrigin: 'bottom right' }}
-          >
+        <div className="px-4 pb-3 pt-3 mt-1 shrink-0 flex items-center justify-between gap-2">
+          <img
+            src={isDark ? mtconErpLabel : mtconErpLabelLight}
+            alt="MTCON goes ERP"
+            className="w-full max-w-[120px] h-auto opacity-90"
+          />
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
