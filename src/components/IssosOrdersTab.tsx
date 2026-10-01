@@ -246,9 +246,13 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
                               </tr>
                             </thead>
                             <tbody>
-                              {(positions[r.auf_nr] || []).length === 0 ? (
-                                <tr><td colSpan={10} className="p-3 text-center text-muted-foreground">Keine Positionen</td></tr>
-                              ) : positions[r.auf_nr].map((p) => (
+                              {(() => {
+                                const all = positions[r.auf_nr] || [];
+                                const shown = posFilter === "alle" ? all : all.filter((p) => posStatus(p) === posFilter);
+                                if (shown.length === 0) {
+                                  return <tr><td colSpan={10} className="p-3 text-center text-muted-foreground">{all.length === 0 ? "Keine Positionen" : "Keine Positionen in dieser Rubrik"}</td></tr>;
+                                }
+                                return shown.map((p) => (
                                 <tr key={p.id} className="border-t border-border/30">
                                   <td className="p-2 tabular-nums">{p.aufpos ?? "—"}</td>
                                   <td className="p-2 font-mono">{p.art_nr || "—"}</td>
