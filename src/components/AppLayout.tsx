@@ -568,29 +568,24 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </nav>
 
-        <div
-          className="pointer-events-none absolute left-0 right-0 z-20 pl-4"
-          style={{ bottom: logoBottom }}
-        >
-          <div
-            className="relative"
-            style={{ width: effectiveLogoSize, height: effectiveLogoSize }}
-          >
-            <img
-              src={isDark ? mtconErpLabel : mtconErpLabelLight}
-              alt="MTCON goes ERP"
-              draggable={false}
-              className="w-full h-full object-contain opacity-90"
-            />
-          </div>
+        <div className="relative z-20 shrink-0 bg-background border-t border-sidebar-border">
           <div
             role="separator"
             aria-orientation="horizontal"
             title="Ziehen: Leiste größer/kleiner machen"
             onPointerDown={startLogoResize}
-            className="pointer-events-auto absolute -top-2 left-0 right-0 h-4 cursor-ns-resize group flex items-center justify-center touch-none"
+            className="absolute -top-2 left-0 right-0 h-4 cursor-ns-resize group flex items-center justify-center touch-none z-10"
           >
             <span className="h-1 w-14 rounded-full bg-muted-foreground/30 group-hover:bg-muted-foreground/60 transition-colors" />
+          </div>
+          <div className="pl-4 pt-3 pb-1 overflow-hidden" style={{ height: effectiveLogoSize + 16 }}>
+            <img
+              src={isDark ? mtconErpLabel : mtconErpLabelLight}
+              alt="MTCON goes ERP"
+              draggable={false}
+              className="object-contain opacity-90"
+              style={{ width: effectiveLogoSize, height: effectiveLogoSize }}
+            />
           </div>
         </div>
 
