@@ -265,7 +265,8 @@ export function IssosOrdersTab({ companyId, companyName }: { companyId?: string;
                                   <td className="p-2 text-muted-foreground">{p.mat_art_text || "—"}</td>
                                   <td className="p-2">{p.kz_erl_p ? <Badge variant="secondary" className="text-[9px]">erledigt</Badge> : "—"}</td>
                                 </tr>
-                              ))}
+                                ));
+                              })()}
                             </tbody>
                           </table>
                         </div>
