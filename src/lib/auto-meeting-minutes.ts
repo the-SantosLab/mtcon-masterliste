@@ -2,13 +2,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { sanitizeFileName } from '@/lib/utils';
 import { buildMeetingMinutesPdf, minutesFileName, MINUTES_NOTE_PREFIX, type MeetingMinutes } from '@/lib/meeting-minutes-pdf';
 
-const MEETING_RE = /\b(besprechung|meeting|protokoll|transkript|transcript|jour\s?fixe|teams[- ]?(call|besprechung|meeting)|abstimmungstermin)\b/i;
+// Erkennt Besprechungs-Hinweise auch in zusammengesetzten Wörtern und bei den
+// typischen Tippfehlern aus den echten Betreffzeilen (Besprechungsaufzeichnung,
+// Besprechungstranskript, Besprechnung, Besprächungsinhalte, Sales Jour Fix …).
+// "besprechen"/"besprich" (reines Verb) zählen bewusst nicht als Besprechung.
+const MEETING_RE = /\b(besprech(?!en\b|e\b|st\b|t\b)\w*|besprechn\w*|bespräch\w*|transkript\w*|transcript\w*|protokoll\w*|meetings?\w*|jour\s?fix\w*|abstimmungstermin)\b/i;
+// Teams-/Meet-Mitschriften: "0 Minuten 3 Sekunden" – ab drei Zeitstempeln gilt ein
+// Text als Protokoll-Mitschrift, auch ohne das Wort "Besprechung".
+const TRANSCRIPT_STAMP_RE = /\d+\s+Minuten/g;
 
 /** Erkennt, ob eine eingegangene E-Mail eine Besprechung (Transkript/Notizen) enthält. */
 export function looksLikeMeeting(subject?: string | null, body?: string | null): boolean {
   const s = subject ?? '';
-  const b = (body ?? '').slice(0, 4000);
-  return MEETING_RE.test(s) || (MEETING_RE.test(b) && b.length > 300);
+  const b = (body ?? '').slice(0, 6000);
+  if (MEETING_RE.test(s)) return true;
+  if (MEETING_RE.test(b) && b.length > 300) return true;
+  const stamps = (b.match(TRANSCRIPT_STAMP_RE) ?? []).length;
+  return stamps >= 3 && b.length > 300;
 }
 
 /** Erzeugt per MTIQ ein Besprechungsprotokoll, legt es als Notiz mit PDF-Anhang im Vorgang ab. */
