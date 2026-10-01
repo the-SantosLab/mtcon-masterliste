@@ -71,8 +71,8 @@ Deno.serve(async (req) => {
     }
     if (!department_id) {
       return new Response(
-        JSON.stringify({ error: "Bitte zuerst eine Abteilung auswählen – ohne Abteilung kann kein Vorgang angelegt werden." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        JSON.stringify({ code: "missing_department", error: "Bitte zuerst eine Abteilung auswählen – ohne Abteilung kann kein Vorgang angelegt werden." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 

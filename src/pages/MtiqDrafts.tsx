@@ -376,6 +376,10 @@ export default function MtiqDrafts({ embedded = false }: { embedded?: boolean } 
         try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch {}
         throw new Error(msg);
       }
+      if ((data as any)?.code === 'missing_department') {
+        toast.error('Abteilung fehlt', { description: 'Die vorgeschlagene Abteilung gibt es nicht – bitte oben eine Abteilung auswählen, dann freigeben.' });
+        return;
+      }
       const id = (data as any)?.vorgang_id;
       if (id) {
         toast.success('Vorgang angelegt');
