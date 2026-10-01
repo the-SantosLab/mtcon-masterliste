@@ -341,6 +341,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, []);
 
   const effectiveLogoSize = Math.min(logoSize, logoMax);
+  // Buttons neben dem Logo skalieren proportional mit (gedeckelt, damit sie klickbar bleiben)
+  const logoBtnScale = Math.min(1.6, Math.max(0.7, effectiveLogoSize / 120));
 
   const startLogoResize = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -596,7 +598,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           ref={logoCtlRowRef}
           className="relative z-30 shrink-0 px-4 pt-2 pb-1 flex justify-end"
         >
-          <div ref={logoBtnsRef} className="flex items-center gap-1 shrink-0">
+          <div
+            ref={logoBtnsRef}
+            className="flex items-center gap-1 shrink-0"
+            style={{ transform: `scale(${logoBtnScale})`, transformOrigin: 'bottom right' }}
+          >
             <button
               type="button"
               onClick={() => setTheme(isDark ? 'light' : 'dark')}
