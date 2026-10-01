@@ -446,6 +446,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {open && <div className="fixed inset-0 bg-foreground/10 z-40 lg:hidden" onClick={() => setOpen(false)} />}
 
       <aside
+        ref={asideRef}
         data-sidebar-density={sidebarCompact ? 'compact' : 'comfortable'}
         className={cn(
           'fixed lg:relative inset-y-0 left-0 z-50 flex flex-col glass-sidebar transition-transform duration-200 overflow-hidden',
