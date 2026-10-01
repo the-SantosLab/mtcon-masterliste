@@ -226,6 +226,7 @@ function AuthenticatedApp() {
           <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/mfa-challenge" element={<MfaChallenge />} />
+          <Route path="/logo-overlay-test" element={<LogoOverlayTest />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/cockpit" element={<ProtectedRoute><Cockpit /></ProtectedRoute>} />
           <Route path="/cases" element={<ProtectedRoute><CasesList /></ProtectedRoute>} />
