@@ -64,7 +64,11 @@ export default function AdminDisposition() {
     const { data, error } = await (supabase as any).rpc('get_disposition_overview');
     setBusy(false);
     if (error) { toast.error('Laden fehlgeschlagen'); console.error(error); return; }
-    setRows((data || []) as Row[]);
+    // Ohne Meldebestand liefert die DB Vorschlag 0 – dann mindestens die Unterdeckung vorschlagen
+    setRows(((data || []) as Row[]).map(r => ({
+      ...r,
+      suggested_qty: Number(r.suggested_qty) > 0 ? Number(r.suggested_qty) : Math.ceil(Number(r.shortage) || 0),
+    })));
   };
 
   useEffect(() => { if (canUse) load(); }, [canUse]);
