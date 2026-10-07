@@ -152,7 +152,7 @@ export default function AdminDeliveries() {
       status: sel.status, delivery_date: sel.delivery_date, ship_to: sel.ship_to,
       carrier: sel.carrier, tracking_no: sel.tracking_no, tracking_url: sel.tracking_url, notes: sel.notes,
     }).eq('id', sel.id)) as any;
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(error.message.replace(/^.*?(Lieferschein)/, '$1'));
     toast.success('Gespeichert');
     setSel(null); load();
   };
