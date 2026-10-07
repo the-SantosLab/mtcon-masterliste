@@ -211,6 +211,13 @@
       "when": 1790857712248,
       "tag": "0029_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791369800890,
+      "tag": "0030_delivery_require_print_before_ship",
+      "breakpoints": true
     }
   ]
 }
