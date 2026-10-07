@@ -412,6 +412,10 @@ function SortableRow({ item, idx, onArticleSelect, updateItem, removeItem }: any
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const line = item.quantity * item.unit_price * (1 - (item.discount_pct || 0) / 100);
+  // Rohtext für den Einzelpreis, damit deutsche Komma-Eingaben ("0,54") und
+  // Zwischenzustände ("0,") nicht verschluckt werden; gerechnet wird mit dem
+  // geparsten Zahlenwert in voller Genauigkeit.
+  const [priceText, setPriceText] = useState<string | null>(null);
   return (
     <tr ref={setNodeRef} style={style} className="border-t border-border/40">
       <td><button {...attributes} {...listeners} className="text-muted-foreground hover:text-foreground cursor-grab"><GripVertical className="h-3.5 w-3.5" /></button></td>
