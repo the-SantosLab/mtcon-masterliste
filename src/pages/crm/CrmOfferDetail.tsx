@@ -412,6 +412,10 @@ function SortableRow({ item, idx, onArticleSelect, updateItem, removeItem }: any
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   const line = item.quantity * item.unit_price * (1 - (item.discount_pct || 0) / 100);
+  // Rohtext für den Einzelpreis, damit deutsche Komma-Eingaben ("0,54") und
+  // Zwischenzustände ("0,") nicht verschluckt werden; gerechnet wird mit dem
+  // geparsten Zahlenwert in voller Genauigkeit.
+  const [priceText, setPriceText] = useState<string | null>(null);
   return (
     <tr ref={setNodeRef} style={style} className="border-t border-border/40">
       <td><button {...attributes} {...listeners} className="text-muted-foreground hover:text-foreground cursor-grab"><GripVertical className="h-3.5 w-3.5" /></button></td>
@@ -420,7 +424,21 @@ function SortableRow({ item, idx, onArticleSelect, updateItem, removeItem }: any
       </td>
       <td className="px-2 py-1"><Input value={item.description} onChange={e => updateItem(idx, { description: e.target.value })} className="h-7 text-xs" /></td>
       <td className="px-2 py-1"><Input type="number" value={item.quantity} onChange={e => updateItem(idx, { quantity: Number(e.target.value) })} className="h-7 text-xs text-right" /></td>
-      <td className="px-2 py-1"><Input type="number" step="0.01" value={item.unit_price} onChange={e => updateItem(idx, { unit_price: Number(e.target.value) })} className="h-7 text-xs text-right" /></td>
+      <td className="px-2 py-1">
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={priceText ?? String(item.unit_price).replace('.', ',')}
+          onChange={e => {
+            const v = e.target.value;
+            setPriceText(v);
+            const n = parseFloat(v.replace(/\s/g, '').replace(',', '.'));
+            if (!isNaN(n)) updateItem(idx, { unit_price: n });
+          }}
+          onBlur={() => setPriceText(null)}
+          className="h-7 text-xs text-right"
+        />
+      </td>
       <td className="px-2 py-1"><Input type="number" value={item.discount_pct} onChange={e => updateItem(idx, { discount_pct: Number(e.target.value) })} className="h-7 text-xs text-right" /></td>
       <td className="px-2 py-1 text-right tabular-nums">{formatEUR(line)}</td>
       <td><button onClick={() => removeItem(idx)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button></td>
