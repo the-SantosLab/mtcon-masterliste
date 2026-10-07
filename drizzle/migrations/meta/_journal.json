@@ -218,6 +218,13 @@
       "when": 1791369800890,
       "tag": "0030_delivery_require_print_before_ship",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791369877776,
+      "tag": "0031_fix_ship_reservation_status",
+      "breakpoints": true
     }
   ]
 }
