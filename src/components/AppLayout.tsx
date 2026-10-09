@@ -413,7 +413,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
           {/* Search trigger */}
           <button
-            onClick={() => setCmdOpen(true)}
+            onClick={() => { setOpen(false); setCmdOpen(true); }}
             className="flex items-center gap-2.5 w-full px-3 py-2 rounded text-sm text-sidebar-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors mb-1"
           >
             <Search className="h-4 w-4" />

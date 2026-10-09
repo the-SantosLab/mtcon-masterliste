@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -271,8 +272,8 @@ export function CommandPalette({ open, onClose }: Props) {
     );
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
+  return createPortal(
+    <div className="fixed inset-0 z-[150] flex items-start justify-center pt-[15vh]">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-foreground/20 backdrop-blur-sm" onClick={onClose} />
 
@@ -346,6 +347,7 @@ export function CommandPalette({ open, onClose }: Props) {
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
