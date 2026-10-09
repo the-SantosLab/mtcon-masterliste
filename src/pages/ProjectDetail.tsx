@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
+  ArrowLeft, ChevronRight, ChevronDown, FolderOpen, Users, Crown,
   CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
   Pencil, Check, X, Clock, Activity, Plus, Printer,
 } from 'lucide-react';
@@ -263,6 +263,14 @@ export default function ProjectDetail() {
     return { column: col, direction: dir };
   });
   const handleCaseSort = (col: PdCaseSortKey) => setCaseSort(prev => nextSort(prev, col));
+
+  // Unteraufgaben aufklappen – wie in der Vorgänge-Übersicht
+  const [expandedSubtasks, setExpandedSubtasks] = useState<Set<string>>(new Set());
+  const toggleExpand = (caseId: string) => setExpandedSubtasks(prev => {
+    const next = new Set(prev);
+    if (next.has(caseId)) next.delete(caseId); else next.add(caseId);
+    return next;
+  });
 
   // Persist filters in URL so back-navigation from a case restores them
   useEffect(() => {
