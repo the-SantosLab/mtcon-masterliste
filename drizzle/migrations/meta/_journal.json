@@ -232,6 +232,13 @@
       "when": 1791541739009,
       "tag": "0032_cases_insert_any_department",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791541765051,
+      "tag": "0033_cases_creator_can_read",
+      "breakpoints": true
     }
   ]
 }
