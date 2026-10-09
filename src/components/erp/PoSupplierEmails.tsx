@@ -64,7 +64,7 @@ export function PoSupplierEmails({ po, onChanged }: {
         )}
       </div>
       {po.needs_clarification && (
-        <div className="rounded border border-warning/40 bg-warning/10 px-2 py-1.5 text-xs text-foreground">
+        <div className="rounded border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs text-foreground">
           <span className="font-medium">Klärungsfall:</span> {po.clarification_reason ?? 'Ansprechpartner oder E-Mail fehlt'}.
           {' '}Nach Eintragen der E-Mail beim Lieferanten erneut senden.
         </div>

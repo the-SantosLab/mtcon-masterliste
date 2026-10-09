@@ -14,6 +14,7 @@ import { ArticlePicker } from '@/components/ArticlePicker';
 import { Plus, Trash2, Package, Truck, ClipboardList, LayoutList } from 'lucide-react';
 import { ErpDocPdfButton } from '@/components/ErpDocPdfButton';
 import { toast } from 'sonner';
+import { PoSupplierEmails, PoEmailTemplatesDialog } from '@/components/erp/PoSupplierEmails';
 
 type Supplier = { id: string; code: string; name: string; contact_name: string | null; email: string | null; is_active: boolean };
 type Warehouse = { id: string; code: string; name: string; is_default: boolean };
@@ -26,6 +27,8 @@ type PO = {
   case_id?: string | null;
   delay_flagged_at?: string | null;
   customer_notified_at?: string | null;
+  needs_clarification?: boolean | null;
+  clarification_reason?: string | null;
   suppliers?: { name: string; code: string } | null;
   warehouses?: { code: string; name: string } | null;
   cases?: { id: string; case_number: string | null; case_no: string; project_name: string } | null;
@@ -56,6 +59,7 @@ export default function AdminPurchasing() {
   const [poPrefill, setPoPrefill] = useState<{ supplierId?: string; notes?: string } | undefined>();
   const [detailPO, setDetailPO] = useState<PO | null>(null);
   const [grDlg, setGrDlg] = useState(false);
+  const [tplDlg, setTplDlg] = useState(false);
 
   const loadAll = useCallback(async () => {
     const [s, w, p] = await Promise.all([
@@ -85,6 +89,7 @@ export default function AdminPurchasing() {
           </div>
         </div>
 
+        <PoEmailTemplatesDialog open={tplDlg} onClose={() => setTplDlg(false)} />
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="overview"><LayoutList className="h-3.5 w-3.5 mr-1.5" />Übersicht</TabsTrigger>
@@ -104,7 +109,8 @@ export default function AdminPurchasing() {
 
           {/* ============ BESTELLUNGEN ============ */}
           <TabsContent value="orders" className="space-y-3">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setTplDlg(true)}>E-Mail-Vorlagen</Button>
               <Button size="sm" onClick={() => setPoDlg(true)} disabled={suppliers.length === 0}>
                 <Plus className="h-4 w-4 mr-1.5" />Neue Bestellung
               </Button>
@@ -137,6 +143,7 @@ export default function AdminPurchasing() {
                       <td className="px-3 py-2">
                         <Badge variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Badge>
                         {delayed && <Badge variant="destructive" className="ml-1.5 text-[10px]">Verzug</Badge>}
+                        {p.needs_clarification && <Badge variant="outline" className="ml-1.5 text-[10px] border-destructive text-destructive">Klärungsfall</Badge>}
                         {!p.confirmation_received_at && (p.status === 'ordered' || p.status === 'partial') && (
                           <Badge variant="outline" className="ml-1.5 text-[10px]">AB fehlt</Badge>
                         )}
@@ -577,6 +584,8 @@ function PODetailDialog({ po, onClose, onChanged }: { po: PO | null; onClose: ()
               <Button size="sm" variant="outline" onClick={saveAB} disabled={savingMeta} className="h-7 text-xs">Speichern</Button>
             </div>
           </div>
+
+          <PoSupplierEmails po={po} onChanged={onChanged} />
 
           {/* Vorgangs-Verknüpfung */}
           <div className="rounded border border-border p-3 space-y-2 bg-muted/10">
