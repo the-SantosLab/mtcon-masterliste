@@ -1,19 +1,21 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
-import { StatusBadge } from '@/components/StatusBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formatDate, formatRelativeTime, ACTION_LABELS, getUrgencyRowClass } from '@/lib/case-utils';
+import { formatDate, formatRelativeTime, ACTION_LABELS, getUrgencyRowClass, STATUS_LABELS } from '@/lib/case-utils';
 import { UrgencyPicker } from '@/components/UrgencyPicker';
+import { UrgencyDot } from '@/components/UrgencyDot';
+import { CaseSubtasksPreview } from '@/components/CaseSubtasksPreview';
+import { Fragment } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, ChevronRight, FolderOpen, Users, Crown,
+  ArrowLeft, ChevronRight, ChevronDown, FolderOpen, Users, Crown,
   CheckCircle2, AlertTriangle, XCircle, TrendingUp, BarChart3,
   Pencil, Check, X, Clock, Activity, Plus, Printer,
 } from 'lucide-react';
@@ -260,6 +262,14 @@ export default function ProjectDetail() {
     return { column: col, direction: dir };
   });
   const handleCaseSort = (col: PdCaseSortKey) => setCaseSort(prev => nextSort(prev, col));
+
+  // Unteraufgaben aufklappen – wie in der Vorgänge-Übersicht
+  const [expandedSubtasks, setExpandedSubtasks] = useState<Set<string>>(new Set());
+  const toggleExpand = (caseId: string) => setExpandedSubtasks(prev => {
+    const next = new Set(prev);
+    if (next.has(caseId)) next.delete(caseId); else next.add(caseId);
+    return next;
+  });
 
   // Persist filters in URL so back-navigation from a case restores them
   useEffect(() => {
@@ -623,33 +633,63 @@ export default function ProjectDetail() {
                     <table className="w-full min-w-[760px]">
                       <thead>
                         <tr className="border-b border-border">
-                          <SortableHeader column="urgency" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
                           <SortableHeader column="status" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Status</SortableHeader>
-                          <SortableHeader column="case_no" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Nr.</SortableHeader>
+                          <SortableHeader column="case_no" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</SortableHeader>
                           <SortableHeader column="project_name" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Name</SortableHeader>
                           <SortableHeader column="assignee" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
                           <SortableHeader column="due_at" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground')}>Termin</SortableHeader>
+                          <SortableHeader column="urgency" sort={caseSort} onSort={handleCaseSort} className={cn(cellCls, 'text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {sortedCases.length === 0 ? (
                           <tr><td colSpan={6} className={cn(cellCls, 'py-6 text-center text-muted-foreground')}>Keine Treffer</td></tr>
-                        ) : sortedCases.map(c => (
-                          <tr key={c.id} className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency, (c as any).status))}>
+                        ) : sortedCases.map(c => {
+                          const isExpanded = expandedSubtasks.has(c.id);
+                          return (
+                          <Fragment key={c.id}>
+                          <tr className={cn('hover:bg-muted/40 transition-colors', getUrgencyRowClass(c.urgency, (c as any).status))}>
                             <td className={cellCls}>
-                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
+                              <span className="inline-flex items-center gap-2 text-xs font-medium text-foreground whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); toggleExpand(c.id); }}
+                                  className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                  title={isExpanded ? 'Unteraufgaben ausblenden' : 'Unteraufgaben einblenden'}
+                                  aria-label={isExpanded ? 'Unteraufgaben ausblenden' : 'Unteraufgaben einblenden'}
+                                  aria-expanded={isExpanded}
+                                >
+                                  {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                                </button>
+                                <UrgencyDot status={c.status as any} dueAt={c.due_at} />
+                                {STATUS_LABELS[c.status] ?? c.status}
+                              </span>
                             </td>
-                            <td className={cellCls}><StatusBadge status={c.status as any} /></td>
                             <td className={cn(cellCls, 'font-mono whitespace-nowrap')}>
                               <Link to={`/cases/${c.id}`} state={backToState} className="text-primary hover:underline">{c.case_no}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-foreground')}>
-                              <Link to={`/cases/${c.id}`} state={backToState} className="hover:text-primary transition-colors truncate max-w-[200px] block">{c.project_name}</Link>
+                              <Link to={`/cases/${c.id}`} state={backToState} className="hover:text-primary transition-colors">{c.project_name}</Link>
                             </td>
                             <td className={cn(cellCls, 'text-muted-foreground')}>{c.assignee?.short_code ?? '–'}</td>
                             <td className={cn(cellCls, 'text-muted-foreground tabular-nums')}>{formatDate(c.due_at)}</td>
+                            <td className={cellCls}>
+                              <UrgencyPicker value={c.urgency} table="cases" rowId={c.id} readOnly={isViewer} size="sm" derived overridden={!!c.urgency_override} canOverride={isAdmin} />
+                            </td>
                           </tr>
-                        ))}
+                          {isExpanded && (
+                            <tr className="bg-muted/20">
+                              <td colSpan={6} className="px-4 py-2 border-t border-border/50">
+                                <div className="pl-6">
+                                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Unteraufgaben</div>
+                                  <CaseSubtasksPreview caseId={c.id} variant="list" />
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          </Fragment>
+                          );
+                        })}
                       </tbody>
                     </table>
                   );
