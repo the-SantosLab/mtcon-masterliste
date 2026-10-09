@@ -299,13 +299,11 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
   const crossDeptViaProject = !!form.project_id;
   const topLevel = useMemo(() => {
     const all = departments.filter(d => !d.parent_id);
-    if (!writableDeptIds || crossDeptViaProject) return all;
-    return all.filter(d => writableDeptIds.has(d.id) || departments.some(c => c.parent_id === d.id && writableDeptIds.has(c.id)));
+    return all; // Vorgänge dürfen in jedem Bereich angelegt werden
   }, [departments, writableDeptIds, crossDeptViaProject]);
   const teams = useMemo(() => {
     const all = departments.filter(d => d.parent_id === form.department_id);
-    if (!writableDeptIds || crossDeptViaProject) return all;
-    return all.filter(d => writableDeptIds.has(d.id));
+    return all; // Vorgänge dürfen in jedem Bereich angelegt werden
   }, [departments, form.department_id, writableDeptIds, crossDeptViaProject]);
   const effectiveDeptId = form.team_id || form.department_id;
 
