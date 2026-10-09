@@ -8333,6 +8333,86 @@ export type Database = {
           },
         ]
       }
+      purchase_email_templates: {
+        Row: {
+          body: string
+          email_type: string
+          subject: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body: string
+          email_type: string
+          subject: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          email_type?: string
+          subject?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      purchase_order_email_logs: {
+        Row: {
+          body: string | null
+          email_type: string
+          error: string | null
+          id: string
+          manual: boolean
+          po_id: string
+          recipient_email: string | null
+          recipient_name: string | null
+          sent_at: string
+          sent_by: string | null
+          status: string
+          subject: string | null
+          trigger_date: string | null
+        }
+        Insert: {
+          body?: string | null
+          email_type: string
+          error?: string | null
+          id?: string
+          manual?: boolean
+          po_id: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status: string
+          subject?: string | null
+          trigger_date?: string | null
+        }
+        Update: {
+          body?: string | null
+          email_type?: string
+          error?: string | null
+          id?: string
+          manual?: boolean
+          po_id?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string
+          sent_by?: string | null
+          status?: string
+          subject?: string | null
+          trigger_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_email_logs_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_order_items: {
         Row: {
           art_nr: string
@@ -8390,6 +8470,7 @@ export type Database = {
       purchase_orders: {
         Row: {
           case_id: string | null
+          clarification_reason: string | null
           company_id: string | null
           confirmation_received_at: string | null
           confirmed_delivery_date: string | null
@@ -8403,16 +8484,20 @@ export type Database = {
           locked: boolean
           locked_at: string | null
           locked_by: string | null
+          needs_clarification: boolean
           notes: string | null
           ordered_at: string | null
           po_no: string | null
           status: Database["public"]["Enums"]["po_status"]
+          status_query_mailed_at: string | null
+          supplier_delay_mailed_at: string | null
           supplier_id: string
           updated_at: string
           warehouse_id: string | null
         }
         Insert: {
           case_id?: string | null
+          clarification_reason?: string | null
           company_id?: string | null
           confirmation_received_at?: string | null
           confirmed_delivery_date?: string | null
@@ -8426,16 +8511,20 @@ export type Database = {
           locked?: boolean
           locked_at?: string | null
           locked_by?: string | null
+          needs_clarification?: boolean
           notes?: string | null
           ordered_at?: string | null
           po_no?: string | null
           status?: Database["public"]["Enums"]["po_status"]
+          status_query_mailed_at?: string | null
+          supplier_delay_mailed_at?: string | null
           supplier_id: string
           updated_at?: string
           warehouse_id?: string | null
         }
         Update: {
           case_id?: string | null
+          clarification_reason?: string | null
           company_id?: string | null
           confirmation_received_at?: string | null
           confirmed_delivery_date?: string | null
@@ -8449,10 +8538,13 @@ export type Database = {
           locked?: boolean
           locked_at?: string | null
           locked_by?: string | null
+          needs_clarification?: boolean
           notes?: string | null
           ordered_at?: string | null
           po_no?: string | null
           status?: Database["public"]["Enums"]["po_status"]
+          status_query_mailed_at?: string | null
+          supplier_delay_mailed_at?: string | null
           supplier_id?: string
           updated_at?: string
           warehouse_id?: string | null
