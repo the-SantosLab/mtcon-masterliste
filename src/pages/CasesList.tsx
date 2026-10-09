@@ -461,16 +461,16 @@ export default function CasesList() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <SortableHeader column="status" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Status</SortableHeader>
-                <SortableHeader column="case_no" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</SortableHeader>
-                <SortableHeader column="project_name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projektname</SortableHeader>
-                <SortableHeader column="project" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Projekt</SortableHeader>
-                <SortableHeader column="assignee" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
-                <SortableHeader column="department" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Abteilung</SortableHeader>
-                <SortableHeader column="customer" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Kunde</SortableHeader>
-                <SortableHeader column="due_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Endtermin</SortableHeader>
-                <SortableHeader column="urgency" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
-                <th className={cn(cellCls, 'sticky top-0 z-10 bg-card text-left font-medium text-muted-foreground')}>Aktionen</th>
+                <SortableHeader column="status" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Status</SortableHeader>
+                <SortableHeader column="case_no" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground min-w-[120px] whitespace-nowrap')}>Nr.</SortableHeader>
+                <SortableHeader column="project_name" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Projektname</SortableHeader>
+                <SortableHeader column="project" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Projekt</SortableHeader>
+                <SortableHeader column="assignee" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Bearbeiter</SortableHeader>
+                <SortableHeader column="department" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Abteilung</SortableHeader>
+                <SortableHeader column="customer" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Kunde</SortableHeader>
+                <SortableHeader column="due_at" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Endtermin</SortableHeader>
+                <SortableHeader column="urgency" sort={sort} onSort={handleSort} className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground whitespace-nowrap')}>Dringlichkeit</SortableHeader>
+                <th className={cn(cellCls, 'sticky top-0 z-10 bg-popover text-left font-medium text-muted-foreground')}>Aktionen</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
