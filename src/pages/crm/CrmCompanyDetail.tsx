@@ -108,7 +108,10 @@ export default function CrmCompanyDetail() {
         <TabsList>
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="master">Stammdaten</TabsTrigger>
-          <TabsTrigger value="documents">Belege <span className="ml-1.5 text-[10px] opacity-70">{orders.length + deliveries.length + invoices.length}</span></TabsTrigger>
+          <TabsTrigger value="contacts">Ansprechpartner <span className="ml-1.5 text-[10px] opacity-70">{contacts.length}</span></TabsTrigger>
+          <TabsTrigger value="deals">Deals <span className="ml-1.5 text-[10px] opacity-70">{deals.length}</span></TabsTrigger>
+          <TabsTrigger value="documents">Dokumente</TabsTrigger>
+          <TabsTrigger value="erp-documents">Belege <span className="ml-1.5 text-[10px] opacity-70">{orders.length + deliveries.length + invoices.length}</span></TabsTrigger>
           <TabsTrigger value="issos">ISSOS-Rechnungen</TabsTrigger>
           <TabsTrigger value="issos-ls">ISSOS-Lieferscheine</TabsTrigger>
           <TabsTrigger value="issos-ang">ISSOS-Angebote</TabsTrigger>
@@ -259,7 +262,45 @@ export default function CrmCompanyDetail() {
           </SubSection>
         </TabsContent>
 
+        <TabsContent value="contacts" className="mt-4">
+          <Section title="Ansprechpartner">
+            {contacts.length === 0 ? <Empty /> : (
+              <ul className="divide-y divide-border/50">
+                {contacts.map(c => (
+                  <li key={c.id}>
+                    <Link to={`/crm/contacts?edit=${c.id}`} className="block py-3 text-xs hover:text-primary transition-colors">
+                      <p className="font-medium">{c.first_name} {c.last_name}</p>
+                      <p className="mt-1 text-muted-foreground break-words">{[c.position, c.email, c.phone].filter(Boolean).join(' · ') || '–'}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+        </TabsContent>
+
+        <TabsContent value="deals" className="mt-4">
+          <Section title="Deals">
+            {deals.length === 0 ? <Empty /> : (
+              <ul className="divide-y divide-border/50">
+                {deals.map(d => (
+                  <li key={d.id}>
+                    <Link to={`/crm/deals/${d.id}`} className="flex items-center justify-between gap-4 py-3 text-xs hover:text-primary transition-colors">
+                      <span className="min-w-0 break-words font-medium">{d.title}</span>
+                      <span className="shrink-0 text-muted-foreground tabular-nums">{formatEUR(d.value_final ?? d.value_estimated)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+        </TabsContent>
+
         <TabsContent value="documents" className="mt-4">
+          <DocumentSection entityType="company" entityId={company.id} />
+        </TabsContent>
+
+        <TabsContent value="erp-documents" className="mt-4">
           <div className="grid lg:grid-cols-3 gap-4">
             <Section title={`Bestellungen (${orders.length})`}>
               {orders.length === 0 ? <Empty /> : (
