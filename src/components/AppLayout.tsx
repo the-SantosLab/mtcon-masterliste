@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLedDepartments } from '@/hooks/useDeptLead';
 import { useErpAccess } from '@/hooks/useErpAccess';
 import { useCrmAccess } from '@/hooks/useCrmAccess';
+import { useSidebarNavigation } from '@/hooks/useSidebarNavigation';
 import { isMasterUser } from '@/lib/master-users';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -287,9 +288,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const sbWidth = sidebarCompact ? 'w-56' : 'w-64';
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const [openNavItem, setOpenNavItem] = useState<string | null>(null);
-  const [moreAdminOpen, setMoreAdminOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [pwDialogOpen, setPwDialogOpen] = useState(false);
   const [oldPw, setOldPw] = useState('');
@@ -335,10 +333,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     .flatMap(item => item.children ? [item, ...item.children] : [item])
     .some(item => item.href === activeHref))?.id ?? 'overview';
 
-  useEffect(() => {
-    setOpenGroup(routeGroup);
-    setMoreAdminOpen(visibleGroups.find(group => group.id === routeGroup)?.items.some(item => item.href === activeHref && item.secondary) ?? false);
-  }, [routeGroup, activeHref]);
+  const { navRef, onScroll, openGroup, setOpenGroup, openNavItem, setOpenNavItem, moreAdminOpen, setMoreAdminOpen } = useSidebarNavigation(
+    user?.id,
+    routeGroup,
+    visibleGroups.find(group => group.id === routeGroup)?.items.some(item => item.href === activeHref && item.secondary) ?? false,
+  );
 
   const handleChangePassword = async () => {
     if (!newPw || newPw.length < 8) { toast.error('Neues Passwort muss mindestens 8 Zeichen lang sein'); return; }
@@ -410,7 +409,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </button>
         </div>
 
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+        <nav ref={navRef} onScroll={onScroll} aria-label="Seitennavigation" className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
           {/* Search trigger */}
           <button
             onClick={() => { setOpen(false); setCmdOpen(true); }}
