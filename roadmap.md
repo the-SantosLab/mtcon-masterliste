@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Scrollposition und geöffnete Unterpunkte der Seitenleiste beim Seitenwechsel erhalten; zwei Tests und angemeldeter Wechsel Angebote → Ansprechpartner → Kommunikation erfolgreich
 
 - [x] Word-Unterpunkte als aufklappbare CRM-Unternavigation ergänzen
 - [x] Direkte Anlage-, Filter- und Ansichtsparameter in CRM-Seiten unterstützen
