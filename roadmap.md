@@ -49,3 +49,15 @@
 - [x] Artikelinfos (Bestand, Preis, offene Aufträge) in Vorgangsansicht
 - [x] Forecast: Kundenvergleich + Entwicklung über Zeit
 - [x] Bankabgleich: Kontoauszug-Import, Zuordnung zu offenen Rechnungen
+
+## Kalkulation
+- [x] Allgemeine Kalkulation /kalkulation mit Tabelle price_calculations + calc_settings; Rechte: Mitarbeitende kalkulieren, nur Admins Faktoren/Grundwerte und Abschluss; Regeltests
+- [x] Unbelegte Werte (Faktor, SWS-Formel, LZ-Herkunft) ausdrücklich als ungeklärt gekennzeichnet, nur belegter Rechenweg (Durchschnitt − Basis) × Verbrauch eingebaut
+- [x] Verbindung zum Angebot: „Aus Kalkulation“ im Angebotsdetail, abgeschlossene Staffel als Position übernehmbar; 8 Kalkulations-Tests erfolgreich
+- [x] Bereichsnavigation „Aufträge abwickeln“ um Kalkulation und Werkstattauslastung ergänzt
+- [ ] Faktor und SWS-Formel MGK 3 klären — wartet auf Werte/Regel vom Nutzer
+- [ ] Herkunft der Legierungszuschlags-Werte (9,85/5/5,798) klären — wartet auf Info vom Nutzer
+- [ ] Master-Kalkulation 2nd/3rd GEN (Relaissockel 200-xxx) als eigenen Bereich umsetzen
+- [ ] Herstellkosten automatisch aus Stückliste vorschlagen
+- [ ] Vergleich Kalkulation gegen Werkstatt-Kosten (Soll/Ist)
+- [ ] Echter Durchlauf mit Preis — blockiert: allgemeiner Faktor fehlt, kein Abschluss möglich
