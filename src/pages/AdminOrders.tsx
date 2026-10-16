@@ -1,3 +1,4 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
 import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Download, Package, ArrowLeft, FlaskConical } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrderFulfillment } from "@/components/OrderFulfillment";
@@ -83,6 +84,9 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AdminOrders() {
+  const { pathname } = useLocation();
+  const isProcurement = pathname === "/bestellungen";
+  const PageHeader = isProcurement ? ProcurementHeader : FulfillmentHeader;
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -204,8 +208,8 @@ export default function AdminOrders() {
 
   return (
     <AppLayout>
-    <div className="fulfillment-page">
-      <FulfillmentHeader title="Aufträge" subtitle="Auftragseingang · Bearbeitung · Lieferung" actions={<>
+    <div className={isProcurement ? "fulfillment-page procurement-page" : "fulfillment-page"}>
+      <PageHeader title={isProcurement ? "Bestellungen" : "Aufträge"} subtitle="Auftragseingang · Bearbeitung · Lieferung" actions={<>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>Aktualisieren</Button>
         <Button size="sm" variant="outline" onClick={() => setDemoOrderOpen(true)}><FlaskConical className="h-4 w-4" /> Demo Auftragsbestätigung</Button>
         <Button size="sm" variant="outline" onClick={() => setDemoPurchaseOpen(true)}><FlaskConical className="h-4 w-4" /> Demo Bestellung</Button>

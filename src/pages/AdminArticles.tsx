@@ -1,3 +1,4 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
 import { useEffect, useState, ReactNode } from 'react';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Navigate } from 'react-router-dom';
@@ -36,13 +37,8 @@ export default function AdminArticles() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-[1400px]">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Artikelverwaltung (ISSOS)</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            ISSOS-Artikelstruktur 1:1 in der MSL — Stamm, Kunden, Lieferanten, Preise, Stücklisten, Sachmerkmale
-          </p>
-        </div>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="Artikel (ISSOS)" subtitle="Artikelstamm · Preise · Stücklisten · Sachmerkmale" />
         <Tabs defaultValue="articles">
           <div className="-mx-2 px-2 overflow-x-auto scrollbar-thin">
             <TabsList className="bg-secondary inline-flex w-max h-auto">

@@ -1,3 +1,5 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -85,13 +87,14 @@ export default function AdminPurchasing() {
 
   return (
     <AppLayout>
-      <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Einkauf</h1>
-            <p className="text-xs text-muted-foreground">Lieferanten, Bestellungen und Wareneingang</p>
-          </div>
-        </div>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="Einkauf" subtitle="Lieferanten · Bestellungen · Wareneingang" />
+        <FulfillmentMetrics metrics={[
+          { label: 'Bestellungen', value: pos.length },
+          { label: 'Offene Lieferungen', value: pos.filter(p => p.status === 'ordered' || p.status === 'partial').length, tone: 'working' },
+          { label: 'Klärungsfälle', value: pos.filter(p => p.needs_clarification).length, tone: 'overdue' },
+          { label: 'Lieferanten', value: suppliers.length },
+        ]} />
 
         <PoEmailTemplatesDialog open={tplDlg} onClose={() => setTplDlg(false)} />
         <Tabs value={tab} onValueChange={setTab}>
@@ -119,7 +122,7 @@ export default function AdminPurchasing() {
                 <Plus className="h-4 w-4 mr-1.5" />Neue Bestellung
               </Button>
             </div>
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="procurement-table">
               <table className="w-full text-sm">
                 <thead className="bg-muted/30 text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr>

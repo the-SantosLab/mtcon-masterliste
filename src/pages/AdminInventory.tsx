@@ -1,3 +1,5 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
@@ -95,11 +97,8 @@ export default function AdminInventory() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-[1400px]">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Lager</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Bestände, Bewegungen, Reservierungen und Lagerorte</p>
-        </div>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="Lager" subtitle="Bestände · Bewegungen · Reservierungen · Lagerorte" />
         <Tabs defaultValue="stock">
           <TabsList className="bg-secondary">
             <TabsTrigger value="stock" className="text-xs">Bestände</TabsTrigger>
@@ -209,11 +208,11 @@ function StockTab({ canWrite }: { canWrite: boolean }) {
 
   return (
     <div className="space-y-3 mt-3">
-      <div className="grid grid-cols-3 gap-3">
-        <KpiTile label="Bestandszeilen" value={rows.length} icon={Package} />
-        <KpiTile label="Unter Mindestmenge" value={lowCount} icon={AlertTriangle} accent={lowCount > 0 ? 'warn' : undefined} />
-        <KpiTile label="Lagerorte" value={warehouses.length} icon={Package} />
-      </div>
+      <FulfillmentMetrics loading={loading} metrics={[
+        { label: 'Bestandszeilen', value: rows.length },
+        { label: 'Unter Mindestmenge', value: lowCount, tone: lowCount > 0 ? 'overdue' : 'done' },
+        { label: 'Lager', value: warehouses.length },
+      ]} />
 
       <div className="flex gap-2 items-end flex-wrap">
         <div className="min-w-[260px] flex-1 max-w-md">

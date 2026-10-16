@@ -1,3 +1,5 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -310,11 +312,14 @@ export default function AdminPriceManagement() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 p-6">
-        <div className="flex items-center gap-3">
-          <TrendingUp className="h-6 w-6" />
-          <h1 className="text-xl font-semibold">Preismanagement</h1>
-        </div>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="Preismanagement" subtitle="Artikelpreise · Geplante Änderungen · Historie" />
+        <FulfillmentMetrics loading={loading} metrics={[
+          { label: 'Geladene Artikel', value: rows.length, detail: 'Aktuelle Trefferliste' },
+          { label: 'Mit Preisdaten', value: rows.filter(r => r.article_prices).length },
+          { label: 'Gesperrte Artikel', value: rows.filter(r => r.is_blocked).length, tone: 'overdue' },
+          { label: 'Geplante Änderungen', value: scheduled.length, tone: 'working' },
+        ]} />
 
         <Tabs defaultValue="list">
           <TabsList>

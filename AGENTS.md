@@ -1,7 +1,7 @@
 # Project Architecture Rules
 
 - All standard tab bars use the shared `TabsList` horizontal overflow behavior so long navigation remains reachable without wrapping.
-- Fulfillment menu pages share a presentation-only header, navigation and metric strip while retaining their existing data and dialogs, so visual changes cannot duplicate or alter booking workflows.
+- Fulfillment and procurement menu pages use group-specific presentation-only headers, navigation and a shared metric strip while retaining existing data and dialogs, so visual changes cannot duplicate or alter booking workflows; the shared order page selects its group header from the current route.
 - Every sales subnavigation group (acquisition, leads, companies, contacts, communication) uses dedicated workflow routes backed by shared CRM data and the existing creation dialogs, so menu points never land on a generic list; canonical list pages stay reachable for full-list work and no create workflow is duplicated.
 - Acquisition suggestions share a deterministic rule engine; MTIQ may refine only visible candidate IDs, and saving always requires user confirmation into existing CRM activities to prevent autonomous outreach.
 - The global search renders in a document-body portal above shell navigation so sidebar stacking contexts cannot obscure it.
