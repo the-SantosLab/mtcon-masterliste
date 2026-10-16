@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
@@ -143,12 +144,8 @@ export default function AdminDisposition() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Disposition</h1>
-            <p className="text-xs text-muted-foreground">Bestandsabgleich gegen offene Aufträge, Meldebestand und Bestellvorschläge mit Preisvergleich.</p>
-          </div>
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Disposition" subtitle="Bestände · Materialbedarf · Bestellvorschläge" actions={
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={load} disabled={busy}>
               <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', busy && 'animate-spin')} /> Aktualisieren
@@ -158,16 +155,16 @@ export default function AdminDisposition() {
               Bestellungen erstellen ({selected.size})
             </Button>
           </div>
-        </div>
+        } />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} label="Artikel unter Meldebestand" value={fmt(kpi.needCount)} />
-          <Kpi icon={<Package className="h-4 w-4 text-muted-foreground" />} label="Ohne Lieferant" value={fmt(kpi.noSupplier)} />
-          <Kpi icon={<ArrowDownToLine className="h-4 w-4 text-muted-foreground" />} label="Bestellvolumen (best.)" value={fmtEUR(kpi.totalValue)} />
-          <Kpi icon={<TrendingDown className="h-4 w-4 text-emerald-500" />} label="Ersparnis 2nd-Source" value={fmtEUR(kpi.totalSavings)} />
-        </div>
+        <FulfillmentMetrics loading={busy} metrics={[
+          { label: 'Artikel unter Meldebestand', value: fmt(kpi.needCount), tone: 'overdue' },
+          { label: 'Ohne Lieferant', value: fmt(kpi.noSupplier) },
+          { label: 'Bestellvolumen (best.)', value: fmtEUR(kpi.totalValue) },
+          { label: 'Ersparnis 2nd-Source', value: fmtEUR(kpi.totalSavings), tone: 'done' },
+        ]} />
 
-        <div className="flex items-center gap-2">
+        <div className="fulfillment-toolbar">
           <Input
             placeholder="Suche Art-Nr, Bezeichnung, Lieferant…"
             value={search}
@@ -184,7 +181,7 @@ export default function AdminDisposition() {
           <span className="text-[11px] text-muted-foreground ml-auto">{filtered.length} Zeilen</span>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="fulfillment-table">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -219,7 +216,7 @@ export default function AdminDisposition() {
                   const qty = overrideQty[r.art_nr] ?? r.suggested_qty;
                   const canSelect = isShort && !!r.primary_lief_nr;
                   return (
-                    <tr key={r.art_nr} className={cn(isShort && 'bg-amber-500/5')}>
+                    <tr key={r.art_nr} className={cn(isShort && 'bg-status-overdue/5')}>
                       <td className="px-2 py-1.5 align-top">
                         <Checkbox
                           checked={selected.has(r.art_nr)}
@@ -245,7 +242,7 @@ export default function AdminDisposition() {
                       </td>
                       <td className="px-2 py-1.5 text-right tabular-nums">{fmt(r.reorder_point)}</td>
                       <td className={cn('px-2 py-1.5 text-right tabular-nums',
-                        isShort ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-muted-foreground')}>
+                        isShort ? 'text-status-overdue dark:text-status-overdue font-semibold' : 'text-muted-foreground')}>
                         {fmt(r.shortage)}
                       </td>
                       <td className="px-2 py-1.5 text-right">
@@ -315,12 +312,12 @@ function SupplierCell({
     <div className="space-y-0.5">
       <div className="flex items-center gap-1.5">
         <span className="text-[11px] text-foreground truncate max-w-[160px]">{name || code}</span>
-        {cheaper && <Badge variant="secondary" className="h-4 text-[9px] px-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">günstiger</Badge>}
+        {cheaper && <Badge variant="secondary" className="h-4 text-[9px] px-1 bg-status-done/15 text-status-done dark:text-status-done">günstiger</Badge>}
       </div>
       <div className="text-[10px] text-muted-foreground tabular-nums">
         {fmtEUR(price)}{lz != null && ` · ${lz} T`}
         {cheaper && savings != null && savings > 0 && (
-          <span className="text-emerald-600 dark:text-emerald-400 ml-1">−{fmtEUR(savings)}</span>
+          <span className="text-status-done dark:text-status-done ml-1">−{fmtEUR(savings)}</span>
         )}
       </div>
     </div>

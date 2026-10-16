@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -110,24 +111,32 @@ export default function AdminCapacityPlan() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><CalendarRange className="h-5 w-5" /> Kapazitätsplan</h1>
-            <p className="text-sm text-muted-foreground mt-1">Auslastung Konstruktion (oder andere Abteilung) — 6 Wochen rollend, Soll vs. Ist.</p>
-          </div>
-          <div className="flex items-center gap-2">
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Kapazitätsplan" subtitle="Abteilungsplanung · Sechs-Wochen-Ausblick" actions={
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={deptId} onValueChange={setDeptId}>
               <SelectTrigger className="w-48 h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>{depts.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
             </Select>
-            <Button size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, -7))}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button title="Vorherige Woche" aria-label="Vorherige Woche" size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, -7))}><ChevronLeft className="h-4 w-4" /></Button>
             <Button size="sm" variant="outline" onClick={() => setWeekStart(isoMonday(new Date()))} className="text-xs">Heute</Button>
-            <Button size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, 7))}><ChevronRight className="h-4 w-4" /></Button>
+            <Button title="Nächste Woche" aria-label="Nächste Woche" size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, 7))}><ChevronRight className="h-4 w-4" /></Button>
           </div>
+        } />
+
+        <FulfillmentMetrics metrics={[
+          { label: 'Mitarbeitende', value: profiles.length },
+          { label: 'Vorgänge', value: cases.length },
+          { label: 'Unverplant', value: unplanned.length, tone: 'overdue' },
+          { label: 'Planungszeitraum', value: '6 Wochen', detail: `${kwLabel(weeks[0])} – ${kwLabel(weeks[5])}` },
+        ]} />
+        <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-status-done" /> Bis 85 %</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-status-overdue" /> 86–100 %</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-destructive" /> Über 100 %</span>
         </div>
 
-        <Card className="overflow-x-auto">
+        <Card className="fulfillment-table">
           <table className="w-full text-xs">
             <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
               <tr>
@@ -151,20 +160,20 @@ export default function AdminCapacityPlan() {
                     const load = loadMap.get(`${p.id}|${ws}`) || 0;
                     const capH = cap?.capacity_hours ?? 40;
                     const pct = capH ? Math.round((load / capH) * 100) : 0;
-                    const tone = pct > 100 ? 'bg-rose-500/20 border-rose-500/40 text-rose-200'
-                      : pct > 85 ? 'bg-amber-500/20 border-amber-500/40 text-amber-200'
-                      : pct > 0 ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200'
+                    const tone = pct > 100 ? 'bg-destructive/10 border-destructive/30 text-destructive'
+                      : pct > 85 ? 'bg-status-overdue/10 border-status-overdue/30 text-status-overdue'
+                      : pct > 0 ? 'bg-status-done/10 border-status-done/30 text-status-done'
                       : 'bg-muted/20 border-border/30 text-muted-foreground';
                     return (
                       <td key={ws} className="p-1 text-center">
-                        <button
+                        <Button variant="outline"
                           disabled={!isAdmin}
                           onClick={() => setEditCap({ user_id: p.id, week_start: ws, capacity_hours: capH })}
-                          className={`w-full rounded border ${tone} px-2 py-1.5 ${isAdmin ? 'hover:opacity-80' : 'cursor-default'}`}
+                          className={`h-auto block w-full rounded border ${tone} px-2 py-3 ${isAdmin ? 'hover:opacity-80' : 'cursor-default'}`}
                         >
                           <div className="tabular-nums text-xs font-medium">{load.toFixed(1)} / {capH}</div>
                           <div className="text-[10px] opacity-80">{pct} %</div>
-                        </button>
+                        </Button>
                       </td>
                     );
                   })}
@@ -174,15 +183,15 @@ export default function AdminCapacityPlan() {
           </table>
         </Card>
 
-        <Card className="p-4">
+        <section className="border-t border-border pt-5">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-medium">Unverplante Vorgänge ({unplanned.length})</div>
-            <div className="text-[10px] text-muted-foreground">Klick zum Planen — Stunden, KW, Bearbeiter setzen.</div>
+            
           </div>
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {unplanned.length === 0 ? <div className="text-xs text-muted-foreground p-3 text-center">Alle Vorgänge sind verplant</div>
             : unplanned.map(c => (
-              <button key={c.id} onClick={() => setEditCase(c)} className="w-full text-left p-2 rounded border border-border/40 hover:bg-muted/20 flex items-center justify-between text-xs">
+              <Button variant="ghost" key={c.id} onClick={() => setEditCase(c)} className="h-auto w-full whitespace-normal text-left p-3 border-b border-border hover:bg-muted/20 flex flex-wrap items-center justify-between text-xs">
                 <div className="flex-1 min-w-0">
                   <div className="font-mono text-[10px] text-muted-foreground">{c.case_no || c.id.slice(0,8)}</div>
                   <div className="truncate">{c.title || '—'}</div>
@@ -193,10 +202,10 @@ export default function AdminCapacityPlan() {
                   <span>{c.assigned_to ? profiles.find(p => p.id === c.assigned_to)?.display_name || '—' : 'nicht zugewiesen'}</span>
                   <Pencil className="h-3 w-3" />
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
-        </Card>
+        </section>
 
         <Dialog open={!!editCap} onOpenChange={(o) => !o && setEditCap(null)}>
           <DialogContent className="max-w-sm">

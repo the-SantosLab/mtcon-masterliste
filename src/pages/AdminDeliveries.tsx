@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -52,14 +53,15 @@ type Warehouse = { id: string; code: string; name: string };
 
 const STATUS: Record<string, string> = { draft: 'Entwurf', shipped: 'Versendet', cancelled: 'Storniert' };
 const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-  shipped: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  cancelled: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  draft: 'bg-status-open/15 text-status-open border-status-open/30',
+  shipped: 'bg-status-done/15 text-status-done border-status-done/30',
+  cancelled: 'bg-status-rejected/15 text-status-rejected border-status-rejected/30',
 };
 
 export default function AdminDeliveries() {
   const [rows, setRows] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [sel, setSel] = useState<Delivery | null>(null);
@@ -189,17 +191,12 @@ export default function AdminDeliveries() {
     if (sel) open(sel);
   };
 
-  const filtered = useMemo(() => filter === 'all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
+  const filtered = useMemo(() => rows.filter(r => (filter === 'all' || r.status === filter) && `${r.delivery_no} ${r.orders?.order_no || ''} ${r.orders?.customer_name || ''} ${r.tracking_no || ''}`.toLowerCase().includes(search.trim().toLowerCase())), [rows, filter, search]);
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><Truck className="h-5 w-5" /> Lieferscheine</h1>
-            <p className="text-sm text-muted-foreground mt-1">Versand auf Basis von Bestellungen und importierte ISSOS-Lieferscheine.</p>
-          </div>
-        </div>
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Lieferscheine" subtitle="Lieferung · Versand · Sendungsverfolgung" />
 
         <Tabs defaultValue="intern" className="w-full">
           <TabsList>
@@ -215,15 +212,19 @@ export default function AdminDeliveries() {
         </div>
 
 
-        <div className="flex gap-2">
-          {['all','draft','shipped','cancelled'].map(s => (
-            <Button key={s} size="sm" variant={filter===s?'default':'outline'} onClick={() => setFilter(s)} className="text-xs">
-              {s==='all'?'Alle':STATUS[s]}
-            </Button>
-          ))}
+        <FulfillmentMetrics loading={loading} metrics={[
+          { label: 'Lieferscheine gesamt', value: rows.length, onClick: () => setFilter('all'), active: filter === 'all' },
+          { label: 'Entwürfe', value: rows.filter(r => r.status === 'draft').length, tone: 'working', onClick: () => setFilter('draft'), active: filter === 'draft' },
+          { label: 'Versendet', value: rows.filter(r => r.status === 'shipped').length, tone: 'done', onClick: () => setFilter('shipped'), active: filter === 'shipped' },
+          { label: 'Storniert', value: rows.filter(r => r.status === 'cancelled').length, onClick: () => setFilter('cancelled'), active: filter === 'cancelled' },
+        ]} />
+        <div className="fulfillment-toolbar">
+          <Input aria-label="Lieferscheine suchen" placeholder="Lieferschein, Kunde oder Tracking…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm h-9 text-xs" />
+          <Select value={filter} onValueChange={setFilter}><SelectTrigger className="w-44 h-9 text-xs" aria-label="Lieferstatus"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alle Status</SelectItem>{Object.entries(STATUS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
+          <span className="ml-auto text-xs text-muted-foreground">{filtered.length} Lieferscheine</span>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="fulfillment-table">
           <table className="w-full text-sm">
             <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
               <tr>
@@ -282,7 +283,7 @@ export default function AdminDeliveries() {
                   <div className="col-span-2"><Label className="text-xs">Lieferadresse</Label><Textarea rows={2} value={sel.ship_to || ''} onChange={e => setSel({ ...sel, ship_to: e.target.value })} /></div>
                   <div className="col-span-2"><Label className="text-xs">Notizen</Label><Textarea rows={2} value={sel.notes || ''} onChange={e => setSel({ ...sel, notes: e.target.value })} /></div>
                   {sel.tracking_pushed_at && (
-                    <div className="col-span-2 text-[11px] text-emerald-400">
+                    <div className="col-span-2 text-[11px] text-status-done">
                       Tracking an Vertrieb gepusht am {format(new Date(sel.tracking_pushed_at), 'dd.MM.yyyy HH:mm')}
                     </div>
                   )}

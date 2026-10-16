@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -245,16 +246,19 @@ export default function AdminTemplates() {
 
   return (
     <AppLayout>
-      <div className="space-y-5">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Vorlagen</h1>
-            <p className="text-xs text-muted-foreground mt-1">Standardisierte Vorgangs-Vorlagen mit Unteraufgaben.</p>
-          </div>
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Standard Vorgänge" subtitle="Vorlagen · Aufgabenfolgen · Abteilungszuordnung" actions={
           <Button size="sm" onClick={openNew} className="h-8 text-xs gap-1.5">
             <Plus className="h-3.5 w-3.5" />Neue Vorlage
           </Button>
-        </div>
+        } />
+
+        <FulfillmentMetrics loading={loading} metrics={[
+          { label: 'Vorlagen', value: templates.length },
+          { label: 'Unteraufgaben', value: templates.reduce((sum, t) => sum + t.task_count, 0) },
+          { label: 'Sequenzielle Abläufe', value: templates.filter(t => t.sequential_mode).length, tone: 'working' },
+          { label: 'Mit Abteilungszuordnung', value: templates.filter(t => t.department_ids.length > 0).length },
+        ]} />
 
         {loading ? (
           <p className="text-xs text-muted-foreground">Laden…</p>
