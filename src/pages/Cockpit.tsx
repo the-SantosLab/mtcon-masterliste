@@ -1614,9 +1614,9 @@ function PipelineShape({
     shapeOverride && ['point','line','triangle','square'].includes(shapeOverride)
       ? shapeOverride
       : depts.length === 1 ? 'point'
+      : depts.length === 2 ? 'line'
       : depts.length === 3 ? 'triangle'
-      : depts.length === 4 ? 'square'
-      : 'line';
+      : 'square';
 
 
   const accentFor = (i: number) => SHAPE_ACCENTS[i % SHAPE_ACCENTS.length];
