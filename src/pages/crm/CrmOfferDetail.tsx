@@ -21,6 +21,7 @@ import { CaseLinkSelect } from '@/components/erp/CaseLinkSelect';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { CopyOfferItemsDialog } from '@/components/crm/CopyOfferItemsDialog';
 
 interface Item { id: string; product_id?: string | null; art_nr?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
 
@@ -43,6 +44,7 @@ export default function CrmOfferDetail() {
   const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   useEffect(() => { void load(); }, [id]);
@@ -333,7 +335,11 @@ export default function CrmOfferDetail() {
       <section className="rounded-lg border border-border bg-card/40 p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold">Positionen</h2>
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={addItem}><Plus className="h-3.5 w-3.5" /> Zeile</Button>
+          <div className="flex gap-2">
+            {!offer.locked_at && offer.status !== 'angenommen' && <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setCopyOpen(true)}>Aus Angebot/Auftrag übernehmen</Button>}
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={addItem}><Plus className="h-3.5 w-3.5" /> Zeile</Button>
+          </div>
+          <CopyOfferItemsDialog open={copyOpen} onClose={() => setCopyOpen(false)} offerId={id!} companyId={offer.company_id} startAt={items.length} onCopy={c => setItems(p => [...p, ...c])} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">

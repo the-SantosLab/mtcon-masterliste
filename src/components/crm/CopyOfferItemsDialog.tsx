@@ -23,7 +23,7 @@ export function CopyOfferItemsDialog({ open, onClose, offerId, companyId, startA
       setBusy(true);
       const s = supabase as any;
       let query = source === 'offer'
-        ? s.from('offers').select('id, offer_no, title, total_net, created_at, company_id').neq('id', offerId)
+        ? s.from('offers').select('id, offer_no, total, status, created_at, company_id').neq('id', offerId)
         : s.from('orders').select('id, order_no, customer_name, total_amount, created_at, company_id');
       if (onlyCompany && companyId) query = query.eq('company_id', companyId);
       const { data } = await query.order('created_at', { ascending: false }).limit(200);
@@ -44,7 +44,7 @@ export function CopyOfferItemsDialog({ open, onClose, offerId, companyId, startA
     onClose();
   };
 
-  const filtered = list.filter(r => !q || JSON.stringify([r.offer_no, r.order_no, r.title, r.customer_name]).toLowerCase().includes(q.toLowerCase()));
+  const filtered = list.filter(r => !q || JSON.stringify([r.offer_no, r.order_no, r.status, r.customer_name]).toLowerCase().includes(q.toLowerCase()));
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
       <DialogContent className="max-w-lg">
@@ -65,8 +65,8 @@ export function CopyOfferItemsDialog({ open, onClose, offerId, companyId, startA
             : filtered.length === 0 ? <p className="p-4 text-xs text-muted-foreground">Keine Einträge.</p>
             : filtered.map(r => (
               <button key={r.id} onClick={() => pick(r)} className="flex w-full items-center justify-between gap-3 border-b border-border/50 px-3 py-2 text-left text-xs last:border-0 hover:bg-muted/50">
-                <span className="min-w-0 truncate"><span className="text-foreground">{r.offer_no ?? r.order_no ?? '–'}</span> <span className="text-muted-foreground">{r.title ?? r.customer_name ?? ''}</span></span>
-                <span className="shrink-0 tabular-nums text-muted-foreground">{formatEUR(r.total_net ?? r.total_amount ?? 0)} · {new Date(r.created_at).toLocaleDateString('de-DE')}</span>
+                <span className="min-w-0 truncate"><span className="text-foreground">{r.offer_no ?? r.order_no ?? '–'}</span> <span className="text-muted-foreground">{r.customer_name ?? r.status ?? ''}</span></span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">{formatEUR(r.total ?? r.total_amount ?? 0)} · {new Date(r.created_at).toLocaleDateString('de-DE')}</span>
               </button>
             ))}
         </div>
