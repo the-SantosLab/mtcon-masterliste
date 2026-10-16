@@ -120,6 +120,7 @@ const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const ContactWorkspace = lazyRetry(() => import("./components/crm/ContactWorkspace"));
 const ActivityWorkspace = lazyRetry(() => import("./components/crm/ActivityWorkspace"));
 const DealWorkspace = lazyRetry(() => import("./components/crm/DealWorkspace"));
+const OfferWorkspace = lazyRetry(() => import("./components/crm/OfferWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
@@ -349,6 +350,12 @@ function AuthenticatedApp() {
           <Route path="/crm/verkaufschancen/faellig" element={<CrmProtectedRoute><DealWorkspace page="due" /></CrmProtectedRoute>} />
           <Route path="/crm/verkaufschancen/zuweisen" element={<CrmProtectedRoute><DealWorkspace page="assign" /></CrmProtectedRoute>} />
           <Route path="/crm/verkaufschancen/abgeschlossen" element={<CrmProtectedRoute><DealWorkspace page="closed" /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote" element={<CrmProtectedRoute><OfferWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote/kalkulation" element={<CrmProtectedRoute><OfferWorkspace page="kalkulation" /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote/versand" element={<CrmProtectedRoute><OfferWorkspace page="versand" /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote/versionen" element={<CrmProtectedRoute><OfferWorkspace page="versionen" /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote/freigegeben" element={<CrmProtectedRoute><OfferWorkspace page="freigegeben" /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote/auftraege" element={<CrmProtectedRoute><OfferWorkspace page="auftraege" /></CrmProtectedRoute>} />
           <Route path="/crm/offers" element={<CrmProtectedRoute><CrmOffers /></CrmProtectedRoute>} />
           <Route path="/crm/offers/:id" element={<CrmProtectedRoute><CrmOfferDetail /></CrmProtectedRoute>} />
           <Route path="/crm/activities" element={<CrmProtectedRoute><CrmActivities /></CrmProtectedRoute>} />
