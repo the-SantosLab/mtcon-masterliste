@@ -344,6 +344,13 @@
       "when": 1792156057119,
       "tag": "0048_workshop_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1792156402696,
+      "tag": "0049_scan_goods_receipt",
+      "breakpoints": true
     }
   ]
 }
