@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -85,6 +86,7 @@ export default function AdminOrders() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Order | null>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -129,9 +131,9 @@ export default function AdminOrders() {
   };
 
   const filtered = useMemo(() => {
-    if (filter === "all") return orders;
-    return orders.filter((o) => o.status === filter);
-  }, [orders, filter]);
+    const query = search.trim().toLowerCase();
+    return orders.filter(o => (filter === "all" || o.status === filter) && (!query || `${o.order_no} ${o.customer_name || ""} ${o.external_order_no || ""}`.toLowerCase().includes(query)));
+  }, [orders, filter, search]);
 
   const draftCount = orders.filter((o) => o.status === "draft").length;
 
@@ -202,31 +204,12 @@ export default function AdminOrders() {
 
   return (
     <AppLayout>
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-2xl font-medium flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Bestellungen
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Eingehende Bestellungen — automatisch via E-Mail erfasst oder manuell angelegt.
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => setDemoOrderOpen(true)}>
-            <FlaskConical className="h-4 w-4 mr-1" /> Demo Auftragsbestätigung
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setDemoPurchaseOpen(true)}>
-            <FlaskConical className="h-4 w-4 mr-1" /> Demo Bestellung
-          </Button>
-        </div>
-      </div>
-
-
-
+    <div className="fulfillment-page">
+      <FulfillmentHeader title="Aufträge" subtitle="Auftragseingang · Bearbeitung · Lieferung" actions={<>
+        <Button size="sm" variant="outline" onClick={load} disabled={loading}>Aktualisieren</Button>
+        <Button size="sm" variant="outline" onClick={() => setDemoOrderOpen(true)}><FlaskConical className="h-4 w-4" /> Demo Auftragsbestätigung</Button>
+        <Button size="sm" variant="outline" onClick={() => setDemoPurchaseOpen(true)}><FlaskConical className="h-4 w-4" /> Demo Bestellung</Button>
+      </>} />
       <Tabs defaultValue="internal" className="space-y-4">
         <TabsList>
           <TabsTrigger value="internal">Interne Bestellungen</TabsTrigger>
@@ -234,24 +217,20 @@ export default function AdminOrders() {
         </TabsList>
 
         <TabsContent value="internal" className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
-            {["all", "draft", "active", "in_progress", "completed", "cancelled"].map((s) => (
-              <Button
-                key={s}
-                variant={filter === s ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilter(s)}
-                className="text-xs"
-              >
-                {s === "all" ? "Alle" : STATUS_LABELS[s]}
-                {s === "draft" && draftCount > 0 && (
-                  <Badge className="ml-2 bg-violet-500/30 text-violet-100">{draftCount}</Badge>
-                )}
-              </Button>
-            ))}
+          <FulfillmentMetrics loading={loading} metrics={[
+            { label: 'Aufträge gesamt', value: orders.length, onClick: () => setFilter('all'), active: filter === 'all' },
+            { label: 'Entwürfe prüfen', value: draftCount, tone: 'working', onClick: () => setFilter('draft'), active: filter === 'draft' },
+            { label: 'In Bearbeitung', value: orders.filter(o => o.status === 'in_progress').length, tone: 'working', onClick: () => setFilter('in_progress'), active: filter === 'in_progress' },
+            { label: 'Erledigt', value: orders.filter(o => o.status === 'completed').length, tone: 'done', onClick: () => setFilter('completed'), active: filter === 'completed' },
+          ]} />
+          <div className="fulfillment-toolbar">
+            <Input aria-label="Aufträge suchen" placeholder="Auftrag, Kunde oder Kunden-Bestellnummer…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm h-9 text-xs" />
+            <Select value={filter} onValueChange={setFilter}><SelectTrigger className="w-44 h-9 text-xs" aria-label="Auftragsstatus"><SelectValue /></SelectTrigger><SelectContent>
+              <SelectItem value="all">Alle Status</SelectItem>{Object.entries(STATUS_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+            </SelectContent></Select>
+            <span className="ml-auto text-xs text-muted-foreground">{filtered.length} Aufträge</span>
           </div>
-
-          <Card className="overflow-hidden">
+          <Card className="fulfillment-table">
             <table className="w-full text-sm">
               <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
                 <tr>

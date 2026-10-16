@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
@@ -143,12 +144,8 @@ export default function AdminDisposition() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Disposition</h1>
-            <p className="text-xs text-muted-foreground">Bestandsabgleich gegen offene Aufträge, Meldebestand und Bestellvorschläge mit Preisvergleich.</p>
-          </div>
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Disposition" subtitle="Bestände · Materialbedarf · Bestellvorschläge" actions={
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={load} disabled={busy}>
               <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', busy && 'animate-spin')} /> Aktualisieren
@@ -158,16 +155,16 @@ export default function AdminDisposition() {
               Bestellungen erstellen ({selected.size})
             </Button>
           </div>
-        </div>
+        } />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Kpi icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} label="Artikel unter Meldebestand" value={fmt(kpi.needCount)} />
-          <Kpi icon={<Package className="h-4 w-4 text-muted-foreground" />} label="Ohne Lieferant" value={fmt(kpi.noSupplier)} />
-          <Kpi icon={<ArrowDownToLine className="h-4 w-4 text-muted-foreground" />} label="Bestellvolumen (best.)" value={fmtEUR(kpi.totalValue)} />
-          <Kpi icon={<TrendingDown className="h-4 w-4 text-emerald-500" />} label="Ersparnis 2nd-Source" value={fmtEUR(kpi.totalSavings)} />
-        </div>
+        <FulfillmentMetrics loading={busy} metrics={[
+          { label: 'Artikel unter Meldebestand', value: fmt(kpi.needCount), tone: 'overdue' },
+          { label: 'Ohne Lieferant', value: fmt(kpi.noSupplier) },
+          { label: 'Bestellvolumen (best.)', value: fmtEUR(kpi.totalValue) },
+          { label: 'Ersparnis 2nd-Source', value: fmtEUR(kpi.totalSavings), tone: 'done' },
+        ]} />
 
-        <div className="flex items-center gap-2">
+        <div className="fulfillment-toolbar">
           <Input
             placeholder="Suche Art-Nr, Bezeichnung, Lieferant…"
             value={search}
@@ -184,7 +181,7 @@ export default function AdminDisposition() {
           <span className="text-[11px] text-muted-foreground ml-auto">{filtered.length} Zeilen</span>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="fulfillment-table">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">

@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -60,6 +61,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function AdminDeliveries() {
   const [rows, setRows] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [sel, setSel] = useState<Delivery | null>(null);
@@ -189,17 +191,12 @@ export default function AdminDeliveries() {
     if (sel) open(sel);
   };
 
-  const filtered = useMemo(() => filter === 'all' ? rows : rows.filter(r => r.status === filter), [rows, filter]);
+  const filtered = useMemo(() => rows.filter(r => (filter === 'all' || r.status === filter) && `${r.delivery_no} ${r.orders?.order_no || ''} ${r.orders?.customer_name || ''} ${r.tracking_no || ''}`.toLowerCase().includes(search.trim().toLowerCase())), [rows, filter, search]);
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><Truck className="h-5 w-5" /> Lieferscheine</h1>
-            <p className="text-sm text-muted-foreground mt-1">Versand auf Basis von Bestellungen und importierte ISSOS-Lieferscheine.</p>
-          </div>
-        </div>
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Lieferscheine" subtitle="Lieferung · Versand · Sendungsverfolgung" />
 
         <Tabs defaultValue="intern" className="w-full">
           <TabsList>
@@ -215,15 +212,19 @@ export default function AdminDeliveries() {
         </div>
 
 
-        <div className="flex gap-2">
-          {['all','draft','shipped','cancelled'].map(s => (
-            <Button key={s} size="sm" variant={filter===s?'default':'outline'} onClick={() => setFilter(s)} className="text-xs">
-              {s==='all'?'Alle':STATUS[s]}
-            </Button>
-          ))}
+        <FulfillmentMetrics loading={loading} metrics={[
+          { label: 'Lieferscheine gesamt', value: rows.length, onClick: () => setFilter('all'), active: filter === 'all' },
+          { label: 'Entwürfe', value: rows.filter(r => r.status === 'draft').length, tone: 'working', onClick: () => setFilter('draft'), active: filter === 'draft' },
+          { label: 'Versendet', value: rows.filter(r => r.status === 'shipped').length, tone: 'done', onClick: () => setFilter('shipped'), active: filter === 'shipped' },
+          { label: 'Storniert', value: rows.filter(r => r.status === 'cancelled').length, onClick: () => setFilter('cancelled'), active: filter === 'cancelled' },
+        ]} />
+        <div className="fulfillment-toolbar">
+          <Input aria-label="Lieferscheine suchen" placeholder="Lieferschein, Kunde oder Tracking…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm h-9 text-xs" />
+          <Select value={filter} onValueChange={setFilter}><SelectTrigger className="w-44 h-9 text-xs" aria-label="Lieferstatus"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alle Status</SelectItem>{Object.entries(STATUS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
+          <span className="ml-auto text-xs text-muted-foreground">{filtered.length} Lieferscheine</span>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="fulfillment-table">
           <table className="w-full text-sm">
             <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
               <tr>

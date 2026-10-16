@@ -1,3 +1,4 @@
+import { FulfillmentHeader, FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
@@ -96,22 +97,21 @@ export default function AdminProduction() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-[1400px]">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-muted-foreground" /> Werkstattaufträge
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Fertigung nach Stückliste: Einzelteile ausbuchen, fertiges Werkteil einbuchen.
-            </p>
-          </div>
+      <div className="fulfillment-page">
+        <FulfillmentHeader title="Werkstattaufträge" subtitle="Stücklisten · Materialentnahme · Fertigmeldung" actions={
           <Button size="sm" className="h-8 text-xs" onClick={() => setCreateOpen(true)}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Neuer Werkstattauftrag
           </Button>
-        </div>
+        } />
 
-        <div className="flex flex-wrap items-center gap-2">
+        <FulfillmentMetrics loading={busy} metrics={[
+          { label: 'Aufträge gesamt', value: rows.length, onClick: () => setStatus('all'), active: status === 'all' },
+          { label: 'Offene Aufträge', value: rows.filter(r => !['completed', 'cancelled'].includes(r.status)).length, tone: 'working', onClick: () => setStatus('open'), active: status === 'open' },
+          { label: 'Material gebucht', value: rows.filter(r => r.status === 'issued').length, tone: 'working' },
+          { label: 'Abgeschlossen', value: rows.filter(r => r.status === 'completed').length, tone: 'done', onClick: () => setStatus('completed'), active: status === 'completed' },
+        ]} />
+
+        <div className="fulfillment-toolbar">
           <Input placeholder="Suche WA-Nr, Artikel…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 max-w-sm text-xs" />
           <Select value={status} onValueChange={(v) => setStatus(v as any)}>
             <SelectTrigger className="h-8 w-[170px] text-xs"><SelectValue /></SelectTrigger>
@@ -127,7 +127,7 @@ export default function AdminProduction() {
           </Button>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="fulfillment-table">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
