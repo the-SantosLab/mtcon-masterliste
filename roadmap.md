@@ -31,7 +31,8 @@
 ## Ausbau „alles davon“ (Reihenfolge: Empfehlung)
 - [x] Kundenblick im CRM: offene Aufträge, Lieferstatus, Forderungen, Zahlungsverhalten, Hinweise (90 Tage / überfällig)
 - [x] Bestellvorschläge: bereits vorhanden unter Disposition (Mindestbestand, offener Bedarf, Lieferzeit, Bestellung per Klick)
-- [ ] Angebot aus Vorlage/früherem Auftrag, automatische Preise mit Kundenrabatt, Posteingang → Einkauf
+- [x] Angebot: Positionen aus früherem Angebot/Auftrag übernehmen (Preise aus Preisliste waren schon vorhanden)
+- [ ] Posteingang → Einkauf: Eingangsrechnungen/Auftragsbestätigungen der Bestellung zuordnen
 - [ ] Werkstattkapazität und Nachkalkulation
 - [ ] Mobil: Barcode/QR-Scan mit Kamera für Wareneingang, Entnahme, Inventur; Fertigmeldung
 - [x] Geschäftsführungs-Kennzahlen (/kennzahlen): Umsatz, Auftragseingang, Liefertreue, Forderungen; drei Regeltests
