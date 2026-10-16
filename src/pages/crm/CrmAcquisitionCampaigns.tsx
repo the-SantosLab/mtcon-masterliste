@@ -19,18 +19,23 @@ export default function CrmAcquisitionCampaigns() {
   const [seqs, setSeqs] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
 
   useEffect(() => { void load(); }, []);
   const load = async () => {
     setLoading(true);
-    const [{ data: s }, { data: e }] = await Promise.all([
+    setLoadError(false);
+    const [sequenceResult, enrollmentResult] = await Promise.all([
       supabase.from('sequences').select('*, sequence_steps(count), sequence_enrollments(count)').order('created_at', { ascending: false }),
       supabase.from('sequence_enrollments').select('id, status, sequence_id'),
     ]);
-    setSeqs(s ?? []);
-    setEnrollments(e ?? []);
+    if (sequenceResult.error || enrollmentResult.error) {
+      setLoadError(true); setLoading(false); return;
+    }
+    setSeqs(sequenceResult.data ?? []);
+    setEnrollments(enrollmentResult.data ?? []);
     setLoading(false);
   };
 
@@ -51,7 +56,7 @@ export default function CrmAcquisitionCampaigns() {
 
   return (
     <CrmLayout>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
         <div>
           <h1 className="text-xl font-medium text-foreground">Akquisekampagnen</h1>
         </div>
@@ -62,9 +67,10 @@ export default function CrmAcquisitionCampaigns() {
       </div>
 
       <AcquisitionNav />
-      <div className="grid grid-cols-2 md:grid-cols-4 border-y border-border mb-6">
+      {loadError && <div role="alert" className="text-xs text-destructive mb-4 flex items-center gap-3">Kampagnen konnten nicht geladen werden.<Button variant="outline" size="sm" onClick={() => void load()}>Erneut versuchen</Button></div>}
+      {!loading && !loadError && <div className="grid grid-cols-2 md:grid-cols-4 border-y border-border mb-6">
         {[{ label: 'Kampagnen', value: seqs.length }, { label: 'Aktive Kampagnen', value: seqs.filter(s => s.status === 'aktiv').length }, { label: 'Aktive Teilnehmer', value: enrollments.filter(e => e.status === 'aktiv').length }, { label: 'Antworten', value: enrollments.filter(e => e.status === 'geantwortet').length }].map(stat => <div key={stat.label} className="p-4"><p className="text-3xl font-medium tabular-nums">{stat.value}</p><p className="text-xs text-muted-foreground mt-1">{stat.label}</p></div>)}
-      </div>
+      </div>}
       <Tabs defaultValue={searchParams.get('tab') === 'contacts' ? 'contacts' : 'sequences'}>
         <TabsList>
           <TabsTrigger value="sequences">Sequenzen</TabsTrigger>
@@ -107,9 +113,9 @@ export default function CrmAcquisitionCampaigns() {
         <TabsContent value="campaigns" className="mt-4">
           {seqs.length === 0 ? <p className="text-xs text-muted-foreground">Keine Kampagnen — lege zuerst eine Sequenz an.</p>
           : (
-            <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-hidden">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground tracking-wider">
+            <div className="rounded-lg border border-border bg-card/40 backdrop-blur-xl overflow-x-auto">
+              <table className="w-full text-xs min-w-[580px]">
+                <thead className="bg-muted/30 text-[10px] uppercase text-muted-foreground">
                   <tr>
                     <th className="text-left p-2">Kampagne (Sequenz)</th>
                     <th className="text-right p-2">Eingeschrieben</th>

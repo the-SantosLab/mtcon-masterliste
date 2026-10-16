@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowUpRight, Search, Users, Mail, Phone, Globe, CalendarClock, Calendar, Megaphone, Target, Sparkles, Plus, Loader2, Check, RefreshCw, Building2, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, Search, Users, Mail, Phone, Globe, CalendarClock, Calendar, Megaphone, Target, Sparkles, Plus, Loader2, Check, RefreshCw, Building2, AlertCircle } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
 import { CrmLayout } from '@/components/CrmLayout';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,12 @@ export default function AcquisitionWorkspace({ channel }: { channel?: Acquisitio
   const [due, setDue] = useState(tomorrow());
   const [kind, setKind] = useState<ActivityKind>('task');
   const [saving, setSaving] = useState(false);
-  useEffect(() => { setSearch(''); setStatus('all'); setAi([]); setAiError(''); }, [channel]);
+  const aiRequest = useRef(0);
+  useEffect(() => {
+    aiRequest.current += 1;
+    setSearch(''); setStatus('all'); setAi([]); setAiError(''); setAiBusy(false);
+    return () => { aiRequest.current += 1; };
+  }, [channel]);
   const data = query.data;
   const suggestions = useMemo(() => data ? buildAcquisitionSuggestions(data.leads, data.activities) : [], [data]);
   const eligible = useMemo(() => data ? leadsForChannel(channel ?? 'research', data.leads, data.activities) : [], [channel, data]);
@@ -94,6 +99,7 @@ export default function AcquisitionWorkspace({ channel }: { channel?: Acquisitio
     toast.success('Aktivität abgeschlossen'); await queryClient.invalidateQueries({ queryKey: ['crm-acquisition', user.id] });
   };
   const askAi = async () => {
+    const request = ++aiRequest.current;
     setAiBusy(true); setAiError('');
     try {
       const candidates = relevantSuggestions.slice(0, 20);
@@ -103,9 +109,9 @@ export default function AcquisitionWorkspace({ channel }: { channel?: Acquisitio
       if (reply?.error) throw new Error(reply.error);
       const results = parseAcquisitionAiReply(String(reply?.reply ?? ''), candidates);
       if (!results.length) throw new Error('MTIQ hat keine passenden Vorschläge geliefert.');
-      setAi(results);
-    } catch (error) { setAiError(error instanceof Error ? error.message : 'MTIQ ist derzeit nicht erreichbar.'); }
-    finally { setAiBusy(false); }
+      if (aiRequest.current === request) setAi(results);
+    } catch (error) { if (aiRequest.current === request) setAiError(error instanceof Error ? error.message : 'MTIQ ist derzeit nicht erreichbar.'); }
+    finally { if (aiRequest.current === request) setAiBusy(false); }
   };
 
   return <CrmLayout>
