@@ -11,6 +11,7 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import { Plus, ChevronsUpDown, Check, Lightbulb, ArrowLeft, ArrowRight, ChevronDown, Sparkles, Loader2, Feather, Wand2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { MtiqButton } from '@/components/MtiqButton';
+import { ArticleNoInput } from '@/components/ArticleNoInput';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
@@ -882,8 +883,8 @@ export function CreateCaseForm({ userId, onCreated, defaultProjectId, prefill }:
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Projekt-/Artikelnummer</Label>
-                      <Input value={form.project_article_no} onChange={e => set('project_article_no', e.target.value)} className="h-8 text-xs" />
+                      <Label className="text-xs text-muted-foreground">Artikelnummer</Label>
+                      <ArticleNoInput value={form.project_article_no} onChange={v => set('project_article_no', v)} />
                     </div>
                   </div>
                 )}
