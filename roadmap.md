@@ -33,7 +33,7 @@
 - [x] Bestellvorschläge: bereits vorhanden unter Disposition (Mindestbestand, offener Bedarf, Lieferzeit, Bestellung per Klick)
 - [x] Angebot: Positionen aus früherem Angebot/Auftrag übernehmen (Preise aus Preisliste waren schon vorhanden)
 - [x] Posteingang → Einkauf: Eingangsrechnungen/Auftragsbestätigungen der Bestellung zuordnen; isoliert getestet und zurückgerollt
-- [ ] Werkstattkapazität und Nachkalkulation
+- [x] Werkstattauslastung (/werkstatt-auslastung) und Soll/Ist-Kosten je Werkstattauftrag; fünf Regeltests
 - [ ] Mobil: Barcode/QR-Scan mit Kamera für Wareneingang, Entnahme, Inventur; Fertigmeldung
 - [x] Geschäftsführungs-Kennzahlen (/kennzahlen): Umsatz, Auftragseingang, Liefertreue, Forderungen; drei Regeltests
 - [x] Bankabgleich per Kontoauszug-Upload (CSV/CAMT) mit Zuordnung und Bestätigung; drei Regeltests
