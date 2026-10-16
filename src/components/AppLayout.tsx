@@ -250,6 +250,8 @@ const processNavGroups: ProcessNavGroup[] = [
   { id: 'finance', label: 'Abrechnen & auswerten', icon: Receipt, items: [
     { href: '/rechnungen', label: 'Rechnungen', icon: Receipt, access: 'erp' },
     { href: '/admin/erp-export', label: 'Mahnwesen & DATEV', icon: Receipt, access: 'erp' },
+    { href: '/bankabgleich', label: 'Bankabgleich', icon: Receipt, access: 'erp' },
+    { href: '/kennzahlen', label: 'Kennzahlen Geschäftsführung', icon: TrendingUp, access: 'erp' },
     { href: '/crm/analytics', label: 'CRM-Auswertungen', icon: TrendingUp, access: 'crm' },
     { href: '/reporting/einkauf', label: 'Einkaufsreporting', icon: TrendingUp, access: 'erp' },
   ]},
