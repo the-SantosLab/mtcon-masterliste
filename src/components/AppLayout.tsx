@@ -199,14 +199,18 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/activities?action=new&type=followup', label: 'Wiedervorlage erstellen', icon: CalendarClock },
       { href: '/crm/activities?action=new&type=note', label: 'Notiz hinterlegen', icon: StickyNote },
     ] },
-    { href: '/crm/deals', label: 'Verkaufschancen', icon: Briefcase, access: 'crm', children: [
+    { href: '/crm/verkaufschancen', label: 'Verkaufschancen', icon: Briefcase, access: 'crm', children: [
+      { href: '/crm/verkaufschancen', label: 'Übersicht', icon: Briefcase },
+      { href: '/crm/verkaufschancen/pipeline', label: 'Pipeline nach Phase', icon: Workflow },
+      { href: '/crm/verkaufschancen/bewerten', label: 'Bewerten & Umsatzpotenzial', icon: TrendingUp },
+      { href: '/crm/verkaufschancen/phasen', label: 'Deal-Phase ändern', icon: Workflow },
+      { href: '/crm/verkaufschancen/faellig', label: 'Fällige Abschlüsse', icon: CalendarClock },
+      { href: '/crm/verkaufschancen/zuweisen', label: 'Ohne Zuständige:n', icon: UserPlus },
+      { href: '/crm/verkaufschancen/abgeschlossen', label: 'Abgeschlossene Chancen', icon: Trophy },
       { href: '/crm/deals?action=new', label: 'Verkaufschance anlegen', icon: Plus },
-      { href: '/crm/deals', label: 'Bewerten & Umsatzpotenzial', icon: TrendingUp },
       { href: '/crm/settings/automationen', label: 'Wahrscheinlichkeiten', icon: Settings },
-      { href: '/crm/deals', label: 'Deal-Phase ändern', icon: Workflow },
       { href: '/crm/deals?focus=competitors', label: 'Mitbewerber erfassen', icon: Users },
       { href: '/crm/deals?focus=project', label: 'Projektinformationen', icon: FolderKanban },
-      { href: '/crm/deals?stages=won,lost', label: 'Abgeschlossene Chancen', icon: Trophy },
     ] },
     { href: '/crm/offers', label: 'Angebote', icon: FileText, access: 'crm', children: [
       { href: '/crm/offers?action=new', label: 'Angebot erstellen', icon: Plus },
