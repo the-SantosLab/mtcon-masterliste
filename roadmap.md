@@ -1,4 +1,8 @@
 # Roadmap
+- [x] Kundenakquise: eigene Übersicht und acht richtig zugeordnete Unterseiten mit echten CRM-Daten
+- [x] Regelbasierte Aktivitäten und MTIQ-Vorschläge mit bestätigter Übernahme in bestehende Aktivitäten ergänzen
+- [x] Akquise-Regeln und Seitenleistenregression prüfen: neun Tests erfolgreich; Seitenmodule laden fehlerfrei
+- [ ] Angemeldeten Akquiseablauf, MTIQ-Antwort und Darstellung prüfen — blockiert: keine passende Anmeldung für das anfragende Konto; Vorschau führt zur Anmeldung
 - [x] Fremdbearbeitung als verknüpften Werkstatt-Schritt mit Materialverlagerung ergänzen; fünf Regeltests erfolgreich
 - [ ] Angemeldeten Durchlauf im Werkstattauftrag testen — blockiert: für dein Konto gibt es keine passende Anmeldung in der App
 - [x] Fremdbearbeitung als eigenen Auftragstyp mit Lieferantenzuordnung ergänzen
