@@ -351,6 +351,13 @@
       "when": 1792156402696,
       "tag": "0049_scan_goods_receipt",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1792157281194,
+      "tag": "0050_scan_production_complete",
+      "breakpoints": true
     }
   ]
 }

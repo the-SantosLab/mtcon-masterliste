@@ -8211,6 +8211,41 @@ export type Database = {
         }
         Relationships: []
       }
+      production_completion_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          production_order_id: string
+          qty: number
+          request_id: string
+          result: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          production_order_id: string
+          qty: number
+          request_id: string
+          result?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          production_order_id?: string
+          qty?: number
+          request_id?: string
+          result?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_completion_requests_production_order_id_fkey"
+            columns: ["production_order_id"]
+            isOneToOne: false
+            referencedRelation: "production_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       production_order_items: {
         Row: {
           component_art_nr: string
@@ -11064,6 +11099,16 @@ export type Database = {
           _warehouse_id: string
         }
         Returns: string
+      }
+      scan_production_complete: {
+        Args: {
+          _expected_done: number
+          _id: string
+          _lot_no?: string
+          _qty: number
+          _request_id: string
+        }
+        Returns: Json
       }
       set_own_active_session_token: {
         Args: { _token: string }
