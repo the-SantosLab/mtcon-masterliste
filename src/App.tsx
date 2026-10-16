@@ -115,6 +115,8 @@ const CrmSettings = lazyRetry(() => import("./pages/crm/CrmSettings"));
 const CrmMicrosoft365 = lazyRetry(() => import("./pages/crm/CrmMicrosoft365"));
 const CrmWiki = lazyRetry(() => import("./pages/crm/CrmWiki"));
 const CrmOutbound = lazyRetry(() => import("./pages/crm/CrmOutbound"));
+const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
+const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
 const CrmEnrollments = lazyRetry(() => import("./pages/crm/CrmEnrollments"));
 const CrmLeads = lazyRetry(() => import("./pages/crm/CrmLeads"));
@@ -321,6 +323,14 @@ function AuthenticatedApp() {
           <Route path="/crm/settings/zugang" element={<CrmProtectedRoute><CrmAccess /></CrmProtectedRoute>} />
           <Route path="/crm/wiki" element={<CrmProtectedRoute><CrmWiki /></CrmProtectedRoute>} />
           <Route path="/crm/outbound" element={<CrmProtectedRoute><CrmOutbound /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/research" element={<CrmProtectedRoute><CrmAcquisitionPage channel="research" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/people" element={<CrmProtectedRoute><CrmAcquisitionPage channel="people" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/email" element={<CrmProtectedRoute><CrmAcquisitionPage channel="email" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/phone" element={<CrmProtectedRoute><CrmAcquisitionPage channel="phone" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/social" element={<CrmProtectedRoute><CrmAcquisitionPage channel="social" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/fairs" element={<CrmProtectedRoute><CrmAcquisitionPage channel="fairs" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/visits" element={<CrmProtectedRoute><CrmAcquisitionPage channel="visits" /></CrmProtectedRoute>} />
+          <Route path="/crm/outbound/campaigns" element={<CrmProtectedRoute><CrmAcquisitionCampaigns /></CrmProtectedRoute>} />
           <Route path="/crm/outbound/sequences/:id" element={<CrmProtectedRoute><CrmSequenceDetail /></CrmProtectedRoute>} />
           <Route path="/crm/outbound/enrollments" element={<CrmProtectedRoute><CrmEnrollments /></CrmProtectedRoute>} />
           <Route path="/crm/outbound/leads" element={<CrmProtectedRoute><CrmLeads /></CrmProtectedRoute>} />
