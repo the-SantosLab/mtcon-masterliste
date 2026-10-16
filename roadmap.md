@@ -34,7 +34,7 @@
 - [x] Angebot: Positionen aus früherem Angebot/Auftrag übernehmen (Preise aus Preisliste waren schon vorhanden)
 - [x] Posteingang → Einkauf: Eingangsrechnungen/Auftragsbestätigungen der Bestellung zuordnen; isoliert getestet und zurückgerollt
 - [x] Werkstattauslastung (/werkstatt-auslastung) und Soll/Ist-Kosten je Werkstattauftrag; fünf Regeltests
-- [ ] Mobil: Barcode/QR-Scan mit Kamera für Wareneingang, Entnahme, Inventur; Fertigmeldung
+- [x] Mobil: Scan-Seite /scan (Kamera + Handscanner) für Wareneingang, Entnahme, Inventur; isoliert getestet
 - [x] Geschäftsführungs-Kennzahlen (/kennzahlen): Umsatz, Auftragseingang, Liefertreue, Forderungen; drei Regeltests
 - [x] Bankabgleich per Kontoauszug-Upload (CSV/CAMT) mit Zuordnung und Bestätigung; drei Regeltests
 - [x] Teilrechnungen: Abschläge (Prozent/Betrag) und Schlussrechnung mit automatischem Abzug; isoliert getestet und zurückgerollt
