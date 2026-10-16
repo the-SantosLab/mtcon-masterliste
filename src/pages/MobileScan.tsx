@@ -45,9 +45,12 @@ export default function MobileScan() {
   useEffect(reset, [mode]);
 
   const onScan = async (raw: string) => {
-    const code = parseScan(raw);
-    const { data: a } = await db.from('articles').select('art_nr, bezeich_1, me').eq('art_nr', code).maybeSingle();
-    if (!a) { toast.error(`Artikel ${code} nicht gefunden`); return; }
+    const scanned = parseScan(raw);
+    let code = scanned;
+    let { data: a } = await db.from('articles').select('art_nr, bezeich_1, me').eq('art_nr', code).maybeSingle();
+    if (!a) ({ data: a } = await db.from('articles').select('art_nr, bezeich_1, me').eq('ean', code).maybeSingle());
+    if (!a) { toast.error(`Artikel oder EAN ${scanned} nicht gefunden`); return; }
+    code = a.art_nr;
     reset(); setArt(a);
     const warehouse = mode === 'count' ? counts.find((c) => c.id === countId)?.warehouse_id : wh;
     const { data: st } = await db.from('inventory_stock').select('quantity').eq('art_nr', code).eq('warehouse_id', warehouse).maybeSingle();
