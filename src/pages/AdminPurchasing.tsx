@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
+import { SubcontractOrders } from '@/components/erp/SubcontractOrders';
 import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,7 +50,9 @@ const STATUS_VARIANT: Record<POStatus, 'secondary' | 'default' | 'outline' | 'de
 
 export default function AdminPurchasing() {
   const { isAdmin, loading, user, role } = useAuth();
-  const [tab, setTab] = useState('overview');
+  const [params, setParams] = useSearchParams();
+  const tab = ['overview', 'orders', 'receipts', 'suppliers'].includes(params.get('tab') || '') ? params.get('tab') || 'overview' : 'overview';
+  const setTab = (value: string) => setParams(p => { p.set('tab', value); return p; });
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -77,7 +81,7 @@ export default function AdminPurchasing() {
   useEffect(() => { loadAll(); }, [loadAll]);
 
   if (loading || (user && !role)) return <AppLayout><div className="p-6 text-muted-foreground text-sm">Lädt…</div></AppLayout>;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin && role !== 'staff') return <Navigate to="/" replace />;
 
   return (
     <AppLayout>
@@ -165,6 +169,7 @@ export default function AdminPurchasing() {
 
           {/* ============ WARENEINGANG ============ */}
           <TabsContent value="receipts" className="space-y-3">
+            <SubcontractOrders receiptsOnly />
             <p className="text-xs text-muted-foreground">Offene Bestellungen (Status bestellt / teilgeliefert). Klick öffnet die Buchung.</p>
             <div className="rounded-lg border border-border overflow-hidden">
               <table className="w-full text-sm">

@@ -9206,6 +9206,203 @@ export type Database = {
         }
         Relationships: []
       }
+      subcontract_order_items: {
+        Row: {
+          art_nr: string
+          description: string | null
+          id: string
+          order_id: string
+          qty_issued: number
+          qty_returned: number
+          quantity: number
+        }
+        Insert: {
+          art_nr: string
+          description?: string | null
+          id?: string
+          order_id: string
+          qty_issued?: number
+          qty_returned?: number
+          quantity: number
+        }
+        Update: {
+          art_nr?: string
+          description?: string | null
+          id?: string
+          order_id?: string
+          qty_issued?: number
+          qty_returned?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontract_order_items_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+          {
+            foreignKeyName: "subcontract_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "subcontract_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontract_orders: {
+        Row: {
+          created_at: string
+          created_by: string
+          expected_at: string | null
+          id: string
+          note: string | null
+          order_no: string
+          status: string
+          supplier_id: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          expected_at?: string | null
+          id?: string
+          note?: string | null
+          order_no?: string
+          status?: string
+          supplier_id: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expected_at?: string | null
+          id?: string
+          note?: string | null
+          order_no?: string
+          status?: string
+          supplier_id?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontract_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_rating_summary"
+            referencedColumns: ["supplier_id"]
+          },
+          {
+            foreignKeyName: "subcontract_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontract_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontract_receipt_items: {
+        Row: {
+          id: string
+          item_id: string
+          movement_id: string
+          quantity: number
+          receipt_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          movement_id: string
+          quantity: number
+          receipt_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          movement_id?: string
+          quantity?: number
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontract_receipt_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "subcontract_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontract_receipt_items_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontract_receipt_items_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "subcontract_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontract_receipts: {
+        Row: {
+          delivery_note_no: string | null
+          id: string
+          order_id: string
+          receipt_no: string
+          received_at: string
+          received_by: string
+          request_id: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          delivery_note_no?: string | null
+          id?: string
+          order_id: string
+          receipt_no?: string
+          received_at?: string
+          received_by?: string
+          request_id?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          delivery_note_no?: string | null
+          id?: string
+          order_id?: string
+          receipt_no?: string
+          received_at?: string
+          received_by?: string
+          request_id?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontract_receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "subcontract_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontract_receipts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_invoice_items: {
         Row: {
           art_nr: string | null
@@ -10064,6 +10261,16 @@ export type Database = {
         Returns: undefined
       }
       archive_old_announcements: { Args: never; Returns: number }
+      book_subcontract_receipt: {
+        Args: {
+          _delivery_note_no?: string
+          _id: string
+          _items: Json
+          _request_id: string
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       book_to_sperrlager: {
         Args: {
           _qty?: number
@@ -10132,6 +10339,7 @@ export type Database = {
         Args: { p_document_id: string; p_uid?: string }
         Returns: boolean
       }
+      cancel_subcontract_order: { Args: { _id: string }; Returns: undefined }
       case_department: { Args: { p_case_id: string }; Returns: string }
       case_dept_owner: { Args: { p_case_id: string }; Returns: string }
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
@@ -10152,6 +10360,16 @@ export type Database = {
           _note?: string
           _order_id?: string
           _quantity: number
+          _warehouse_id: string
+        }
+        Returns: string
+      }
+      create_subcontract_order: {
+        Args: {
+          _expected_at?: string
+          _items: Json
+          _note?: string
+          _supplier_id: string
           _warehouse_id: string
         }
         Returns: string
@@ -10285,6 +10503,7 @@ export type Database = {
         Args: { p_project_id: string; p_uid?: string }
         Returns: boolean
       }
+      issue_subcontract_material: { Args: { _id: string }; Returns: undefined }
       lock_erp_document: {
         Args: { _id: string; _kind: string }
         Returns: boolean
@@ -10336,6 +10555,15 @@ export type Database = {
         Returns: undefined
       }
       recalc_order_status: { Args: { _order_id: string }; Returns: undefined }
+      receive_subcontract_material: {
+        Args: {
+          _delivery_note_no?: string
+          _id: string
+          _items: Json
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       recompute_case_urgency: {
         Args: { p_case_id: string }
         Returns: undefined
@@ -10344,6 +10572,7 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: undefined
       }
+      require_subcontract_writer: { Args: never; Returns: undefined }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
       set_own_active_session_token: {
         Args: { _token: string }

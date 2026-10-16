@@ -38,6 +38,7 @@ const AdminApiExplorer = lazyRetry(() => import("./pages/AdminApiExplorer"));
 const AdminArticles = lazyRetry(() => import("./pages/AdminArticles"));
 const AdminInventory = lazyRetry(() => import("./pages/AdminInventory"));
 const AdminProduction = lazyRetry(() => import("./pages/AdminProduction"));
+const Subcontracting = lazyRetry(() => import("./pages/Subcontracting"));
 
 const AdminPurchasing = lazyRetry(() => import("./pages/AdminPurchasing"));
 const AdminDisposition = lazyRetry(() => import("./pages/AdminDisposition"));
@@ -259,6 +260,7 @@ function AuthenticatedApp() {
           <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
           <Route path="/admin/inventory" element={<ProtectedRoute><AdminInventory /></ProtectedRoute>} />
           <Route path="/admin/production" element={<ProtectedRoute><AdminProduction /></ProtectedRoute>} />
+          <Route path="/fremdbearbeitung" element={<ProtectedRoute><Subcontracting /></ProtectedRoute>} />
           <Route path="/admin/storage-locations" element={<Navigate to="/admin/inventory" replace />} />
           <Route path="/admin/purchasing" element={<ProtectedRoute><AdminPurchasing /></ProtectedRoute>} />
           <Route path="/admin/disposition" element={<ProtectedRoute><AdminDisposition /></ProtectedRoute>} />
