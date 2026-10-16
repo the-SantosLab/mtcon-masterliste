@@ -12,12 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, Layers, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Eye, Layers, AlertTriangle, LayoutGrid, List, FileText, Image as ImageIcon, FileBox } from "lucide-react";
+import { FulfillmentMetrics } from "@/components/erp/FulfillmentHeader";
+import { cn } from "@/lib/utils";
 import { isOutdated, paramSummary, revLabel } from "@/lib/drawings";
 import "@/components/erp/fulfillment.css";
 
 export type Category = { id: string; parent_id: string | null; code: string; name: string };
-type Drawing = { id: string; drawing_no: string; title: string | null; current_version: number; category_id: string | null; subcategory_id: string | null; part_name: string | null; manufacturer: string | null; updated_at: string };
+type Drawing = { id: string; drawing_no: string; title: string | null; current_version: number; current_version_id: string | null; category_id: string | null; subcategory_id: string | null; part_name: string | null; manufacturer: string | null; updated_at: string };
 type Param = { drawing_id: string; name: string; value: string | null; sort_order: number };
 
 const db = supabase as any;
@@ -35,17 +37,27 @@ export default function AdminDrawings() {
   const [cat, setCat] = useState('all');
   const [sortDesc, setSortDesc] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [view, setView] = useState<'grid' | 'table'>(() => (localStorage.getItem('drawings-view') as any) || 'grid');
+  const [thumbs, setThumbs] = useState<Map<string, { url: string | null; name: string; mime: string | null }>>(new Map());
+  useEffect(() => { localStorage.setItem('drawings-view', view); }, [view]);
 
   const load = async () => {
     setLoading(true);
     const [d, c, p] = await Promise.all([
-      db.from('drawings').select('id, drawing_no, title, current_version, category_id, subcategory_id, part_name, manufacturer, updated_at').limit(2000),
+      db.from('drawings').select('id, drawing_no, title, current_version, current_version_id, category_id, subcategory_id, part_name, manufacturer, updated_at').limit(2000),
       db.from('drawing_categories').select('*').order('code'),
       db.from('drawing_parameters').select('drawing_id, name, value, sort_order').order('sort_order').limit(10000),
     ]);
     setDrawings(d.data ?? []); setCats(c.data ?? []);
     const m = new Map<string, Param[]>(); (p.data ?? []).forEach((x: Param) => m.set(x.drawing_id, [...(m.get(x.drawing_id) ?? []), x])); setParamsBy(m);
     setLoading(false);
+    const ids = (d.data ?? []).map((x: Drawing) => x.current_version_id).filter(Boolean);
+    if (!ids.length) return;
+    const { data: vs } = await db.from('drawing_versions').select('id, drawing_id, storage_path, file_name, mime_type').in('id', ids);
+    const imgs = (vs ?? []).filter((v: any) => /^image\//.test(v.mime_type ?? '') || /\.(png|jpe?g|webp|gif|svg)$/i.test(v.file_name));
+    const signed = imgs.length ? (await supabase.storage.from('drawings').createSignedUrls(imgs.map((v: any) => v.storage_path), 1800)).data ?? [] : [];
+    const urlBy = new Map(signed.map((x: any) => [x.path, x.signedUrl]));
+    setThumbs(new Map((vs ?? []).map((v: any) => [v.drawing_id, { url: (urlBy.get(v.storage_path) as string) ?? null, name: v.file_name, mime: v.mime_type }])));
   };
   useEffect(() => { void load(); }, []);
 
@@ -76,6 +88,16 @@ export default function AdminDrawings() {
           </TabsList>
 
           <TabsContent value="drawings" className="space-y-4">
+            <FulfillmentMetrics metrics={[
+              { label: 'Zeichnungen', value: drawings.length },
+              { label: 'Mit Zeichnungsdatei', value: drawings.filter(x => x.current_version > 0).length, tone: 'done' },
+              { label: 'Ohne Datei', value: drawings.filter(x => !x.current_version).length, tone: drawings.some(x => !x.current_version) ? 'overdue' : undefined },
+              { label: 'Ohne Kategorie', value: drawings.filter(x => !x.category_id).length, tone: drawings.some(x => !x.category_id) ? 'working' : undefined },
+            ]} />
+            {cats.some(c => !c.parent_id) && <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {[{ id: 'all', name: 'Alle', code: '' }, ...cats.filter(c => !c.parent_id)].map(c => <button key={c.id} onClick={() => setCat(c.id)} className={cn('shrink-0 rounded-full border px-3 py-1 text-xs transition-colors', cat === c.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground')}>
+                {c.name}<span className="ml-1.5 tabular-nums opacity-70">{c.id === 'all' ? drawings.length : drawings.filter(x => x.category_id === c.id).length}</span></button>)}
+            </div>}
             <div className="fulfillment-toolbar">
               <Input placeholder="Nummer, Name, Parameter suchen…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs h-8 text-xs" />
               <Select value={cat} onValueChange={setCat}>
@@ -83,8 +105,29 @@ export default function AdminDrawings() {
                 <SelectContent><SelectItem value="all">Alle Kategorien</SelectItem>{cats.filter(c => !c.parent_id).map(c => <SelectItem key={c.id} value={c.id}>{c.code} · {c.name}</SelectItem>)}</SelectContent>
               </Select>
               <span className="text-xs text-muted-foreground">{rows.length} Zeichnungen</span>
+              <div className="ml-auto flex rounded-md border border-border p-0.5">
+                <Button size="sm" variant={view === 'grid' ? 'secondary' : 'ghost'} className="h-7 px-2" onClick={() => setView('grid')} aria-label="Kachelansicht"><LayoutGrid className="h-3.5 w-3.5" /></Button>
+                <Button size="sm" variant={view === 'table' ? 'secondary' : 'ghost'} className="h-7 px-2" onClick={() => setView('table')} aria-label="Tabellenansicht"><List className="h-3.5 w-3.5" /></Button>
+              </div>
             </div>
-            <div className="fulfillment-table">
+            {view === 'grid' ? (loading ? <p className="py-10 text-center text-sm text-muted-foreground">Lade…</p>
+            : rows.length === 0 ? <div className="py-16 text-center border border-dashed border-border rounded-lg"><FileBox className="h-8 w-8 mx-auto text-muted-foreground mb-2" /><p className="text-sm">Keine Zeichnungen</p><Button size="sm" variant="outline" className="mt-3" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" />Neue Zeichnung</Button></div>
+            : <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {rows.map(d => { const t = thumbs.get(d.id); const ps = paramsBy.get(d.id) ?? []; return (
+                <Link key={d.id} to={`/zeichnungen/${d.id}`} className="group overflow-hidden rounded-lg border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+                  <div className="relative aspect-[4/3] bg-muted/40 flex items-center justify-center overflow-hidden border-b border-border">
+                    {t?.url ? <img src={t.url} alt={`Vorschau ${d.drawing_no}`} loading="lazy" className="h-full w-full object-contain bg-background p-2 transition-transform group-hover:scale-[1.03]" />
+                    : <div className="flex flex-col items-center gap-2 text-muted-foreground">{t ? <FileText className="h-10 w-10" /> : <ImageIcon className="h-10 w-10 opacity-40" />}<span className="text-[11px]">{t ? (t.name.split('.').pop() ?? '').toUpperCase() : 'Noch keine Datei'}</span></div>}
+                    <Badge variant="secondary" className="absolute right-2 top-2 font-mono text-[10px]">Rev. {d.current_version ? revLabel(d.current_version) : '–'}</Badge>
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    <div className="font-mono text-xs text-primary">{d.drawing_no}</div>
+                    <div className="text-sm font-medium text-foreground line-clamp-1">{d.title || d.part_name || 'Ohne Name'}</div>
+                    <div className="flex flex-wrap gap-1">{d.category_id && <Badge variant="outline" className="text-[10px]">{catName(d.category_id)}</Badge>}{d.subcategory_id && <Badge variant="outline" className="text-[10px] text-muted-foreground">{catName(d.subcategory_id)}</Badge>}</div>
+                    {(d.manufacturer || ps.length > 0) && <p className="text-[11px] text-muted-foreground line-clamp-2">{[d.manufacturer && `Hersteller: ${d.manufacturer}`, paramSummary(ps, 2)].filter(Boolean).join(' · ')}</p>}
+                  </div>
+                </Link>); })}
+            </div>) : <div className="fulfillment-table">
               <table className="w-full text-sm">
                 <thead><tr className="text-xs">
                   <th className="text-left p-3"><button onClick={() => setSortDesc(!sortDesc)}>Nummer {sortDesc ? '↑' : '↓'}</button></th>
@@ -105,7 +148,7 @@ export default function AdminDrawings() {
                     </tr>))}
                 </tbody>
               </table>
-            </div>
+            </div>}
           </TabsContent>
 
           <TabsContent value="sets"><SetsTab drawings={drawings} /></TabsContent>
