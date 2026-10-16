@@ -330,6 +330,13 @@
       "when": 1792155462879,
       "tag": "0046_block_standard_invoice_after_partial",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792155851404,
+      "tag": "0047_inbox_link_purchase_order",
+      "breakpoints": true
     }
   ]
 }
