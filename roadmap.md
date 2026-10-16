@@ -20,3 +20,5 @@
 - [ ] Angemeldeten Werkstattauftrag-Durchlauf mit Fremdbearbeitung testen — offen: Ablauf (Materialausgabe, Wareneingang) noch nicht durchgeführt
 - [x] Kommunikation & Aufgaben: sieben eigene Unterseiten (Übersicht, Aufgaben, Wiedervorlagen, Termine, Telefonate, E-Mails, Besuchsberichte, Erledigt) mit Kennzahlen, Übernehmen/Erledigen-Aktionen; acht Regeltests erfolgreich
 - [x] Verkaufschancen: sechs eigene Unterseiten (Übersicht, Pipeline, Bewerten, Phasen, Fällige Abschlüsse, Zuweisen, Abgeschlossen) mit gewichtetem Volumen und Phasenwechsel; zehn Regeltests erfolgreich
+
+- [ ] „Aufträge abwickeln“: /orders und alle sieben Menüziele einheitlich neu gestalten; bestehende Abläufe erhalten und angemeldet prüfen
