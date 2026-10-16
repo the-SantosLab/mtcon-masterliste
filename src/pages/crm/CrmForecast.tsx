@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -17,6 +18,8 @@ type Deal = {
   value_final: number | null;
   currency: string;
   owner_id: string | null;
+  company_id: string | null;
+  companies?: { name: string | null } | null;
   lead_source: string | null;
   probability_override: number | null;
   expected_close_date: string | null;
@@ -51,13 +54,16 @@ export default function CrmForecast() {
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
+  const [params, setParams] = useSearchParams();
+  const companyFilter = params.get('company') || 'all';
+  const setCompanyFilter = (v: string) => { const n = new URLSearchParams(params); if (v === 'all') n.delete('company'); else n.set('company', v); setParams(n, { replace: true }); };
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       const [d, sp, p, g] = await Promise.all([
-        supabase.from('deals').select('id,title,stage,value_estimated,value_final,currency,owner_id,lead_source,probability_override,expected_close_date,stage_changed_at,won_at,lost_at,created_at').limit(5000),
+        supabase.from('deals').select('id,title,stage,value_estimated,value_final,currency,owner_id,company_id,companies(name),lead_source,probability_override,expected_close_date,stage_changed_at,won_at,lost_at,created_at').limit(5000),
         supabase.from('crm_stage_probabilities').select('*'),
         supabase.from('users_profile').select('id,display_name').eq('active', true).order('display_name'),
         supabase.from('crm_sales_goals').select('*').eq('period_year', year),
@@ -85,8 +91,15 @@ export default function CrmForecast() {
   };
 
   const dealsFiltered = useMemo(() => {
-    return deals.filter(d => ownerFilter === 'all' || d.owner_id === ownerFilter);
-  }, [deals, ownerFilter]);
+    return deals.filter(d => (ownerFilter === 'all' || d.owner_id === ownerFilter) && (companyFilter === 'all' || (companyFilter === '__none' ? !d.company_id : d.company_id === companyFilter)));
+  }, [deals, ownerFilter, companyFilter]);
+
+  const companyOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    deals.forEach(d => { if (d.company_id) m.set(d.company_id, d.companies?.name || 'Ohne Namen'); });
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], 'de'));
+  }, [deals]);
+  const [companySearch, setCompanySearch] = useState('');
 
   // Forecast: open pipeline weighted by probability
   const forecast = useMemo(() => {
@@ -206,6 +219,20 @@ export default function CrmForecast() {
                   <SelectItem value="all">Alle Owner</SelectItem>
                   {profiles.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.display_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 min-w-[260px]">
+              <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Kunde</label>
+              <Select value={companyFilter} onValueChange={setCompanyFilter}>
+                <SelectTrigger className="h-9" aria-label="Kunde"><SelectValue placeholder="Alle Kunden" /></SelectTrigger>
+                <SelectContent>
+                  <div className="p-1"><input value={companySearch} onChange={e => setCompanySearch(e.target.value)} onKeyDown={e => e.stopPropagation()} placeholder="Kunde suchen" className="h-8 w-full rounded border border-input bg-background px-2 text-xs" /></div>
+                  <SelectItem value="all">Alle Kunden</SelectItem>
+                  <SelectItem value="__none">Ohne Kunde</SelectItem>
+                  {companyOptions.filter(([id, n]) => id === companyFilter || n.toLowerCase().includes(companySearch.toLowerCase())).map(([id, n]) => (
+                    <SelectItem key={id} value={id}>{n}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
