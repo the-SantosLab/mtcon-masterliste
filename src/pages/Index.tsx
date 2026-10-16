@@ -19,7 +19,6 @@ import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { DashboardClock } from '@/components/DashboardClock';
-import { MyDay } from '@/components/MyDay';
 
 type CaseRow = Tables<'cases'> & { assignee: { display_name: string; short_code: string } | null };
 
@@ -341,7 +340,6 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="dashboard-shell space-y-4 max-w-[1600px]">
-        <MyDay />
         {/* Hero zone — Left 60% / Right 40% */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* LEFT: Hero image with greeting + KPIs overlay */}
