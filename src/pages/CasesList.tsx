@@ -446,6 +446,17 @@ export default function CasesList() {
             </button>
           )}
         </div>
+        {filtersActive && (
+          <div role="status" className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs text-foreground">
+            <span className="font-medium">Filter aktiv:</span>
+            <span>{cases.length - filtered.length} von {cases.length} Vorgängen ausgeblendet</span>
+            {statusFilter.length !== allStatuses.length && <span className="text-muted-foreground">· {allStatuses.length - statusFilter.length} Status ausgeblendet</span>}
+            {onlyMine && <span className="text-muted-foreground">· nur meine</span>}
+            {[assigneeFilter, projectFilter, deptFilter, dueFilter, dateRangeFilter].filter(v => v !== 'all').length > 0 && <span className="text-muted-foreground">· {[assigneeFilter, projectFilter, deptFilter, dueFilter, dateRangeFilter].filter(v => v !== 'all').length} weitere Filter</span>}
+            {search && <span className="text-muted-foreground">· Suche „{search}“</span>}
+            <button onClick={resetFilters} className="ml-auto underline">Alle anzeigen</button>
+          </div>
+        )}
 
         {/* Legend */}
         <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
