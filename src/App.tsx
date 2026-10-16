@@ -115,6 +115,7 @@ const CrmSettings = lazyRetry(() => import("./pages/crm/CrmSettings"));
 const CrmMicrosoft365 = lazyRetry(() => import("./pages/crm/CrmMicrosoft365"));
 const CrmWiki = lazyRetry(() => import("./pages/crm/CrmWiki"));
 const CrmOutbound = lazyRetry(() => import("./pages/crm/CrmOutbound"));
+const LeadWorkspace = lazy(() => import('./components/crm/LeadWorkspace'));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
@@ -334,6 +335,13 @@ function AuthenticatedApp() {
           <Route path="/crm/outbound/sequences/:id" element={<CrmProtectedRoute><CrmSequenceDetail /></CrmProtectedRoute>} />
           <Route path="/crm/outbound/enrollments" element={<CrmProtectedRoute><CrmEnrollments /></CrmProtectedRoute>} />
           <Route path="/crm/outbound/leads" element={<CrmProtectedRoute><CrmLeads /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten" element={<CrmProtectedRoute><LeadWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten/qualifizieren" element={<CrmProtectedRoute><LeadWorkspace page="qualify" /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten/bewerten" element={<CrmProtectedRoute><LeadWorkspace page="score" /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten/zuweisen" element={<CrmProtectedRoute><LeadWorkspace page="assign" /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten/umwandeln" element={<CrmProtectedRoute><LeadWorkspace page="convert" /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten/archiv" element={<CrmProtectedRoute><LeadWorkspace page="archive" /></CrmProtectedRoute>} />
+          <Route path="/crm/interessenten/historie" element={<CrmProtectedRoute><LeadWorkspace page="history" /></CrmProtectedRoute>} />
           <Route path="/crm/activities/calendar" element={<CrmProtectedRoute><CrmCalendar /></CrmProtectedRoute>} />
           <Route path="/crm/analytics" element={<CrmProtectedRoute><CrmAnalytics /></CrmProtectedRoute>} />
           <Route path="/crm/forecast" element={<CrmProtectedRoute><CrmForecast /></CrmProtectedRoute>} />
