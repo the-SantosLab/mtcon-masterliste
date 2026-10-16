@@ -27,3 +27,12 @@
 - [x] „Aufträge abwickeln“: alle sieben Menüziele einheitlich neu gestaltet; Suche, Details, Kennzahlenfilter, Navigation und schmale Ansichten angemeldet geprüft; sieben bestehende Tests erfolgreich
 
 - [x] „Einkaufen & lagern“: acht Menüziele einheitlich neu gestaltet; angemeldete Seiten-, Such-, Detail- und Lagerreitertests sowie sieben Regressionstests erfolgreich; Buchungen unverändert
+
+## Ausbau „alles davon“ (Reihenfolge: Empfehlung)
+- [x] Kundenblick im CRM: offene Aufträge, Lieferstatus, Forderungen, Zahlungsverhalten, Hinweise (90 Tage / überfällig)
+- [ ] Bestellvorschläge aus Mindestbestand, offenen Aufträgen und Lieferzeit mit Freigabe
+- [ ] Angebot aus Vorlage/früherem Auftrag, automatische Preise mit Kundenrabatt, Posteingang → Einkauf
+- [ ] Werkstattkapazität und Nachkalkulation
+- [ ] Mobil: Barcode/QR-Scan mit Kamera für Wareneingang, Entnahme, Inventur; Fertigmeldung
+- [ ] Geschäftsführungs-Kennzahlen (Wochenwerte)
+- [ ] Teilrechnungen und Bankabgleich per Kontoauszug-Upload (CSV/CAMT)
