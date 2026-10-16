@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { parseScan, openPoLines, issueAllowed } from '@/lib/scan';
 import { toast } from 'sonner';
+import { ScanProductionComplete } from '@/components/erp/ScanProductionComplete';
 
-type Mode = 'receipt' | 'issue' | 'count';
+type Mode = 'receipt' | 'issue' | 'count' | 'done';
 const db = supabase as any;
 
 export default function MobileScan() {
@@ -93,11 +94,12 @@ export default function MobileScan() {
   return (
     <AppLayout>
       <div className="mx-auto max-w-md space-y-4 pb-24">
-        <div><h1 className="text-xl font-semibold">Scannen</h1><p className="text-xs text-muted-foreground">Wareneingang, Entnahme und Inventur mit Handykamera</p></div>
+        <div><h1 className="text-xl font-semibold">Scannen</h1><p className="text-xs text-muted-foreground">Wareneingang, Entnahme, Inventur und Fertigmeldung mit Handykamera</p></div>
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
-          <TabsList className="w-full"><TabsTrigger value="receipt" className="flex-1">Wareneingang</TabsTrigger><TabsTrigger value="issue" className="flex-1">Entnahme</TabsTrigger><TabsTrigger value="count" className="flex-1">Inventur</TabsTrigger></TabsList>
+          <TabsList className="w-full"><TabsTrigger value="receipt" className="flex-1">Wareneingang</TabsTrigger><TabsTrigger value="issue" className="flex-1">Entnahme</TabsTrigger><TabsTrigger value="count" className="flex-1">Inventur</TabsTrigger><TabsTrigger value="done" className="flex-1">Fertig</TabsTrigger></TabsList>
         </Tabs>
         {!canBook && <p className="rounded border border-border p-3 text-xs text-muted-foreground">Nur Ansicht: Buchen ist Admins und Mitarbeitenden vorbehalten.</p>}
+        {mode === 'done' ? <ScanProductionComplete canBook={canBook} /> : <>
         {mode === 'count' ? (
           <div className="space-y-1"><Label className="text-xs">Laufende Inventur</Label>
             {counts.length ? <Select value={countId} onValueChange={(v) => { setCountId(v); reset(); }}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
@@ -130,6 +132,7 @@ export default function MobileScan() {
             </Button>
           </div>
         )}
+        </>}
       </div>
     </AppLayout>
   );
