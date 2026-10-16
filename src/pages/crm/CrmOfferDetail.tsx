@@ -338,7 +338,8 @@ export default function CrmOfferDetail() {
               <SelectContent>{filteredContacts.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <CaseLinkSelect value={offer.case_id ?? null} onChange={(v) => setOffer({ ...offer, case_id: v })} />
+          <div className="space-y-1"><CaseLinkSelect value={offer.case_id ?? null} onChange={(v) => setOffer({ ...offer, case_id: v })} />
+            {!offer.case_id && <p className="text-[10px] text-destructive">Pflicht: Vor dem Versenden mit einem Vorgang der Masterliste verknüpfen.</p>}</div>
           <div className="space-y-1.5 md:col-span-3">
             <Label className="text-[11px] text-muted-foreground">Lieferadresse</Label>
             <Textarea value={offer.delivery_address ?? ''} onChange={e => setOffer({ ...offer, delivery_address: e.target.value })} className="text-xs min-h-[60px]" />
