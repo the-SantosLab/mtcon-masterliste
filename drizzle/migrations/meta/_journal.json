@@ -379,6 +379,13 @@
       "when": 1792160991206,
       "tag": "0053_price_calculations",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1792161010594,
+      "tag": "0054_price_calc_freeze_final",
+      "breakpoints": true
     }
   ]
 }
