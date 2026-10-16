@@ -5,6 +5,10 @@ DECLARE staff uuid; viewer uuid; wo uuid:=gen_random_uuid(); wh uuid; r jsonb; o
 BEGIN
  SELECT user_id INTO staff FROM public.user_roles WHERE role='staff' LIMIT 1;
  SELECT user_id INTO viewer FROM public.user_roles WHERE role='viewer' LIMIT 1;
+ IF viewer IS NULL THEN -- temporary, rolled back
+  SELECT user_id INTO viewer FROM public.user_roles WHERE role='staff' AND user_id<>staff LIMIT 1;
+  DELETE FROM public.user_roles WHERE user_id=viewer; INSERT INTO public.user_roles(user_id,role) VALUES(viewer,'viewer');
+ END IF;
  SELECT id INTO wh FROM public.warehouses LIMIT 1;
  IF staff IS NULL OR viewer IS NULL OR wh IS NULL THEN RAISE EXCEPTION 'fixtures missing'; END IF;
  INSERT INTO public.production_orders(id,wo_no,art_nr,warehouse_id,quantity,status) VALUES(wo,'ISOLATED-SCAN-DONE','ISOLATED-SCAN-ART',wh,10,'in_progress');
