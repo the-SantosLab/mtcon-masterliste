@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CaseArticleInfo } from '@/components/CaseArticleInfo';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -709,7 +710,7 @@ export default function CaseDetail() {
               const filledCount = detailFields.filter(v => v !== null && v !== undefined && v !== '').length + (c.project ? 1 : 0);
               const hasAny = filledCount > 0;
               return (
-                <details className="rounded-md border border-border bg-card p-5 group">
+                <details open={!!c.project_article_no || undefined} className="rounded-md border border-border bg-card p-5 group">
                   <summary className="flex items-center justify-between cursor-pointer list-none">
                     <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Details {!hasAny && <span className="ml-1 normal-case text-[10px] text-muted-foreground/70">(keine Angaben)</span>}
@@ -722,7 +723,7 @@ export default function CaseDetail() {
                      <Field label="Auftraggeber" value={c.client_name} />
                      <Field label="Produkt" value={c.product_code} />
                      <Field label="Bereich intern" value={c.internal_area_code} />
-                     <Field label="Projekt-/Artikelnr." value={c.project_article_no} />
+                     <Field label="Artikelnr." value={c.project_article_no} />
                      <Field label="Geschätzte Std." value={c.estimated_hours?.toString()} />
                      <Field label="Erstellt von" value={c.creator?.short_code} />
                       {(c.project || c.project_id) && (
@@ -740,6 +741,7 @@ export default function CaseDetail() {
                         </div>
                       )}
                    </div>
+                   <CaseArticleInfo artNr={c.project_article_no} />
                 </details>
               );
             })()}

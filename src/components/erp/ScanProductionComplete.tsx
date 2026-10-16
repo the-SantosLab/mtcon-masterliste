@@ -26,7 +26,10 @@ export function ScanProductionComplete({ canBook }: { canBook: boolean }) {
   const load = async (code: string) => {
     const cols = 'id, wo_no, art_nr, description, quantity, quantity_done, status, lot_no';
     let { data } = await db.from('production_orders').select(cols).eq('wo_no', code).limit(1);
-    if (!data?.length) ({ data } = await db.from('production_orders').select(cols).eq('art_nr', code).order('created_at').limit(50));
+    if (!data?.length) {
+      const { data: byEan } = await db.from('articles').select('art_nr').eq('ean', code).maybeSingle();
+      ({ data } = await db.from('production_orders').select(cols).eq('art_nr', byEan?.art_nr ?? code).order('created_at').limit(50));
+    }
     const open = ((data ?? []) as Wo[]).filter((w) => w.status !== 'completed' && w.status !== 'cancelled');
     setList(open); pick(open[0]);
     if (!data?.length) toast.error(`Kein Werkstattauftrag zu ${code}`);

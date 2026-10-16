@@ -16,6 +16,8 @@ import { RefreshCw, Plus, Wrench, PackageMinus, PackagePlus, PackageSearch, Load
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SubcontractOrders } from '@/components/erp/SubcontractOrders';
+import { printLabels } from '@/lib/labels';
+import { QrCode } from 'lucide-react';
 
 type Wo = {
   id: string;
@@ -122,6 +124,10 @@ export default function AdminProduction() {
             </SelectContent>
           </Select>
           <span className="text-[11px] text-muted-foreground ml-auto">{filtered.length} Aufträge</span>
+          <Button size="sm" variant="outline" className="h-8 text-xs" disabled={!filtered.some(r => r.wo_no)}
+            onClick={() => printLabels(filtered.filter(r => r.wo_no).map(r => ({ code: r.wo_no!, title: r.description || r.art_nr, sub: `${r.art_nr} · ${r.quantity} Stk` }))).catch(e => toast.error(e.message))}>
+            <QrCode className="h-3.5 w-3.5 mr-1.5" /> Etiketten ({filtered.filter(r => r.wo_no).length})
+          </Button>
           <Button size="sm" variant="outline" className="h-8 text-xs" onClick={load} disabled={busy}>
             <RefreshCw className={cn('h-3.5 w-3.5 mr-1.5', busy && 'animate-spin')} /> Aktualisieren
           </Button>
@@ -382,6 +388,7 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
         <DialogHeader>
           <DialogTitle className="text-sm">
             Werkstattauftrag <span className="font-mono">{wo?.wo_no}</span>
+            {wo?.wo_no && <Button size="sm" variant="outline" className="h-6 px-2 text-[11px] ml-2" onClick={() => printLabels([{ code: wo.wo_no!, title: wo.description || wo.art_nr, sub: `${wo.art_nr} · ${wo.quantity} Stk` }]).catch(e => toast.error(e.message))}><QrCode className="h-3 w-3 mr-1" />Etikett</Button>}
             <span className="text-muted-foreground font-normal"> · {wo?.art_nr} {wo?.description ? `· ${wo.description}` : ''}</span>
           </DialogTitle>
         </DialogHeader>

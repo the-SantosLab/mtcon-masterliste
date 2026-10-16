@@ -41,14 +41,16 @@ export default function CrmOffers() {
   const [dealPickerOpen, setDealPickerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
+  const [company, setCompany] = useState<{ id: string; name: string } | null>(null);
+  const NEW_DEAL = '__new';
 
   useEffect(() => { void load(); }, []);
   useEffect(() => {
     const status = searchParams.get('status');
     if (status && (status === 'all' || STATUS_LABEL[status])) setStatusF(status);
     if (searchParams.get('action') === 'new') {
-      void openCreate();
-      const next = new URLSearchParams(searchParams); next.delete('action'); setSearchParams(next, { replace: true });
+      void openCreate(searchParams.get('company'));
+      const next = new URLSearchParams(searchParams); next.delete('action'); next.delete('company'); setSearchParams(next, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
@@ -65,10 +67,16 @@ export default function CrmOffers() {
     setLoading(false);
   };
 
-  const openCreate = async () => {
+  const openCreate = async (companyId?: string | null) => {
     try {
       const data = await fetchAllOfferDealOptions();
-      setDeals(data); setDealId(''); setOpen(true);
+      let c: { id: string; name: string } | null = null;
+      if (companyId) {
+        const { data: co } = await supabase.from('companies').select('id, name').eq('id', companyId).maybeSingle();
+        c = co ?? null;
+      }
+      const own = c ? data.filter((d: any) => d.company_id === c!.id) : data;
+      setCompany(c); setDeals(own); setDealId(c && own.length === 0 ? NEW_DEAL : ''); setOpen(true);
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -77,10 +85,18 @@ export default function CrmOffers() {
   const create = async () => {
     if (!dealId) { toast.error('Deal wählen'); return; }
     setCreating(true);
-    const deal = deals.find(d => d.id === dealId);
     const { data: u } = await supabase.auth.getUser();
+    let useDeal = dealId; let companyId = deals.find(d => d.id === dealId)?.company_id ?? null;
+    if (dealId === NEW_DEAL && company) {
+      // Angebot direkt bei der Firma: passende Verkaufschance wird automatisch angelegt
+      const { data: nd, error: de } = await supabase.from('deals').insert({
+        title: `Angebot ${company.name}`, company_id: company.id, stage: 'angebot_versendet', owner_id: u.user?.id ?? null,
+      }).select('id').single();
+      if (de) { setCreating(false); toast.error(de.message); return; }
+      useDeal = nd!.id; companyId = company.id;
+    }
     const { data, error } = await supabase.from('offers').insert({
-      deal_id: dealId, company_id: deal?.company_id ?? null, owner_id: u.user?.id, status: 'entwurf', total: 0,
+      deal_id: useDeal, company_id: companyId, owner_id: u.user?.id, status: 'entwurf', total: 0,
     }).select('id').single();
     setCreating(false);
     if (error) { toast.error(error.message); return; }
@@ -109,7 +125,7 @@ export default function CrmOffers() {
             <Button size="sm" variant="outline" onClick={() => setDemoOpen(true)} className="h-8 text-xs gap-1.5">
               <FlaskConical className="h-3.5 w-3.5" /> Demo-PDF
             </Button>
-            <Button size="sm" onClick={openCreate} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
+            <Button size="sm" onClick={() => openCreate()} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" /> Neues Angebot</Button>
           </div>
         </div>
 
@@ -169,11 +185,12 @@ export default function CrmOffers() {
         <DialogContent>
           <DialogHeader><DialogTitle>Neues Angebot</DialogTitle></DialogHeader>
           <div className="space-y-2">
+            {company && <p className="text-xs text-muted-foreground">Firma: <span className="text-foreground">{company.name}</span></p>}
             <Label className="text-xs">Deal * (nach Unternehmen oder Deal suchen)</Label>
             <Popover open={dealPickerOpen} onOpenChange={setDealPickerOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" className="w-full h-8 text-xs justify-between font-normal">
-                  {dealId ? (() => {
+                  {dealId === NEW_DEAL ? 'Neue Verkaufschance automatisch anlegen' : dealId ? (() => {
                     const d = deals.find(x => x.id === dealId);
                     return d ? `${d.deal_no} · ${d.title}${d.companies?.name ? ` — ${d.companies.name}` : ''}` : 'Deal wählen…';
                   })() : 'Deal wählen…'}
@@ -186,6 +203,11 @@ export default function CrmOffers() {
                   <CommandList className="max-h-72">
                     <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">Kein Deal gefunden.</CommandEmpty>
                     <CommandGroup>
+                      {company && (
+                        <CommandItem value="neue verkaufschance automatisch anlegen" onSelect={() => { setDealId(NEW_DEAL); setDealPickerOpen(false); }} className="text-xs">
+                          <Check className={cn('mr-2 h-3.5 w-3.5', dealId === NEW_DEAL ? 'opacity-100' : 'opacity-0')} />Neue Verkaufschance automatisch anlegen
+                        </CommandItem>
+                      )}
                       {deals.map(d => {
                         const label = `${d.deal_no} · ${d.title}${d.companies?.name ? ` — ${d.companies.name}` : ''}`;
                         return (

@@ -38,3 +38,14 @@
 - [x] Geschäftsführungs-Kennzahlen (/kennzahlen): Umsatz, Auftragseingang, Liefertreue, Forderungen; drei Regeltests
 - [x] Bankabgleich per Kontoauszug-Upload (CSV/CAMT) mit Zuordnung und Bestätigung; drei Regeltests
 - [x] Teilrechnungen: Abschläge (Prozent/Betrag) und Schlussrechnung mit automatischem Abzug; isoliert getestet und zurückgerollt
+
+## Vertiefung Runde Okt 16
+- [x] Etiketten (QR) für Werkstattaufträge drucken
+- [x] EAN an Artikeln + Scan-Suche über EAN
+- [ ] Werkstatt-Kapazität/Stundensatz — wartet auf echte Werte vom Nutzer
+- [ ] Echter Lieferanten-Testversand — wartet auf Testadresse/Freigabe vom Nutzer
+- [x] Posteingang → Bestellung im Browser durchklicken (isoliert)
+- [x] Angebot direkt bei Firma anlegen
+- [x] Artikelinfos (Bestand, Preis, offene Aufträge) in Vorgangsansicht
+- [x] Forecast: Kundenvergleich + Entwicklung über Zeit
+- [x] Bankabgleich: Kontoauszug-Import, Zuordnung zu offenen Rechnungen
