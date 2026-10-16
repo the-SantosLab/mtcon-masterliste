@@ -22,3 +22,5 @@
 - [x] Verkaufschancen: sechs eigene Unterseiten (Übersicht, Pipeline, Bewerten, Phasen, Fällige Abschlüsse, Zuweisen, Abgeschlossen) mit gewichtetem Volumen und Phasenwechsel; zehn Regeltests erfolgreich
 
 - [x] „Aufträge abwickeln“: alle sieben Menüziele einheitlich neu gestaltet; Suche, Details, Kennzahlenfilter, Navigation und schmale Ansichten angemeldet geprüft; sieben bestehende Tests erfolgreich
+
+- [ ] „Einkaufen & lagern“: acht Menüziele einheitlich neu gestalten und angemeldet prüfen; Buchungen unverändert lassen
