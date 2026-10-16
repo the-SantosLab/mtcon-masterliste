@@ -58,3 +58,14 @@ export function openPoints(settings: Setting[], opt: CalcOptions, usedKeys = ['f
   if (opt.with_sws) out.push('SWS: Rechenweg für MGK 3 nicht geklärt');
   return out;
 }
+
+/** Angebotsposition aus einer abgeschlossenen Kalkulation (Preis je Stück). */
+export function calcItemFromCalc(c: any, rowIdx: number): { art_nr: string | null; description: string; quantity: number; unit_price: number } | null {
+  if (!c || c.status !== 'final') return null;
+  const row: CalcRow | undefined = c.rows?.[rowIdx];
+  if (!row || !row.qty) return null;
+  const lz = lzValue(c.lz_quarter_avg, c.lz_base, c.lz_consumption);
+  const r = calcRow(row, { with_galvanik: c.with_galvanik, with_pruefung: c.with_pruefung, with_lz: c.with_lz, with_sws: c.with_sws }, c.factor, lz);
+  if (r.vkPiece == null) return null;
+  return { art_nr: c.art_nr ?? null, description: `${c.art_nr ?? 'Artikel'} – lt. Kalkulation, Staffel ${row.qty.toLocaleString('de-DE')} Stk`, quantity: row.qty, unit_price: Math.round(r.vkPiece * 10000) / 10000 };
+}

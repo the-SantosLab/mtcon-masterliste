@@ -29,3 +29,14 @@ describe('priceCalc', () => {
     expect(p).toEqual(['factor: Wert ungeklärt']);
   });
 });
+
+import { calcItemFromCalc } from './priceCalc';
+describe('calcItemFromCalc', () => {
+  const c = { status: 'final', art_nr: 'A1', factor: 2, with_galvanik: false, with_pruefung: false, with_lz: false, with_sws: false, rows: [{ qty: 1000, hk: 100, galvanik: null, pruefung: null }] };
+  it('übernimmt Stückpreis und Staffelmenge', () => {
+    expect(calcItemFromCalc(c, 0)).toMatchObject({ quantity: 1000, unit_price: 0.2, art_nr: 'A1' });
+  });
+  it('Entwürfe werden nicht übernommen', () => {
+    expect(calcItemFromCalc({ ...c, status: 'draft' }, 0)).toBeNull();
+  });
+});

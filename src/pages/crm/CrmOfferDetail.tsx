@@ -350,6 +350,7 @@ export default function CrmOfferDetail() {
           <h2 className="text-sm font-semibold">Positionen</h2>
           <div className="flex gap-2">
             {!offer.locked_at && offer.status !== 'angenommen' && <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setCopyOpen(true)}>Aus Angebot/Auftrag übernehmen</Button>}
+            {!offer.locked_at && offer.status !== 'angenommen' && <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => { if (await save(true)) nav(`/kalkulation?offer=${id}`); }}>Aus Kalkulation</Button>}
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={addItem}><Plus className="h-3.5 w-3.5" /> Zeile</Button>
           </div>
           <CopyOfferItemsDialog open={copyOpen} onClose={() => setCopyOpen(false)} offerId={id!} companyId={offer.company_id} startAt={items.length} onCopy={c => setItems(p => [...p, ...c])} />
