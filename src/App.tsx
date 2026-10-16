@@ -120,6 +120,7 @@ const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const ContactWorkspace = lazyRetry(() => import("./components/crm/ContactWorkspace"));
 const ActivityWorkspace = lazyRetry(() => import("./components/crm/ActivityWorkspace"));
 const DealWorkspace = lazyRetry(() => import("./components/crm/DealWorkspace"));
+const DealInsightsWorkspace = lazyRetry(() => import("./components/crm/DealInsightsWorkspace"));
 const OfferWorkspace = lazyRetry(() => import("./components/crm/OfferWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
@@ -350,6 +351,8 @@ function AuthenticatedApp() {
           <Route path="/crm/verkaufschancen/faellig" element={<CrmProtectedRoute><DealWorkspace page="due" /></CrmProtectedRoute>} />
           <Route path="/crm/verkaufschancen/zuweisen" element={<CrmProtectedRoute><DealWorkspace page="assign" /></CrmProtectedRoute>} />
           <Route path="/crm/verkaufschancen/abgeschlossen" element={<CrmProtectedRoute><DealWorkspace page="closed" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/mitbewerber" element={<CrmProtectedRoute><DealInsightsWorkspace page="competitors" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/projekte" element={<CrmProtectedRoute><DealInsightsWorkspace page="project" /></CrmProtectedRoute>} />
           <Route path="/crm/angebote" element={<CrmProtectedRoute><OfferWorkspace /></CrmProtectedRoute>} />
           <Route path="/crm/angebote/kalkulation" element={<CrmProtectedRoute><OfferWorkspace page="kalkulation" /></CrmProtectedRoute>} />
           <Route path="/crm/angebote/versand" element={<CrmProtectedRoute><OfferWorkspace page="versand" /></CrmProtectedRoute>} />

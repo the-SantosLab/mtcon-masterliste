@@ -103,3 +103,25 @@ export function nextStage(d: Deal): string | null {
   const i = openStages.indexOf(d.stage as typeof openStages[number]);
   return i >= 0 && i < openStages.length - 1 ? openStages[i + 1] : null;
 }
+
+/** Project details sales needs before handing a deal over to fulfillment. */
+export function missingProjectInfo(d: Pick<Deal, 'sop' | 'delivery_address' | 'quantity'>): string[] {
+  const m: string[] = [];
+  if (!d.sop?.trim()) m.push('SOP');
+  if (!d.delivery_address?.trim()) m.push('Lieferadresse');
+  if (d.quantity == null || d.quantity <= 0) m.push('Menge');
+  return m;
+}
+
+/** Per competitor: how often it appears and how those deals ended. */
+export function competitorStats(links: { competitor_id: string; deal_id: string }[], deals: Pick<Deal, 'id' | 'stage'>[]) {
+  const stageOf = new Map(deals.map(d => [d.id, d.stage]));
+  const map = new Map<string, { deals: number; won: number; lost: number; open: number }>();
+  for (const l of links) {
+    const s = stageOf.get(l.deal_id); if (!s) continue;
+    const e = map.get(l.competitor_id) ?? { deals: 0, won: 0, lost: 0, open: 0 };
+    e.deals++; if (s === 'won') e.won++; else if (s === 'lost') e.lost++; else e.open++;
+    map.set(l.competitor_id, e);
+  }
+  return map;
+}

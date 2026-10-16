@@ -213,8 +213,8 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/verkaufschancen/abgeschlossen', label: 'Abgeschlossene Chancen', icon: Trophy },
       { href: '/crm/deals?action=new', label: 'Verkaufschance anlegen', icon: Plus },
       { href: '/crm/settings/automationen', label: 'Wahrscheinlichkeiten', icon: Settings },
-      { href: '/crm/deals?focus=competitors', label: 'Mitbewerber erfassen', icon: Users },
-      { href: '/crm/deals?focus=project', label: 'Projektinformationen', icon: FolderKanban },
+      { href: '/crm/verkaufschancen/mitbewerber', label: 'Mitbewerber erfassen', icon: Users },
+      { href: '/crm/verkaufschancen/projekte', label: 'Projektinformationen', icon: FolderKanban },
     ] },
     { href: '/crm/angebote', label: 'Angebote', icon: FileText, access: 'crm', children: [
       { href: '/crm/angebote', label: 'Übersicht', icon: FileText },
@@ -224,7 +224,6 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/angebote/freigegeben', label: 'Angenommene Angebote', icon: ShieldCheck },
       { href: '/crm/angebote/auftraege', label: 'Aufträge erzeugen', icon: ClipboardList },
       { href: '/crm/offers?action=new', label: 'Angebot erstellen', icon: Plus },
-      { href: '/crm/offers?focus=process', label: 'Punkt / Linie / Dreieck / Quadrat', icon: Workflow },
     ] },
   ]},
   { id: 'fulfillment', label: 'Aufträge abwickeln', icon: ClipboardList, items: [

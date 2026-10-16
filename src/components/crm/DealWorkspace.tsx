@@ -152,6 +152,8 @@ export default function DealWorkspace({ page: key }: { page?: DealPageKey }) {
     <nav aria-label="Verkaufschancenseiten" className="flex gap-1 overflow-x-auto border-b border-border pb-3 mb-6">
       <Button asChild size="sm" variant={pathname === '/crm/verkaufschancen' ? 'secondary' : 'ghost'} className="shrink-0 text-xs"><Link to="/crm/verkaufschancen"><Briefcase className="h-3.5 w-3.5 mr-1.5" />Übersicht</Link></Button>
       {dealPages.map(p => { const I = icons[p.key]; return <Button asChild key={p.key} size="sm" variant={pathname === p.path ? 'secondary' : 'ghost'} className="shrink-0 text-xs"><Link to={p.path}><I className="h-3.5 w-3.5 mr-1.5" />{p.short}</Link></Button>; })}
+      <Button asChild size="sm" variant="ghost" className="shrink-0 text-xs"><Link to="/crm/verkaufschancen/mitbewerber">Mitbewerber</Link></Button>
+      <Button asChild size="sm" variant="ghost" className="shrink-0 text-xs"><Link to="/crm/verkaufschancen/projekte">Projektinfos</Link></Button>
     </nav>
     {query.isLoading ? <div role="status" className="flex justify-center gap-2 text-muted-foreground py-20"><Loader2 className="h-5 w-5 animate-spin" />Verkaufschancen werden geladen…</div>
     : query.isError ? <div role="alert" className="py-12 text-center space-y-3"><AlertCircle className="h-6 w-6 mx-auto text-destructive" /><p>Verkaufschancen konnten nicht geladen werden.</p><Button variant="outline" onClick={() => void query.refetch()}>Erneut versuchen</Button></div>
