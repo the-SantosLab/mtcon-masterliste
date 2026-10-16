@@ -1,6 +1,6 @@
 # Roadmap
-- [ ] Fremdbearbeitung als verknüpften Werkstatt-Schritt mit Materialverlagerung ergänzen
-- [ ] Rücknahme und Fortsetzung des Werkstattauftrags testen
+- [x] Fremdbearbeitung als verknüpften Werkstatt-Schritt mit Materialverlagerung ergänzen; fünf Regeltests erfolgreich
+- [ ] Angemeldeten Durchlauf im Werkstattauftrag testen — blockiert: für dein Konto gibt es keine passende Anmeldung in der App
 - [x] Fremdbearbeitung als eigenen Auftragstyp mit Lieferantenzuordnung ergänzen
 - [x] Materialausgabe und Teilrückbuchung über Wareneingang sicher buchen
 - [x] Regeln und angemeldeten Durchlauf testen — FB-3C2C4EA5B3: 1 ausgegeben, zweimal 0,5 zurückgebucht, Übermenge blockiert, Endbestand unverändert; sechs Tests erfolgreich
