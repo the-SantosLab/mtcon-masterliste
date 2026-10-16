@@ -92,7 +92,7 @@ export default function MobileScan() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto max-w-md space-y-4 pb-24">
         <div><h1 className="text-xl font-semibold">Scannen</h1><p className="text-xs text-muted-foreground">Wareneingang, Entnahme und Inventur mit Handykamera</p></div>
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
           <TabsList className="w-full"><TabsTrigger value="receipt" className="flex-1">Wareneingang</TabsTrigger><TabsTrigger value="issue" className="flex-1">Entnahme</TabsTrigger><TabsTrigger value="count" className="flex-1">Inventur</TabsTrigger></TabsList>
