@@ -153,15 +153,15 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/outbound/visits', label: 'Besuchstermin vereinbaren', icon: Calendar },
       { href: '/crm/outbound/campaigns', label: 'Akquisekampagnen', icon: Megaphone },
     ] },
-    { href: '/crm/outbound/leads', label: 'Neue Interessenten', icon: Target, access: 'crm', children: [
+    { href: '/crm/interessenten', label: 'Neue Interessenten', icon: Target, access: 'crm', children: [
       { href: '/crm/outbound/leads?action=new', label: 'Interessent anlegen', icon: Plus },
       { href: '/crm/outbound/leads?action=import', label: 'Interessenten importieren', icon: Upload },
-      { href: '/crm/outbound/leads?status=qualifiziert', label: 'Qualifizieren & schützen', icon: ShieldCheck },
-      { href: '/crm/settings/scoring', label: 'Interessenten bewerten', icon: Star },
-      { href: '/crm/outbound/leads?view=board', label: 'Geschäftsprozess zuweisen', icon: Workflow },
-      { href: '/crm/outbound/leads?status=konvertiert', label: 'In Kunde umwandeln', icon: Building2 },
-      { href: '/crm/outbound/leads?status=abgelehnt', label: 'Archivierte Interessenten', icon: FolderArchive },
-      { href: '/crm/outbound/leads?view=liste', label: 'Interessenten-Historie', icon: Activity },
+      { href: '/crm/interessenten/qualifizieren', label: 'Qualifizieren & schützen', icon: ShieldCheck },
+      { href: '/crm/interessenten/bewerten', label: 'Interessenten bewerten', icon: Star },
+      { href: '/crm/interessenten/zuweisen', label: 'Geschäftsprozess zuweisen', icon: Workflow },
+      { href: '/crm/interessenten/umwandeln', label: 'In Kunde umwandeln', icon: Building2 },
+      { href: '/crm/interessenten/archiv', label: 'Archivierte Interessenten', icon: FolderArchive },
+      { href: '/crm/interessenten/historie', label: 'Interessenten-Historie', icon: Activity },
     ] },
     { href: '/crm/companies', label: 'Kundenfirmen & Partner', icon: Building2, access: 'crm', children: [
       { href: '/crm/companies?action=new', label: 'Firma / Partner anlegen', icon: Plus },
