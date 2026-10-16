@@ -24,11 +24,17 @@ describe('workshopLoad', () => {
 
 import { unitPrice } from './workshopLoad';
 describe('Preiseinheit', () => {
-  it('481,99 € je 1000 Stück ergibt 0,48199 € je Stück', () => { expect(unitPrice(481.99, 1000)).toBeCloseTo(0.48199, 6); });
-  it('fehlende oder ungültige Preiseinheit zählt als 1', () => { expect(unitPrice(5, null)).toBe(5); expect(unitPrice(5, 0)).toBe(5); expect(unitPrice(5, '100')).toBe(0.05); });
-  it('ohne Preis kein Stückpreis', () => { expect(unitPrice(0, 1000)).toBeNull(); expect(unitPrice(null, 1)).toBeNull(); });
-  it('2500 Stück zu 481,99 € je 1000 kosten 1.204,98 €', () => {
-    const c = orderCosts({ planned_hours: 0, actual_hours: 0, items: [{ qty_required: 2500, qty_issued: 0, price: unitPrice(481.99, 1000) }] }, 65);
-    expect(c.matPlan).toBe(1204.98);
+  it('481,99 € je 1000 Stück ergibt 0,48199 € je Stück', () => { expect(unitPrice(481.99, 1000).price).toBeCloseTo(0.48199, 6); });
+  it('fehlende oder ungültige Preiseinheit wird nicht umgerechnet, sondern als unklar markiert', () => {
+    expect(unitPrice(5, null)).toEqual({ price: null, unclear: true });
+    expect(unitPrice(5, 0)).toEqual({ price: null, unclear: true });
+  });
+  it('ohne Preis kein Stückpreis und nicht unklar', () => { expect(unitPrice(0, 1000)).toEqual({ price: null, unclear: false }); });
+  it('unklare Positionen zählen nicht in die Kosten und werden gemeldet', () => {
+    const c = orderCosts({ planned_hours: 0, actual_hours: 0, items: [
+      { qty_required: 2500, qty_issued: 0, ...unitPrice(481.99, 1000) },
+      { qty_required: 10, qty_issued: 0, ...unitPrice(5, null) },
+    ] }, 65);
+    expect(c.matPlan).toBe(1204.98); expect(c.unclearUnit).toBe(true); expect(c.missingPrice).toBe(false);
   });
 });
