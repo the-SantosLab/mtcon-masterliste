@@ -117,6 +117,7 @@ const CrmWiki = lazyRetry(() => import("./pages/crm/CrmWiki"));
 const CrmOutbound = lazyRetry(() => import("./pages/crm/CrmOutbound"));
 const CompanyWorkspace = lazyRetry(() => import("./components/crm/CompanyWorkspace"));
 const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
+const ContactWorkspace = lazyRetry(() => import("./components/crm/ContactWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
@@ -323,6 +324,14 @@ function AuthenticatedApp() {
           <Route path="/crm/firmen/dokumente" element={<CrmProtectedRoute><CompanyWorkspace page="documents" /></CrmProtectedRoute>} />
           <Route path="/crm/firmen/historie" element={<CrmProtectedRoute><CompanyWorkspace page="history" /></CrmProtectedRoute>} />
           <Route path="/crm/contacts" element={<CrmProtectedRoute><CrmContacts /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner" element={<CrmProtectedRoute><ContactWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/pflegen" element={<CrmProtectedRoute><ContactWorkspace page="data" /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/zuweisen" element={<CrmProtectedRoute><ContactWorkspace page="assign" /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/verantwortlichkeiten" element={<CrmProtectedRoute><ContactWorkspace page="owners" /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/email" element={<CrmProtectedRoute><ContactWorkspace page="email" /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/telefon" element={<CrmProtectedRoute><ContactWorkspace page="phone" /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/historie" element={<CrmProtectedRoute><ContactWorkspace page="history" /></CrmProtectedRoute>} />
+          <Route path="/crm/ansprechpartner/inaktiv" element={<CrmProtectedRoute><ContactWorkspace page="inactive" /></CrmProtectedRoute>} />
           <Route path="/crm/offers" element={<CrmProtectedRoute><CrmOffers /></CrmProtectedRoute>} />
           <Route path="/crm/offers/:id" element={<CrmProtectedRoute><CrmOfferDetail /></CrmProtectedRoute>} />
           <Route path="/crm/activities" element={<CrmProtectedRoute><CrmActivities /></CrmProtectedRoute>} />
