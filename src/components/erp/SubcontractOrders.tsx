@@ -14,6 +14,7 @@ import { ArticlePicker } from '@/components/ArticlePicker';
 import { Plus, RefreshCw, Trash2, PackageMinus, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { canIssue, canReceive, parseMaterialQuantity, validReturn, hasOpenSubcontractSteps } from '@/lib/subcontracting';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 
 type Order = Tables<'subcontract_orders'>;
 type Item = Tables<'subcontract_order_items'>;
@@ -133,14 +134,20 @@ export function SubcontractOrders({ receiptsOnly = false, productionOrder, onSte
   const warehouseSelect = (value: string, change: (v: string) => void, label: string) => <Select value={value} onValueChange={change}><SelectTrigger aria-label={label}><SelectValue placeholder="Lager wählen" /></SelectTrigger><SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent></Select>;
 
   return <section className="space-y-3">
+    {!receiptsOnly && !productionOrder && <FulfillmentMetrics loading={busy} metrics={[
+      { label: 'Aufträge gesamt', value: orders.length },
+      { label: 'Entwürfe', value: orders.filter(o => o.status === 'draft').length, tone: 'working' },
+      { label: 'Beim Lieferanten', value: orders.filter(o => ['issued', 'partial'].includes(o.status)).length, tone: 'overdue' },
+      { label: 'Abgeschlossen', value: orders.filter(o => o.status === 'completed').length, tone: 'done' },
+    ]} />}
     <div className="flex flex-wrap items-center justify-between gap-2">
       {receiptsOnly && <h2 className="text-sm font-semibold">Rücklieferungen aus Fremdbearbeitung</h2>}
       {productionOrder && <h2 className="text-sm font-semibold">Fremdbearbeitung · {productionOrder.wo_no}</h2>}
-      <div className="flex flex-wrap gap-2 w-full">
+      <div className="flex flex-wrap items-center gap-2 w-full">
         <Input aria-label="Fremdbearbeitung suchen" placeholder="Auftrag oder Lieferant suchen…" className="max-w-xs h-8" value={search} onChange={e => setSearch(e.target.value)} />
         {!receiptsOnly && <Select value={filter} onValueChange={setFilter}><SelectTrigger className="w-36 h-8" aria-label="Auftragsfilter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">Offene</SelectItem><SelectItem value="all">Alle</SelectItem></SelectContent></Select>}
         <Button variant="outline" size="icon" title="Aktualisieren" aria-label="Fremdbearbeitung aktualisieren" disabled={busy} onClick={load}><RefreshCw className="h-4 w-4" /></Button>
-        {!receiptsOnly && writable && <Button size="sm" disabled={busy || (productionOrder && !productionOrder.canCreate)} title={productionOrder && !productionOrder.canCreate ? 'Interne Materialentnahme bereits erfolgt' : undefined} onClick={() => { setSupplierId(''); setWarehouseId(productionOrder?.warehouse_id || ''); setExpected(''); setNote(''); setDrafts([{ key: crypto.randomUUID(), art_nr: '', quantity: '1' }]); setCreating(true); }}><Plus className="h-4 w-4 mr-1" />{productionOrder ? 'Fremdbearbeitung hinzufügen' : 'Neuer Fremdbearbeitungsauftrag'}</Button>}
+        {!receiptsOnly && writable && <Button size="sm" className="ml-auto" disabled={busy || (productionOrder && !productionOrder.canCreate)} title={productionOrder && !productionOrder.canCreate ? 'Interne Materialentnahme bereits erfolgt' : undefined} onClick={() => { setSupplierId(''); setWarehouseId(productionOrder?.warehouse_id || ''); setExpected(''); setNote(''); setDrafts([{ key: crypto.randomUUID(), art_nr: '', quantity: '1' }]); setCreating(true); }}><Plus className="h-4 w-4 mr-1" />{productionOrder ? 'Fremdbearbeitung hinzufügen' : 'Neuer Fremdbearbeitungsauftrag'}</Button>}
       </div>
     </div>
     {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
