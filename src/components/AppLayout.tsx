@@ -163,14 +163,14 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/interessenten/archiv', label: 'Archivierte Interessenten', icon: FolderArchive },
       { href: '/crm/interessenten/historie', label: 'Interessenten-Historie', icon: Activity },
     ] },
-    { href: '/crm/companies', label: 'Kundenfirmen & Partner', icon: Building2, access: 'crm', children: [
+    { href: '/crm/firmen', label: 'Kundenfirmen & Partner', icon: Building2, access: 'crm', children: [
       { href: '/crm/companies?action=new', label: 'Firma / Partner anlegen', icon: Plus },
-      { href: '/crm/companies', label: 'Firmen bearbeiten', icon: Building2 },
-      { href: '/crm/companies?focus=addresses', label: 'Adressen & Standorte', icon: MapPin },
-      { href: '/crm/companies?focus=groups', label: 'Kundengruppen', icon: Users },
-      { href: '/crm/companies?tab=supplier', label: 'Lieferanten', icon: Truck },
-      { href: '/crm/companies?focus=documents', label: 'Dokumente', icon: FileText },
-      { href: '/crm/companies?focus=history', label: 'Firmenhistorie', icon: Activity },
+      { href: '/crm/firmen/bearbeiten', label: 'Firmen bearbeiten', icon: Building2 },
+      { href: '/crm/firmen/standorte', label: 'Adressen & Standorte', icon: MapPin },
+      { href: '/crm/firmen/gruppen', label: 'Kundengruppen', icon: Users },
+      { href: '/crm/firmen/lieferanten', label: 'Lieferanten', icon: Truck },
+      { href: '/crm/firmen/dokumente', label: 'Dokumente', icon: FileText },
+      { href: '/crm/firmen/historie', label: 'Firmenhistorie', icon: Activity },
     ] },
     { href: '/crm/contacts', label: 'Ansprechpartner', icon: Users, access: 'crm', children: [
       { href: '/crm/contacts?action=new', label: 'Kontakt anlegen', icon: Plus },
