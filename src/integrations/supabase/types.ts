@@ -850,6 +850,7 @@ export type Database = {
           dichtring: string | null
           dispo_kz: string | null
           dispo_kz_label: string | null
+          ean: string | null
           eisos_nr: string | null
           erni_nr: string | null
           galvanik: string | null
@@ -901,6 +902,7 @@ export type Database = {
           dichtring?: string | null
           dispo_kz?: string | null
           dispo_kz_label?: string | null
+          ean?: string | null
           eisos_nr?: string | null
           erni_nr?: string | null
           galvanik?: string | null
@@ -952,6 +954,7 @@ export type Database = {
           dichtring?: string | null
           dispo_kz?: string | null
           dispo_kz_label?: string | null
+          ean?: string | null
           eisos_nr?: string | null
           erni_nr?: string | null
           galvanik?: string | null
