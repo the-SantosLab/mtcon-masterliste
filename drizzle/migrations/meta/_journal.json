@@ -400,6 +400,13 @@
       "when": 1792170665915,
       "tag": "0056_goods_inspections",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1792170718402,
+      "tag": "0057_goods_inspection_case_status",
+      "breakpoints": true
     }
   ]
 }
