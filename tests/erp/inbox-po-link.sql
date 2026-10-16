@@ -8,7 +8,7 @@ BEGIN
   INSERT INTO public.suppliers(code, name) VALUES ('ZZTEST','ZZ Testlieferant GmbH') RETURNING id INTO sup;
   INSERT INTO public.purchase_orders(supplier_id) VALUES (sup) RETURNING id INTO po;
   INSERT INTO public.purchase_order_items(po_id, position, art_nr, description, qty_ordered, qty_received, unit_price)
-    VALUES (po,1,NULL,'Teil A',10,0,5);
+    VALUES (po,1,(SELECT art_nr FROM public.articles LIMIT 1),'Teil A',10,0,5);
   INSERT INTO public.inbox_documents(status, classified_type_id, extracted_data)
     SELECT 'auto_classified', id, '{"invoice_number":"ZZ-R-1","net_amount":50,"tax_amount":9.5,"total_amount":59.5}' FROM public.document_types WHERE code='invoice' RETURNING id INTO d1;
   INSERT INTO public.inbox_documents(status, classified_type_id, extracted_data)
