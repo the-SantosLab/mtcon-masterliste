@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Plus, Loader2, Pause, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { AcquisitionNav } from '@/components/crm/AcquisitionWorkspace';
 
-export default function CrmOutbound() {
+export default function CrmAcquisitionCampaigns() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,16 +53,19 @@ export default function CrmOutbound() {
     <CrmLayout>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Outbound</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Sequenzen, Kampagnen und eingeschriebene Kontakte</p>
+          <h1 className="text-xl font-medium text-foreground">Akquisekampagnen</h1>
         </div>
         <div className="flex gap-2">
-          <Link to="/crm/outbound/enrollments" className="text-xs text-muted-foreground hover:text-foreground underline self-center">Enrollments</Link>
+          <Link to="/crm/outbound/enrollments" className="text-xs text-muted-foreground hover:text-foreground underline self-center">Teilnehmer</Link>
           <Button size="sm" onClick={() => setOpen(true)} className="h-8 text-xs gap-1.5"><Plus className="h-3.5 w-3.5" />Neue Sequenz</Button>
         </div>
       </div>
 
-      <Tabs defaultValue={searchParams.get('tab') === 'campaigns' ? 'campaigns' : searchParams.get('tab') === 'contacts' ? 'contacts' : 'sequences'}>
+      <AcquisitionNav />
+      <div className="grid grid-cols-2 md:grid-cols-4 border-y border-border mb-6">
+        {[{ label: 'Kampagnen', value: seqs.length }, { label: 'Aktive Kampagnen', value: seqs.filter(s => s.status === 'aktiv').length }, { label: 'Aktive Teilnehmer', value: enrollments.filter(e => e.status === 'aktiv').length }, { label: 'Antworten', value: enrollments.filter(e => e.status === 'geantwortet').length }].map(stat => <div key={stat.label} className="p-4"><p className="text-3xl font-medium tabular-nums">{stat.value}</p><p className="text-xs text-muted-foreground mt-1">{stat.label}</p></div>)}
+      </div>
+      <Tabs defaultValue={searchParams.get('tab') === 'contacts' ? 'contacts' : 'sequences'}>
         <TabsList>
           <TabsTrigger value="sequences">Sequenzen</TabsTrigger>
           <TabsTrigger value="campaigns">Kampagnen</TabsTrigger>
@@ -81,7 +85,7 @@ export default function CrmOutbound() {
                   <div key={s.id} className="p-4 rounded-lg border border-border bg-card/40 backdrop-blur-xl">
                     <div className="flex items-start justify-between mb-2">
                       <Link to={`/crm/outbound/sequences/${s.id}`} className="text-sm font-semibold text-foreground hover:text-primary truncate">{s.name}</Link>
-                      <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-semibold', s.status === 'aktiv' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground')}>
+                      <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-semibold', s.status === 'aktiv' ? 'bg-status-done/15 text-status-done' : 'bg-muted text-muted-foreground')}>
                         {s.status === 'aktiv' ? 'Aktiv' : 'Pausiert'}
                       </span>
                     </div>
@@ -125,9 +129,9 @@ export default function CrmOutbound() {
                       <tr key={s.id} className="border-t border-border/40">
                         <td className="p-2"><Link to={`/crm/outbound/sequences/${s.id}`} className="text-foreground hover:text-primary">{s.name}</Link></td>
                         <td className="p-2 text-right tabular-nums text-foreground">{en.length}</td>
-                        <td className="p-2 text-right tabular-nums text-emerald-400">{active}</td>
+                        <td className="p-2 text-right tabular-nums text-status-done">{active}</td>
                         <td className="p-2 text-right tabular-nums text-muted-foreground">{done}</td>
-                        <td className="p-2 text-right tabular-nums text-blue-400">{rate}%</td>
+                        <td className="p-2 text-right tabular-nums text-status-working">{rate}%</td>
                       </tr>
                     );
                   })}
