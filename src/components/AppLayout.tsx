@@ -15,7 +15,7 @@ import { useContainerUnread } from '@/hooks/useContainerUnread';
 import {
   LayoutDashboard, ClipboardList, Settings, Users, Database, TerminalSquare,
   LogOut, Menu, X, ChevronDown, Sun, Moon, Building2, AlignJustify, AlignLeft,
-  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp, FolderTree, Globe, PlugZap,
+  FolderKanban, BookOpen, Search, KeyRound, Loader2, Eye, EyeOff, RefreshCw, Headphones, Workflow, DatabaseBackup, Package, Trash2, FileText, ShieldCheck, StickyNote, Megaphone, Inbox, Sparkles, Bug, FolderArchive, Network, ShoppingCart, Truck, Receipt, Lock, Briefcase, Activity, ScanLine, Calendar, Send, Target, MapPin, CalendarRange, Star, TrendingUp, FolderTree, Globe, PlugZap,
   Wrench, ChevronRight, Trophy, CalendarClock, Mail, Phone, Plus, Upload, Pencil, Check, UserPlus, Kanban,
 } from 'lucide-react';
 import { BugReportDialog } from '@/components/BugReportDialog';
@@ -239,6 +239,7 @@ const processNavGroups: ProcessNavGroup[] = [
   ]},
   { id: 'procurement', label: 'Einkaufen & lagern', icon: ShoppingCart, items: [
     { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart, access: 'erp' },
+    { href: '/scan', label: 'Scannen (Handy)', icon: ScanLine, access: 'erp' },
     { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart, access: 'erp' },
     { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp' },
     { href: '/inventur', label: 'Inventur', icon: ClipboardList, access: 'erp' },
