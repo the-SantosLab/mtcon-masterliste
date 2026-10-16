@@ -1,4 +1,4 @@
--- Isolated, fully rolled back: scan completion, duplicate protection, roles.
+-- Run with a privileged runner (needs user_roles write). Isolated, fully rolled back: scan completion, duplicate protection, roles.
 BEGIN;
 DO $$
 DECLARE staff uuid; viewer uuid; wo uuid:=gen_random_uuid(); wh uuid; r jsonb; ok boolean; st numeric; ra uuid:=gen_random_uuid();
@@ -10,8 +10,9 @@ BEGIN
   DELETE FROM public.user_roles WHERE user_id=viewer; INSERT INTO public.user_roles(user_id,role) VALUES(viewer,'viewer');
  END IF;
  SELECT id INTO wh FROM public.warehouses LIMIT 1;
+ INSERT INTO public.articles(art_nr,bezeich_1) VALUES('ISOLATED-SCAN-ART','Testartikel');
  IF staff IS NULL OR viewer IS NULL OR wh IS NULL THEN RAISE EXCEPTION 'fixtures missing'; END IF;
- INSERT INTO public.production_orders(id,wo_no,art_nr,warehouse_id,quantity,status) VALUES(wo,'ISOLATED-SCAN-DONE','ISOLATED-SCAN-ART',wh,10,'in_progress');
+ INSERT INTO public.production_orders(id,wo_no,art_nr,warehouse_id,quantity,status) VALUES(wo,'ISOLATED-SCAN-DONE','ISOLATED-SCAN-ART',wh,10,'issued');
 
  PERFORM set_config('request.jwt.claim.sub',viewer::text,true);
  PERFORM set_config('request.jwt.claims',json_build_object('sub',viewer,'role','authenticated')::text,true);
