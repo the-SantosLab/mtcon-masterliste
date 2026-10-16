@@ -121,7 +121,7 @@ export default function AdminCapacityPlan() {
             <Button title="Vorherige Woche" aria-label="Vorherige Woche" size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, -7))}><ChevronLeft className="h-4 w-4" /></Button>
             <Button size="sm" variant="outline" onClick={() => setWeekStart(isoMonday(new Date()))} className="text-xs">Heute</Button>
             <Button title="Nächste Woche" aria-label="Nächste Woche" size="sm" variant="outline" onClick={() => setWeekStart(addDays(weekStart, 7))}><ChevronRight className="h-4 w-4" /></Button>
-          } />
+          </div>
         } />
 
         <FulfillmentMetrics metrics={[
