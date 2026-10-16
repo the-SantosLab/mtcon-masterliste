@@ -182,7 +182,7 @@ export default function AdminSupplierInvoices() {
           { label: 'Rechnungen', value: rows.length },
           { label: 'Offen / Geprüft', value: `${totals.open.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`, tone: 'working' },
           { label: 'Freigegeben', value: `${totals.appr.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`, tone: 'done' },
-          { label: 'Gebucht', value: rows.filter(r => r.status === 'booked').length, tone: 'done' },
+          { label: 'Offen mit Abweichung', value: rows.filter(r => (r.status === 'open' || r.status === 'matched') && r.match_status && r.match_status !== 'ok').length, tone: 'overdue' },
         ]} />
 
         <div className="flex gap-2 flex-wrap">
