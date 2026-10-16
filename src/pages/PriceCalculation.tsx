@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
 import { FulfillmentHeader } from '@/components/erp/FulfillmentHeader';
@@ -31,6 +32,17 @@ export default function PriceCalculation() {
   const s = supabase as any;
   const [f, setF] = useState<Form>(blank());
   const [busy, setBusy] = useState(false);
+  const nav = useNavigate();
+  const [sp] = useSearchParams();
+  const offerId = sp.get('offer');
+  const { data: offer } = useQuery({ queryKey: ['calc-offer', offerId], enabled: !!offerId, queryFn: async () => (await s.from('offers').select('id, offer_no, company_id, companies(name)').eq('id', offerId).maybeSingle()).data });
+  useEffect(() => { if (offer && !f.id && !f.customer_name) setF((p) => ({ ...p, customer_name: offer.companies?.name ?? '' })); }, [offer]);
+  const takeOver = async (i: number) => {
+    if (!f.id || f.status !== 'final' || !offerId) return;
+    const { error } = await s.from('price_calculations').update({ offer_id: offerId }).eq('id', f.id);
+    if (error) return toast.error(error.message);
+    nav(`/crm/offers/${offerId}?calc=${f.id}&row=${i}`);
+  };
 
   const { data: settings = [] } = useQuery({ queryKey: ['calc-settings'], queryFn: async () => (await s.from('calc_settings').select('*').order('key')).data ?? [] });
   const { data: list = [] } = useQuery({ queryKey: ['price-calcs'], queryFn: async () => (await s.from('price_calculations').select('*').order('created_at', { ascending: false }).limit(200)).data ?? [] });
@@ -54,7 +66,7 @@ export default function PriceCalculation() {
     setBusy(true);
     const payload = { art_nr: f.art_nr.trim(), issos_offer_no: f.issos_offer_no || null, supplier_offer: f.supplier_offer || null, customer_name: f.customer_name || null, ...opt,
       lz_quarter_avg: val('lz_quarter_avg'), lz_base: val('lz_base'), lz_consumption: num(f.lz_consumption), factor, sws_factor: val('sws_factor'),
-      rows: f.rows, lead_time_weeks: num(f.lead_time_weeks), note: f.note || null, status };
+      ...(offerId && !f.id ? { offer_id: offerId } : {}), rows: f.rows, lead_time_weeks: num(f.lead_time_weeks), note: f.note || null, status };
     const q = f.id ? s.from('price_calculations').update(payload).eq('id', f.id).select('id').single() : s.from('price_calculations').insert(payload).select('id').single();
     const { data, error } = await q;
     setBusy(false);
@@ -76,6 +88,7 @@ export default function PriceCalculation() {
         <FulfillmentHeader title="Kalkulation" subtitle="Verkaufspreis je 1.000 Stück aus Herstellkosten, Zuschlägen und Faktor"
           actions={<Button variant="outline" onClick={() => setF(blank())}>Neue Kalkulation</Button>} />
 
+        {offerId && <div className="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm">Kalkulation für Angebot <span className="font-medium">{offer?.offer_no ?? '…'}</span>{offer?.companies?.name ? ` · ${offer.companies.name}` : ''}. Nach dem Abschließen eine Staffel mit „Übernehmen“ ins Angebot übertragen.</div>}
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="space-y-5 rounded-xl border border-border bg-card/60 p-4">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -102,7 +115,7 @@ export default function PriceCalculation() {
                   {f.with_galvanik && <TableHead>Galvanik</TableHead>}{f.with_pruefung && <TableHead>Prüfung</TableHead>}
                   {f.with_lz && <TableHead>LZ</TableHead>}
                   {f.with_sws && <><TableHead>SWS WKZ</TableHead><TableHead>SWS Gurt</TableHead></>}
-                  <TableHead>MGK 1</TableHead><TableHead>MGK 2</TableHead><TableHead>VK /1000</TableHead><TableHead>VK / Stk</TableHead>
+                  <TableHead>MGK 1</TableHead><TableHead>MGK 2</TableHead><TableHead>VK /1000</TableHead><TableHead>VK / Stk</TableHead>{offerId && <TableHead />}
                 </TableRow></TableHeader>
                 <TableBody>
                   {f.rows.map((r, i) => { const x = results[i]; const cell = (k: keyof CalcRow) => <TableCell><Input disabled={locked} className="h-8 w-24" inputMode="decimal" value={r[k]?.toString() ?? ''} onChange={(e) => setRow(i, k, e.target.value)} /></TableCell>;
@@ -110,7 +123,8 @@ export default function PriceCalculation() {
                       {f.with_lz && <TableCell className="tabular-nums">{fmt(x.lz)}</TableCell>}
                       {f.with_sws && <>{cell('sws_wkz')}{cell('sws_gurt')}</>}
                       <TableCell className="tabular-nums">{fmt(x.mgk1)}</TableCell><TableCell className="tabular-nums">{fmt(x.mgk2)}</TableCell>
-                      <TableCell className="tabular-nums font-medium">{fmt(x.vk1000)}</TableCell><TableCell className="tabular-nums">{fmt(x.vkPiece, 4)}</TableCell></TableRow>; })}
+                      <TableCell className="tabular-nums font-medium">{fmt(x.vk1000)}</TableCell><TableCell className="tabular-nums">{fmt(x.vkPiece, 4)}</TableCell>
+                      {offerId && <TableCell><Button size="sm" variant="outline" disabled={f.status !== 'final' || x.vkPiece == null || !r.qty} onClick={() => takeOver(i)}>Übernehmen</Button></TableCell>}</TableRow>; })}
                 </TableBody>
               </Table>
             </div>
