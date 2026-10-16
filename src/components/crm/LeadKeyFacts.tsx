@@ -26,9 +26,9 @@ export function LeadKeyFacts({ lead }: { lead: { id: string; company_name: strin
   });
   const f = data?.facts;
   const tiles = [
-    { label: 'Gesamtbestellvolumen', value: f ? formatEUR(f.orderVolume) : '–', detail: f ? `${f.orderCount} Aufträge` : '' },
+    { label: 'Gesamtbestellvolumen', value: f ? formatEUR(f.orderVolume) : '–', detail: f ? `${f.orderCount} ${f.orderCount === 1 ? "Auftrag" : "Aufträge"}` : '' },
     { label: 'Prognostizierter Forecast', value: f ? formatEUR(f.forecast) : '–', detail: 'gewichtet nach Wahrscheinlichkeit' },
-    { label: 'Offene Pipeline', value: f ? formatEUR(f.pipeline) : '–', detail: f ? `${f.openDeals} offene Chancen` : '' },
+    { label: 'Offene Pipeline', value: f ? formatEUR(f.pipeline) : '–', detail: f ? `${f.openDeals} offene ${f.openDeals === 1 ? "Chance" : "Chancen"}` : '' },
     { label: 'Abschlussquote', value: f?.winRate == null ? '–' : `${f.winRate} %`, detail: 'gewonnen / abgeschlossen' },
     { label: 'Letzter Auftrag', value: f?.lastOrder ? new Date(f.lastOrder).toLocaleDateString('de-DE') : '–', detail: '' },
     { label: 'Lead-Score', value: lead.score != null ? String(lead.score) : '–', detail: '' },
