@@ -56,9 +56,9 @@ export default function CrmCompanyDetail() {
       supabase.from('deals').select('*').eq('company_id', id).order('created_at', { ascending: false }),
       supabase.from('contacts').select('*').eq('company_id', id).order('last_name'),
       supabase.from('crm_activities').select('*').eq('company_id', id).order('created_at', { ascending: false }).limit(20),
-      (supabase as any).from('orders').select('id, order_no, status, total_amount, created_at').eq('company_id', id).order('created_at', { ascending: false }).limit(50),
-      (supabase as any).from('deliveries').select('id, delivery_no, status, created_at').eq('company_id', id).order('created_at', { ascending: false }).limit(50),
-      (supabase as any).from('invoices').select('id, invoice_no, status, total_amount, created_at').eq('company_id', id).order('created_at', { ascending: false }).limit(50),
+      (supabase as any).from('orders').select('id, order_no, status, total_amount, order_date, created_at').eq('company_id', id).order('created_at', { ascending: false }).limit(500),
+      (supabase as any).from('deliveries').select('id, delivery_no, status, created_at').eq('company_id', id).order('created_at', { ascending: false }).limit(500),
+      (supabase as any).from('invoices').select('id, invoice_no, status, total_amount, paid_amount, due_date, paid_at, payment_status, created_at').eq('company_id', id).order('created_at', { ascending: false }).limit(500),
     ]);
     setCompany(c); setDeals(d ?? []); setContacts(ct ?? []); setActs(a ?? []);
     setOrders(o ?? []); setDeliveries(dl ?? []); setInvoices(inv ?? []);
@@ -123,6 +123,7 @@ export default function CrmCompanyDetail() {
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
+          <CustomerView orders={orders} deliveries={deliveries} invoices={invoices} />
           <div className="grid lg:grid-cols-3 gap-4">
             <Section title="Deal-History">
               {deals.length === 0 ? <Empty /> : (
