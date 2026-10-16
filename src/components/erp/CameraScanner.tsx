@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Camera, CameraOff, ScanLine } from 'lucide-react';
 
 /** Kamera-Scanner (Barcode/QR) mit Eingabefeld für Handscanner oder manuelle Eingabe. */
-export function CameraScanner({ onScan }: { onScan: (code: string) => void }) {
+export function CameraScanner({ onScan, placeholder = 'Artikelnummer eingeben oder Handscanner' }: { onScan: (code: string) => void; placeholder?: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const controls = useRef<IScannerControls | null>(null);
   const last = useRef<{ code: string; at: number }>({ code: '', at: 0 });
@@ -49,7 +49,7 @@ export function CameraScanner({ onScan }: { onScan: (code: string) => void }) {
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (manual.trim()) { onScan(manual); setManual(''); } }}>
-        <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Artikelnummer eingeben oder Handscanner" className="h-11" aria-label="Code eingeben" />
+        <Input value={manual} onChange={(e) => setManual(e.target.value)} placeholder={placeholder} className="h-11" aria-label="Code eingeben" />
         <Button type="submit" variant="outline" className="h-11">OK</Button>
       </form>
     </div>
