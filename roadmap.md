@@ -18,3 +18,4 @@
 - [x] Ansprechpartner-Regeln automatisch geprüft (acht Tests) und alle 32 Tests des Projekts erfolgreich
 - [x] Angemeldeter Menüdurchlauf durch alle acht Ansprechpartner-Punkte sowie 22 Akquise-, Firmen- und Interessentenseiten ohne Fehler
 - [ ] Angemeldeten Werkstattauftrag-Durchlauf mit Fremdbearbeitung testen — offen: Ablauf (Materialausgabe, Wareneingang) noch nicht durchgeführt
+- [x] Kommunikation & Aufgaben: sieben eigene Unterseiten (Übersicht, Aufgaben, Wiedervorlagen, Termine, Telefonate, E-Mails, Besuchsberichte, Erledigt) mit Kennzahlen, Übernehmen/Erledigen-Aktionen; acht Regeltests erfolgreich
