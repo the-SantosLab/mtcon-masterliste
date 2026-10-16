@@ -44,6 +44,7 @@ const AdminPurchasing = lazyRetry(() => import("./pages/AdminPurchasing"));
 const BankReconciliation = lazyRetry(() => import("./pages/BankReconciliation"));
 const ManagementKpis = lazyRetry(() => import("./pages/ManagementKpis"));
 const WorkshopLoad = lazyRetry(() => import("./pages/WorkshopLoad"));
+const PriceCalculation = lazyRetry(() => import("./pages/PriceCalculation"));
 const MobileScan = lazyRetry(() => import("./pages/MobileScan"));
 const AdminDisposition = lazyRetry(() => import("./pages/AdminDisposition"));
 const AdminLots = lazyRetry(() => import("./pages/AdminLots"));
@@ -315,6 +316,7 @@ function AuthenticatedApp() {
           <Route path="/kennzahlen" element={<ProtectedRoute><ManagementKpis /></ProtectedRoute>} />
           <Route path="/scan" element={<ProtectedRoute><MobileScan /></ProtectedRoute>} />
           <Route path="/werkstatt-auslastung" element={<ProtectedRoute><WorkshopLoad /></ProtectedRoute>} />
+          <Route path="/kalkulation" element={<ProtectedRoute><PriceCalculation /></ProtectedRoute>} />
           <Route path="/reporting/einkauf" element={<ProtectedRoute><AdminPurchasingReport /></ProtectedRoute>} />
           <Route path="/kapazitaet" element={<ProtectedRoute><AdminCapacityPlan /></ProtectedRoute>} />
           <Route path="/zeichnungen" element={<ProtectedRoute><AdminDrawings /></ProtectedRoute>} />

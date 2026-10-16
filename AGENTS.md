@@ -19,3 +19,5 @@
 - Workshop scan completions go through scan_production_complete, which wraps production_order_complete with a per-request idempotency key and an expected-done check, so retries and parallel phones cannot report twice.
 - Bank reconciliation payments carry reference BANK|<tx key>; a partial unique index on invoice_payments.reference enforces that each bank line is booked once.
 - Offers created from a company without a deal auto-create a deal first, because offers.deal_id is required and all offer views key off the deal.
+
+- Price calculations take factors only from admin-maintained calc_settings via a trigger, so staff cannot override factors; unclear values stay flagged and block finalizing.
