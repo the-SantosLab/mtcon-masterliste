@@ -285,9 +285,9 @@ function ArticlesTab({ onOpen }: { onOpen: (n: string) => void }) {
   return (
     <PaginatedBrowser
       table="articles"
-      select="art_nr,matchcode,bezeich_1,bezeich_2,art_gr,mat_art,me,pe,art_stat,zeichnung_nr,is_blocked"
+      select="art_nr,matchcode,bezeich_1,bezeich_2,ean,art_gr,mat_art,me,pe,art_stat,zeichnung_nr,is_blocked"
       orderBy="art_nr"
-      searchableCols={['art_nr', 'matchcode', 'bezeich_1', 'bezeich_2', 'zeichnung_nr']}
+      searchableCols={['art_nr', 'matchcode', 'bezeich_1', 'bezeich_2', 'ean', 'zeichnung_nr']}
       searchPlaceholder="Suche Art.-Nr, Matchcode, Bezeichnung, Zeichn.-Nr…"
       onRowClick={(r) => onOpen(r.art_nr)}
       columns={[
@@ -295,6 +295,7 @@ function ArticlesTab({ onOpen }: { onOpen: (n: string) => void }) {
         { key: 'matchcode', label: 'Matchcode' },
         { key: 'bezeich_1', label: 'Bezeichnung 1' },
         { key: 'bezeich_2', label: 'Bezeichnung 2', className: 'text-muted-foreground' },
+        { key: 'ean', label: 'EAN', className: 'font-mono text-muted-foreground' },
         { key: 'art_gr', label: 'Gruppe', className: 'text-muted-foreground' },
         { key: 'mat_art', label: 'Mat-Art', className: 'text-muted-foreground' },
         { key: 'me', label: 'ME', className: 'text-muted-foreground' },
