@@ -10,7 +10,7 @@ export type ContactDeal = { id: string; primary_contact_id: string | null; owner
 /** Each sidebar point under "Ansprechpartner" is backed by its own page. */
 export const contactPages = [
   { key: 'data', title: 'Kontaktdaten pflegen', short: 'Pflegen', path: '/crm/ansprechpartner/pflegen' },
-  { key: 'assign', title: 'Intern zuweisen', short: 'Zuweisen', path: '/crm/ansprechpartner/zuweisen' },
+  { key: 'assign', title: 'Zuständigkeit zuweisen', short: 'Zuweisen', path: '/crm/ansprechpartner/zuweisen' },
   { key: 'owners', title: 'Verantwortlichkeiten', short: 'Zuständig', path: '/crm/ansprechpartner/verantwortlichkeiten' },
   { key: 'email', title: 'E-Mail-Adressen', short: 'E-Mail', path: '/crm/ansprechpartner/email' },
   { key: 'phone', title: 'Telefonverzeichnis', short: 'Telefon', path: '/crm/ansprechpartner/telefon' },

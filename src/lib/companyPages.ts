@@ -2,7 +2,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 export type Company = Tables<'companies'>;
 export const companyPages = [
-  { key: 'edit', title: 'Firmen bearbeiten', short: 'Bearbeiten', path: '/crm/firmen/bearbeiten' },
+  { key: 'edit', title: 'Firmendaten vervollständigen', short: 'Vervollständigen', path: '/crm/firmen/bearbeiten' },
   { key: 'locations', title: 'Adressen & Standorte', short: 'Standorte', path: '/crm/firmen/standorte' },
   { key: 'groups', title: 'Kundengruppen', short: 'Gruppen', path: '/crm/firmen/gruppen' },
   { key: 'suppliers', title: 'Lieferanten', short: 'Lieferanten', path: '/crm/firmen/lieferanten' },
