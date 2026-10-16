@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { dayOf, dueToday, localDay, personalHandoff, sortDayItems, type DayItem } from '@/lib/myDay';
+import { activityPages } from '@/lib/activityPages';
 
 async function paged<T>(read: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
   const rows: T[] = [];
@@ -54,7 +55,7 @@ export function MyDay() {
         const rows = await paged((f, t) => supabase.from('crm_activities').select('id,subject,type,due_at,created_at')
           .eq('owner_id', user.id).is('completed_at', null).lt('due_at', end).order('id').range(f, t));
         for (const r of rows) if (dueToday(r.due_at, now)) items.push({ id: `crm:${r.id}`, title: r.subject,
-          context: 'CRM · Kommunikation & Aufgaben', href: `/crm/kommunikation/aufgaben?activity=${r.id}`,
+          context: 'CRM · Kommunikation & Aufgaben', href: `${activityPages.find(p => p.key === ({ task: 'tasks', followup: 'followups', call: 'calls', email: 'emails', meeting: 'meetings' } as Record<string, string>)[r.type])?.path || '/crm/kommunikation'}?activity=${r.id}`,
           source: 'crm', due: r.due_at, opened: r.created_at });
       } });
       if (erp.allowed && writer && profile?.active) {
@@ -70,8 +71,8 @@ export function MyDay() {
           const departments = [...new Set([profile.department_id, ...members.map(m => m.department_id)].filter((x): x is string => Boolean(x)))];
           if (!departments.length) return;
           const rows = await paged((f, t) => supabase.from('order_handoffs')
-            .select('id,title,status,department_id,order_id,created_at,orders!inner(order_no,customer_name,status),departments(name)')
-            .eq('status', 'open').in('department_id', departments).not('orders.status', 'in', '(completed,cancelled)').order('id').range(f, t));
+            .select('id,title,status,department_id,order_id,created_at,orders!inner(order_no,customer_name,status),departments!inner(name,is_active)')
+            .eq('status', 'open').eq('departments.is_active', true).in('department_id', departments).not('orders.status', 'in', '(completed,cancelled)').order('id').range(f, t));
           for (const r of rows) if (personalHandoff(r.status, r.department_id, departments, profile.active, writer))
             items.push({ id: `handoff:${r.id}`, title: r.title, context: `${r.orders.order_no} · ${r.departments?.name || 'Bereich'} · ${r.orders.customer_name || ''}`,
               href: `/orders/${r.order_id}/akte`, source: 'handoff', due: null, opened: r.created_at });
