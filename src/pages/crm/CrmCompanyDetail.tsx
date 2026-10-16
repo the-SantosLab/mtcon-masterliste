@@ -102,6 +102,7 @@ export default function CrmCompanyDetail() {
           <div className="mt-2"><TagPicker entityType="company" entityId={company.id} /></div>
         </div>
 
+        <Button size="sm" onClick={() => navigate(`/crm/offers?action=new&company=${company.id}`)} className="h-8 text-xs">Neues Angebot</Button>
         <Button size="sm" variant="outline" onClick={() => setLookalike(true)} className="h-8 text-xs gap-1.5"><Sparkles className="h-3.5 w-3.5" />Ähnliche finden</Button>
       </div>
 
