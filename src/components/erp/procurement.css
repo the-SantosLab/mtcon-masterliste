@@ -1,6 +1,8 @@
 .procurement-page { min-width: 0; }
+.procurement-page table { min-width: 760px !important; table-layout: auto !important; }
+.procurement-page thead th { white-space: nowrap !important; word-break: normal !important; }
 .procurement-page > [data-orientation] { min-width: 0; }
-.procurement-page .procurement-section { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.procurement-page .procurement-section { border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
 .procurement-page .procurement-section > div { padding-inline: 0; }
 .procurement-page .procurement-table { overflow-x: auto; border: 1px solid hsl(var(--border)); border-radius: 6px; }
 .procurement-page .procurement-upload { border: 1px dashed hsl(var(--border)); background: hsl(var(--muted) / .2); border-radius: 6px; }

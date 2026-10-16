@@ -174,7 +174,7 @@ export default function AdminPurchasing() {
           <TabsContent value="receipts" className="space-y-3">
             <SubcontractOrders receiptsOnly />
             <p className="text-xs text-muted-foreground">Offene Bestellungen (Status bestellt / teilgeliefert). Klick öffnet die Buchung.</p>
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="procurement-table">
               <table className="w-full text-sm">
                 <thead className="bg-muted/30 text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr>
@@ -215,7 +215,7 @@ export default function AdminPurchasing() {
                 <Plus className="h-4 w-4 mr-1.5" />Neuer Lieferant
               </Button>
             </div>
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="procurement-table">
               <table className="w-full text-sm">
                 <thead className="bg-muted/30 text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr>
@@ -1077,7 +1077,7 @@ function PurchasingOverview({ onOpenPO, onCreatePO, suppliers }: {
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={filter} onValueChange={(v: 'open' | 'all') => setFilter(v)}>
             <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -1092,7 +1092,7 @@ function PurchasingOverview({ onOpenPO, onCreatePO, suppliers }: {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="procurement-table">
         <table className="w-full text-sm">
           <thead className="bg-muted/30 text-[11px] uppercase tracking-wide text-muted-foreground">
             <tr>
