@@ -223,6 +223,7 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/angebote/versionen', label: 'Angebotsversionen', icon: FileText },
       { href: '/crm/angebote/freigegeben', label: 'Angenommene Angebote', icon: ShieldCheck },
       { href: '/crm/angebote/auftraege', label: 'Aufträge erzeugen', icon: ClipboardList },
+      { href: '/crm/angebote/prozessform', label: 'Punkt / Linie / Dreieck / Quadrat', icon: Workflow },
       { href: '/crm/offers?action=new', label: 'Angebot erstellen', icon: Plus },
     ] },
   ]},

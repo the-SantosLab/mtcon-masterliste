@@ -119,6 +119,7 @@ const CompanyWorkspace = lazyRetry(() => import("./components/crm/CompanyWorkspa
 const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const ContactWorkspace = lazyRetry(() => import("./components/crm/ContactWorkspace"));
 const ActivityWorkspace = lazyRetry(() => import("./components/crm/ActivityWorkspace"));
+const OfferShapeWorkspace = lazyRetry(() => import("./components/crm/OfferShapeWorkspace"));
 const DealWorkspace = lazyRetry(() => import("./components/crm/DealWorkspace"));
 const DealInsightsWorkspace = lazyRetry(() => import("./components/crm/DealInsightsWorkspace"));
 const OfferWorkspace = lazyRetry(() => import("./components/crm/OfferWorkspace"));
@@ -354,6 +355,7 @@ function AuthenticatedApp() {
           <Route path="/crm/verkaufschancen/mitbewerber" element={<CrmProtectedRoute><DealInsightsWorkspace page="competitors" /></CrmProtectedRoute>} />
           <Route path="/crm/verkaufschancen/projekte" element={<CrmProtectedRoute><DealInsightsWorkspace page="project" /></CrmProtectedRoute>} />
           <Route path="/crm/angebote" element={<CrmProtectedRoute><OfferWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/angebote/prozessform" element={<CrmProtectedRoute><OfferShapeWorkspace /></CrmProtectedRoute>} />
           <Route path="/crm/angebote/kalkulation" element={<CrmProtectedRoute><OfferWorkspace page="kalkulation" /></CrmProtectedRoute>} />
           <Route path="/crm/angebote/versand" element={<CrmProtectedRoute><OfferWorkspace page="versand" /></CrmProtectedRoute>} />
           <Route path="/crm/angebote/versionen" element={<CrmProtectedRoute><OfferWorkspace page="versionen" /></CrmProtectedRoute>} />
