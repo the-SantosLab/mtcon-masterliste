@@ -2,7 +2,7 @@
 - [x] Kundenakquise: eigene Übersicht und acht richtig zugeordnete Unterseiten mit echten CRM-Daten
 - [x] Regelbasierte Aktivitäten und MTIQ-Vorschläge mit bestätigter Übernahme in bestehende Aktivitäten ergänzen
 - [x] Akquise-Regeln und Seitenleistenregression prüfen: neun Tests erfolgreich; Seitenmodule laden fehlerfrei
-- [ ] Angemeldeten Akquiseablauf, MTIQ-Antwort und Darstellung prüfen — blockiert: keine passende Anmeldung für das anfragende Konto; Vorschau führt zur Anmeldung
+- [ ] Angemeldeten MTIQ-Antwortablauf in der Akquise prüfen — offen: Antwortqualität und Kandidenauswahl noch nicht kontrolliert
 - [x] Fremdbearbeitung als verknüpften Werkstatt-Schritt mit Materialverlagerung ergänzen; fünf Regeltests erfolgreich
 - [ ] Angemeldeten Durchlauf im Werkstattauftrag testen — blockiert: für dein Konto gibt es keine passende Anmeldung in der App
 - [x] Fremdbearbeitung als eigenen Auftragstyp mit Lieferantenzuordnung ergänzen
@@ -15,3 +15,7 @@
 - [x] Navigation und zentrale Zielpfade prüfen
 - [x] Eigene Firmenreiter für Ansprechpartner, Deals und Dokumente ergänzen; Lagerreservierungen unverändert lassen; Fehlercheck erfolgreich
 - [ ] Angemeldeten Bedienungstest der Firmenreiter abschließen — blockiert: Testzugang wird trotz erneuerter Sitzung zur Anmeldung umgeleitet
+- [x] Ansprechpartner: acht eigene Unterseiten mit Kennzahlen, Zuständigkeitsableitung, E-Mail-Status, Telefonverzeichnis, Verlauf und Nachfassen-Planung
+- [x] Ansprechpartner-Regeln automatisch geprüft (acht Tests) und alle 32 Tests des Projekts erfolgreich
+- [x] Angemeldeter Menüdurchlauf durch alle acht Ansprechpartner-Punkte sowie 22 Akquise-, Firmen- und Interessentenseiten ohne Fehler
+- [ ] Angemeldeten Werkstattauftrag-Durchlauf mit Fremdbearbeitung testen — offen: Ablauf (Materialausgabe, Wareneingang) noch nicht durchgeführt
