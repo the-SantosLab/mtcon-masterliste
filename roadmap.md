@@ -40,12 +40,12 @@
 - [x] Teilrechnungen: Abschläge (Prozent/Betrag) und Schlussrechnung mit automatischem Abzug; isoliert getestet und zurückgerollt
 
 ## Vertiefung Runde Okt 16
-- [ ] Etiketten (QR) für Werkstattaufträge drucken
-- [ ] EAN an Artikeln + Scan-Suche über EAN
+- [x] Etiketten (QR) für Werkstattaufträge drucken
+- [x] EAN an Artikeln + Scan-Suche über EAN
 - [ ] Werkstatt-Kapazität/Stundensatz — wartet auf echte Werte vom Nutzer
 - [ ] Echter Lieferanten-Testversand — wartet auf Testadresse/Freigabe vom Nutzer
-- [ ] Posteingang → Bestellung im Browser durchklicken (isoliert)
-- [ ] Angebot direkt bei Firma anlegen
-- [ ] Artikelinfos (Bestand, Preis, offene Aufträge) in Vorgangsansicht
-- [ ] Forecast: Kundenvergleich + Entwicklung über Zeit
-- [ ] Bankabgleich: Kontoauszug-Import, Zuordnung zu offenen Rechnungen
+- [x] Posteingang → Bestellung im Browser durchklicken (isoliert)
+- [x] Angebot direkt bei Firma anlegen
+- [x] Artikelinfos (Bestand, Preis, offene Aufträge) in Vorgangsansicht
+- [x] Forecast: Kundenvergleich + Entwicklung über Zeit
+- [x] Bankabgleich: Kontoauszug-Import, Zuordnung zu offenen Rechnungen
