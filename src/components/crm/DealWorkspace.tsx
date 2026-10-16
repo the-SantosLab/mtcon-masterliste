@@ -110,7 +110,7 @@ export default function DealWorkspace({ page: key }: { page?: DealPageKey }) {
     ? <p className="text-xs text-muted-foreground py-8 text-center">Keine Verkaufschancen in diesem Bereich.</p>
     : <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground border-b border-border"><th className="py-2 font-normal">Chance</th><th className="font-normal">Firma</th><th className="font-normal">Wert</th><th className="font-normal">Phase</th><th className="font-normal">Status</th><th /></tr></thead>
       <tbody>{list.slice(0, 300).map(deal => <tr key={deal.id} className="border-b border-border/60">
-        <td className="py-2.5 font-medium"><Link to={`/crm/deals?focus=${deal.id}`} className="hover:text-primary">{deal.title}</Link><div className="text-muted-foreground font-normal">{deal.deal_no}</div></td>
+        <td className="py-2.5 font-medium"><Link to={`/crm/deals/${deal.id}`} className="hover:text-primary">{deal.title}</Link><div className="text-muted-foreground font-normal">{deal.deal_no}</div></td>
         <td className="text-muted-foreground">{names.company.get(deal.company_id ?? '') ?? '–'}</td>
         <td className="tabular-nums">{money(deal.value_final ?? deal.value_estimated ?? 0, deal.currency)}<div className="text-muted-foreground">{effectiveProbability(deal, probs)} % · gewichtet {money(weightedValue(deal, probs), deal.currency)}</div></td>
         <td>{stageLabel[deal.stage] ?? deal.stage}</td>
@@ -120,7 +120,7 @@ export default function DealWorkspace({ page: key }: { page?: DealPageKey }) {
           {key === 'stages' && nextStage(deal) && <Button size="sm" variant="outline" disabled={busy === deal.id} onClick={() => void advance(deal)}>
             {busy === deal.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><ArrowRight className="h-3.5 w-3.5 mr-1" />{stageLabel[nextStage(deal)!]}</>}
           </Button>}
-          {key !== 'assign' && key !== 'stages' && <Button asChild size="sm" variant="ghost"><Link to={`/crm/deals?focus=${deal.id}`}>Öffnen<ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link></Button>}
+          {key !== 'assign' && key !== 'stages' && <Button asChild size="sm" variant="ghost"><Link to={`/crm/deals/${deal.id}`}>Öffnen<ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link></Button>}
         </td>
       </tr>)}</tbody></table>
       {list.length > 300 && <p className="text-xs text-muted-foreground py-3">300 von {list.length} angezeigt – Suche verfeinern.</p>}</div>;
@@ -131,7 +131,7 @@ export default function DealWorkspace({ page: key }: { page?: DealPageKey }) {
       const groups = pipelineGroups(rows);
       return <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">{groups.map(g => <div key={g.stage} className="border border-border rounded-lg p-4">
         <div className="flex justify-between text-sm mb-3"><span className="font-medium">{g.label}</span><span className="tabular-nums text-muted-foreground">{g.deals.length} · {money(g.deals.reduce((s, x) => s + (x.value_final ?? x.value_estimated ?? 0), 0))}</span></div>
-        <div className="space-y-2">{g.deals.length === 0 ? <p className="text-xs text-muted-foreground">Keine Chancen.</p> : g.deals.slice(0, 12).map(deal => <Link key={deal.id} to={`/crm/deals?focus=${deal.id}`} className="block text-xs border border-border/60 rounded p-2 hover:border-primary">
+        <div className="space-y-2">{g.deals.length === 0 ? <p className="text-xs text-muted-foreground">Keine Chancen.</p> : g.deals.slice(0, 12).map(deal => <Link key={deal.id} to={`/crm/deals/${deal.id}`} className="block text-xs border border-border/60 rounded p-2 hover:border-primary">
           <div className="font-medium">{deal.title}</div>
           <div className="text-muted-foreground flex justify-between"><span>{names.company.get(deal.company_id ?? '') ?? '–'}</span><span className="tabular-nums">{money(deal.value_final ?? deal.value_estimated ?? 0, deal.currency)}</span></div>
         </Link>)}{g.deals.length > 12 && <p className="text-xs text-muted-foreground">+{g.deals.length - 12} weitere</p>}</div>
