@@ -240,6 +240,7 @@ const processNavGroups: ProcessNavGroup[] = [
     { href: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart, access: 'erp' },
     { href: '/bestellungen', label: 'Bestellungen', icon: ShoppingCart, access: 'erp' },
     { href: '/admin/inventory', label: 'Lager', icon: Package, access: 'erp' },
+    { href: '/inventur', label: 'Inventur', icon: ClipboardList, access: 'erp' },
     { href: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt, access: 'erp' },
     { href: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star, access: 'erp' },
     { href: '/preismanagement', label: 'Preismanagement', icon: TrendingUp, access: 'erp' },

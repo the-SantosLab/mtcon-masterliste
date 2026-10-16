@@ -65,6 +65,7 @@ const AdminGhv = lazyRetry(() => import("./pages/AdminGhv"));
 const AdminOrders = lazyRetry(() => import("./pages/AdminOrders"));
 const AdminDeliveries = lazyRetry(() => import("./pages/AdminDeliveries"));
 const AdminSupplierInvoices = lazyRetry(() => import("./pages/AdminSupplierInvoices"));
+const StockCounts = lazyRetry(() => import("./pages/StockCounts"));
 const AdminPurchasingReport = lazyRetry(() => import("./pages/AdminPurchasingReport"));
 const AdminCapacityPlan = lazyRetry(() => import("./pages/AdminCapacityPlan"));
 const AdminDrawings = lazyRetry(() => import("./pages/AdminDrawings"));
@@ -302,6 +303,7 @@ function AuthenticatedApp() {
           <Route path="/lieferscheine" element={<ProtectedRoute><AdminDeliveries /></ProtectedRoute>} />
           <Route path="/rechnungen" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
           <Route path="/admin/erp-export" element={<ProtectedRoute><AdminErpExport /></ProtectedRoute>} />
+          <Route path="/inventur" element={<ProtectedRoute><StockCounts /></ProtectedRoute>} />
           <Route path="/eingangsrechnungen" element={<ProtectedRoute><AdminSupplierInvoices /></ProtectedRoute>} />
           <Route path="/reporting/einkauf" element={<ProtectedRoute><AdminPurchasingReport /></ProtectedRoute>} />
           <Route path="/kapazitaet" element={<ProtectedRoute><AdminCapacityPlan /></ProtectedRoute>} />

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ShoppingCart, ClipboardList, Package, Receipt, Star, TrendingUp, Sparkles, Boxes } from 'lucide-react';
+import { ShoppingCart, ClipboardList, Package, Receipt, Star, TrendingUp, Sparkles, Boxes, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import './fulfillment.css';
@@ -10,6 +10,7 @@ const navigation = [
   { to: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
   { to: '/bestellungen', label: 'Bestellungen', icon: ClipboardList },
   { to: '/admin/inventory', label: 'Lager', icon: Package },
+  { to: '/inventur', label: 'Inventur', icon: ClipboardCheck },
   { to: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
   { to: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star },
   { to: '/preismanagement', label: 'Preismanagement', icon: TrendingUp },
