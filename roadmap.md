@@ -23,4 +23,4 @@
 
 - [x] „Aufträge abwickeln“: alle sieben Menüziele einheitlich neu gestaltet; Suche, Details, Kennzahlenfilter, Navigation und schmale Ansichten angemeldet geprüft; sieben bestehende Tests erfolgreich
 
-- [ ] „Einkaufen & lagern“: acht Menüziele einheitlich neu gestalten und angemeldet prüfen; Buchungen unverändert lassen
+- [x] „Einkaufen & lagern“: acht Menüziele einheitlich neu gestaltet; angemeldete Seiten-, Such-, Detail- und Lagerreitertests sowie sieben Regressionstests erfolgreich; Buchungen unverändert
