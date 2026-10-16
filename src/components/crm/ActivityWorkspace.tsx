@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity as ActivityIcon, Plus, Loader2, AlertCircle, RefreshCw, ArrowUpRight, Check,
@@ -40,6 +40,8 @@ export default function ActivityWorkspace({ page: key }: { page?: ActivityPageKe
   const { user } = useAuth();
   const qc = useQueryClient();
   const { pathname } = useLocation();
+  const [params] = useSearchParams();
+  const activityId = params.get('activity');
   const page = activityPages.find(p => p.key === key);
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -75,9 +77,9 @@ export default function ActivityWorkspace({ page: key }: { page?: ActivityPageKe
     ?? (a.deal_id && names.deal.get(a.deal_id))
     ?? null;
 
-  const rows = useMemo(() => filterForPage(key ?? null, acts)
+  const rows = useMemo(() => (activityId ? acts.filter(a => a.id === activityId) : filterForPage(key ?? null, acts))
     .filter(a => `${a.subject} ${a.body ?? ''} ${refOf(a) ?? ''}`.toLowerCase().includes(search.toLowerCase())),
-  [acts, key, search, names]);
+   [acts, key, search, names, activityId]);
 
   const complete = async (a: Activity) => {
     if (!user) return;
