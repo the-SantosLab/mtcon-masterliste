@@ -119,6 +119,7 @@ const CompanyWorkspace = lazyRetry(() => import("./components/crm/CompanyWorkspa
 const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const ContactWorkspace = lazyRetry(() => import("./components/crm/ContactWorkspace"));
 const ActivityWorkspace = lazyRetry(() => import("./components/crm/ActivityWorkspace"));
+const DealWorkspace = lazyRetry(() => import("./components/crm/DealWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
@@ -341,6 +342,13 @@ function AuthenticatedApp() {
           <Route path="/crm/kommunikation/emails" element={<CrmProtectedRoute><ActivityWorkspace page="emails" /></CrmProtectedRoute>} />
           <Route path="/crm/kommunikation/besuchsberichte" element={<CrmProtectedRoute><ActivityWorkspace page="visits" /></CrmProtectedRoute>} />
           <Route path="/crm/kommunikation/erledigt" element={<CrmProtectedRoute><ActivityWorkspace page="done" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen" element={<CrmProtectedRoute><DealWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/pipeline" element={<CrmProtectedRoute><DealWorkspace page="pipeline" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/bewerten" element={<CrmProtectedRoute><DealWorkspace page="rate" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/phasen" element={<CrmProtectedRoute><DealWorkspace page="stages" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/faellig" element={<CrmProtectedRoute><DealWorkspace page="due" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/zuweisen" element={<CrmProtectedRoute><DealWorkspace page="assign" /></CrmProtectedRoute>} />
+          <Route path="/crm/verkaufschancen/abgeschlossen" element={<CrmProtectedRoute><DealWorkspace page="closed" /></CrmProtectedRoute>} />
           <Route path="/crm/offers" element={<CrmProtectedRoute><CrmOffers /></CrmProtectedRoute>} />
           <Route path="/crm/offers/:id" element={<CrmProtectedRoute><CrmOfferDetail /></CrmProtectedRoute>} />
           <Route path="/crm/activities" element={<CrmProtectedRoute><CrmActivities /></CrmProtectedRoute>} />
