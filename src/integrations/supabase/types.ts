@@ -7462,6 +7462,95 @@ export type Database = {
           },
         ]
       }
+      order_handoff_rules: {
+        Row: {
+          department_id: string | null
+          enabled: boolean
+          label: string
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          department_id?: string | null
+          enabled?: boolean
+          label: string
+          stage: string
+          updated_at?: string
+        }
+        Update: {
+          department_id?: string | null
+          enabled?: boolean
+          label?: string
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_handoff_rules_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_handoffs: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          completed_reason: string | null
+          created_at: string
+          department_id: string | null
+          id: string
+          order_id: string
+          stage: string
+          status: string
+          title: string
+          trigger_event: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_reason?: string | null
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          order_id: string
+          stage: string
+          status?: string
+          title: string
+          trigger_event?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completed_reason?: string | null
+          created_at?: string
+          department_id?: string | null
+          id?: string
+          order_id?: string
+          stage?: string
+          status?: string
+          title?: string
+          trigger_event?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_handoffs_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_handoffs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_intake_corrections: {
         Row: {
           ai_value: Json | null
@@ -10683,6 +10772,10 @@ export type Database = {
       check_is_admin: { Args: { uid?: string }; Returns: boolean }
       check_is_manager: { Args: { uid?: string }; Returns: boolean }
       check_po_delays: { Args: never; Returns: Json }
+      close_order_handoff: {
+        Args: { _order_id: string; _reason: string; _stage: string }
+        Returns: undefined
+      }
       create_po_from_suggestions: {
         Args: {
           _items: Json
@@ -10870,6 +10963,10 @@ export type Database = {
       next_counter: { Args: { p_key: string }; Returns: number }
       next_partner_customer_no: { Args: never; Returns: string }
       next_partner_supplier_code: { Args: never; Returns: string }
+      open_order_handoff: {
+        Args: { _event: string; _order_id: string; _stage: string }
+        Returns: undefined
+      }
       own_profile_is_manager: { Args: { _uid: string }; Returns: boolean }
       po_effective_due: {
         Args: { _po: Database["public"]["Tables"]["purchase_orders"]["Row"] }
