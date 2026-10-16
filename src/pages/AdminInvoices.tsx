@@ -1,3 +1,5 @@
+import { FinanceHeader } from '@/components/erp/FinanceHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -157,13 +159,14 @@ export default function AdminInvoices() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><Receipt className="h-5 w-5" /> Rechnungen</h1>
-            <p className="text-sm text-muted-foreground mt-1">Ausgangsrechnungen, Gutschriften, Stornos — inkl. offener Posten und XRechnung-Export.</p>
-          </div>
-        </div>
+      <div className="fulfillment-page">
+        <FinanceHeader title="Rechnungen" subtitle="Ausgangsrechnungen, Gutschriften, Stornos · offene Posten · XRechnung-Export" />
+        <FulfillmentMetrics metrics={[
+          { label: 'Belege', value: String(rows.length) },
+          { label: 'Offene Posten', value: currencyDe(totals.openSum), tone: 'working' },
+          { label: 'Überfällig', value: currencyDe(totals.overdueSum), tone: 'overdue' },
+          { label: 'Bezahlt', value: currencyDe(totals.paidSum), tone: 'done' },
+        ]} />
 
         <Tabs defaultValue="outgoing" className="space-y-4">
           <TabsList>

@@ -1,3 +1,4 @@
+import { FinanceHeader } from '@/components/erp/FinanceHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -123,18 +124,14 @@ export default function AdminPurchasingReport() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><BarChart3 className="h-5 w-5" /> GF-Reporting Einkauf</h1>
-            <p className="text-sm text-muted-foreground mt-1">Volumen, Liefertreue, AB-Quote, Rechnungs-Differenzen, Top-Lieferanten.</p>
-          </div>
+      <div className="fulfillment-page">
+        <FinanceHeader title="Einkaufsreporting" subtitle="Volumen · Liefertreue · AB-Quote · Rechnungsdifferenzen · Top-Lieferanten" actions={
           <div className="flex gap-1">
             {RANGES.map(r => (
               <Button key={r.key} size="sm" variant={range===r.key?'default':'outline'} onClick={() => setRange(r.key)} className="text-xs">{r.label}</Button>
             ))}
           </div>
-        </div>
+        } />
 
         {loading ? <div className="text-sm text-muted-foreground">Lade…</div> : (
         <>

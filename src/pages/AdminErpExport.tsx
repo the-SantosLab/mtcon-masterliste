@@ -1,3 +1,5 @@
+import { FinanceHeader } from '@/components/erp/FinanceHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -145,11 +147,14 @@ export default function AdminErpExport() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 max-w-7xl">
-        <div>
-          <h1 className="text-2xl font-semibold">Mahnwesen & DATEV-Export</h1>
-          <p className="text-sm text-muted-foreground">Offene Posten verfolgen, Mahnungen versenden, Belege für die Buchhaltung exportieren.</p>
-        </div>
+      <div className="fulfillment-page">
+        <FinanceHeader title="Mahnwesen & DATEV" subtitle="Offene Posten verfolgen · Mahnungen versenden · Belege für die Buchhaltung exportieren" />
+        <FulfillmentMetrics loading={loading} metrics={[
+          { label: 'Überfällige Rechnungen', value: String(overdue.length), tone: overdue.length ? 'overdue' : undefined },
+          { label: 'Überfällig offen', value: eur(overdue.reduce((s, r) => s + Number(r.total_amount || 0) - Number(r.paid_amount || 0), 0)), tone: 'overdue' },
+          { label: 'Noch ohne Mahnung', value: String(overdue.filter(r => r.reminder_stage === 0).length) },
+          { label: 'Auto-Mahnwesen', value: settings?.enabled ? 'Aktiv' : 'Inaktiv', tone: settings?.enabled ? 'done' : undefined },
+        ]} />
 
         <Tabs defaultValue="dunning">
           <TabsList>
