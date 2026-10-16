@@ -15,6 +15,7 @@ import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List, Flame, Settings
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
+import { MtiqRequestSuggest } from '@/components/mtiq/MtiqRequestSuggest';
 
 const STATUS_LABEL: Record<string, string> = { neu: 'Neu', qualifiziert: 'Qualifiziert', eingeschrieben: 'Eingeschrieben', konvertiert: 'Konvertiert', abgelehnt: 'Abgelehnt' };
 const STATUS_COLOR: Record<string, string> = { neu: 'bg-blue-500/15 text-blue-400', qualifiziert: 'bg-amber-500/15 text-amber-400', eingeschrieben: 'bg-purple-500/15 text-purple-400', konvertiert: 'bg-emerald-500/15 text-emerald-400', abgelehnt: 'bg-muted text-muted-foreground' };
@@ -328,6 +329,7 @@ export default function CrmLeads() {
           {selected && (
             <div className="space-y-2 text-xs">
               <LeadKeyFacts lead={selected as any} />
+              <div className="mt-2"><MtiqRequestSuggest title={`Anfrage ${(selected as any).company_name ?? ''}`.trim()} text={Object.entries(selected as any).filter(([k, v]) => typeof v === 'string' && v && !/(_id|^id|_at)$/.test(k)).map(([k, v]) => `${k}: ${v}`).join('\n')} /></div>
               <Detail label="Website" value={selected.website} />
               <Detail label="Land" value={selected.country} />
               <Detail label="Branche" value={selected.industry} />

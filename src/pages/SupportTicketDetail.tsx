@@ -19,6 +19,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { MtiqRequestSuggest } from '@/components/mtiq/MtiqRequestSuggest';
 
 const STATUS_LABELS: Record<string, string> = {
   open: 'Offen', in_progress: 'In Bearbeitung', waiting: 'Wartend', resolved: 'Gelöst', closed: 'Geschlossen',
@@ -198,6 +199,7 @@ export default function SupportTicketDetail() {
             <div className="border-l border-border mx-1" />
 
             <CreateCaseFromTicket ticket={ticket} messages={messages} profiles={profiles} />
+            <MtiqRequestSuggest title={ticket.title} text={[ticket.title, ticket.description, ...messages.filter((m: any) => !m.is_internal).map((m: any) => m.body ?? m.message ?? '')].filter(Boolean).join('\n\n')} />
           </CardContent>
         </Card>
 
