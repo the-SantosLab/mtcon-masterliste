@@ -32,6 +32,7 @@ export default function MobileScan() {
   const [lot, setLot] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [overAsk, setOverAsk] = useState<{ open: number; qty: number } | null>(null);
 
   useEffect(() => {
     db.from('warehouses').select('id, code, name, is_default').order('code').then(({ data }: any) => {
@@ -67,15 +68,17 @@ export default function MobileScan() {
     }
   };
 
-  const book = async () => {
+  const book = async (overDecision?: 'accepted' | 'rejected') => {
+    setOverAsk(null);
     const q = Number(qty.replace(',', '.'));
     if (!art || !(q >= 0) || (mode !== 'count' && q <= 0)) { toast.error('Menge prüfen'); return; }
     setBusy(true);
     let error: any = null;
     if (mode === 'receipt') {
       const l = lines.find((x) => x.id === lineId);
-      if (!l || q > l.open) { setBusy(false); toast.error(`Höchstens ${l?.open ?? 0} offen`); return; }
-      ({ error } = await db.rpc('scan_goods_receipt', { _po_item_id: lineId, _warehouse_id: wh, _qty: q, _lot_no: lot || null, _delivery_note_no: note || null }));
+      if (!l) { setBusy(false); return; }
+      if (q > l.open && !overDecision) { setBusy(false); setOverAsk({ open: l.open, qty: q }); return; }
+      ({ error } = await db.rpc('scan_goods_receipt', { _po_item_id: lineId, _warehouse_id: wh, _qty: q, _lot_no: lot || null, _delivery_note_no: note || null, _over_decision: q > l.open ? overDecision : null }));
     } else if (mode === 'issue') {
       if (!issueAllowed(q, onHand)) { setBusy(false); toast.error(`Bestand nur ${onHand}`); return; }
       const { data: { user } } = await supabase.auth.getUser();
@@ -90,7 +93,7 @@ export default function MobileScan() {
     }
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(mode === 'receipt' ? 'Wareneingang gebucht' : mode === 'issue' ? 'Entnahme gebucht' : 'Zählmenge gespeichert');
+    toast.success(mode === 'receipt' ? 'Auf i-Punkt gebucht, Prüfvorgang an Lager übergeben' : mode === 'issue' ? 'Entnahme gebucht' : 'Zählmenge gespeichert');
     reset();
   };
 
