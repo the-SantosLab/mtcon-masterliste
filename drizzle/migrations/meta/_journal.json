@@ -281,6 +281,13 @@
       "when": 1792144639569,
       "tag": "0039_stock_counts_and_invoice_match",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1792145079031,
+      "tag": "0040_harden_definer_functions",
+      "breakpoints": true
     }
   ]
 }
