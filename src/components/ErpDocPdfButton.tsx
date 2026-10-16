@@ -21,6 +21,8 @@ interface Props {
   variant?: 'default' | 'outline' | 'ghost' | 'secondary';
   className?: string;
   iconOnly?: boolean;
+  /** Läuft vor der PDF-Erstellung (z. B. Speichern); false bricht ab. */
+  beforeBuild?: () => Promise<boolean>;
 }
 
 const TYPE_LABEL: Record<ErpDocType, string> = {
@@ -37,10 +39,11 @@ const TYPE_LABEL: Record<ErpDocType, string> = {
  * Der Klick kehrt sofort zurück; Fortschritt & Vorschau erscheinen im
  * schwebenden PdfJobToaster (rechts unten, global gemountet).
  */
-export function ErpDocPdfButton({ type, id, label = 'PDF', size = 'sm', variant = 'outline', className, iconOnly }: Props) {
-  const onClick = (e: React.MouseEvent) => {
+export function ErpDocPdfButton({ type, id, label = 'PDF', size = 'sm', variant = 'outline', className, iconOnly, beforeBuild }: Props) {
+  const onClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!id) return;
+    if (beforeBuild && !(await beforeBuild())) return;
     enqueuePdfJob({
       label: `${TYPE_LABEL[type]} · ${id.slice(0, 8)}`,
       autoPreview: false,
