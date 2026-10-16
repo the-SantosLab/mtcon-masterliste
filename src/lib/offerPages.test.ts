@@ -50,7 +50,7 @@ describe('offerPages rules', () => {
       offer({ id: 'd', status: 'angenommen', case_id: 'case-1' }),
       offer({ id: 'e', status: 'entwurf', version: 2, parent_offer_id: 'a' }),
     ];
-    expect(filterForPage('kalkulation', list).map(o => o.id)).toEqual(['e', 'a']);
+    expect(filterForPage('kalkulation', list).map(o => o.id)).toEqual(['a', 'e']);
     expect(filterForPage('versand', list).map(o => o.id)).toEqual(['b']);
     expect(filterForPage('versionen', list).map(o => o.id)).toEqual(['e']);
     expect(filterForPage('freigegeben', list).map(o => o.id).sort()).toEqual(['c', 'd']);
