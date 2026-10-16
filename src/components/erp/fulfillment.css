@@ -6,6 +6,10 @@
   padding: 8px;
 }
 .fulfillment-page > * + * { margin-top: 24px; }
+.fulfillment-page .fulfillment-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1024px) {
+  .fulfillment-page .fulfillment-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 .fulfillment-page table { min-width: 760px; }
 .fulfillment-page thead {
   background: hsl(var(--muted));

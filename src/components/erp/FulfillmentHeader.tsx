@@ -40,7 +40,7 @@ export function FulfillmentHeader({ title, subtitle, actions }: { title: string;
 
 export type FulfillmentMetric = { label: string; value: string | number; detail?: string; tone?: 'working' | 'done' | 'overdue'; onClick?: () => void; active?: boolean };
 export function FulfillmentMetrics({ metrics, loading = false }: { metrics: FulfillmentMetric[]; loading?: boolean }) {
-  return <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-b border-border pb-5 lg:grid-cols-4">
+  return <div className="fulfillment-metrics grid grid-cols-2 gap-x-4 gap-y-5 border-b border-border pb-5 lg:grid-cols-4">
     {metrics.map(metric => {
       const content = <><span className="block text-xs font-normal text-muted-foreground">{metric.label}</span>
         <span className={cn('mt-2 block break-words text-2xl font-medium tabular-nums', metric.tone === 'overdue' ? 'text-status-overdue' : metric.tone === 'done' ? 'text-status-done' : metric.tone === 'working' ? 'text-status-working' : 'text-foreground')}>{loading ? '—' : metric.value}</span>
