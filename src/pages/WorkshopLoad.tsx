@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatEUR } from '@/lib/crm';
-import { weeklyLoad, orderCosts } from '@/lib/workshopLoad';
+import { weeklyLoad, orderCosts, unitPrice } from '@/lib/workshopLoad';
 import { toast } from 'sonner';
 
 const num = (v: any) => (v === '' || v == null ? null : Number(String(v).replace(',', '.')));
@@ -31,10 +31,16 @@ export default function WorkshopLoad() {
       const arts = [...new Set(wos.flatMap((o: any) => (o.production_order_items ?? []).map((i: any) => i.component_art_nr)).filter(Boolean))];
       const prices = new Map<string, number>();
       for (let i = 0; i < arts.length; i += 200) {
-        const { data: p } = await s.from('article_prices').select('art_nr, durchschnittspreis, bewertungspreis, standardpreis, einkaufspreis, letzter_ep').in('art_nr', arts.slice(i, i + 200));
+        const chunk = arts.slice(i, i + 200);
+        const [{ data: p }, { data: a }] = await Promise.all([
+          s.from('article_prices').select('art_nr, durchschnittspreis, bewertungspreis, standardpreis, einkaufspreis, letzter_ep').in('art_nr', chunk),
+          s.from('articles').select('art_nr, pe').in('art_nr', chunk),
+        ]);
+        const pe = new Map((a ?? []).map((r: any) => [r.art_nr, r.pe]));
         for (const r of p ?? []) {
           const v = [r.durchschnittspreis, r.bewertungspreis, r.standardpreis, r.einkaufspreis, r.letzter_ep].map(Number).find((x) => x > 0);
-          if (v != null) prices.set(r.art_nr, v);
+          const u = unitPrice(v, pe.get(r.art_nr) as any);
+          if (u != null) prices.set(r.art_nr, u);
         }
       }
       const cfg = Object.fromEntries((set.data ?? []).map((r: any) => [r.key, Number(r.value)]));
