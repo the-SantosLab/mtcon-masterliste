@@ -5256,6 +5256,7 @@ export type Database = {
           id: string
           invoice_date: string | null
           invoice_no: string
+          invoice_type: string
           last_reminder_at: string | null
           locked: boolean
           locked_at: string | null
@@ -5295,6 +5296,7 @@ export type Database = {
           id?: string
           invoice_date?: string | null
           invoice_no?: string
+          invoice_type?: string
           last_reminder_at?: string | null
           locked?: boolean
           locked_at?: string | null
@@ -5334,6 +5336,7 @@ export type Database = {
           id?: string
           invoice_date?: string | null
           invoice_no?: string
+          invoice_type?: string
           last_reminder_at?: string | null
           locked?: boolean
           locked_at?: string | null
@@ -10669,6 +10672,11 @@ export type Database = {
     }
     Functions: {
       _erp_actor_name: { Args: { uid: string }; Returns: string }
+      _guard_invoice_writer: { Args: never; Returns: undefined }
+      _order_net_tax: {
+        Args: { _order_id: string }
+        Returns: Record<string, unknown>
+      }
       add_stock_count_item: {
         Args: { _art_nr: string; _count_id: string }
         Returns: undefined
@@ -10775,6 +10783,19 @@ export type Database = {
       close_order_handoff: {
         Args: { _order_id: string; _reason: string; _stage: string }
         Returns: undefined
+      }
+      create_final_invoice: {
+        Args: { _note?: string; _order_id: string }
+        Returns: string
+      }
+      create_partial_invoice: {
+        Args: {
+          _net_amount?: number
+          _note?: string
+          _order_id: string
+          _percent?: number
+        }
+        Returns: string
       }
       create_po_from_suggestions: {
         Args: {
