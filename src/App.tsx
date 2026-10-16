@@ -115,6 +115,7 @@ const CrmSettings = lazyRetry(() => import("./pages/crm/CrmSettings"));
 const CrmMicrosoft365 = lazyRetry(() => import("./pages/crm/CrmMicrosoft365"));
 const CrmWiki = lazyRetry(() => import("./pages/crm/CrmWiki"));
 const CrmOutbound = lazyRetry(() => import("./pages/crm/CrmOutbound"));
+const CompanyWorkspace = lazyRetry(() => import("./components/crm/CompanyWorkspace"));
 const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
@@ -314,6 +315,13 @@ function AuthenticatedApp() {
           <Route path="/crm/deals/:id" element={<CrmProtectedRoute><CrmDealDetail /></CrmProtectedRoute>} />
           <Route path="/crm/companies" element={<CrmProtectedRoute><CrmCompanies /></CrmProtectedRoute>} />
           <Route path="/crm/companies/:id" element={<CrmProtectedRoute><CrmCompanyDetail /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen" element={<CrmProtectedRoute><CompanyWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen/bearbeiten" element={<CrmProtectedRoute><CompanyWorkspace page="edit" /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen/standorte" element={<CrmProtectedRoute><CompanyWorkspace page="locations" /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen/gruppen" element={<CrmProtectedRoute><CompanyWorkspace page="groups" /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen/lieferanten" element={<CrmProtectedRoute><CompanyWorkspace page="suppliers" /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen/dokumente" element={<CrmProtectedRoute><CompanyWorkspace page="documents" /></CrmProtectedRoute>} />
+          <Route path="/crm/firmen/historie" element={<CrmProtectedRoute><CompanyWorkspace page="history" /></CrmProtectedRoute>} />
           <Route path="/crm/contacts" element={<CrmProtectedRoute><CrmContacts /></CrmProtectedRoute>} />
           <Route path="/crm/offers" element={<CrmProtectedRoute><CrmOffers /></CrmProtectedRoute>} />
           <Route path="/crm/offers/:id" element={<CrmProtectedRoute><CrmOfferDetail /></CrmProtectedRoute>} />
