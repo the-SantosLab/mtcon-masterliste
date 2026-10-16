@@ -1,7 +1,7 @@
 # Roadmap
-- [ ] Fremdbearbeitung als eigenen Auftragstyp mit Lieferantenzuordnung ergänzen
-- [ ] Materialausgabe und Teilrückbuchung über Wareneingang sicher buchen
-- [ ] Regeln und angemeldeten Durchlauf testen
+- [x] Fremdbearbeitung als eigenen Auftragstyp mit Lieferantenzuordnung ergänzen
+- [x] Materialausgabe und Teilrückbuchung über Wareneingang sicher buchen
+- [x] Regeln und angemeldeten Durchlauf testen — FB-3C2C4EA5B3: 1 ausgegeben, zweimal 0,5 zurückgebucht, Übermenge blockiert, Endbestand unverändert; sechs Tests erfolgreich
 - [x] Scrollposition und geöffnete Unterpunkte der Seitenleiste beim Seitenwechsel erhalten; zwei Tests und angemeldeter Wechsel Angebote → Ansprechpartner → Kommunikation erfolgreich
 
 - [x] Word-Unterpunkte als aufklappbare CRM-Unternavigation ergänzen
