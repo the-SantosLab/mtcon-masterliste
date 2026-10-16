@@ -21,4 +21,4 @@
 - Offers created from a company without a deal auto-create a deal first, because offers.deal_id is required and all offer views key off the deal.
 
 - Price calculations take factors only from admin-maintained calc_settings via a trigger, so staff cannot override factors; unclear values stay flagged and block finalizing; only finalized calculations hand a per-piece price to an offer, added as unsaved offer item so the offer page keeps computing totals.
-- Scan goods receipts book onto a per-warehouse I-PUNKT location and open a goods_inspections record plus a Lager case; release/defect, put-away and supplier returns run only via role-checked RPCs, and over-deliveries need an explicit accept/reject decision, so unchecked stock never lands on normal locations.
+- Scan goods receipts book onto a per-warehouse I-PUNKT location and open goods_inspections records plus a QS/QM case (Purchasing dialog and scan share one RPC; staff cannot insert receipt items elsewhere); release/defect, put-away and supplier returns run only via role-checked RPCs, and over-deliveries need an explicit accept/reject decision, so unchecked stock never lands on normal locations.

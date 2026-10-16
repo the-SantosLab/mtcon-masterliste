@@ -19,7 +19,7 @@ const db = supabase as any;
 type Row = {
   id: string; art_nr: string; qty: number; lot_no: string | null; status: InspectionStatus; note: string | null;
   over_qty: number; over_decision: string | null; case_id: string | null; warehouse_id: string; created_at: string;
-  stored_location_id: string | null; warehouses?: { code: string } | null; cases?: { case_no: string } | null;
+  stored_location_id: string | null; planned_location_id: string | null; warehouses?: { code: string } | null; cases?: { case_no: string } | null;
   goods_receipts?: { gr_no: string | null; purchase_orders?: { po_no: string | null } | null } | null;
 };
 type Loc = { id: string; code: string; lager: string; is_blocked: boolean };
@@ -52,7 +52,7 @@ export default function GoodsInspection() {
   const count = (s: string) => rows.filter((r) => inspectionStage(r.status) === s).length;
 
   const open = async (row: Row, kind: Action['kind']) => {
-    setAct({ row, kind }); setNote(''); setLoc('');
+    setAct({ row, kind }); setNote(''); setLoc(kind === 'store' && row.status === 'released' ? row.planned_location_id ?? '' : '');
     if (kind === 'store') {
       const { data } = await db.from('storage_locations').select('id, code, lager, is_blocked, lagerpl')
         .eq('lager', row.warehouses?.code ?? '').neq('lagerpl', 'I-PUNKT').order('code').limit(1000);
@@ -79,7 +79,7 @@ export default function GoodsInspection() {
   return (
     <AppLayout>
       <div className="procurement-page fulfillment-page">
-        <ProcurementHeader title="Wareneingangsprüfung" subtitle="i-Punkt · Prüfung durch Lager · Einlagern · Rücksendung" />
+        <ProcurementHeader title="Wareneingangsprüfung" subtitle="i-Punkt · Prüfung durch QS/QM · Einlagern · Rücksendung" />
         <FulfillmentMetrics loading={loading} metrics={[
           { label: 'Am i-Punkt zu prüfen', value: count('check') },
           { label: 'Freigegeben, einzulagern', value: count('store') },

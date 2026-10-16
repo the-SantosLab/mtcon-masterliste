@@ -94,7 +94,7 @@ export default function MobileScan() {
     }
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(mode === 'receipt' ? 'Auf i-Punkt gebucht, Prüfvorgang an Lager übergeben' : mode === 'issue' ? 'Entnahme gebucht' : 'Zählmenge gespeichert');
+    toast.success(mode === 'receipt' ? 'Auf i-Punkt gebucht, Prüfvorgang an QS/QM übergeben' : mode === 'issue' ? 'Entnahme gebucht' : 'Zählmenge gespeichert');
     reset();
   };
 
