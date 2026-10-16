@@ -1,3 +1,4 @@
+import { KnowledgeNav } from '@/components/KnowledgeNav';
 import { urgencyMuteEnabled } from '@/lib/urgencyMute';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -296,10 +297,10 @@ export default function ProjectsList() {
   return (
     <AppLayout>
       <div className="space-y-4 max-w-6xl">
-        {/* Header */}
+        <KnowledgeNav />
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Vorgänge abteilungsübergreifend / Projekte</h1>
+            <h1 className="text-2xl font-medium text-foreground">Vorgänge abteilungsübergreifend / Projekte</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Alle abteilungsübergreifenden Vorgänge und Dateiablagen</p>
           </div>
           <div className="flex items-center gap-2">

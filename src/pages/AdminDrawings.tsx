@@ -1,3 +1,4 @@
+import { KnowledgeNav } from '@/components/KnowledgeNav';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -103,9 +104,10 @@ export default function AdminDrawings() {
   return (
     <AppLayout>
       <div className="p-6 space-y-4">
+        <KnowledgeNav />
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><FileBox className="h-5 w-5" /> Zeichnungen</h1>
+            <h1 className="text-2xl font-medium flex items-center gap-2"><FileBox className="h-5 w-5" /> Zeichnungen</h1>
             <p className="text-sm text-muted-foreground mt-1">Master pro Zeichnung mit Versionshistorie. Neue Freigabe setzt alte Versionen automatisch auf „Überholt".</p>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neue Zeichnung</Button>

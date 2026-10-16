@@ -1,3 +1,4 @@
+import { KnowledgeNav } from '@/components/KnowledgeNav';
 import { useEffect, useMemo, useState } from 'react';
 import { CrmLayout } from '@/components/CrmLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -129,9 +130,10 @@ export default function CrmWiki() {
 
   return (
     <CrmLayout>
+      <KnowledgeNav className="mb-4" />
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Wissensdatenbank</h1>
+          <h1 className="text-2xl font-medium text-foreground">Wissensdatenbank</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Interner Vertriebs-Wissensspeicher</p>
         </div>
         <div className="flex gap-2">
