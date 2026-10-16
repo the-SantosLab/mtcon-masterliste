@@ -3,7 +3,7 @@ import type { AcquisitionLead } from '@/lib/acquisition';
 export const leadPages = [
   { key: 'qualify', title: 'Qualifizieren & schützen', short: 'Qualifizieren', path: '/crm/interessenten/qualifizieren' },
   { key: 'score', title: 'Interessenten bewerten', short: 'Bewertung', path: '/crm/interessenten/bewerten' },
-  { key: 'assign', title: 'Geschäftsprozess zuweisen', short: 'Zuweisen', path: '/crm/interessenten/zuweisen' },
+  { key: 'assign', title: 'Zuständigkeit zuweisen', short: 'Zuweisen', path: '/crm/interessenten/zuweisen' },
   { key: 'convert', title: 'In Kunde umwandeln', short: 'Umwandeln', path: '/crm/interessenten/umwandeln' },
   { key: 'archive', title: 'Archivierte Interessenten', short: 'Archiv', path: '/crm/interessenten/archiv' },
   { key: 'history', title: 'Interessenten-Historie', short: 'Historie', path: '/crm/interessenten/historie' },

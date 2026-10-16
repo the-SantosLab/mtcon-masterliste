@@ -7,9 +7,9 @@ export type StageProbability = { stage: string; probability: number };
 export const dealPages = [
   { key: 'pipeline', title: 'Pipeline nach Phase', short: 'Pipeline', path: '/crm/verkaufschancen/pipeline' },
   { key: 'rate', title: 'Bewerten & Umsatzpotenzial', short: 'Bewerten', path: '/crm/verkaufschancen/bewerten' },
-  { key: 'stages', title: 'Deal-Phase ändern', short: 'Phasen', path: '/crm/verkaufschancen/phasen' },
+  { key: 'stages', title: 'Phase weiterschieben', short: 'Phasen', path: '/crm/verkaufschancen/phasen' },
   { key: 'due', title: 'Fällige Abschlüsse', short: 'Fällig', path: '/crm/verkaufschancen/faellig' },
-  { key: 'assign', title: 'Ohne Zuständige:n', short: 'Zuweisen', path: '/crm/verkaufschancen/zuweisen' },
+  { key: 'assign', title: 'Zuständigkeit zuweisen', short: 'Zuweisen', path: '/crm/verkaufschancen/zuweisen' },
   { key: 'closed', title: 'Abgeschlossene Chancen', short: 'Abgeschlossen', path: '/crm/verkaufschancen/abgeschlossen' },
 ] as const;
 export type DealPageKey = typeof dealPages[number]['key'];

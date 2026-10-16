@@ -4,10 +4,10 @@ export type Offer = Tables<'offers'>;
 
 /** Each sidebar point under "Angebote" is backed by its own page. */
 export const offerPages = [
-  { key: 'kalkulation', title: 'Kalkulation & Positionen', short: 'Kalkulation', path: '/crm/angebote/kalkulation' },
+  { key: 'kalkulation', title: 'Angebotsentwürfe', short: 'Entwürfe', path: '/crm/angebote/kalkulation' },
   { key: 'versand', title: 'Versand & Nachverfolgung', short: 'Versand', path: '/crm/angebote/versand' },
   { key: 'versionen', title: 'Angebotsversionen', short: 'Versionen', path: '/crm/angebote/versionen' },
-  { key: 'freigegeben', title: 'Freigegebene Angebote', short: 'Freigegeben', path: '/crm/angebote/freigegeben' },
+  { key: 'freigegeben', title: 'Angenommene Angebote', short: 'Angenommen', path: '/crm/angebote/freigegeben' },
   { key: 'auftraege', title: 'Aufträge erzeugen', short: 'Aufträge', path: '/crm/angebote/auftraege' },
 ] as const;
 export type OfferPageKey = typeof offerPages[number]['key'];
