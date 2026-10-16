@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { validateEan } from '@/lib/ean';
 import { Loader2, Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -617,10 +618,21 @@ function DetailGrid({
     if (Object.keys(patch).length === 0) {
       setEditing(false); setSaving(false); return;
     }
+    if (table === 'articles' && typeof patch.ean === 'string') {
+      patch.ean = patch.ean.trim();
+      const err = validateEan(patch.ean);
+      if (err) { setSaving(false); toast.error(err); return; }
+      const { data: dup } = await (supabase as any)
+        .from('articles').select('art_nr').eq('ean', patch.ean).neq('art_nr', pkVal).maybeSingle();
+      if (dup) { setSaving(false); toast.error(`EAN ist bereits Artikel ${dup.art_nr} zugeordnet`); return; }
+    }
     const { data: updated, error } = await (supabase as any)
       .from(table).update(patch).eq(pkCol, pkVal).select('*').maybeSingle();
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.code === '23505' ? 'EAN ist bereits einem anderen Artikel zugeordnet' : error.message);
+      return;
+    }
     toast.success(`${Object.keys(patch).length} Feld(er) gespeichert`);
     onSaved(updated);
     setEditing(false);
