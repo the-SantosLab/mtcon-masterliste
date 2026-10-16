@@ -1,3 +1,4 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
@@ -91,13 +92,9 @@ export default function AdminAiArticleFromPdf() {
 
   return (
     <AppLayout>
-      <div className="space-y-4 max-w-[1100px]">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">KI-Artikelanlage aus PDF</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Lieferanten-Datenblatt hochladen — KI extrahiert Stammdaten als Vorschlag.</p>
-        </div>
-
-        <Card>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="KI-Artikelanlage" subtitle="Datenblatt · Stammdatenvorschlag · Prüfung" />
+        <Card className="procurement-upload">
           <CardHeader className="pb-3"><CardTitle className="text-sm">1 · Datenblatt</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <Input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
@@ -109,15 +106,15 @@ export default function AdminAiArticleFromPdf() {
         </Card>
 
         {(Object.keys(data).length > 0 || confidence !== null) && (
-          <Card>
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <Card className="procurement-section">
+            <CardHeader className="pb-3 flex flex-row flex-wrap gap-2 items-center justify-between">
               <CardTitle className="text-sm">2 · Vorschlag prüfen</CardTitle>
               {confidence !== null && (
                 <span className="text-xs text-muted-foreground">Konfidenz: {Math.round(confidence * 100)}%</span>
               )}
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {FIELDS.map((f) => (
                   <div key={f.key} className="space-y-1">
                     <Label className="text-xs">{f.label}</Label>
@@ -130,7 +127,7 @@ export default function AdminAiArticleFromPdf() {
                 <Textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={3} className="text-xs" />
               </div>
               {notes && (
-                <div className="rounded border border-amber-500/20 bg-amber-500/5 p-2 text-xs text-amber-300">
+                <div className="rounded border border-status-working/20 bg-status-working/5 p-2 text-xs text-status-working">
                   KI-Hinweise: {notes}
                 </div>
               )}

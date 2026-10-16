@@ -1,3 +1,5 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
@@ -107,18 +109,19 @@ export default function AdminSupplierRatings() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Lieferantenbewertung</h1>
-            <p className="text-sm text-muted-foreground">Qualität, Liefertreue, Preis und Kommunikation pro Lieferant</p>
-          </div>
-          <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Neue Bewertung</Button>
-        </div>
-
-        <Card>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="Lieferantenbewertung" subtitle="Qualität · Liefertreue · Preis · Kommunikation" actions={
+          <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" />Neue Bewertung</Button>
+        } />
+        <FulfillmentMetrics metrics={[
+          { label: 'Lieferanten', value: suppliers.length },
+          { label: 'Bewertete Lieferanten', value: summary.filter(s => s.rating_count > 0).length },
+          { label: 'Bewertungen', value: ratings.length },
+          { label: 'Ohne Bewertung', value: suppliers.filter(s => !summary.some(r => r.supplier_id === s.id && r.rating_count > 0)).length, tone: 'working' },
+        ]} />
+        <Card className="procurement-section">
           <CardHeader>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <CardTitle className="text-base">Übersicht</CardTitle>
               <Input className="max-w-xs" placeholder="Lieferant suchen…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
@@ -161,7 +164,7 @@ export default function AdminSupplierRatings() {
         </Card>
 
         {selected && (
-          <Card>
+          <Card className="procurement-section">
             <CardHeader>
               <CardTitle className="text-base">Bewertungen — {summary.find(s => s.supplier_id === selected)?.supplier_name}</CardTitle>
             </CardHeader>

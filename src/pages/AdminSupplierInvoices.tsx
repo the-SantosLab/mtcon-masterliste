@@ -1,3 +1,5 @@
+import { ProcurementHeader } from '@/components/erp/ProcurementHeader';
+import { FulfillmentMetrics } from '@/components/erp/FulfillmentHeader';
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
@@ -161,19 +163,16 @@ export default function AdminSupplierInvoices() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2"><Receipt className="h-5 w-5" /> Eingangsrechnungen</h1>
-            <p className="text-sm text-muted-foreground mt-1">Inbox, 3-Wege-Matching gegen Bestellung und Wareneingang, Freigabe-Workflow.</p>
-          </div>
-          <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Neue Eingangsrechnung</Button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 max-w-md">
-          <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Offen / Geprüft</div><div className="text-lg tabular-nums">{totals.open.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</div></Card>
-          <Card className="p-3"><div className="text-[10px] uppercase text-muted-foreground">Freigegeben</div><div className="text-lg tabular-nums">{totals.appr.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €</div></Card>
-        </div>
+      <div className="fulfillment-page procurement-page">
+        <ProcurementHeader title="Eingangsrechnungen" subtitle="Rechnungseingang · Abgleich · Freigabe" actions={
+          <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" />Neue Eingangsrechnung</Button>
+        } />
+        <FulfillmentMetrics loading={loading} metrics={[
+          { label: 'Rechnungen', value: rows.length },
+          { label: 'Offen / Geprüft', value: `${totals.open.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`, tone: 'working' },
+          { label: 'Freigegeben', value: `${totals.appr.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`, tone: 'done' },
+          { label: 'Gebucht', value: rows.filter(r => r.status === 'booked').length, tone: 'done' },
+        ]} />
 
         <div className="flex gap-2 flex-wrap">
           {['all','open','matched','approved','rejected','booked'].map(s => (
@@ -183,7 +182,7 @@ export default function AdminSupplierInvoices() {
           ))}
         </div>
 
-        <Card className="overflow-hidden">
+        <Card className="procurement-table">
           <table className="w-full text-sm">
             <thead className="bg-muted/30 text-[11px] uppercase text-muted-foreground">
               <tr>
