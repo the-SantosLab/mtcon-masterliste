@@ -148,8 +148,8 @@ export default function CrmOfferDetail() {
     });
   };
 
-  const save = async () => {
-    if (!id) return;
+  const save = async (silent = false): Promise<boolean> => {
+    if (!id) return false;
     setSaving(true);
     const total = totals.gross;
     const { error: oe } = await supabase.from('offers').update({
@@ -162,7 +162,7 @@ export default function CrmOfferDetail() {
       valid_until: offer.valid_until || null,
       total,
     }).eq('id', id);
-    if (oe) { setSaving(false); toast.error(oe.message); return; }
+    if (oe) { setSaving(false); toast.error(oe.message); return false; }
     // delete existing items, re-insert
     await supabase.from('offer_items').delete().eq('offer_id', id);
     if (items.length) {
@@ -170,12 +170,14 @@ export default function CrmOfferDetail() {
         offer_id: id, product_id: it.product_id || null, art_nr: it.art_nr || null, description: it.description,
         quantity: it.quantity, unit_price: it.unit_price, discount_pct: it.discount_pct, sort_order: i,
       })));
-      if (ie) { setSaving(false); toast.error(ie.message); return; }
+      if (ie) { setSaving(false); toast.error(ie.message); return false; }
     }
-    setSaving(false); toast.success('Gespeichert'); void load();
+    setSaving(false); if (!silent) toast.success('Gespeichert'); void load();
+    return true;
   };
 
   const setStatus = async (status: string) => {
+    if (!offer.locked_at && offer.status !== 'angenommen' && !(await save(true))) return;
     const patch: any = { status };
     if (status === 'versendet') patch.sent_at = new Date().toISOString();
     if (status === 'angenommen') patch.accepted_at = new Date().toISOString();
@@ -267,7 +269,7 @@ export default function CrmOfferDetail() {
           <span className="px-2.5 py-1 rounded text-[11px] font-semibold uppercase text-white" style={{ background: STATUS_COLOR[offer.status] }}>
             {STATUS_LABEL[offer.status]}
           </span>
-          <ErpDocPdfButton type="angebot" id={id!} />
+          <ErpDocPdfButton type="angebot" id={id!} beforeBuild={() => ((offer.locked_at || offer.status === 'angenommen') ? Promise.resolve(true) : save(true))} />
           <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={createShareLink}><Link2 className="h-3.5 w-3.5" /> Freigabe-Link</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -401,7 +403,7 @@ export default function CrmOfferDetail() {
         </section>
       )}
 
-      <Button onClick={save} disabled={saving} size="sm" className="h-8 text-xs gap-1.5">
+      <Button onClick={() => void save()} disabled={saving} size="sm" className="h-8 text-xs gap-1.5">
         {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Speichern
       </Button>
     </CrmLayout>
