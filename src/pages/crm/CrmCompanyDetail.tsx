@@ -23,6 +23,7 @@ import { TagPicker } from '@/components/crm/TagPicker';
 import { CompanyStructureTab } from '@/components/crm/CompanyStructureTab';
 import { VisitReports } from '@/components/crm/VisitReports';
 import { toast } from 'sonner';
+import { CustomerView } from '@/components/crm/CustomerView';
 
 
 const ROLE_LABEL: Record<string, string> = { lead: 'Lead', customer: 'Kunde', supplier: 'Lieferant', both: 'Kunde + Lieferant' };
