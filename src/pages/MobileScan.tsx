@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { parseScan, openPoLines, issueAllowed } from '@/lib/scan';
 import { toast } from 'sonner';
 import { ScanProductionComplete } from '@/components/erp/ScanProductionComplete';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 type Mode = 'receipt' | 'issue' | 'count' | 'done';
 const db = supabase as any;
@@ -133,12 +134,23 @@ export default function MobileScan() {
               <Input inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} className="h-11 text-right text-lg" aria-label="Menge" /></div>
             {mode === 'receipt' && <><Input placeholder="Charge (optional)" value={lot} onChange={(e) => setLot(e.target.value)} className="h-11" /><Input placeholder="Lieferschein-Nr. (optional)" value={note} onChange={(e) => setNote(e.target.value)} className="h-11" /></>}
             {mode === 'issue' && <Input placeholder="Verwendung / Notiz (optional)" value={note} onChange={(e) => setNote(e.target.value)} className="h-11" />}
-            <Button className="w-full h-12" disabled={busy || !canBook || (mode === 'receipt' && !lineId) || (mode === 'count' && !countId)} onClick={book}>
+            <Button className="w-full h-12" disabled={busy || !canBook || (mode === 'receipt' && !lineId) || (mode === 'count' && !countId)} onClick={() => book()}>
               {mode === 'receipt' ? 'Wareneingang buchen' : mode === 'issue' ? 'Entnahme buchen' : 'Zählmenge speichern'}
             </Button>
           </div>
         )}
         </>}
+        <AlertDialog open={!!overAsk} onOpenChange={(o) => !o && setOverAsk(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Überlieferung</AlertDialogTitle>
+              <AlertDialogDescription>Offen sind {overAsk?.open}, erfasst {overAsk?.qty}. Mehrmenge {overAsk ? Math.round((overAsk.qty - overAsk.open) * 1000) / 1000 : 0} akzeptieren oder abweisen? Beim Abweisen wird nur die offene Menge gebucht.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+              <Button variant="outline" disabled={!overAsk?.open} onClick={() => book('rejected')}>Abweisen</Button>
+              <Button onClick={() => book('accepted')}>Akzeptieren</Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
