@@ -63,6 +63,7 @@ const AdminAiPrompts = lazyRetry(() => import("./pages/AdminAiPrompts"));
 const AdminInsurance = lazyRetry(() => import("./pages/AdminInsurance"));
 const AdminGhv = lazyRetry(() => import("./pages/AdminGhv"));
 const AdminOrders = lazyRetry(() => import("./pages/AdminOrders"));
+const OrderDossier = lazyRetry(() => import("./pages/OrderDossier"));
 const AdminDeliveries = lazyRetry(() => import("./pages/AdminDeliveries"));
 const AdminSupplierInvoices = lazyRetry(() => import("./pages/AdminSupplierInvoices"));
 const StockCounts = lazyRetry(() => import("./pages/StockCounts"));
@@ -299,6 +300,7 @@ function AuthenticatedApp() {
           <Route path="/container" element={<ProtectedRoute><Container3D /></ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute><BusinessMap /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+          <Route path="/orders/:id/akte" element={<ProtectedRoute><OrderDossier /></ProtectedRoute>} />
           <Route path="/bestellungen" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
           <Route path="/lieferscheine" element={<ProtectedRoute><AdminDeliveries /></ProtectedRoute>} />
           <Route path="/rechnungen" element={<ProtectedRoute><AdminInvoices /></ProtectedRoute>} />
