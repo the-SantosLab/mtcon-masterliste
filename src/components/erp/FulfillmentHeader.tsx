@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ClipboardList, Activity, CalendarRange, Wrench, Truck, FileText, ArrowUpRight } from 'lucide-react';
+import { ClipboardList, Activity, CalendarRange, Wrench, Truck, FileText, ArrowUpRight, Gauge, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -11,8 +11,10 @@ const navigation = [
   { to: '/admin/disposition', label: 'Disposition', icon: Activity },
   { to: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange },
   { to: '/admin/production', label: 'Werkstatt', icon: Wrench },
+  { to: '/werkstatt-auslastung', label: 'Werkstattauslastung', icon: Gauge },
   { to: '/fremdbearbeitung', label: 'Fremdbearbeitung', icon: ArrowUpRight },
   { to: '/lieferscheine', label: 'Lieferscheine', icon: Truck },
+  { to: '/kalkulation', label: 'Kalkulation', icon: Calculator },
   { to: '/admin/templates', label: 'Standard Vorgänge', icon: FileText, admin: true },
 ];
 
