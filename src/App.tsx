@@ -115,7 +115,7 @@ const CrmSettings = lazyRetry(() => import("./pages/crm/CrmSettings"));
 const CrmMicrosoft365 = lazyRetry(() => import("./pages/crm/CrmMicrosoft365"));
 const CrmWiki = lazyRetry(() => import("./pages/crm/CrmWiki"));
 const CrmOutbound = lazyRetry(() => import("./pages/crm/CrmOutbound"));
-const LeadWorkspace = lazy(() => import('./components/crm/LeadWorkspace'));
+const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
