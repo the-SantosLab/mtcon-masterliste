@@ -260,6 +260,13 @@
       "when": 1792134700984,
       "tag": "0036_subcontract_receipt_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1792135227920,
+      "tag": "0037_production_subcontract_steps",
+      "breakpoints": true
     }
   ]
 }
