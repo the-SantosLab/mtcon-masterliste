@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Vorgangsakte: isolierten Browser- und Datenbankdurchlauf aller Übergaben, Rollen, Empfänger und Duplikate prüfen; Fehler beheben; Testdaten vollständig entfernen
 - [x] Kundenakquise: eigene Übersicht und acht richtig zugeordnete Unterseiten mit echten CRM-Daten
 - [x] Regelbasierte Aktivitäten und MTIQ-Vorschläge mit bestätigter Übernahme in bestehende Aktivitäten ergänzen
 - [x] Akquise-Regeln und Seitenleistenregression prüfen: neun Tests erfolgreich; Seitenmodule laden fehlerfrei

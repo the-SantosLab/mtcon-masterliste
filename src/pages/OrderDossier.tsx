@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Check, CircleDot } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { currentStage, STAGE_LABELS, STAGE_ORDER, type DossierStage } from "@/lib/orderDossier";
+import { crmDossierLinks, currentStage, STAGE_LABELS, STAGE_ORDER, type DossierStage } from "@/lib/orderDossier";
 
 type Row = Record<string, any>;
 type Event = { at: string; stage: DossierStage; title: string; detail?: string; href?: string };
@@ -20,7 +20,7 @@ const fmt = (d?: string | null) => (d ? format(new Date(d), "dd.MM.yyyy HH:mm") 
 export default function OrderDossier() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAdmin, user } = useAuth() as any;
+  const { isAdmin, isStaff, user } = useAuth();
   const [order, setOrder] = useState<Row | null>(null);
   const [data, setData] = useState<{ offers: Row[]; deals: Row[]; pos: Row[]; prods: Row[]; dels: Row[]; invs: Row[]; handoffs: Row[]; depts: Row[] }>({ offers: [], deals: [], pos: [], prods: [], dels: [], invs: [], handoffs: [], depts: [] });
   const [loading, setLoading] = useState(true);
@@ -32,18 +32,27 @@ export default function OrderDossier() {
     setOrder(o);
     if (!o) { setLoading(false); return; }
     const caseId = (o as Row).case_id as string | null;
+    const links = crmDossierLinks(o.notes);
+    const offerFields = "id, offer_no, status, total, sent_at, accepted_at, created_at, deal_id";
     const none = Promise.resolve({ data: [] as Row[] });
     const [offers, deals, pos, prods, dels, invs, handoffs, depts] = await Promise.all([
-      caseId ? supabase.from("offers").select("id, offer_no, status, total, sent_at, accepted_at, created_at, deal_id").eq("case_id", caseId) : none,
+      caseId ? supabase.from("offers").select(offerFields).eq("case_id", caseId) : none,
       caseId ? supabase.from("deals").select("id, deal_no, title, stage, won_at, created_at").eq("won_case_id", caseId) : none,
       caseId ? supabase.from("purchase_orders").select("id, po_no, status, ordered_at, expected_at, confirmed_delivery_date, created_at, updated_at").eq("case_id", caseId) : none,
       supabase.from("production_orders").select("id, wo_no, status, art_nr, quantity, created_at, completed_at").eq("order_id", id),
       supabase.from("deliveries").select("id, delivery_no, status, delivery_date, created_at, updated_at, tracking_no").eq("order_id", id),
-      supabase.from("invoices").select("id, invoice_no, status, total_amount, invoice_date, created_at, payment_status").eq("order_id", id),
+      supabase.from("invoices").select("id, invoice_no, status, doc_kind, total_amount, invoice_date, created_at, payment_status").eq("order_id", id),
       supabase.from("order_handoffs").select("*").eq("order_id", id).order("created_at"),
       supabase.from("departments").select("id, name"),
     ]);
-    setData({ offers: offers.data || [], deals: deals.data || [], pos: pos.data || [], prods: prods.data || [], dels: dels.data || [], invs: invs.data || [], handoffs: handoffs.data || [], depts: depts.data || [] });
+    const linkedOffer = links.offerId
+      ? await supabase.from("offers").select(offerFields).eq("id", links.offerId)
+      : o.external_order_no ? await supabase.from("offers").select(offerFields).eq("offer_no", o.external_order_no) : { data: [] };
+    const allOffers = [...new Map([...(offers.data || []), ...(linkedOffer.data || [])].map(x => [x.id, x])).values()];
+    const dealIds = [...new Set([links.dealId, ...allOffers.map(x => x.deal_id)].filter((x): x is string => Boolean(x)))];
+    const linkedDeals = dealIds.length ? await supabase.from("deals").select("id, deal_no, title, stage, won_at, created_at").in("id", dealIds) : { data: [] };
+    const allDeals = [...new Map([...(deals.data || []), ...(linkedDeals.data || [])].map(x => [x.id, x])).values()];
+    setData({ offers: allOffers, deals: allDeals, pos: pos.data || [], prods: prods.data || [], dels: dels.data || [], invs: invs.data || [], handoffs: handoffs.data || [], depts: depts.data || [] });
     setLoading(false);
   };
   useEffect(() => { load(); }, [id]);
@@ -54,6 +63,7 @@ export default function OrderDossier() {
     productionStatuses: data.prods.map(p => p.status),
     deliveryStatuses: data.dels.map(d => d.status),
     invoiceCount: data.invs.filter(i => !i.doc_kind || i.doc_kind === "invoice").length,
+    openHandoffStages: data.handoffs.filter(h => h.status === "open").map(h => h.stage as DossierStage),
   }) : "vertrieb", [order, data]);
 
   const events = useMemo<Event[]>(() => {
@@ -69,9 +79,10 @@ export default function OrderDossier() {
   }, [data, order]);
 
   const deptName = (d?: string) => data.depts.find(x => x.id === d)?.name || "—";
-  const canWrite = !!user;
+  const canWrite = isAdmin || isStaff;
 
   const completeHandoff = async (h: Row) => {
+    if (!canWrite || !user || h.status !== "open") return;
     const { error } = await supabase.from("order_handoffs").update({ status: "done", completed_at: new Date().toISOString(), completed_by: user?.id, completed_reason: "Manuell erledigt" }).eq("id", h.id);
     if (error) return toast.error("Übergabe konnte nicht abgeschlossen werden");
     toast.success("Übergabe erledigt");
