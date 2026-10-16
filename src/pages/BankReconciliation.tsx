@@ -44,7 +44,7 @@ export default function BankReconciliation() {
     }));
     const { error } = rows.length ? await (supabase as any).from('invoice_payments').insert(rows) : { error: null };
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(error.code === '23505' ? 'Mindestens eine Zahlung wurde bereits verbucht. Bitte Datei neu laden.' : error.message);
     toast.success(`${rows.length} Zahlung(en) verbucht`);
     setBooked(new Set([...booked, ...rows.map(r => r.reference.slice(5))]));
   };
