@@ -1,4 +1,7 @@
 # Roadmap
+- [ ] Fremdbearbeitung als eigenen Auftragstyp mit Lieferantenzuordnung ergänzen
+- [ ] Materialausgabe und Teilrückbuchung über Wareneingang sicher buchen
+- [ ] Regeln und angemeldeten Durchlauf testen
 - [x] Scrollposition und geöffnete Unterpunkte der Seitenleiste beim Seitenwechsel erhalten; zwei Tests und angemeldeter Wechsel Angebote → Ansprechpartner → Kommunikation erfolgreich
 
 - [x] Word-Unterpunkte als aufklappbare CRM-Unternavigation ergänzen
