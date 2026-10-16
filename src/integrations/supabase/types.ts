@@ -9256,9 +9256,11 @@ export type Database = {
           created_at: string
           created_by: string
           expected_at: string | null
+          external_warehouse_id: string | null
           id: string
           note: string | null
           order_no: string
+          production_order_id: string | null
           status: string
           supplier_id: string
           warehouse_id: string
@@ -9267,9 +9269,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           expected_at?: string | null
+          external_warehouse_id?: string | null
           id?: string
           note?: string | null
           order_no?: string
+          production_order_id?: string | null
           status?: string
           supplier_id: string
           warehouse_id: string
@@ -9278,14 +9282,30 @@ export type Database = {
           created_at?: string
           created_by?: string
           expected_at?: string | null
+          external_warehouse_id?: string | null
           id?: string
           note?: string | null
           order_no?: string
+          production_order_id?: string | null
           status?: string
           supplier_id?: string
           warehouse_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subcontract_orders_external_warehouse_id_fkey"
+            columns: ["external_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontract_orders_production_order_id_fkey"
+            columns: ["production_order_id"]
+            isOneToOne: false
+            referencedRelation: "production_orders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subcontract_orders_supplier_id_fkey"
             columns: ["supplier_id"]
@@ -10361,6 +10381,16 @@ export type Database = {
           _order_id?: string
           _quantity: number
           _warehouse_id: string
+        }
+        Returns: string
+      }
+      create_production_subcontract_step: {
+        Args: {
+          _expected_at?: string
+          _items: Json
+          _note?: string
+          _production_order_id: string
+          _supplier_id: string
         }
         Returns: string
       }

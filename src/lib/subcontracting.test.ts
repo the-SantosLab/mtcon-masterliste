@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { canIssue, canReceive, parseMaterialQuantity, validReturn } from './subcontracting';
+import { canIssue, canReceive, parseMaterialQuantity, validReturn, hasOpenSubcontractSteps } from './subcontracting';
 
 describe('Fremdbearbeitung', () => {
+  it('hält den Werkstattauftrag bis zur vollständigen Rücknahme offen', () => {
+    expect(hasOpenSubcontractSteps(['draft'])).toBe(true);
+    expect(hasOpenSubcontractSteps(['issued'])).toBe(true);
+    expect(hasOpenSubcontractSteps(['partial', 'completed'])).toBe(true);
+    expect(hasOpenSubcontractSteps(['completed', 'cancelled'])).toBe(false);
+    expect(hasOpenSubcontractSteps([])).toBe(false);
+  });
   it('gibt Material nur einmal aus dem Entwurf aus', () => {
     expect(canIssue('draft')).toBe(true);
     for (const status of ['issued', 'partial', 'completed', 'cancelled']) expect(canIssue(status)).toBe(false);

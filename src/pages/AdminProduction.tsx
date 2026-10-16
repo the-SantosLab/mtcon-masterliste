@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RefreshCw, Plus, Wrench, PackageMinus, PackagePlus, PackageSearch, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { SubcontractOrders } from '@/components/erp/SubcontractOrders';
 
 type Wo = {
   id: string;
@@ -314,9 +315,11 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
   const [lotNo, setLotNo] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
   const [infoArt, setInfoArt] = useState<string | null>(null);
+  const [externalPending, setExternalPending] = useState(true);
 
   useEffect(() => {
     if (!wo) return;
+    setExternalPending(true);
     setDoneQty(String(wo.quantity - wo.quantity_done));
     setLotNo(wo.lot_no || '');
     let cancelled = false;
@@ -441,6 +444,9 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
               </div>
             </div>
 
+            <SubcontractOrders key={wo.id} productionOrder={{ id: wo.id, wo_no: wo.wo_no, warehouse_id: wo.warehouse_id, canCreate: !loading && wo.quantity_done === 0 && items.every(i => i.qty_issued === 0) && !['completed', 'cancelled'].includes(wo.status) }} onStepsChange={setExternalPending} />
+
+            {externalPending && <p className="text-muted-foreground">Fremdbearbeitung: Rücknahme ausstehend</p>}
             {wo.status !== 'completed' && wo.status !== 'cancelled' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Card className="p-3 space-y-2">
@@ -456,12 +462,12 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                       möglich sind {fmtN(issuableQty)} von {fmtN(openQty)}.
                     </div>
                   )}
-                  <Button size="sm" className="h-8 text-xs w-full" onClick={() => issue(false)} disabled={working || allIssued || items.length === 0 || shortItems.length > 0}>
+                  <Button size="sm" className="h-8 text-xs w-full" onClick={() => issue(false)} disabled={working || externalPending || allIssued || items.length === 0 || shortItems.length > 0}>
                     {working && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
                     {allIssued ? 'Bereits ausgebucht' : 'Material entnehmen'}
                   </Button>
                   {shortItems.length > 0 && !allIssued && (
-                    <Button size="sm" variant="outline" className="h-8 text-xs w-full" onClick={() => issue(true)} disabled={working || issuableQty <= 0}>
+                    <Button size="sm" variant="outline" className="h-8 text-xs w-full" onClick={() => issue(true)} disabled={working || externalPending || issuableQty <= 0}>
                       Nur verfügbare Mengen entnehmen
                     </Button>
                   )}
@@ -481,7 +487,7 @@ function DetailDialog({ wo, onClose, onChanged }: { wo: Wo | null; onClose: () =
                       <Input value={lotNo} onChange={(e) => setLotNo(e.target.value)} className="h-8 text-xs font-mono" />
                     </div>
                   </div>
-                  <Button size="sm" className="h-8 text-xs w-full" onClick={complete} disabled={working || !allIssued}>
+                  <Button size="sm" className="h-8 text-xs w-full" onClick={complete} disabled={working || externalPending || !allIssued}>
                     {working && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
                     {allIssued ? 'Fertig melden & einbuchen' : 'Erst Material ausbuchen'}
                   </Button>
