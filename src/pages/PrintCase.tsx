@@ -28,6 +28,8 @@ interface CaseRow {
   department_id: string | null;
   assignee_id: string | null;
   created_by: string | null;
+  watchers: string[] | null;
+  watcher_departments: string[] | null;
   created_at: string | null;
   closure_summary: string | null;
   closure_outputs: any;
@@ -273,6 +275,24 @@ export default function PrintCase() {
             <div className="card sub" style={{ whiteSpace: 'pre-wrap' }}>{plain(c.note)}</div>
           </div>
         )}
+
+        {/* Beteiligte Personen */}
+        <div className="print-section mb-2">
+          <h2>Beteiligte</h2>
+          <div className="grid2">
+            <dl className="kv">
+              <dt>Bearbeiter</dt><dd>{userLabel(c.assignee_id)}</dd>
+              <dt>Erstellt von</dt><dd>{userLabel(c.created_by)}</dd>
+              {c.closed_by && (<><dt>Abgeschlossen von</dt><dd>{userLabel(c.closed_by)}</dd></>)}
+            </dl>
+            <dl className="kv">
+              <dt>Beobachter</dt>
+              <dd>{(c.watchers || []).map(w => userLabel(w)).join(', ') || '—'}</dd>
+              <dt>Bereiche in Beobachtung</dt>
+              <dd>{(c.watcher_departments || []).map(d => depts[d] || '—').join(', ') || '—'}</dd>
+            </dl>
+          </div>
+        </div>
 
         {notes.length > 0 && (
           <div className="print-flow mb-2">
