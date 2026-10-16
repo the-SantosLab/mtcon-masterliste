@@ -850,6 +850,7 @@ export type Database = {
           dichtring: string | null
           dispo_kz: string | null
           dispo_kz_label: string | null
+          drawing_image_path: string | null
           ean: string | null
           eisos_nr: string | null
           erni_nr: string | null
@@ -873,6 +874,7 @@ export type Database = {
           mwst_gr_label: string | null
           nutz_gewinde: string | null
           pe: number | null
+          photo_image_path: string | null
           pinlaenge: string | null
           pins: string | null
           rastermass: string | null
@@ -902,6 +904,7 @@ export type Database = {
           dichtring?: string | null
           dispo_kz?: string | null
           dispo_kz_label?: string | null
+          drawing_image_path?: string | null
           ean?: string | null
           eisos_nr?: string | null
           erni_nr?: string | null
@@ -925,6 +928,7 @@ export type Database = {
           mwst_gr_label?: string | null
           nutz_gewinde?: string | null
           pe?: number | null
+          photo_image_path?: string | null
           pinlaenge?: string | null
           pins?: string | null
           rastermass?: string | null
@@ -954,6 +958,7 @@ export type Database = {
           dichtring?: string | null
           dispo_kz?: string | null
           dispo_kz_label?: string | null
+          drawing_image_path?: string | null
           ean?: string | null
           eisos_nr?: string | null
           erni_nr?: string | null
@@ -977,6 +982,7 @@ export type Database = {
           mwst_gr_label?: string | null
           nutz_gewinde?: string | null
           pe?: number | null
+          photo_image_path?: string | null
           pinlaenge?: string | null
           pins?: string | null
           rastermass?: string | null
@@ -11383,6 +11389,10 @@ export type Database = {
           _request_id: string
         }
         Returns: Json
+      }
+      set_article_images: {
+        Args: { _art_nr: string; _drawing: string; _photo: string }
+        Returns: undefined
       }
       set_own_active_session_token: {
         Args: { _token: string }
