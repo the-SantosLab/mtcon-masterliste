@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/AppLayout';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { requestPercent, departmentSteps } from '@/lib/requestProgress';
 
@@ -78,7 +77,7 @@ export default function RequestContainers() {
                         <span className="shrink-0 text-xs font-medium tabular-nums">{pct} %</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground">{c.case_no} · {c.client_name ?? c.customer_no}{c.due_at ? ` · fällig ${new Date(c.due_at).toLocaleDateString('de-DE')}` : ''}</p>
-                      <Progress value={pct} className="mt-2 h-1.5" />
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
                       {steps.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{steps.map((s) => (
                         <span key={s.department_id} className={cn('rounded border px-1.5 py-0.5 text-[10px]',
                           s.state === 'done' ? 'border-primary/40 bg-primary/10 text-primary' : s.state === 'active' ? 'border-border bg-muted text-foreground' : 'border-border text-muted-foreground')}>
