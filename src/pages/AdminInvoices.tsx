@@ -66,6 +66,7 @@ const PAY_COLOR: Record<string,string> = {
   cancelled: 'bg-slate-700/40 text-slate-400 border-slate-600/40',
 };
 const KIND: Record<string,string> = { invoice:'Rechnung', credit_note:'Gutschrift', storno:'Storno' };
+const TYPE_LABEL: Record<string,string> = { partial:'Abschlagsrechnung', final:'Schlussrechnung' };
 const TAX_MODE: Record<string,string> = {
   standard: 'Standard (19/7%)',
   reverse_charge: 'Reverse Charge (§ 13b UStG)',
@@ -232,7 +233,7 @@ export default function AdminInvoices() {
                       return (
                         <tr key={r.id} onClick={() => open ? void 0 : null} className="border-t border-border/40 hover:bg-muted/20 cursor-pointer" onClickCapture={() => open ? null : null}>
                           <td className="p-3 font-mono text-xs" onClick={(e) => { e.stopPropagation(); void openInvoice(r, setSel, setItems, setPayments); }}>{r.invoice_no}</td>
-                          <td className="p-3 text-xs" onClick={(e) => { e.stopPropagation(); void openInvoice(r, setSel, setItems, setPayments); }}>{KIND[r.doc_kind] || 'Rechnung'}</td>
+                          <td className="p-3 text-xs" onClick={(e) => { e.stopPropagation(); void openInvoice(r, setSel, setItems, setPayments); }}>{TYPE_LABEL[(r as any).invoice_type] || KIND[r.doc_kind] || 'Rechnung'}</td>
                           <td className="p-3" onClick={(e) => { e.stopPropagation(); void openInvoice(r, setSel, setItems, setPayments); }}>
                             <Badge variant="outline" className={PAY_COLOR[r.payment_status] || PAY_COLOR.open}>{PAY_STATUS[r.payment_status] || 'Offen'}</Badge>
                           </td>
@@ -543,6 +544,9 @@ function CreateInvoiceDialog({ open, onClose, onCreated }: { open: boolean; onCl
   const [list, setList] = useState<any[]>([]);
   const [sourceId, setSourceId] = useState('');
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<'standard' | 'partial' | 'final'>('standard');
+  const [pct, setPct] = useState('30');
+  const [netAmt, setNetAmt] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -560,6 +564,17 @@ function CreateInvoiceDialog({ open, onClose, onCreated }: { open: boolean; onCl
 
   const create = async () => {
     if (!sourceId) return toast.error('Quelle wählen');
+    if (sourceType === 'order' && mode !== 'standard') {
+      setBusy(true);
+      const args = mode === 'partial'
+        ? { _order_id: sourceId, _percent: netAmt ? null : Number(pct), _net_amount: netAmt ? Number(netAmt) : null }
+        : { _order_id: sourceId };
+      const { error } = await (supabase.rpc((mode === 'partial' ? 'create_partial_invoice' : 'create_final_invoice') as any, args as any)) as any;
+      setBusy(false);
+      if (error) return toast.error(error.message);
+      toast.success(mode === 'partial' ? 'Abschlagsrechnung erstellt' : 'Schlussrechnung erstellt');
+      onCreated(); onClose(); return;
+    }
     setBusy(true);
     const { data: { user } } = await supabase.auth.getUser();
     const src = list.find(x => x.id === sourceId);
@@ -630,8 +645,17 @@ function CreateInvoiceDialog({ open, onClose, onCreated }: { open: boolean; onCl
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <Button type="button" size="sm" variant={sourceType==='order'?'default':'outline'} onClick={() => setSourceType('order')}>Aus Bestellung</Button>
-            <Button type="button" size="sm" variant={sourceType==='delivery'?'default':'outline'} onClick={() => setSourceType('delivery')}>Aus Lieferschein</Button>
+            <Button type="button" size="sm" variant={sourceType==='delivery'?'default':'outline'} onClick={() => { setSourceType('delivery'); setMode('standard'); }}>Aus Lieferschein</Button>
           </div>
+          {sourceType === 'order' && <div className="grid grid-cols-3 gap-2">
+            {([['standard','Normale Rechnung'],['partial','Abschlag'],['final','Schlussrechnung']] as const).map(([k,l]) =>
+              <Button key={k} type="button" size="sm" variant={mode===k?'secondary':'ghost'} className="text-xs" onClick={() => setMode(k)}>{l}</Button>)}
+          </div>}
+          {sourceType === 'order' && mode === 'partial' && <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-xs">Prozent vom Auftragswert</Label><Input type="number" value={pct} disabled={!!netAmt} onChange={e => setPct(e.target.value)} /></div>
+            <div><Label className="text-xs">oder Nettobetrag €</Label><Input type="number" step="0.01" value={netAmt} onChange={e => setNetAmt(e.target.value)} /></div>
+          </div>}
+          {sourceType === 'order' && mode === 'final' && <p className="text-[11px] text-muted-foreground">Alle Auftragspositionen; bereits berechnete Abschläge werden automatisch abgezogen.</p>}
           <div>
             <Label className="text-xs">{sourceType === 'order' ? 'Bestellung' : 'Lieferschein'}</Label>
             <Select value={sourceId} onValueChange={setSourceId}>
