@@ -309,6 +309,13 @@
       "when": 1792152283584,
       "tag": "0043_guard_order_handoffs_and_recipients",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792153598066,
+      "tag": "0044_guard_workshop_writer_roles",
+      "breakpoints": true
     }
   ]
 }
