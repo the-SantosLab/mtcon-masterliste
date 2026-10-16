@@ -4539,6 +4539,7 @@ export type Database = {
           note: string | null
           over_decision: string | null
           over_qty: number
+          planned_location_id: string | null
           po_item_id: string | null
           qty: number
           returned_at: string | null
@@ -4564,6 +4565,7 @@ export type Database = {
           note?: string | null
           over_decision?: string | null
           over_qty?: number
+          planned_location_id?: string | null
           po_item_id?: string | null
           qty: number
           returned_at?: string | null
@@ -4589,6 +4591,7 @@ export type Database = {
           note?: string | null
           over_decision?: string | null
           over_qty?: number
+          planned_location_id?: string | null
           po_item_id?: string | null
           qty?: number
           returned_at?: string | null
@@ -10938,6 +10941,17 @@ export type Database = {
     }
     Functions: {
       _erp_actor_name: { Args: { uid: string }; Returns: string }
+      _gi_book_receipt: {
+        Args: {
+          _delivery_note_no: string
+          _items: Json
+          _notes: string
+          _po_id: string
+          _source: string
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       _gi_move: {
         Args: {
           _art: string
@@ -10977,6 +10991,16 @@ export type Database = {
         Returns: undefined
       }
       archive_old_announcements: { Args: never; Returns: number }
+      book_goods_receipt: {
+        Args: {
+          _delivery_note_no?: string
+          _items: Json
+          _notes?: string
+          _po_id: string
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       book_subcontract_receipt: {
         Args: {
           _delivery_note_no?: string
