@@ -4523,6 +4523,99 @@ export type Database = {
           },
         ]
       }
+      goods_inspections: {
+        Row: {
+          art_nr: string
+          case_id: string | null
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          gr_id: string
+          gr_item_id: string | null
+          id: string
+          ipunkt_location_id: string
+          lot_no: string | null
+          note: string | null
+          over_decision: string | null
+          over_qty: number
+          po_item_id: string | null
+          qty: number
+          returned_at: string | null
+          returned_by: string | null
+          status: string
+          stored_at: string | null
+          stored_by: string | null
+          stored_location_id: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          art_nr: string
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          gr_id: string
+          gr_item_id?: string | null
+          id?: string
+          ipunkt_location_id: string
+          lot_no?: string | null
+          note?: string | null
+          over_decision?: string | null
+          over_qty?: number
+          po_item_id?: string | null
+          qty: number
+          returned_at?: string | null
+          returned_by?: string | null
+          status?: string
+          stored_at?: string | null
+          stored_by?: string | null
+          stored_location_id?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          art_nr?: string
+          case_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          gr_id?: string
+          gr_item_id?: string | null
+          id?: string
+          ipunkt_location_id?: string
+          lot_no?: string | null
+          note?: string | null
+          over_decision?: string | null
+          over_qty?: number
+          po_item_id?: string | null
+          qty?: number
+          returned_at?: string | null
+          returned_by?: string | null
+          status?: string
+          stored_at?: string | null
+          stored_by?: string | null
+          stored_location_id?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_inspections_gr_id_fkey"
+            columns: ["gr_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_inspections_gr_item_id_fkey"
+            columns: ["gr_item_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_items: {
         Row: {
           created_at: string
@@ -10845,6 +10938,22 @@ export type Database = {
     }
     Functions: {
       _erp_actor_name: { Args: { uid: string }; Returns: string }
+      _gi_move: {
+        Args: {
+          _art: string
+          _from: string
+          _lot: string
+          _note: string
+          _qty: number
+          _to: string
+        }
+        Returns: undefined
+      }
+      _gi_notify_lager: {
+        Args: { _body: string; _title: string }
+        Returns: undefined
+      }
+      _gi_require_staff: { Args: never; Returns: undefined }
       _guard_invoice_writer: { Args: never; Returns: undefined }
       _order_net_tax: {
         Args: { _order_id: string }
@@ -11014,6 +11123,10 @@ export type Database = {
         Returns: string
       }
       current_user_email: { Args: never; Returns: string }
+      decide_goods_inspection: {
+        Args: { _id: string; _note?: string; _ok: boolean }
+        Returns: undefined
+      }
       dept_has_matrix: { Args: { p_dept_id: string }; Returns: boolean }
       dept_member_role: {
         Args: { p_dept_id: string; p_uid: string }
@@ -11222,10 +11335,15 @@ export type Database = {
       }
       require_subcontract_writer: { Args: never; Returns: undefined }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
+      return_goods_inspection: {
+        Args: { _id: string; _note?: string }
+        Returns: undefined
+      }
       scan_goods_receipt: {
         Args: {
           _delivery_note_no?: string
           _lot_no?: string
+          _over_decision?: string
           _po_item_id: string
           _qty: number
           _warehouse_id: string
@@ -11244,6 +11362,10 @@ export type Database = {
       }
       set_own_active_session_token: {
         Args: { _token: string }
+        Returns: undefined
+      }
+      store_goods_inspection: {
+        Args: { _id: string; _location_id: string }
         Returns: undefined
       }
       suggest_po_from_deal: {
