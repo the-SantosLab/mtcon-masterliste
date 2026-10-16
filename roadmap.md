@@ -61,3 +61,10 @@
 - [ ] Herstellkosten automatisch aus Stückliste vorschlagen
 - [ ] Vergleich Kalkulation gegen Werkstatt-Kosten (Soll/Ist)
 - [ ] Echter Durchlauf mit Preis — blockiert: allgemeiner Faktor fehlt, kein Abschluss möglich
+
+## Wareneingang / QS / Folgepunkte (16.10.)
+- [x] Wareneingang auf i-Punkt, Prüfvorgang an Lager, Freigabe → Meldung Einlagern, Fehlerhaft einlagerbar bis Rücksendung, Überlieferung abfragen
+- [ ] Zwei Bilder je Artikel (Zeichnung, real/gerendert) in Wareneingang, Kalkulation, Angebot
+- [ ] Angebot muss mit Vorgang verknüpft sein; Anfragen-Container je Kategorie mit 0–100-%-Balken und Abteilungsschritten; MTIQ-Vorschläge für Kundenanfragen
+- [ ] UI: Sidebar/Tabellen kompakter, Zeilenhöhe klein, ausgeblendete Filter markieren
+- [ ] Vorgangsansicht mit Widget-Leiste oben (Notizen, Dateien, E-Mails), Druck prüfen

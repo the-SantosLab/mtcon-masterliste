@@ -10,6 +10,7 @@ const navigation = [
   { to: '/admin/purchasing', label: 'Einkauf', icon: ShoppingCart },
   { to: '/bestellungen', label: 'Bestellungen', icon: ClipboardList },
   { to: '/admin/inventory', label: 'Lager', icon: Package },
+  { to: '/wareneingang-pruefung', label: 'Wareneingangsprüfung', icon: ClipboardCheck },
   { to: '/inventur', label: 'Inventur', icon: ClipboardCheck },
   { to: '/eingangsrechnungen', label: 'Eingangsrechnungen', icon: Receipt },
   { to: '/lieferantenbewertung', label: 'Lieferantenbewertung', icon: Star },
