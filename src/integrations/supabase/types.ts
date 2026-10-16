@@ -10970,6 +10970,10 @@ export type Database = {
         Returns: boolean
       }
       issue_subcontract_material: { Args: { _id: string }; Returns: undefined }
+      link_inbox_document_to_po: {
+        Args: { _doc_id: string; _po_id: string }
+        Returns: Json
+      }
       lock_erp_document: {
         Args: { _id: string; _kind: string }
         Returns: boolean
