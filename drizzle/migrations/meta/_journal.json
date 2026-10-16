@@ -386,6 +386,13 @@
       "when": 1792161010594,
       "tag": "0054_price_calc_freeze_final",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1792161778753,
+      "tag": "0055_price_calc_offer_link",
+      "breakpoints": true
     }
   ]
 }
