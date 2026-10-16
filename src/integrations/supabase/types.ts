@@ -9190,6 +9190,101 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_count_items: {
+        Row: {
+          art_nr: string
+          count_id: string
+          counted_at: string | null
+          counted_by: string | null
+          counted_qty: number | null
+          expected_qty: number
+          id: string
+          note: string | null
+          posted_delta: number | null
+        }
+        Insert: {
+          art_nr: string
+          count_id: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number | null
+          expected_qty?: number
+          id?: string
+          note?: string | null
+          posted_delta?: number | null
+        }
+        Update: {
+          art_nr?: string
+          count_id?: string
+          counted_at?: string | null
+          counted_by?: string | null
+          counted_qty?: number | null
+          expected_qty?: number
+          id?: string
+          note?: string | null
+          posted_delta?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_items_art_nr_fkey"
+            columns: ["art_nr"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["art_nr"]
+          },
+          {
+            foreignKeyName: "stock_count_items_count_id_fkey"
+            columns: ["count_id"]
+            isOneToOne: false
+            referencedRelation: "stock_counts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_counts: {
+        Row: {
+          count_no: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          posted_at: string | null
+          posted_by: string | null
+          status: string
+          warehouse_id: string
+        }
+        Insert: {
+          count_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: string
+          warehouse_id: string
+        }
+        Update: {
+          count_no?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           art_nr: string
@@ -10485,6 +10580,10 @@ export type Database = {
     }
     Functions: {
       _erp_actor_name: { Args: { uid: string }; Returns: string }
+      add_stock_count_item: {
+        Args: { _art_nr: string; _count_id: string }
+        Returns: undefined
+      }
       apply_case_status_from_doc: {
         Args: {
           _action: string
@@ -10577,6 +10676,7 @@ export type Database = {
         Args: { p_document_id: string; p_uid?: string }
         Returns: boolean
       }
+      cancel_stock_count: { Args: { _count_id: string }; Returns: undefined }
       cancel_subcontract_order: { Args: { _id: string }; Returns: undefined }
       case_department: { Args: { p_case_id: string }; Returns: string }
       case_dept_owner: { Args: { p_case_id: string }; Returns: string }
@@ -10610,6 +10710,10 @@ export type Database = {
           _production_order_id: string
           _supplier_id: string
         }
+        Returns: string
+      }
+      create_stock_count: {
+        Args: { _note?: string; _warehouse_id: string }
         Returns: string
       }
       create_subcontract_order: {
@@ -10772,6 +10876,7 @@ export type Database = {
         Returns: string
       }
       policy_category: { Args: { p_policy_id: string }; Returns: string }
+      post_stock_count: { Args: { _count_id: string }; Returns: number }
       production_order_availability: {
         Args: { _id: string }
         Returns: {
