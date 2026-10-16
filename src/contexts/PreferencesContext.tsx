@@ -36,6 +36,11 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     document.documentElement.classList.toggle('dark', theme === 'dark');
   };
 
+  // Global density class: compact tables shrink row heights app-wide
+  useEffect(() => {
+    document.documentElement.classList.toggle('density-compact', preferences.compactTables);
+  }, [preferences.compactTables]);
+
   // Load preferences from DB
   useEffect(() => {
     if (!user) {

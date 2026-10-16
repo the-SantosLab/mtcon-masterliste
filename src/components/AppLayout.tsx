@@ -308,9 +308,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const showCrm = isAdmin || crmAllowed === true;
   const { preferences, setTheme, setCompactTables, setSidebarCompact } = usePreferences();
   const sidebarCompact = preferences.sidebarCompact;
-  const sbText = sidebarCompact ? 'text-sm' : 'text-[15px]';
-  const sbPy = sidebarCompact ? 'py-2' : 'py-2.5';
-  const sbWidth = sidebarCompact ? 'w-56' : 'w-64';
+  const sbText = sidebarCompact ? 'text-[13px]' : 'text-[15px]';
+  const sbPy = sidebarCompact ? 'py-1.5' : 'py-2.5';
+  const sbWidth = sidebarCompact ? 'w-52' : 'w-64';
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
