@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LeadPartnerLock } from '@/components/crm/LeadPartnerLock';
+import { LeadKeyFacts } from '@/components/crm/LeadKeyFacts';
 import { Plus, Loader2, Upload, ArrowRight, X, LayoutGrid, List, Flame, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -322,10 +323,11 @@ export default function CrmLeads() {
 
       {/* Detail */}
       <Dialog open={!!selected} onOpenChange={o => !o && setSelected(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{selected?.company_name}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-2 text-xs">
+              <LeadKeyFacts lead={selected as any} />
               <Detail label="Website" value={selected.website} />
               <Detail label="Land" value={selected.country} />
               <Detail label="Branche" value={selected.industry} />
