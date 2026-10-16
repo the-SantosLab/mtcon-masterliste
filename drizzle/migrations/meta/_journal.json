@@ -253,6 +253,13 @@
       "when": 1792134663171,
       "tag": "0035_subcontracting_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1792134700984,
+      "tag": "0036_subcontract_receipt_idempotency",
+      "breakpoints": true
     }
   ]
 }

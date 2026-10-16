@@ -9363,6 +9363,7 @@ export type Database = {
           receipt_no: string
           received_at: string
           received_by: string
+          request_id: string | null
           warehouse_id: string
         }
         Insert: {
@@ -9372,6 +9373,7 @@ export type Database = {
           receipt_no?: string
           received_at?: string
           received_by?: string
+          request_id?: string | null
           warehouse_id: string
         }
         Update: {
@@ -9381,6 +9383,7 @@ export type Database = {
           receipt_no?: string
           received_at?: string
           received_by?: string
+          request_id?: string | null
           warehouse_id?: string
         }
         Relationships: [
@@ -10258,6 +10261,16 @@ export type Database = {
         Returns: undefined
       }
       archive_old_announcements: { Args: never; Returns: number }
+      book_subcontract_receipt: {
+        Args: {
+          _delivery_note_no?: string
+          _id: string
+          _items: Json
+          _request_id: string
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       book_to_sperrlager: {
         Args: {
           _qty?: number
