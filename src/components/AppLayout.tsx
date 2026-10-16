@@ -130,6 +130,7 @@ const processNavGroups: ProcessNavGroup[] = [
     { href: '/', label: 'Mein Dashboard', icon: LayoutDashboard },
     { href: '/cases', label: 'Meine Vorgänge', icon: ClipboardList, badge: 'cases' },
     { href: '/cases/kanban', label: 'Kanban', icon: Workflow },
+    { href: '/anfragen', label: 'Anfragen', icon: Workflow },
     { href: '/crm/activities/calendar', label: 'Kalender', icon: Calendar, access: 'crm' },
     { href: '/cockpit', label: 'Cockpit (Beta)', icon: LayoutDashboard },
   ]},
