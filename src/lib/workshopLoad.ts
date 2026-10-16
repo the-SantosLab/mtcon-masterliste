@@ -36,7 +36,7 @@ export function weeklyLoad(orders: WoLoad[], today: string, capacity: number, we
 
 export interface CostInput {
   planned_hours: number | null; actual_hours: number | null;
-  items: { qty_required: number; qty_issued: number; price: number | null }[];
+  items: { qty_required: number; qty_issued: number; price: number | null; unclear?: boolean }[];
 }
 
 /** Soll/Ist: Material = Menge × Bewertungspreis, Arbeit = Stunden × Stundensatz. */
@@ -50,14 +50,16 @@ export function orderCosts(o: CostInput, rate: number) {
   return {
     matPlan: r2(matPlan), matAct: r2(matAct), labPlan: r2(labPlan), labAct: r2(labAct), planned, actual,
     diff: r2(actual - planned), diffPct: planned > 0 ? Math.round(((actual - planned) / planned) * 100) : null,
-    missingPrice: o.items.some((i) => i.price == null),
+    missingPrice: o.items.some((i) => i.price == null && !i.unclear),
+    unclearUnit: o.items.some((i) => !!i.unclear),
   };
 }
 
-/** Stückpreis: hinterlegter Preis gilt je Preiseinheit (Artikel-Feld PE, z. B. 1000); fehlt sie, gilt 1. */
-export function unitPrice(price: number | null | undefined, pe: number | string | null | undefined): number | null {
+/** Stückpreis aus hinterlegter Preiseinheit (PE). Fehlt PE oder ist sie ungültig, wird nicht geraten: Ergebnis "unklar". */
+export function unitPrice(price: number | null | undefined, pe: number | string | null | undefined): { price: number | null; unclear: boolean } {
   const p = Number(price);
-  if (!(p > 0)) return null;
+  if (!(p > 0)) return { price: null, unclear: false };
   const e = Number(pe);
-  return p / (e > 0 ? e : 1);
+  if (pe == null || pe === '' || !(e > 0)) return { price: null, unclear: true };
+  return { price: p / e, unclear: false };
 }

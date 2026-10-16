@@ -29,7 +29,8 @@ export default function WorkshopLoad() {
       ]);
       const wos = w.data ?? [];
       const arts = [...new Set(wos.flatMap((o: any) => (o.production_order_items ?? []).map((i: any) => i.component_art_nr)).filter(Boolean))];
-      const prices = new Map<string, number>();
+      const prices = new Map<string, { price: number | null; unclear: boolean }>();
+      const unclear: { art_nr: string; raw: number; pe: any }[] = [];
       for (let i = 0; i < arts.length; i += 200) {
         const chunk = arts.slice(i, i + 200);
         const [{ data: p }, { data: a }] = await Promise.all([
@@ -40,11 +41,12 @@ export default function WorkshopLoad() {
         for (const r of p ?? []) {
           const v = [r.durchschnittspreis, r.bewertungspreis, r.standardpreis, r.einkaufspreis, r.letzter_ep].map(Number).find((x) => x > 0);
           const u = unitPrice(v, pe.get(r.art_nr) as any);
-          if (u != null) prices.set(r.art_nr, u);
+          prices.set(r.art_nr, u);
+          if (u.unclear) unclear.push({ art_nr: r.art_nr, raw: v as number, pe: pe.get(r.art_nr) ?? null });
         }
       }
       const cfg = Object.fromEntries((set.data ?? []).map((r: any) => [r.key, Number(r.value)]));
-      return { wos, prices, capacity: cfg.workshop_capacity_hours_week ?? 40, rate: cfg.workshop_hourly_rate ?? 65 };
+      return { wos, prices, unclear, capacity: cfg.workshop_capacity_hours_week ?? 40, rate: cfg.workshop_hourly_rate ?? 65 };
     },
   });
 
@@ -54,7 +56,7 @@ export default function WorkshopLoad() {
   const rows = (data?.wos ?? []).map((o: any) => ({
     o, c: orderCosts({
       planned_hours: num(o.planned_hours), actual_hours: num(o.actual_hours),
-      items: (o.production_order_items ?? []).map((i: any) => ({ qty_required: Number(i.qty_required || 0), qty_issued: Number(i.qty_issued || 0), price: data?.prices.get(i.component_art_nr) ?? null })),
+      items: (o.production_order_items ?? []).map((i: any) => ({ qty_required: Number(i.qty_required || 0), qty_issued: Number(i.qty_issued || 0), ...(data?.prices.get(i.component_art_nr) ?? { price: null, unclear: false }) })),
     }, rate),
   }));
   const done = rows.filter((r: any) => r.o.status === 'completed' || r.o.status === 'done');
@@ -106,6 +108,17 @@ export default function WorkshopLoad() {
           <p className="text-[11px] text-muted-foreground">Gestrichelt: Kapazität. Geplante Stunden werden gleichmäßig auf die Wochen von Start bis Ende verteilt.</p>
         </section>
 
+        {(data?.unclear.length ?? 0) > 0 && (
+          <section className="rounded-lg border border-destructive/40 p-4 space-y-2">
+            <p className="text-xs font-medium">Preiseinheit unklar – bitte manuell klären ({data!.unclear.length})</p>
+            <p className="text-[11px] text-muted-foreground">Für diese Bauteile ist keine gültige Preiseinheit hinterlegt. Sie werden in den Materialkosten nicht berücksichtigt, bis die Preiseinheit am Artikel gepflegt ist.</p>
+            <Table><TableHeader><TableRow><TableHead>Artikel</TableHead><TableHead className="text-right">Hinterlegter Preis</TableHead><TableHead className="text-right">Preiseinheit</TableHead></TableRow></TableHeader>
+              <TableBody>{data!.unclear.map((u) => (
+                <TableRow key={u.art_nr}><TableCell className="font-mono text-xs">{u.art_nr}</TableCell><TableCell className="text-right text-xs tabular-nums">{formatEUR(u.raw)}</TableCell><TableCell className="text-right text-xs">{u.pe ?? 'fehlt'}</TableCell></TableRow>
+              ))}</TableBody></Table>
+          </section>
+        )}
+
         <section className="rounded-lg border border-border overflow-x-auto">
           <Table>
             <TableHeader><TableRow>
@@ -126,7 +139,7 @@ export default function WorkshopLoad() {
                         onBlur={(e) => (num(e.target.value) ?? null) !== (num(o[f]) ?? null) && saveHours(o.id, f, e.target.value)} />
                     </TableCell>
                   ))}
-                  <TableCell className="text-right text-xs tabular-nums">{formatEUR(c.matPlan)} / {formatEUR(c.matAct)}{c.missingPrice && <span className="block text-[10px] text-muted-foreground">Preis fehlt teilweise</span>}</TableCell>
+                  <TableCell className="text-right text-xs tabular-nums">{formatEUR(c.matPlan)} / {formatEUR(c.matAct)}{c.missingPrice && <span className="block text-[10px] text-muted-foreground">Preis fehlt teilweise</span>}{c.unclearUnit && <span className="block text-[10px] text-destructive">Preiseinheit unklar</span>}</TableCell>
                   <TableCell className="text-right text-xs tabular-nums">{formatEUR(c.planned)}</TableCell>
                   <TableCell className="text-right text-xs tabular-nums">{formatEUR(c.actual)}</TableCell>
                   <TableCell className={`text-right text-xs tabular-nums ${c.diff > 0 ? 'text-destructive' : ''}`}>{formatEUR(c.diff)}{c.diffPct != null && ` (${c.diffPct > 0 ? '+' : ''}${c.diffPct} %)`}</TableCell>
