@@ -177,6 +177,7 @@ export default function CrmOfferDetail() {
   };
 
   const setStatus = async (status: string) => {
+    if (!offer.locked_at && offer.status !== 'angenommen' && !(await save(true))) return;
     const patch: any = { status };
     if (status === 'versendet') patch.sent_at = new Date().toISOString();
     if (status === 'angenommen') patch.accepted_at = new Date().toISOString();
