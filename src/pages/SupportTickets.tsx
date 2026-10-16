@@ -1,3 +1,4 @@
+import { KnowledgeNav } from '@/components/KnowledgeNav';
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
@@ -155,9 +156,10 @@ export default function SupportTickets() {
   return (
     <AppLayout>
       <div className="space-y-4 max-w-6xl">
+        <KnowledgeNav />
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-lg font-semibold text-foreground">Support-Tickets</h1>
+            <h1 className="text-2xl font-medium text-foreground">Support-Tickets</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Kundenanfragen sowie interne Bug-/Feedback-Meldungen verwalten · {internCount} intern</p>
           </div>
           <div className="flex items-center gap-2">
