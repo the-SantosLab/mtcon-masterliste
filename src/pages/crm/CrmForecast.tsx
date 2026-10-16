@@ -180,6 +180,34 @@ export default function CrmForecast() {
     return { target: Number(annual.target_value), progress: Math.min(100, progress), actualPct: progress };
   }, [goals, ownerFilter, wonThisYear, companyFilter]);
 
+  // Kundenvergleich (nur Owner-Filter, damit alle Kunden vergleichbar bleiben)
+  const customerRows = useMemo(() => {
+    const m = new Map<string, { id: string; name: string; pipeline: number; weighted: number; won: number; w: number; l: number }>();
+    for (const d of deals) {
+      if (ownerFilter !== 'all' && d.owner_id !== ownerFilter) continue;
+      if (!d.company_id) continue;
+      const e = m.get(d.company_id) ?? { id: d.company_id, name: d.companies?.name || 'Ohne Namen', pipeline: 0, weighted: 0, won: 0, w: 0, l: 0 };
+      if (d.stage === 'won') { e.w++; if (d.won_at && new Date(d.won_at).getFullYear() === year) e.won += Number(d.value_final ?? d.value_estimated ?? 0); }
+      else if (d.stage === 'lost') e.l++;
+      else { const v = Number(d.value_estimated ?? d.value_final ?? 0); e.pipeline += v; e.weighted += v * (d.probability_override ?? probMap.get(d.stage) ?? 0) / 100; }
+      m.set(d.company_id, e);
+    }
+    return [...m.values()].sort((a, b) => (b.weighted + b.won) - (a.weighted + a.won)).slice(0, 15);
+  }, [deals, ownerFilter, year, probMap]);
+
+  // Entwicklung über das Jahr: gewonnener Umsatz und erwarteter gewichteter Abschluss pro Monat
+  const monthly = useMemo(() => {
+    const rows = Array.from({ length: 12 }, (_, i) => ({ month: new Date(year, i, 1).toLocaleDateString('de-DE', { month: 'short' }), won: 0, expected: 0 }));
+    for (const d of dealsFiltered) {
+      if (d.stage === 'won' && d.won_at) { const t = new Date(d.won_at); if (t.getFullYear() === year) rows[t.getMonth()].won += Number(d.value_final ?? d.value_estimated ?? 0); }
+      else if (d.stage !== 'lost' && d.expected_close_date) {
+        const t = new Date(d.expected_close_date);
+        if (t.getFullYear() === year) rows[t.getMonth()].expected += Number(d.value_estimated ?? d.value_final ?? 0) * (d.probability_override ?? probMap.get(d.stage) ?? 0) / 100;
+      }
+    }
+    return rows.map(r => ({ ...r, won: Math.round(r.won), expected: Math.round(r.expected) }));
+  }, [dealsFiltered, year, probMap]);
+
   const stageBars = useMemo(() => {
     const stages = ['anfrage', 'qualifikation', 'angebot_versendet', 'verhandlung'];
     return stages.map(s => {
@@ -297,6 +325,53 @@ export default function CrmForecast() {
                 </ResponsiveContainer>
               </div>
             </Card>
+
+            <Card className="p-5 border border-border/50 bg-card/40 backdrop-blur-xl">
+              <div className="mb-4">
+                <div className="text-sm font-medium">Entwicklung {year}</div>
+                <div className="text-xs text-muted-foreground">Gewonnener Umsatz und erwarteter gewichteter Abschluss pro Monat (nach geplantem Abschlussdatum)</div>
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthly} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)} />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                      formatter={(v: any, n: any) => [fmtEUR(Number(v)), n === 'won' ? 'Gewonnen' : 'Erwartet (gewichtet)']} />
+                    <Bar dataKey="won" stackId="a" fill={STAGE_COLOR.won} radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="expected" stackId="a" fill="hsl(var(--primary))" fillOpacity={0.5} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {companyFilter === 'all' && (
+              <Card className="p-5 border border-border/50 bg-card/40 backdrop-blur-xl">
+                <div className="mb-3">
+                  <div className="text-sm font-medium">Kundenvergleich</div>
+                  <div className="text-xs text-muted-foreground">Top 15 nach gewichtetem Forecast + Umsatz {year}. Klick filtert auf den Kunden.</div>
+                </div>
+                {customerRows.length === 0 ? <div className="text-xs text-muted-foreground py-4 text-center">Keine Deals mit Kunde</div> : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-[11px] text-muted-foreground text-left">
+                        <th className="py-1.5 font-normal">Kunde</th><th className="font-normal text-right">Offene Pipeline</th><th className="font-normal text-right">Gewichtet</th><th className="font-normal text-right">Won {year}</th><th className="font-normal text-right">Win-Rate</th>
+                      </tr></thead>
+                      <tbody>{customerRows.map(r => (
+                        <tr key={r.id} className="border-t border-border/40 hover:bg-muted/30 cursor-pointer" onClick={() => setCompanyFilter(r.id)}>
+                          <td className="py-1.5">{r.name}</td>
+                          <td className="text-right tabular-nums">{fmtEUR(r.pipeline)}</td>
+                          <td className="text-right tabular-nums">{fmtEUR(r.weighted)}</td>
+                          <td className="text-right tabular-nums">{fmtEUR(r.won)}</td>
+                          <td className="text-right tabular-nums text-muted-foreground">{r.w + r.l ? `${Math.round(r.w / (r.w + r.l) * 100)} %` : '–'}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+            )}
 
             <div className="grid lg:grid-cols-2 gap-4">
               <Card className="p-5 border border-border/50 bg-card/40 backdrop-blur-xl">
