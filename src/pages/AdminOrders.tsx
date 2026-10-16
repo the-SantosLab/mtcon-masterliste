@@ -317,6 +317,11 @@ export default function AdminOrders() {
                   {STATUS_LABELS[selected.status]}
                 </Badge>
               )}
+              {selected && !isProcurement && (
+                <Button size="sm" variant="outline" className="ml-auto mr-6" onClick={() => navigate(`/orders/${selected.id}/akte`)}>
+                  Vorgangsakte
+                </Button>
+              )}
             </DialogTitle>
           </DialogHeader>
 
