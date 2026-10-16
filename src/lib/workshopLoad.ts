@@ -53,3 +53,11 @@ export function orderCosts(o: CostInput, rate: number) {
     missingPrice: o.items.some((i) => i.price == null),
   };
 }
+
+/** Stückpreis: hinterlegter Preis gilt je Preiseinheit (Artikel-Feld PE, z. B. 1000); fehlt sie, gilt 1. */
+export function unitPrice(price: number | null | undefined, pe: number | string | null | undefined): number | null {
+  const p = Number(price);
+  if (!(p > 0)) return null;
+  const e = Number(pe);
+  return p / (e > 0 ? e : 1);
+}

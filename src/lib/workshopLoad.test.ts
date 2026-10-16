@@ -21,3 +21,14 @@ describe('workshopLoad', () => {
     expect(c.planned).toBe(690); expect(c.actual).toBe(830); expect(c.diff).toBe(140); expect(c.diffPct).toBe(20);
   });
 });
+
+import { unitPrice } from './workshopLoad';
+describe('Preiseinheit', () => {
+  it('481,99 € je 1000 Stück ergibt 0,48199 € je Stück', () => { expect(unitPrice(481.99, 1000)).toBeCloseTo(0.48199, 6); });
+  it('fehlende oder ungültige Preiseinheit zählt als 1', () => { expect(unitPrice(5, null)).toBe(5); expect(unitPrice(5, 0)).toBe(5); expect(unitPrice(5, '100')).toBe(0.05); });
+  it('ohne Preis kein Stückpreis', () => { expect(unitPrice(0, 1000)).toBeNull(); expect(unitPrice(null, 1)).toBeNull(); });
+  it('2500 Stück zu 481,99 € je 1000 kosten 1.204,98 €', () => {
+    const c = orderCosts({ planned_hours: 0, actual_hours: 0, items: [{ qty_required: 2500, qty_issued: 0, price: unitPrice(481.99, 1000) }] }, 65);
+    expect(c.matPlan).toBe(1204.98);
+  });
+});
