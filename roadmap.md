@@ -1,6 +1,6 @@
 # Roadmap
 - [x] Vorgangsakte: rückrollbare Datenbanktests für Angebot → Auftrag und alle vier Übergaben, Rollen, Empfänger und Duplikate; zehn Regeltests und Browser-Zwischenstände mit isolierten Antworten geprüft; keine Testdaten verblieben
-- [ ] Vorgangsakte: gemeinsamer Browser-Datenbankdurchlauf mit realen Rollen-Sitzungen — blockiert: kein beschreibbarer rückrollbarer Browser-Testzugang; Browser-Rollen und Zwischenstände wurden separat mit isolierten Antworten geprüft
+- [x] Vorgangsakte: gemeinsamer Browser-Datenbankdurchlauf mit separaten Admin-/Staff-/Viewer-Testkonten abgeschlossen; Angebot → Einkauf → Werkstatt → Versand → Buchhaltung, Teilstatus, Empfänger und Duplikate geprüft; Viewer-Werkstattlücke geschlossen und erneut geprüft; alle Testkonten/-belege/-Benachrichtigungen entfernt, Prüfsummen echter Aufträge/Bestände/Rechnungen unverändert
 - [x] Kundenakquise: eigene Übersicht und acht richtig zugeordnete Unterseiten mit echten CRM-Daten
 - [x] Regelbasierte Aktivitäten und MTIQ-Vorschläge mit bestätigter Übernahme in bestehende Aktivitäten ergänzen
 - [x] Akquise-Regeln und Seitenleistenregression prüfen: neun Tests erfolgreich; Seitenmodule laden fehlerfrei

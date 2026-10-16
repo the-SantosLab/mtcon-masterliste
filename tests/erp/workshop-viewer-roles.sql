@@ -4,6 +4,11 @@ DO $$
 DECLARE actor uuid; wo uuid:=gen_random_uuid(); wh uuid; denied boolean; n integer;
 BEGIN
  SELECT user_id INTO actor FROM public.user_roles WHERE role='viewer' LIMIT 1;
+ IF actor IS NULL THEN
+  SELECT id INTO actor FROM public.users_profile LIMIT 1;
+  DELETE FROM public.user_roles WHERE user_id=actor;
+  INSERT INTO public.user_roles(user_id,role) VALUES(actor,'viewer');
+ END IF;
  SELECT id INTO wh FROM public.warehouses LIMIT 1;
  IF actor IS NULL OR wh IS NULL THEN RAISE EXCEPTION 'Viewer and warehouse fixtures required'; END IF;
  INSERT INTO public.production_orders(id,wo_no,art_nr,warehouse_id) VALUES(wo,'ISOLATED-VIEWER-ROLE','ISOLATED-NO-STOCK',wh);
