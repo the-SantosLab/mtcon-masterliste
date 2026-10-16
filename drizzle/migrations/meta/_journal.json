@@ -407,6 +407,13 @@
       "when": 1792170718402,
       "tag": "0057_goods_inspection_case_status",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1792170851911,
+      "tag": "0058_scan_receipt_ipunkt_fix",
+      "breakpoints": true
     }
   ]
 }
