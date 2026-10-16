@@ -89,8 +89,8 @@ export default function PriceCalculation() {
           actions={<Button variant="outline" onClick={() => setF(blank())}>Neue Kalkulation</Button>} />
 
         {offerId && <div className="rounded-xl border border-border bg-card/60 px-4 py-3 text-sm">Kalkulation für Angebot <span className="font-medium">{offer?.offer_no ?? '…'}</span>{offer?.companies?.name ? ` · ${offer.companies.name}` : ''}. Nach dem Abschließen eine Staffel mit „Übernehmen“ ins Angebot übertragen.</div>}
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-5 rounded-xl border border-border bg-card/60 p-4">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0 space-y-5 rounded-xl border border-border bg-card/60 p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               {([['art_nr', 'Artikelnummer'], ['customer_name', 'Kunde'], ['issos_offer_no', 'ISSOS Angebot-Nr.'], ['supplier_offer', 'Angebot Lieferant']] as const).map(([k, l]) => (
                 <div key={k} className="space-y-1"><Label className="text-xs">{l}</Label>
@@ -139,7 +139,7 @@ export default function PriceCalculation() {
             </div>}
           </div>
 
-          <div className="space-y-5">
+          <div className="min-w-0 space-y-5">
             <div className="rounded-xl border border-border bg-card/60 p-4 space-y-2">
               <h2 className="text-sm font-medium">Offene Punkte</h2>
               {points.length ? <ul className="space-y-1 text-xs text-destructive">{points.map((p) => <li key={p}>{p}</li>)}</ul> : <p className="text-xs text-muted-foreground">Keine</p>}
