@@ -801,45 +801,35 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
     setLocResults(s => ({ ...s, [itemId]: (data ?? []) as any[] }));
   };
 
-  const save = async () => {
+  const save = async (overDecision?: 'accepted' | 'rejected') => {
     if (!po) return;
+    setOverAsk(null);
     if (!warehouseId) { toast.error('Lager wählen'); return; }
     const toBook = items
       .map(it => ({ it, qty: Number(qtys[it.id] || 0) }))
       .filter(x => x.qty > 0);
     if (toBook.length === 0) { toast.error('Keine Mengen erfasst'); return; }
-    for (const x of toBook) {
-      const open = Number(x.it.qty_ordered) - Number(x.it.qty_received);
-      if (x.qty > open) { toast.error(`Position ${x.it.position}: Menge übersteigt Offen (${open})`); return; }
+    const over = toBook.filter(x => x.qty > Number(x.it.qty_ordered) - Number(x.it.qty_received));
+    if (over.length && !overDecision) {
+      setOverAsk(over.map(x => `Pos. ${x.it.position} ${x.it.art_nr}: offen ${Number(x.it.qty_ordered) - Number(x.it.qty_received)}, erfasst ${x.qty}`));
+      return;
     }
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: gr, error: grErr } = await (supabase as any).from('goods_receipts').insert({
-      po_id: po.id,
-      warehouse_id: warehouseId,
-      delivery_note_no: deliveryNo.trim() || null,
-      notes: notes.trim() || null,
-      received_by: user?.id ?? null,
-    }).select('id, gr_no').single();
-    if (grErr || !gr) { setSaving(false); toast.error(grErr?.message || 'Fehler'); return; }
-
-    const rows = toBook.map(x => ({
-      gr_id: gr.id,
-      po_item_id: x.it.id,
-      qty_received: x.qty,
-      lot_no: (lots[x.it.id] || '').trim() || null,
-      lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
-      expiry_date: expiries[x.it.id] || null,
-      storage_location_id: locSel[x.it.id]?.id ?? null,
-    }));
-    const { error: itemErr } = await (supabase as any).from('goods_receipt_items').insert(rows);
+    const { data: grId, error } = await (supabase as any).rpc('book_goods_receipt', {
+      _po_id: po.id, _warehouse_id: warehouseId,
+      _delivery_note_no: deliveryNo.trim() || null, _notes: notes.trim() || null,
+      _items: toBook.map(x => ({
+        po_item_id: x.it.id, qty: x.qty,
+        lot_no: (lots[x.it.id] || '').trim() || null,
+        lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
+        expiry_date: expiries[x.it.id] || null,
+        planned_location_id: locSel[x.it.id]?.id ?? null,
+        over_decision: overDecision ?? null,
+      })),
+    });
     setSaving(false);
-    if (itemErr) {
-      // Rollback GR if items fail
-      await (supabase as any).from('goods_receipts').delete().eq('id', gr.id);
-      toast.error(itemErr.message); return;
-    }
-    toast.success(`Wareneingang ${gr.gr_no} gebucht`);
+    if (error || !grId) { toast.error(error?.message || 'Fehler'); return; }
+    toast.success('Auf i-Punkt gebucht, Prüfvorgang an QS/QM übergeben');
     onSaved(); onClose();
   };
 
