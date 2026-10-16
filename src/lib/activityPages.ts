@@ -1,6 +1,7 @@
 import type { Tables } from '@/integrations/supabase/types';
 
-export type Activity = Tables<'crm_activities'>;
+/** crm_activities row; `type` is widened to string because follow-ups are stored beyond the base enum. */
+export type Activity = Omit<Tables<'crm_activities'>, 'type'> & { type: string };
 export type VisitReport = Tables<'crm_visit_reports'>;
 
 /** Each sidebar point under "Kommunikation & Aufgaben" is backed by its own page. */
