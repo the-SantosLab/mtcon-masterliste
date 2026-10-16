@@ -8,6 +8,8 @@ import './fulfillment.css';
 const navigation = [
   { to: '/rechnungen', label: 'Rechnungen', icon: Receipt },
   { to: '/admin/erp-export', label: 'Mahnwesen & DATEV', icon: AlarmClock },
+  { to: '/bankabgleich', label: 'Bankabgleich', icon: Receipt },
+  { to: '/kennzahlen', label: 'Kennzahlen', icon: BarChart3 },
   { to: '/crm/analytics', label: 'CRM-Auswertungen', icon: TrendingUp },
   { to: '/reporting/einkauf', label: 'Einkaufsreporting', icon: BarChart3 },
 ];
