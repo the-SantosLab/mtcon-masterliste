@@ -337,6 +337,13 @@
       "when": 1792155851404,
       "tag": "0047_inbox_link_purchase_order",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792156057119,
+      "tag": "0048_workshop_hours",
+      "breakpoints": true
     }
   ]
 }

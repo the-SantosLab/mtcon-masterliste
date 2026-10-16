@@ -232,6 +232,7 @@ const processNavGroups: ProcessNavGroup[] = [
     { href: '/admin/disposition', label: 'Disposition', icon: Activity, access: 'erp' },
     { href: '/kapazitaet', label: 'Kapazitätsplan', icon: CalendarRange, access: 'erp' },
     { href: '/admin/production', label: 'Werkstattaufträge', icon: Wrench, access: 'erp' },
+    { href: '/werkstatt-auslastung', label: 'Werkstattauslastung', icon: Activity, access: 'erp' },
     { href: '/fremdbearbeitung', label: 'Fremdbearbeitung', icon: Wrench, access: 'erp' },
     { href: '/lieferscheine', label: 'Lieferscheine', icon: Truck, access: 'erp' },
     { href: '/admin/templates', label: 'Standard Vorgänge', icon: FileText, access: 'admin' },

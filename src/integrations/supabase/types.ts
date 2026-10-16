@@ -8263,6 +8263,7 @@ export type Database = {
       }
       production_orders: {
         Row: {
+          actual_hours: number | null
           art_nr: string
           case_id: string | null
           completed_at: string | null
@@ -8275,6 +8276,7 @@ export type Database = {
           note: string | null
           order_id: string | null
           planned_end: string | null
+          planned_hours: number | null
           planned_start: string | null
           quantity: number
           quantity_done: number
@@ -8284,6 +8286,7 @@ export type Database = {
           wo_no: string | null
         }
         Insert: {
+          actual_hours?: number | null
           art_nr: string
           case_id?: string | null
           completed_at?: string | null
@@ -8296,6 +8299,7 @@ export type Database = {
           note?: string | null
           order_id?: string | null
           planned_end?: string | null
+          planned_hours?: number | null
           planned_start?: string | null
           quantity?: number
           quantity_done?: number
@@ -8305,6 +8309,7 @@ export type Database = {
           wo_no?: string | null
         }
         Update: {
+          actual_hours?: number | null
           art_nr?: string
           case_id?: string | null
           completed_at?: string | null
@@ -8317,6 +8322,7 @@ export type Database = {
           note?: string | null
           order_id?: string | null
           planned_end?: string | null
+          planned_hours?: number | null
           planned_start?: string | null
           quantity?: number
           quantity_done?: number
