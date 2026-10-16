@@ -22,6 +22,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CopyOfferItemsDialog } from '@/components/crm/CopyOfferItemsDialog';
+import { calcItemFromCalc } from '@/lib/priceCalc';
 
 interface Item { id: string; product_id?: string | null; art_nr?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
 
@@ -68,7 +69,19 @@ export default function CrmOfferDetail() {
       supabase.from('price_list_items').select('*').eq('is_active', true),
       supabase.from('offers').select('id, offer_no, version, status, created_at').or(`id.eq.${id},parent_offer_id.eq.${id},parent_offer_id.eq.${o.parent_offer_id ?? id}`).order('version'),
     ]);
-    setItems((its ?? []).map(i => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), discount_pct: Number(i.discount_pct) })));
+    const loaded: Item[] = (its ?? []).map(i => ({ ...i, quantity: Number(i.quantity), unit_price: Number(i.unit_price), discount_pct: Number(i.discount_pct) }));
+    const sp = new URLSearchParams(window.location.search);
+    const calcId = sp.get('calc'); const rowIdx = Number(sp.get('row'));
+    if (calcId && !o.locked_at && o.status !== 'angenommen') {
+      const { data: c } = await (supabase as any).from('price_calculations').select('*').eq('id', calcId).maybeSingle();
+      const pos = c ? calcItemFromCalc(c, rowIdx) : null;
+      if (pos) {
+        loaded.push({ id: crypto.randomUUID(), art_nr: pos.art_nr, description: pos.description, quantity: pos.quantity, unit_price: pos.unit_price, discount_pct: 0, sort_order: loaded.length, _new: true } as any);
+        toast.success('Position aus Kalkulation übernommen – bitte Angebot speichern');
+      } else toast.error('Kalkulation hat für diese Menge keinen Preis');
+      nav(`/crm/offers/${id}`, { replace: true });
+    }
+    setItems(loaded);
     setProducts(pr ?? []); setCompanies(co ?? []); setContacts(ct ?? []); setPriceItems(pl ?? []);
     setVersions(vs ?? []);
     setLoading(false);
