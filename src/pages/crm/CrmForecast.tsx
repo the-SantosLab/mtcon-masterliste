@@ -172,12 +172,13 @@ export default function CrmForecast() {
 
   // Sales goal progress (annual revenue goal for selected owner or team)
   const goalForOwner = useMemo(() => {
+    if (companyFilter !== 'all') return null; // Ziele gelten pro Owner/Team, nicht pro Kunde
     const matchOwner = ownerFilter === 'all' ? null : ownerFilter;
     const annual = goals.find(g => g.owner_id === matchOwner && g.period_month === null && g.metric === 'revenue');
     if (!annual) return null;
     const progress = annual.target_value > 0 ? (wonThisYear.revenue / Number(annual.target_value)) * 100 : 0;
     return { target: Number(annual.target_value), progress: Math.min(100, progress), actualPct: progress };
-  }, [goals, ownerFilter, wonThisYear]);
+  }, [goals, ownerFilter, wonThisYear, companyFilter]);
 
   const stageBars = useMemo(() => {
     const stages = ['anfrage', 'qualifikation', 'angebot_versendet', 'verhandlung'];
