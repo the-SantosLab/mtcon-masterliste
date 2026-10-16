@@ -68,6 +68,7 @@ const AdminSupplierInvoices = lazyRetry(() => import("./pages/AdminSupplierInvoi
 const AdminPurchasingReport = lazyRetry(() => import("./pages/AdminPurchasingReport"));
 const AdminCapacityPlan = lazyRetry(() => import("./pages/AdminCapacityPlan"));
 const AdminDrawings = lazyRetry(() => import("./pages/AdminDrawings"));
+const DrawingDetail = lazyRetry(() => import("./pages/DrawingDetail"));
 const AdminFolderTemplates = lazyRetry(() => import("./pages/AdminFolderTemplates"));
 const AdminSupplierRatings = lazyRetry(() => import("./pages/AdminSupplierRatings"));
 const AdminPriceManagement = lazyRetry(() => import("./pages/AdminPriceManagement"));
@@ -305,6 +306,7 @@ function AuthenticatedApp() {
           <Route path="/reporting/einkauf" element={<ProtectedRoute><AdminPurchasingReport /></ProtectedRoute>} />
           <Route path="/kapazitaet" element={<ProtectedRoute><AdminCapacityPlan /></ProtectedRoute>} />
           <Route path="/zeichnungen" element={<ProtectedRoute><AdminDrawings /></ProtectedRoute>} />
+          <Route path="/zeichnungen/:id" element={<ProtectedRoute><DrawingDetail /></ProtectedRoute>} />
           <Route path="/admin/folder-templates" element={<ProtectedRoute><AdminFolderTemplates /></ProtectedRoute>} />
           <Route path="/lieferantenbewertung" element={<ProtectedRoute><AdminSupplierRatings /></ProtectedRoute>} />
           <Route path="/preismanagement" element={<ProtectedRoute><AdminPriceManagement /></ProtectedRoute>} />
