@@ -47,7 +47,14 @@ const MATCH_COLOR: Record<string,string> = {
   price_diff: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
   qty_over_gr: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
   unmatched: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+  no_gr: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  item_diff: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
 };
+const MATCH_LABEL: Record<string,string> = {
+  ok: 'Passt', amount_diff: 'Betrag weicht ab', no_po: 'Ohne Bestellung', no_gr: 'Kein Wareneingang',
+  item_diff: 'Positionen weichen ab', price_diff: 'Preis weicht ab', qty_over_gr: 'Mehr als geliefert', unmatched: 'Nicht zugeordnet',
+};
+const ml = (k: string) => MATCH_LABEL[k] ?? k;
 
 export default function AdminSupplierInvoices() {
   const [rows, setRows] = useState<SI[]>([]);
@@ -95,7 +102,7 @@ export default function AdminSupplierInvoices() {
     const _id = id || sel?.id; if (!_id) return;
     const { data, error } = await (supabase.rpc('match_supplier_invoice' as any, { _invoice_id: _id })) as any;
     if (error) return toast.error(error.message);
-    toast.success(`Matching: ${data?.match_status || '—'} (Diff ${Number(data?.diff||0).toFixed(2)})`);
+    toast.success(`Abgleich: ${ml(data?.match_status || '—')} (Differenz zum Wareneingang ${Number(data?.diff||0).toFixed(2)} €)`);
     await load();
     if (sel) {
       const { data: r } = await (supabase.from('supplier_invoices' as any).select('*').eq('id', _id).single()) as any;
@@ -111,6 +118,10 @@ export default function AdminSupplierInvoices() {
     if (!ok) {
       reason = prompt('Grund für Ablehnung?') || null;
       if (!reason) return;
+    } else if (sel.match_status !== 'ok') {
+      reason = prompt(`Abgleich: ${ml(sel.match_status || 'nicht geprüft')}. Begründung für die Freigabe trotz Abweichung?`) || null;
+      if (!reason) return;
+      await (supabase.from('supplier_invoices' as any).update({ notes: [sel.notes, `Freigabe trotz Abweichung (${ml(sel.match_status || '—')}): ${reason}`].filter(Boolean).join('\n') }).eq('id', sel.id));
     }
     const { error } = await (supabase.rpc('approve_supplier_invoice' as any, { _invoice_id: sel.id, _approve: ok, _reason: reason })) as any;
     if (error) return toast.error(error.message);
@@ -191,7 +202,7 @@ export default function AdminSupplierInvoices() {
                 <th className="text-left p-3 font-medium">Lieferant</th>
                 <th className="text-left p-3 font-medium">PO</th>
                 <th className="text-left p-3 font-medium">Status</th>
-                <th className="text-left p-3 font-medium">Matching</th>
+                <th className="text-left p-3 font-medium">Abgleich</th>
                 <th className="text-right p-3 font-medium">Summe</th>
                 <th className="text-right p-3 font-medium">Diff</th>
               </tr>
@@ -206,7 +217,7 @@ export default function AdminSupplierInvoices() {
                   <td className="p-3">{suppliers.find(s => s.id===r.supplier_id)?.name || '—'}</td>
                   <td className="p-3 text-xs text-muted-foreground">{r.po_id ? '✓' : '—'}</td>
                   <td className="p-3"><Badge variant="outline" className={STATUS_COLOR[r.status]}>{STATUS[r.status]}</Badge></td>
-                  <td className="p-3">{r.match_status ? <Badge variant="outline" className={MATCH_COLOR[r.match_status] || ''}>{r.match_status}</Badge> : '—'}</td>
+                  <td className="p-3">{r.match_status ? <Badge variant="outline" className={MATCH_COLOR[r.match_status] || ''}>{ml(r.match_status)}</Badge> : '—'}</td>
                   <td className="p-3 text-right tabular-nums">{r.total_amount != null ? `${Number(r.total_amount).toLocaleString('de-DE', { minimumFractionDigits: 2 })} ${r.currency}` : '—'}</td>
                   <td className={`p-3 text-right tabular-nums ${Math.abs(Number(r.match_diff||0)) > 0.5 ? 'text-amber-400' : 'text-muted-foreground'}`}>{r.match_diff != null ? Number(r.match_diff).toFixed(2) : '—'}</td>
                 </tr>
@@ -226,7 +237,7 @@ export default function AdminSupplierInvoices() {
               <DialogTitle className="flex items-center gap-2">
                 <span className="font-mono">{sel?.invoice_no}</span>
                 {sel && <Badge variant="outline" className={STATUS_COLOR[sel.status]}>{STATUS[sel.status]}</Badge>}
-                {sel?.match_status && <Badge variant="outline" className={MATCH_COLOR[sel.match_status] || ''}>{sel.match_status}</Badge>}
+                {sel?.match_status && <Badge variant="outline" className={MATCH_COLOR[sel.match_status] || ''}>{ml(sel.match_status)}</Badge>}
               </DialogTitle>
             </DialogHeader>
             {sel && (
@@ -277,7 +288,7 @@ export default function AdminSupplierInvoices() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <Label className="text-xs">Positionen</Label>
-                    <Button size="sm" variant="outline" onClick={() => runMatch()} className="h-7 text-xs">Erneut matchen</Button>
+                    <Button size="sm" variant="outline" onClick={() => runMatch()} className="h-7 text-xs">Erneut abgleichen</Button>
                   </div>
                   <Card className="overflow-hidden">
                     <table className="w-full text-xs">
@@ -298,7 +309,7 @@ export default function AdminSupplierInvoices() {
                             <td className="p-2 text-right tabular-nums">{it.quantity} {it.unit || ''}</td>
                             <td className="p-2 text-right tabular-nums">{it.unit_price?.toFixed(2) ?? '—'}</td>
                             <td className="p-2 text-right tabular-nums">{it.line_total?.toFixed(2) ?? '—'}</td>
-                            <td className="p-2">{it.match_status ? <Badge variant="outline" className={MATCH_COLOR[it.match_status] || ''}>{it.match_status}</Badge> : '—'}</td>
+                            <td className="p-2">{it.match_status ? <Badge variant="outline" className={MATCH_COLOR[it.match_status] || ''}>{ml(it.match_status)}</Badge> : '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -317,7 +328,7 @@ export default function AdminSupplierInvoices() {
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setSel(null)}>Schließen</Button>
-              <Button onClick={save}>Speichern + Matchen</Button>
+              <Button onClick={save}>Speichern + abgleichen</Button>
               {sel && (sel.status === 'open' || sel.status === 'matched') && (
                 <>
                   <Button variant="destructive" onClick={() => approve(false)}><XCircle className="h-4 w-4 mr-1" /> Ablehnen</Button>
