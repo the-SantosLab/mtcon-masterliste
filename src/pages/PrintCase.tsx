@@ -28,6 +28,8 @@ interface CaseRow {
   department_id: string | null;
   assignee_id: string | null;
   created_by: string | null;
+  watchers: string[] | null;
+  watcher_departments: string[] | null;
   created_at: string | null;
   closure_summary: string | null;
   closure_outputs: any;
