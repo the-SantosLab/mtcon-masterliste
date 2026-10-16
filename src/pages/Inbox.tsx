@@ -13,6 +13,8 @@ import { Inbox as InboxIcon, RefreshCw, FileText, Loader2, CheckCircle2, XCircle
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { InboxPoLink } from '@/components/inbox/InboxPoLink';
+import { linkableToPo } from '@/lib/inboxPoMatch';
 
 interface DocType {
   id: string;
@@ -412,6 +414,10 @@ function InboxDocDialog({ doc, type, onClose, onReclassify, onChanged }: {
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">Kein Typ erkannt — Felder nicht verfügbar.</p>
+            )}
+
+            {!doc.linked_table && doc.status !== 'dismissed' && linkableToPo((type as any)?.code) && (
+              <InboxPoLink doc={doc} code={(type as any).code} extracted={edited} onLinked={() => { onChanged(); onClose(); }} />
             )}
 
             {doc.linked_table && doc.linked_id && (
