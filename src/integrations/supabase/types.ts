@@ -1040,6 +1040,39 @@ export type Database = {
         }
         Relationships: []
       }
+      calc_settings: {
+        Row: {
+          key: string
+          label: string
+          note: string | null
+          status: string
+          unit: string | null
+          updated_at: string
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          key: string
+          label: string
+          note?: string | null
+          status?: string
+          unit?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          key?: string
+          label?: string
+          note?: string | null
+          status?: string
+          unit?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       capacity_entries: {
         Row: {
           capacity_hours: number
@@ -8003,6 +8036,92 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "users_profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_calculations: {
+        Row: {
+          art_nr: string | null
+          calc_date: string
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_name: string | null
+          factor: number | null
+          id: string
+          issos_offer_no: string | null
+          lead_time_weeks: number | null
+          lz_base: number | null
+          lz_consumption: number | null
+          lz_quarter_avg: number | null
+          note: string | null
+          rows: Json
+          status: string
+          supplier_offer: string | null
+          sws_factor: number | null
+          updated_at: string
+          with_galvanik: boolean
+          with_lz: boolean
+          with_pruefung: boolean
+          with_sws: boolean
+        }
+        Insert: {
+          art_nr?: string | null
+          calc_date?: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string | null
+          factor?: number | null
+          id?: string
+          issos_offer_no?: string | null
+          lead_time_weeks?: number | null
+          lz_base?: number | null
+          lz_consumption?: number | null
+          lz_quarter_avg?: number | null
+          note?: string | null
+          rows?: Json
+          status?: string
+          supplier_offer?: string | null
+          sws_factor?: number | null
+          updated_at?: string
+          with_galvanik?: boolean
+          with_lz?: boolean
+          with_pruefung?: boolean
+          with_sws?: boolean
+        }
+        Update: {
+          art_nr?: string | null
+          calc_date?: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string | null
+          factor?: number | null
+          id?: string
+          issos_offer_no?: string | null
+          lead_time_weeks?: number | null
+          lz_base?: number | null
+          lz_consumption?: number | null
+          lz_quarter_avg?: number | null
+          note?: string | null
+          rows?: Json
+          status?: string
+          supplier_offer?: string | null
+          sws_factor?: number | null
+          updated_at?: string
+          with_galvanik?: boolean
+          with_lz?: boolean
+          with_pruefung?: boolean
+          with_sws?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_calculations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
