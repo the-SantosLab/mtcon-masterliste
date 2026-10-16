@@ -64,7 +64,7 @@ describe('Ansprechpartner-Seiten', () => {
     expect(filterForPage('assign', views, NOW).map(v => v.c.id)).toEqual(['k1']);
   });
 
-  it('lists long-silent contacts first on the inactive page', () => {
+  it('lists never-contacted and long-silent contacts first on the inactive page', () => {
     const views = buildContactViews(
       [contact({ id: 'alt' }), contact({ id: 'neu', last_name: 'Neu' }), contact({ id: 'nie', last_name: 'Nie' })],
       [
@@ -73,7 +73,7 @@ describe('Ansprechpartner-Seiten', () => {
       ],
       [], new Set(), new Set(),
     );
-    expect(filterForPage('inactive', views, NOW).map(v => v.c.id)).toEqual(['alt', 'neu', 'nie']);
+    expect(filterForPage('inactive', views, NOW).map(v => v.c.id)).toEqual(['nie', 'alt', 'neu']);
   });
 
   it('keeps unassigned contacts in their own group', () => {
