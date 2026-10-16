@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { INSPECTION_STATUS, inspectionStage, type InspectionStatus } from '@/lib/goodsInspection';
+import { ArticleImages } from '@/components/erp/ArticleImages';
 
 const db = supabase as any;
 type Row = {
@@ -103,7 +104,7 @@ export default function GoodsInspection() {
             <tbody>
               {byStage.map((r) => (
                 <tr key={r.id} className="border-t border-border align-top">
-                  <td className="px-3 font-mono">{r.art_nr}<div className="text-[11px] text-muted-foreground font-sans">{r.warehouses?.code} · {new Date(r.created_at).toLocaleDateString('de-DE')}</div></td>
+                  <td className="px-3 font-mono"><div className="mb-1"><ArticleImages artNr={r.art_nr} size="sm" /></div>{r.art_nr}<div className="text-[11px] text-muted-foreground font-sans">{r.warehouses?.code} · {new Date(r.created_at).toLocaleDateString('de-DE')}</div></td>
                   <td className="px-3 text-right tabular-nums">{fmt(r.qty)}
                     {r.over_qty > 0 && <div className="text-[11px] text-muted-foreground">Überlieferung {fmt(r.over_qty)} {r.over_decision === 'accepted' ? 'akzeptiert' : 'abgewiesen'}</div>}</td>
                   <td className="px-3">{r.lot_no ?? '—'}</td>

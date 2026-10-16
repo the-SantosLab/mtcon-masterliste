@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { calcRow, lzValue, openPoints, type CalcRow, type Setting } from '@/lib/priceCalc';
 import { toast } from 'sonner';
+import { ArticleImages } from '@/components/erp/ArticleImages';
 
 const num = (v: string) => (v.trim() === '' ? null : Number(v.replace(',', '.')));
 const fmt = (v: number | null, d = 2) => (v == null || isNaN(v) ? '–' : v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }));
@@ -97,6 +98,7 @@ export default function PriceCalculation() {
                   <Input disabled={locked} value={(f as any)[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></div>
               ))}
             </div>
+            {f.art_nr.trim() && <ArticleImages artNr={f.art_nr.trim()} />}
             <div className="flex flex-wrap gap-5">
               {([['with_galvanik', 'Galvanik'], ['with_pruefung', 'Prüfung'], ['with_lz', 'Legierungszuschlag'], ['with_sws', 'SWS-Gurte']] as const).map(([k, l]) => (
                 <label key={k} className="flex items-center gap-2 text-sm"><Switch disabled={locked} checked={(f as any)[k]} onCheckedChange={(v) => setF({ ...f, [k]: v })} />{l}</label>
