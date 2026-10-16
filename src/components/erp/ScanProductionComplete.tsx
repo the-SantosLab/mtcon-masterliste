@@ -48,7 +48,7 @@ export function ScanProductionComplete({ canBook }: { canBook: boolean }) {
 
   return (
     <>
-      <CameraScanner onScan={(raw) => load(parseScan(raw))} />
+      <CameraScanner onScan={(raw) => load(parseScan(raw))} placeholder="Auftrags- oder Artikelnummer" />
       {list.length > 0 && wo && (
         <div className="space-y-3 rounded-lg border border-border p-3">
           <div className="space-y-1"><Label className="text-xs">Werkstattauftrag</Label>
