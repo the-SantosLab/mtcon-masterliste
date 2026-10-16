@@ -23,6 +23,7 @@ import { SortableContext, useSortable, arrayMove, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { CopyOfferItemsDialog } from '@/components/crm/CopyOfferItemsDialog';
 import { calcItemFromCalc } from '@/lib/priceCalc';
+import { ArticleImages } from '@/components/erp/ArticleImages';
 
 interface Item { id: string; product_id?: string | null; art_nr?: string | null; description: string; quantity: number; unit_price: number; discount_pct: number; sort_order: number; _new?: boolean; }
 
@@ -337,7 +338,8 @@ export default function CrmOfferDetail() {
               <SelectContent>{filteredContacts.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <CaseLinkSelect value={offer.case_id ?? null} onChange={(v) => setOffer({ ...offer, case_id: v })} />
+          <div className="space-y-1"><CaseLinkSelect value={offer.case_id ?? null} onChange={(v) => setOffer({ ...offer, case_id: v })} />
+            {!offer.case_id && <p className="text-[10px] text-destructive">Pflicht: Vor dem Versenden mit einem Vorgang der Masterliste verknüpfen.</p>}</div>
           <div className="space-y-1.5 md:col-span-3">
             <Label className="text-[11px] text-muted-foreground">Lieferadresse</Label>
             <Textarea value={offer.delivery_address ?? ''} onChange={e => setOffer({ ...offer, delivery_address: e.target.value })} className="text-xs min-h-[60px]" />
@@ -381,6 +383,10 @@ export default function CrmOfferDetail() {
             </DndContext>
           </table>
         </div>
+        {[...new Set(items.map((i) => i.art_nr).filter(Boolean))].length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-4">{[...new Set(items.map((i) => i.art_nr).filter(Boolean))].map((a) => (
+            <div key={a!} className="space-y-1"><p className="font-mono text-[10px] text-muted-foreground">{a}</p><ArticleImages artNr={a} size="sm" /></div>))}</div>
+        )}
         <div className="flex justify-end mt-4">
           <div className="text-xs space-y-1 min-w-[220px]">
             <div className="flex justify-between"><span className="text-muted-foreground">Netto</span><span className="tabular-nums">{formatEUR(totals.net)}</span></div>

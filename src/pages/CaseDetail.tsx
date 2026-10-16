@@ -48,6 +48,7 @@ import { useNotificationLog } from '@/hooks/useNotificationLog';
 import { CaseConflictDialog } from '@/components/CaseConflictDialog';
 import { BugReportDialog } from '@/components/BugReportDialog';
 import { Bug, Printer } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface DeptOption { id: string; name: string; code: string | null; parent_id: string | null; }
 interface ProfileOption { id: string; display_name: string; short_code: string; department_id: string | null; }
@@ -694,6 +695,40 @@ export default function CaseDetail() {
 
 
 
+        {/* Widget-Leiste: Notizen, Dateien, E-Mails usw. ohne langes Scrollen */}
+        <Tabs defaultValue="notes" className="rounded-md border border-border bg-card print:hidden">
+          <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-2">
+            <TabsTrigger value="notes" className="text-xs">Notizen</TabsTrigger>
+            <TabsTrigger value="files" className="text-xs">Dateien</TabsTrigger>
+            <TabsTrigger value="emails" className="text-xs">E-Mails</TabsTrigger>
+            <TabsTrigger value="articles" className="text-xs">Artikel</TabsTrigger>
+            <TabsTrigger value="container" className="text-xs">3D-Container</TabsTrigger>
+            {c.note && c.note.includes('--- Ticket-Verlauf:') && <TabsTrigger value="ticket" className="text-xs">Ticket-Verlauf</TabsTrigger>}
+          </TabsList>
+          <div className="max-h-[420px] overflow-y-auto p-4">
+            <TabsContent value="notes" className="mt-0">
+              <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
+            </TabsContent>
+            <TabsContent value="files" className="mt-0">
+              <FileAttachments bucket="case-attachments" folder={`cases/${c.id}`} canUpload={!isViewer && !isTerminalStatus(c.status)} canDelete={!isViewer} />
+            </TabsContent>
+            <TabsContent value="emails" className="mt-0 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground shrink-0">E-Mail an diesen Vorgang:</span>
+                <code className="flex-1 text-xs bg-muted/40 border border-border rounded px-2 py-1 font-mono break-all">vorgang+{c.case_no}@inbox.kscommand.com</code>
+                <button type="button" onClick={() => { navigator.clipboard.writeText(`vorgang+${c.case_no}@inbox.kscommand.com`); toast.success('Adresse kopiert'); }}
+                  className="text-xs px-2 py-1 rounded border border-border hover:bg-muted text-foreground">Kopieren</button>
+              </div>
+              <CaseEmails caseId={c.id} />
+            </TabsContent>
+            <TabsContent value="articles" className="mt-0"><CaseArticles caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} /></TabsContent>
+            <TabsContent value="container" className="mt-0"><DocumentSection entityType="case" entityId={c.id} title="3D-Container" /></TabsContent>
+            {c.note && c.note.includes('--- Ticket-Verlauf:') && <TabsContent value="ticket" className="mt-0">
+              <pre className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed font-sans max-w-full">{c.note}</pre>
+            </TabsContent>}
+          </div>
+        </Tabs>
+
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4 min-w-0 [&>div:nth-of-type(even)]:!bg-foreground/[0.08]">
             {(() => {
@@ -1018,60 +1053,6 @@ export default function CaseDetail() {
 
             <CaseOutputPanel caseId={c.id} canEdit={!isViewer} isAdmin={isAdmin} userId={user?.id || ''} onChanged={refresh} />
 
-            {/* Anhänge */}
-            <div className="rounded-md border border-border bg-card p-5 space-y-5">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Anhänge</h3>
-
-              <div className="space-y-2">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Dateien</p>
-                <FileAttachments
-                  bucket="case-attachments"
-                  folder={`cases/${c.id}`}
-                  canUpload={!isViewer && !isTerminalStatus(c.status)}
-                  canDelete={!isViewer}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">E-Mails</p>
-                <CaseEmails caseId={c.id} />
-              </div>
-            </div>
-
-            <DocumentSection entityType="case" entityId={c.id} title="3D-Container" />
-
-            <CaseArticles caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} />
-
-            {/* Email-Adresse für diesen Vorgang */}
-            <div className="rounded-md border border-border bg-card p-5 space-y-2">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email an diesen Vorgang</h3>
-              <p className="text-[11px] text-muted-foreground">Emails an diese Adresse landen automatisch hier — inklusive Anhängen.</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs bg-muted/40 border border-border rounded px-2 py-1.5 font-mono break-all">
-                  vorgang+{c.case_no}@inbox.kscommand.com
-                </code>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`vorgang+${c.case_no}@inbox.kscommand.com`);
-                    toast.success('Adresse kopiert');
-                  }}
-                  className="text-xs px-2 py-1.5 rounded border border-border hover:bg-muted text-foreground"
-                >
-                  Kopieren
-                </button>
-              </div>
-            </div>
-
-            {/* Ticket-Verlauf */}
-            {c.note && c.note.includes('--- Ticket-Verlauf:') && (
-              <div className="rounded-md border border-border bg-card p-5 space-y-2 min-w-0 overflow-hidden">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Ticket-Verlauf</h3>
-                <pre className="text-xs text-foreground whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed font-sans max-w-full">{c.note}</pre>
-              </div>
-            )}
-
-            <CaseNotes caseId={c.id} canEdit={!isViewer && !isTerminalStatus(c.status)} userId={user?.id || ''} isAdmin={isAdmin} refreshKey={refreshKey} onRefresh={() => setRefreshKey(k => k + 1)} />
           </div>
 
           <div className="space-y-4">

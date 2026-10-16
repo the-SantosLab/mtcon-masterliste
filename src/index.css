@@ -2556,3 +2556,12 @@ html:not(.dark) .cockpit-shell .text-amber-300 { color: #b45309 !important; }
 }
 
 
+
+/* Kompakte Ansicht: niedrigere Zeilen in allen Tabellen, schmalere Seitenleisten-Symbole */
+html.density-compact main table td { padding-top: 0.25rem; padding-bottom: 0.25rem; line-height: 1.25; }
+html.density-compact main table th { padding-top: 0.3rem; padding-bottom: 0.3rem; height: auto; line-height: 1.2; }
+html.density-compact main table tbody tr { height: auto; }
+html.density-compact .fulfillment-page tbody td { padding-block: 6px; }
+aside[data-sidebar-density="compact"] nav button svg,
+aside[data-sidebar-density="compact"] nav a svg { width: 0.95rem; height: 0.95rem; }
+@media print { html.density-compact main table td { padding-top: 2px; padding-bottom: 2px; } }

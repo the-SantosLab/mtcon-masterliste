@@ -730,6 +730,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   const [deliveryNo, setDeliveryNo] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [overAsk, setOverAsk] = useState<string[] | null>(null);
 
   useEffect(() => {
     if (!po) return;
@@ -801,45 +802,35 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
     setLocResults(s => ({ ...s, [itemId]: (data ?? []) as any[] }));
   };
 
-  const save = async () => {
+  const save = async (overDecision?: 'accepted' | 'rejected') => {
     if (!po) return;
+    setOverAsk(null);
     if (!warehouseId) { toast.error('Lager wählen'); return; }
     const toBook = items
       .map(it => ({ it, qty: Number(qtys[it.id] || 0) }))
       .filter(x => x.qty > 0);
     if (toBook.length === 0) { toast.error('Keine Mengen erfasst'); return; }
-    for (const x of toBook) {
-      const open = Number(x.it.qty_ordered) - Number(x.it.qty_received);
-      if (x.qty > open) { toast.error(`Position ${x.it.position}: Menge übersteigt Offen (${open})`); return; }
+    const over = toBook.filter(x => x.qty > Number(x.it.qty_ordered) - Number(x.it.qty_received));
+    if (over.length && !overDecision) {
+      setOverAsk(over.map(x => `Pos. ${x.it.position} ${x.it.art_nr}: offen ${Number(x.it.qty_ordered) - Number(x.it.qty_received)}, erfasst ${x.qty}`));
+      return;
     }
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: gr, error: grErr } = await (supabase as any).from('goods_receipts').insert({
-      po_id: po.id,
-      warehouse_id: warehouseId,
-      delivery_note_no: deliveryNo.trim() || null,
-      notes: notes.trim() || null,
-      received_by: user?.id ?? null,
-    }).select('id, gr_no').single();
-    if (grErr || !gr) { setSaving(false); toast.error(grErr?.message || 'Fehler'); return; }
-
-    const rows = toBook.map(x => ({
-      gr_id: gr.id,
-      po_item_id: x.it.id,
-      qty_received: x.qty,
-      lot_no: (lots[x.it.id] || '').trim() || null,
-      lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
-      expiry_date: expiries[x.it.id] || null,
-      storage_location_id: locSel[x.it.id]?.id ?? null,
-    }));
-    const { error: itemErr } = await (supabase as any).from('goods_receipt_items').insert(rows);
+    const { data: grId, error } = await (supabase as any).rpc('book_goods_receipt', {
+      _po_id: po.id, _warehouse_id: warehouseId,
+      _delivery_note_no: deliveryNo.trim() || null, _notes: notes.trim() || null,
+      _items: toBook.map(x => ({
+        po_item_id: x.it.id, qty: x.qty,
+        lot_no: (lots[x.it.id] || '').trim() || null,
+        lot_no_ext: (lotsExt[x.it.id] || '').trim() || null,
+        expiry_date: expiries[x.it.id] || null,
+        planned_location_id: locSel[x.it.id]?.id ?? null,
+        over_decision: overDecision ?? null,
+      })),
+    });
     setSaving(false);
-    if (itemErr) {
-      // Rollback GR if items fail
-      await (supabase as any).from('goods_receipts').delete().eq('id', gr.id);
-      toast.error(itemErr.message); return;
-    }
-    toast.success(`Wareneingang ${gr.gr_no} gebucht`);
+    if (error || !grId) { toast.error(error?.message || 'Fehler'); return; }
+    toast.success('Auf i-Punkt gebucht, Prüfvorgang an QS/QM übergeben');
     onSaved(); onClose();
   };
 
@@ -888,7 +879,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                   <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Offen</th>
                   <th className="text-right px-2 py-1.5 w-24">Buchen</th>
-                  <th className="text-left px-2 py-1.5 w-44">Lagerplatz</th>
+                  <th className="text-left px-2 py-1.5 w-44">Einlagerziel</th>
                   <th className="text-left px-2 py-1.5 w-40">Charge</th>
                   <th className="text-left px-2 py-1.5 w-32">Ext. Charge</th>
                   <th className="text-left px-2 py-1.5 w-36">MHD</th>
@@ -905,7 +896,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                       <td className="px-2 py-1.5">{it.description || it.articles?.bezeich_1 || it.articles?.matchcode}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums font-medium">{open}</td>
                       <td className="px-2 py-1">
-                        <Input type="number" step="0.001" min="0" max={open}
+                        <Input type="number" step="0.001" min="0"
                           disabled={open <= 0}
                           value={qtys[it.id] ?? ''}
                           onChange={e => setQtys(q => ({ ...q, [it.id]: e.target.value }))}
@@ -987,10 +978,23 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
               </tbody>
             </table>
           </div>
+          <p className="text-[11px] text-muted-foreground">Die Ware wird auf den i-Punkt gebucht und als Prüfvorgang an QS/QM übergeben. Der Lagerplatz ist nur das Einlagerziel nach der Freigabe.</p>
+          {overAsk && (
+            <div className="rounded border border-border bg-muted/30 p-3 space-y-2">
+              <p className="text-sm font-medium">Überlieferung – akzeptieren oder abweisen?</p>
+              <ul className="text-xs text-muted-foreground">{overAsk.map(l => <li key={l}>{l}</li>)}</ul>
+              <p className="text-[11px] text-muted-foreground">Beim Abweisen wird nur die offene Menge gebucht.</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setOverAsk(null)}>Zurück</Button>
+                <Button size="sm" variant="outline" onClick={() => save('rejected')} disabled={saving}>Abweisen</Button>
+                <Button size="sm" onClick={() => save('accepted')} disabled={saving}>Akzeptieren</Button>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Abbrechen</Button>
-          <Button onClick={save} disabled={saving}>Wareneingang buchen</Button>
+          <Button onClick={() => save()} disabled={saving || !!overAsk}>Wareneingang buchen</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

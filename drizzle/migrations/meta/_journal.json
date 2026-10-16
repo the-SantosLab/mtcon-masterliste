@@ -414,6 +414,20 @@
       "when": 1792170851911,
       "tag": "0058_scan_receipt_ipunkt_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1792170987172,
+      "tag": "0059_goods_receipt_via_ipunkt",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1792171094666,
+      "tag": "0060_article_images_offer_case",
+      "breakpoints": true
     }
   ]
 }

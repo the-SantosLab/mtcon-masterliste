@@ -19,7 +19,7 @@
 .fulfillment-page tbody td { padding-block: 14px; }
 .fulfillment-page td.font-mono,
 .fulfillment-page td.tabular-nums { white-space: nowrap; }
-.table-compact .fulfillment-page tbody td { padding-block: 10px; }
+.table-compact .fulfillment-page tbody td { padding-block: 6px; }
 .fulfillment-page tbody tr { transition: background-color 150ms ease; }
 .fulfillment-page tbody tr:hover { background: hsl(var(--muted) / .4); }
 .fulfillment-page tbody td:first-child { color: hsl(var(--foreground)); }

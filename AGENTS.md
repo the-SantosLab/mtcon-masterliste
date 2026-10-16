@@ -1,24 +1,22 @@
 # Project Architecture Rules
 
-- All standard tab bars use the shared `TabsList` horizontal overflow behavior so long navigation remains reachable without wrapping.
-- Fulfillment, procurement and finance menu pages use group-specific presentation-only headers, navigation and a shared metric strip while retaining existing data and dialogs, so visual changes cannot duplicate or alter booking workflows; the shared order page selects its group header from the current route.
-- Every sales subnavigation group (acquisition, leads, companies, contacts, communication) uses dedicated workflow routes backed by shared CRM data and the existing creation dialogs, so menu points never land on a generic list; canonical list pages stay reachable for full-list work and no create workflow is duplicated.
-- Acquisition suggestions share a deterministic rule engine; MTIQ may refine only visible candidate IDs, and saving always requires user confirmation into existing CRM activities to prevent autonomous outreach.
-- The global search renders in a document-body portal above shell navigation so sidebar stacking contexts cannot obscure it.
-- Sidebar presentation state (scroll position and expanded navigation) is retained per user across page remounts by the shared navigation hook, preventing route changes from resetting the menu.
-- Subcontracting uses one shared order/receipt view for standalone orders and linked workshop steps; stock changes run through role-checked atomic RPCs and the existing movement triggers to prevent double posting.
-- Linked workshop subcontract steps transfer unconsumed material to a supplier warehouse and back to the workshop warehouse; a database trigger blocks workshop consumption, completion and cancellation until steps are returned or cancelled to prevent lost or duplicate stock.
-- Subcontract returns are booked only in Purchasing's goods receipt tab with an idempotency key; separate receipt records preserve existing required purchase-order references without changing normal purchasing behavior.
-- The drawing library keeps one drawings record per manually numbered drawing; revisions are drawing_versions shown as letters, extra files, parameters, categories and sets live in separate drawing_* tables so revision history and set pinning stay independent.
-- Stocktakes (stock_counts) post differences only via the admin-only post_stock_count RPC as adjustment stock_movements computed against current stock, so the existing movement trigger stays the single path that changes inventory.
-- Staff writes on inventory_stock quantities and supplier invoice approval/match fields are blocked by triggers that only let definer RPCs, server roles and admins through, so bookings always go through movements and the approval RPC; scheduled maintenance functions are executable by service_role only.
-- Order dossier (/orders/:id/akte) aggregates linked ERP records; cross-department handoffs are opened/closed by status triggers, authenticated manual updates may only complete open handoffs with server-stamped attribution, and recipients must be active staff/admin department members, so notifications cannot be duplicated or completion history forged. Open handoffs take precedence in the displayed stage.
-- Workshop table writes and creation/material-issue/completion RPCs require internal staff/admin roles; read access remains unchanged, preventing viewer bookings without changing staff workflows.
-- The shared day-list logic (myDay) is not rendered in the dashboard; it stays unused but tested so a future surface can reuse the existing RLS-protected reads and CRM/ERP access gates.
-- Partial and final invoices are created only via role-checked RPCs (invoice_type partial/final, doc_kind stays invoice); a trigger blocks standard order invoices once partials exist and partials do not close the billing handoff, so amounts are never billed twice.
-- Workshop scan completions go through scan_production_complete, which wraps production_order_complete with a per-request idempotency key and an expected-done check, so retries and parallel phones cannot report twice.
-- Bank reconciliation payments carry reference BANK|<tx key>; a partial unique index on invoice_payments.reference enforces that each bank line is booked once.
-- Offers created from a company without a deal auto-create a deal first, because offers.deal_id is required and all offer views key off the deal.
-
-- Price calculations take factors only from admin-maintained calc_settings via a trigger, so staff cannot override factors; unclear values stay flagged and block finalizing; only finalized calculations hand a per-piece price to an offer, added as unsaved offer item so the offer page keeps computing totals.
-- Scan goods receipts book onto a per-warehouse I-PUNKT location and open a goods_inspections record plus a Lager case; release/defect, put-away and supplier returns run only via role-checked RPCs, and over-deliveries need an explicit accept/reject decision, so unchecked stock never lands on normal locations.
+- Tab bars use the shared `TabsList` horizontal overflow so long navigation never wraps.
+- Fulfillment, procurement and finance pages use presentation-only group headers, navigation and a shared metric strip over existing data/dialogs, so visuals cannot alter bookings; the shared order page picks its header from the route.
+- Sales subnavigation groups use dedicated workflow routes on shared CRM data and existing create dialogs, so menu points never land on a generic list and no create flow is duplicated.
+- Acquisition suggestions use a deterministic rule engine; MTIQ may only refine visible candidates and saving needs user confirmation, preventing autonomous outreach. Customer-request MTIQ suggestions likewise only create reviewable drafts via mtiq-text-intake.
+- Global search renders in a body portal so sidebar stacking contexts cannot hide it.
+- Sidebar scroll/expanded state is kept per user by the shared navigation hook so route changes do not reset it.
+- Subcontracting shares one order/receipt view for standalone orders and workshop steps; stock moves via role-checked atomic RPCs and movement triggers. Linked steps move material to the supplier warehouse and back, and a trigger blocks workshop consumption/completion/cancellation until steps are returned or cancelled. Returns are booked in Purchasing's goods receipt tab with an idempotency key using separate receipt records.
+- Drawing library: one drawings record per drawing number; revisions (letters), files, parameters, categories and sets live in separate drawing_* tables so history and set pinning stay independent.
+- Stocktakes post differences only via admin-only post_stock_count as adjustment movements, keeping the movement trigger the single inventory path.
+- Triggers block staff writes on inventory_stock quantities and supplier-invoice approval/match fields (only definer RPCs, server roles, admins), so bookings go through movements and the approval RPC; scheduled maintenance functions are service_role only.
+- Order dossier aggregates linked ERP records; handoffs open/close via status triggers, manual updates may only complete open handoffs with server-stamped attribution, recipients are active staff/admin department members; open handoffs win in the displayed stage.
+- Workshop writes and RPCs require internal staff/admin roles; reads unchanged.
+- myDay logic is not rendered in the dashboard but stays tested for reuse.
+- Partial/final invoices only via role-checked RPCs; a trigger blocks standard order invoices once partials exist, so nothing is billed twice.
+- Scan completions go through scan_production_complete with a per-request idempotency key and expected-done check, so retries cannot report twice.
+- Bank payments carry reference BANK|<tx key> with a partial unique index, so each bank line is booked once.
+- Offers from a company without a deal auto-create a deal (offers.deal_id required); offers may leave draft only with a linked case (offer_requires_case trigger).
+- Price calculations take factors only from admin calc_settings via trigger; unclear values block finalizing; only finalized calculations hand a per-piece price to an offer as an unsaved item.
+- Goods receipts (scan and Purchasing share one RPC) book onto a per-warehouse I-PUNKT location and open goods_inspections plus a QS/QM case; release/defect, put-away and returns run via role-checked RPCs, over-deliveries need accept/reject, and staff cannot insert receipt items elsewhere, so unchecked stock never reaches normal locations.
+- Article images (drawing, real/rendered) live in the private article-images bucket, paths on articles, written only via set_article_images and shown by one shared ArticleImages component.

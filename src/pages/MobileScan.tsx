@@ -12,6 +12,7 @@ import { parseScan, openPoLines, issueAllowed } from '@/lib/scan';
 import { toast } from 'sonner';
 import { ScanProductionComplete } from '@/components/erp/ScanProductionComplete';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { ArticleImages } from '@/components/erp/ArticleImages';
 
 type Mode = 'receipt' | 'issue' | 'count' | 'done';
 const db = supabase as any;
@@ -94,7 +95,7 @@ export default function MobileScan() {
     }
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(mode === 'receipt' ? 'Auf i-Punkt gebucht, Prüfvorgang an Lager übergeben' : mode === 'issue' ? 'Entnahme gebucht' : 'Zählmenge gespeichert');
+    toast.success(mode === 'receipt' ? 'Auf i-Punkt gebucht, Prüfvorgang an QS/QM übergeben' : mode === 'issue' ? 'Entnahme gebucht' : 'Zählmenge gespeichert');
     reset();
   };
 
@@ -122,6 +123,7 @@ export default function MobileScan() {
         <CameraScanner onScan={onScan} />
         {art && (
           <div className="space-y-3 rounded-lg border border-border p-3">
+            <ArticleImages artNr={art.art_nr} size="sm" />
             <div><p className="font-mono text-sm">{art.art_nr}</p><p className="text-xs text-muted-foreground">{art.bezeich_1}</p>
               <p className="text-xs mt-1">Bestand: <span className="tabular-nums">{onHand} {art.me}</span>{countItem && <> · Soll laut Inventur: {countItem.expected_qty}</>}</p></div>
             {mode === 'receipt' && lines.length > 0 && (

@@ -23,6 +23,7 @@ import {
   type Row,
 } from '@/lib/article-import';
 import { StockLocationsTable } from '@/components/articles/StockLocationsTable';
+import { ArticleImages } from '@/components/erp/ArticleImages';
 
 type Pending = {
   file: File;
@@ -529,6 +530,7 @@ function ArticleDetailDialog({ artNr, onClose }: { artNr: string | null; onClose
               <TabsTrigger value="bom" className="text-xs">Stückliste ({bom.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="stamm" className="pt-3">
+              <div className="mb-3"><ArticleImages artNr={artNr} editable /></div>
               <DetailGrid data={article} table="articles" pkCol="art_nr" pkVal={artNr!} onSaved={(d) => setArticle(d)} />
             </TabsContent>
             <TabsContent value="stock" className="pt-3">

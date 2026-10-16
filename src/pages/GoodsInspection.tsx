@@ -14,12 +14,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { INSPECTION_STATUS, inspectionStage, type InspectionStatus } from '@/lib/goodsInspection';
+import { ArticleImages } from '@/components/erp/ArticleImages';
 
 const db = supabase as any;
 type Row = {
   id: string; art_nr: string; qty: number; lot_no: string | null; status: InspectionStatus; note: string | null;
   over_qty: number; over_decision: string | null; case_id: string | null; warehouse_id: string; created_at: string;
-  stored_location_id: string | null; warehouses?: { code: string } | null; cases?: { case_no: string } | null;
+  stored_location_id: string | null; planned_location_id: string | null; warehouses?: { code: string } | null; cases?: { case_no: string } | null;
   goods_receipts?: { gr_no: string | null; purchase_orders?: { po_no: string | null } | null } | null;
 };
 type Loc = { id: string; code: string; lager: string; is_blocked: boolean };
@@ -52,7 +53,7 @@ export default function GoodsInspection() {
   const count = (s: string) => rows.filter((r) => inspectionStage(r.status) === s).length;
 
   const open = async (row: Row, kind: Action['kind']) => {
-    setAct({ row, kind }); setNote(''); setLoc('');
+    setAct({ row, kind }); setNote(''); setLoc(kind === 'store' && row.status === 'released' ? row.planned_location_id ?? '' : '');
     if (kind === 'store') {
       const { data } = await db.from('storage_locations').select('id, code, lager, is_blocked, lagerpl')
         .eq('lager', row.warehouses?.code ?? '').neq('lagerpl', 'I-PUNKT').order('code').limit(1000);
@@ -79,7 +80,7 @@ export default function GoodsInspection() {
   return (
     <AppLayout>
       <div className="procurement-page fulfillment-page">
-        <ProcurementHeader title="Wareneingangsprüfung" subtitle="i-Punkt · Prüfung durch Lager · Einlagern · Rücksendung" />
+        <ProcurementHeader title="Wareneingangsprüfung" subtitle="i-Punkt · Prüfung durch QS/QM · Einlagern · Rücksendung" />
         <FulfillmentMetrics loading={loading} metrics={[
           { label: 'Am i-Punkt zu prüfen', value: count('check') },
           { label: 'Freigegeben, einzulagern', value: count('store') },
@@ -103,7 +104,7 @@ export default function GoodsInspection() {
             <tbody>
               {byStage.map((r) => (
                 <tr key={r.id} className="border-t border-border align-top">
-                  <td className="px-3 font-mono">{r.art_nr}<div className="text-[11px] text-muted-foreground font-sans">{r.warehouses?.code} · {new Date(r.created_at).toLocaleDateString('de-DE')}</div></td>
+                  <td className="px-3 font-mono"><div className="mb-1"><ArticleImages artNr={r.art_nr} size="sm" /></div>{r.art_nr}<div className="text-[11px] text-muted-foreground font-sans">{r.warehouses?.code} · {new Date(r.created_at).toLocaleDateString('de-DE')}</div></td>
                   <td className="px-3 text-right tabular-nums">{fmt(r.qty)}
                     {r.over_qty > 0 && <div className="text-[11px] text-muted-foreground">Überlieferung {fmt(r.over_qty)} {r.over_decision === 'accepted' ? 'akzeptiert' : 'abgewiesen'}</div>}</td>
                   <td className="px-3">{r.lot_no ?? '—'}</td>
