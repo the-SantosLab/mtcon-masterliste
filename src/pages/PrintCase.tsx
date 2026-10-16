@@ -322,7 +322,7 @@ export default function PrintCase() {
               <div className="task-meta text-right">
 
                 {chili(t.urgency)}
-                {t.status && <div>{t.status}</div>}
+                {t.status && <div>{({ done: 'Erledigt', open: 'Offen', todo: 'Offen', in_progress: 'In Arbeit', blocked: 'Blockiert', waiting: 'Wartet', cancelled: 'Storniert' } as Record<string, string>)[t.status] || t.status}</div>}
               </div>
             </div>
           ))}
