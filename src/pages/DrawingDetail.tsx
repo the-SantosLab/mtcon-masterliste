@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Upload, Download, Trash2, Plus, Save, FileText } from "lucide-react";
+import { ArrowLeft, Pencil, Upload, Download, Trash2, Plus, Save, FileText, Maximize2, ZoomIn, ZoomOut, Factory, Tag, Package, Euro, StickyNote, Layers, SlidersHorizontal, Paperclip, History } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CategorySelects, type Category } from "./AdminDrawings";
 import { isOutdated, isPreviewable, revLabel } from "@/lib/drawings";
 import "@/components/erp/fulfillment.css";
@@ -34,6 +35,8 @@ export default function DrawingDetail() {
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState<any>({});
   const [artSearch, setArtSearch] = useState('');
+  const [zoom, setZoom] = useState(1);
+  const [full, setFull] = useState(false);
 
   const load = async () => {
     const [a, c, v, f, p, s] = await Promise.all([
@@ -48,6 +51,7 @@ export default function DrawingDetail() {
     setRev(r => r ?? (v.data?.[0]?.version ?? null));
   };
   useEffect(() => { setRev(null); void load(); }, [id]);
+  useEffect(() => { setZoom(1); }, [rev]);
 
   useEffect(() => {
     if (!artSearch.trim()) { setArticles([]); return; }
@@ -115,7 +119,12 @@ export default function DrawingDetail() {
 
   if (!d) return <AppLayout><div className="fulfillment-page"><KnowledgeNav /><p className="text-sm text-muted-foreground py-10 text-center">Lade…</p></div></AppLayout>;
 
-  const field = (label: string, value: React.ReactNode) => <div className="grid grid-cols-[160px_1fr] gap-3 py-2 border-b border-border text-sm"><span className="text-muted-foreground">{label}</span><span className="text-foreground break-words">{value || '—'}</span></div>;
+  const field = (label: string, value: React.ReactNode, Icon: any, wide = false) => <div className={`rounded-lg border border-border bg-card/60 p-3 ${wide ? 'sm:col-span-2' : ''}`}><div className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><Icon className="h-3.5 w-3.5" />{label}</div><div className={`mt-1 text-sm break-words ${value ? 'text-foreground' : 'text-muted-foreground'}`}>{value || '—'}</div></div>;
+  const previewEl = (big: boolean) => preview ? (preview.mime?.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(preview.name)
+    ? <div className="h-full w-full overflow-auto"><img src={preview.url} alt={`Zeichnung ${d.drawing_no}`} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }} className={`w-full object-contain transition-transform ${big ? 'max-h-[85vh]' : 'max-h-[560px]'}`} /></div>
+    : <iframe src={preview.url} title={`Zeichnung ${d.drawing_no}`} className={`w-full rounded ${big ? 'h-[85vh]' : 'h-[560px]'}`} />)
+    : <div className="text-center text-xs text-muted-foreground p-8"><FileText className="h-10 w-10 mx-auto mb-3 opacity-60" />{current ? 'Für dieses Dateiformat gibt es keine Vorschau.' : 'Lade unter „Revisionshistorie“ die erste Zeichnungsdatei hoch (PDF oder Bild).'}</div>;
+  const missing = [!d.category_id && 'Kategorie', !versions.length && 'Zeichnungsdatei', !d.manufacturer && 'Hersteller'].filter(Boolean) as string[];
   const inp = (k: string, label: string, type = 'text') => <div><Label className="text-xs">{label}</Label><Input type={type} value={form[k] ?? ''} onChange={e => setForm({ ...form, [k]: e.target.value })} /></div>;
 
   return <AppLayout>
@@ -124,24 +133,30 @@ export default function DrawingDetail() {
       <Button asChild variant="ghost" size="sm" className="-ml-2"><Link to="/zeichnungen"><ArrowLeft className="h-4 w-4 mr-1" />Alle Zeichnungen</Link></Button>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         <section className="space-y-4">
-          <div>
-            <h1 className="text-3xl font-medium text-foreground">{d.title || d.part_name || 'Ohne Name'}</h1>
-            <p className="text-xl font-mono text-primary mt-1">{d.drawing_no}</p>
-          </div>
-          {!edit ? <>
-            <Button size="sm" variant="outline" onClick={() => setEdit(true)}><Pencil className="h-4 w-4 mr-1" />Bearbeiten</Button>
-            <div>
-              <div className="grid grid-cols-[160px_1fr] gap-3 py-2 border-b border-border text-sm items-center"><span className="text-muted-foreground">Revision</span>
-                {versions.length ? <Select value={String(rev ?? '')} onValueChange={v => setRev(Number(v))}><SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger><SelectContent>{versions.map(v => <SelectItem key={v.id} value={String(v.version)}>Rev. {revLabel(v.version)}</SelectItem>)}</SelectContent></Select> : <span>— (noch keine Datei)</span>}</div>
-              {field('Kategorie', catName(d.category_id))}
-              {field('Unterkategorie', catName(d.subcategory_id))}
-              {field('Hersteller', d.manufacturer)}
-              {field('Preis', d.price != null ? `${Number(d.price).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €${d.price_note ? ` · ${d.price_note}` : ''}` : d.price_note)}
-              {field('Teilename', d.part_name)}
-              {field('Artikel', d.article_art_nr && <Link to={`/admin/articles?q=${encodeURIComponent(d.article_art_nr)}`} className="font-mono hover:text-primary">{d.article_art_nr}</Link>)}
-              {field('Notiz', d.note && <span className="whitespace-pre-wrap">{d.note}</span>)}
+          <div className="rounded-xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="rounded-md bg-primary/15 px-2 py-0.5 font-mono text-sm text-primary">{d.drawing_no}</span>
+              {d.category_id && <Badge variant="outline">{catName(d.category_id)}</Badge>}
+              {d.subcategory_id && <Badge variant="outline" className="text-muted-foreground">{catName(d.subcategory_id)}</Badge>}
             </div>
-          </> : <div className="space-y-3 border border-border rounded-md p-4">
+            <h1 className="text-3xl font-medium text-foreground leading-tight">{d.title || d.part_name || 'Ohne Name'}</h1>
+            {d.part_name && d.title && <p className="text-sm text-muted-foreground mt-1">{d.part_name}</p>}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {versions.length ? <Select value={String(rev ?? '')} onValueChange={v => setRev(Number(v))}><SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger><SelectContent>{versions.map(v => <SelectItem key={v.id} value={String(v.version)}>Rev. {revLabel(v.version)}{v.version === d.current_version ? ' · aktuell' : ''}</SelectItem>)}</SelectContent></Select> : <Badge variant="outline" className="text-status-overdue">Noch keine Datei</Badge>}
+              {!edit && <Button size="sm" variant="outline" onClick={() => setEdit(true)}><Pencil className="h-4 w-4 mr-1" />Bearbeiten</Button>}
+            </div>
+            <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+              {[['Revisionen', versions.length], ['Parameter', params.length], ['Dateien', files.length], ['Sets', sets.length]].map(([l, v]) => <div key={l as string} className="rounded-lg bg-background/60 py-2"><div className="text-lg font-medium tabular-nums">{v}</div><div className="text-[10px] text-muted-foreground">{l}</div></div>)}
+            </div>
+            {missing.length > 0 && <p className="mt-3 text-xs text-status-working">Noch offen: {missing.join(', ')}</p>}
+          </div>
+          {!edit ? <div className="grid gap-2 sm:grid-cols-2">
+              {field('Hersteller', d.manufacturer, Factory)}
+              {field('Preis', d.price != null ? `${Number(d.price).toLocaleString('de-DE', { minimumFractionDigits: 2 })} €${d.price_note ? ` · ${d.price_note}` : ''}` : d.price_note, Euro)}
+              {field('Teilename', d.part_name, Tag)}
+              {field('Artikel', d.article_art_nr && <Link to={`/admin/articles?q=${encodeURIComponent(d.article_art_nr)}`} className="font-mono hover:text-primary">{d.article_art_nr}</Link>, Package)}
+              {field('Notiz', d.note && <span className="whitespace-pre-wrap">{d.note}</span>, StickyNote, true)}
+          </div> : <div className="space-y-3 border border-border rounded-md p-4">
             <div className="grid grid-cols-2 gap-3">{inp('drawing_no', 'Nummer')}{inp('title', 'Name')}</div>
             <CategorySelects cats={cats} category={form.category_id ?? null} sub={form.subcategory_id ?? null} onChange={(c, s) => setForm({ ...form, category_id: c, subcategory_id: s })} />
             <div className="grid grid-cols-2 gap-3">{inp('manufacturer', 'Hersteller')}{inp('part_name', 'Teilename')}{inp('price', 'Preis (€)', 'number')}{inp('price_note', 'Preis-Hinweis, z. B. netto / Währung')}</div>
@@ -154,26 +169,26 @@ export default function DrawingDetail() {
           </div>}
         </section>
 
-        <section className="border border-border rounded-md bg-muted/20 p-3 min-h-[360px] flex flex-col">
-          <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
-            <span>{current ? `${current.file_name} · Rev. ${revLabel(current.version)}` : 'Keine Zeichnungsdatei'}</span>
-            {current && <Button size="sm" variant="ghost" onClick={() => signed(current.storage_path)}><Download className="h-3.5 w-3.5 mr-1" />Öffnen</Button>}
+        <section className="xl:sticky xl:top-4 self-start rounded-xl border border-border bg-card shadow-sm p-3 min-h-[360px] flex flex-col">
+          <div className="flex items-center justify-between gap-2 mb-2 text-xs text-muted-foreground">
+            <span className="truncate">{current ? <><span className="text-foreground">{current.file_name}</span> · Rev. {revLabel(current.version)}{current.size_bytes ? ` · ${Math.round(current.size_bytes / 1024)} KB` : ''}</> : 'Keine Zeichnungsdatei'}</span>
+            {current && <div className="flex shrink-0">
+              {preview && !/pdf/.test(preview.mime ?? '') && <><Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Verkleinern" onClick={() => setZoom(z => Math.max(1, z - 0.5))}><ZoomOut className="h-3.5 w-3.5" /></Button><Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Vergrößern" onClick={() => setZoom(z => Math.min(4, z + 0.5))}><ZoomIn className="h-3.5 w-3.5" /></Button></>}
+              {preview && <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Vollbild" onClick={() => setFull(true)}><Maximize2 className="h-3.5 w-3.5" /></Button>}
+              <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Herunterladen" onClick={() => signed(current.storage_path)}><Download className="h-3.5 w-3.5" /></Button>
+            </div>}
           </div>
-          <div className="flex-1 flex items-center justify-center bg-background rounded">
-            {preview ? (preview.mime?.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(preview.name)
-              ? <img src={preview.url} alt={`Zeichnung ${d.drawing_no}`} className="max-h-[560px] w-full object-contain" />
-              : <iframe src={preview.url} title={`Zeichnung ${d.drawing_no}`} className="w-full h-[560px] rounded" />)
-            : <div className="text-center text-xs text-muted-foreground p-8"><FileText className="h-8 w-8 mx-auto mb-2" />{current ? 'Für dieses Dateiformat gibt es keine Vorschau.' : 'Lade unter „Revisionshistorie“ die erste Zeichnungsdatei hoch (PDF oder Bild).'}</div>}
-          </div>
+          <div className="flex-1 flex items-center justify-center rounded-lg bg-[radial-gradient(hsl(var(--border))_1px,transparent_1px)] [background-size:16px_16px] bg-background overflow-hidden">{previewEl(false)}</div>
         </section>
       </div>
 
-      <Tabs defaultValue="sets">
+      <Dialog open={full} onOpenChange={setFull}><DialogContent className="max-w-[95vw] w-[95vw] p-3"><DialogTitle className="text-sm font-mono">{d.drawing_no} · Rev. {revLabel(current?.version)}</DialogTitle>{previewEl(true)}</DialogContent></Dialog>
+      <Tabs defaultValue="params">
         <TabsList>
-          <TabsTrigger value="sets">Zugehörige Sets</TabsTrigger>
-          <TabsTrigger value="params">Parameter</TabsTrigger>
-          <TabsTrigger value="files">Dateien</TabsTrigger>
-          <TabsTrigger value="history">Revisionshistorie</TabsTrigger>
+          <TabsTrigger value="params"><SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />Parameter <span className="ml-1.5 text-muted-foreground tabular-nums">{params.length}</span></TabsTrigger>
+          <TabsTrigger value="files"><Paperclip className="h-3.5 w-3.5 mr-1.5" />Dateien <span className="ml-1.5 text-muted-foreground tabular-nums">{files.length}</span></TabsTrigger>
+          <TabsTrigger value="history"><History className="h-3.5 w-3.5 mr-1.5" />Revisionshistorie <span className="ml-1.5 text-muted-foreground tabular-nums">{versions.length}</span></TabsTrigger>
+          <TabsTrigger value="sets"><Layers className="h-3.5 w-3.5 mr-1.5" />Zugehörige Sets <span className="ml-1.5 text-muted-foreground tabular-nums">{sets.length}</span></TabsTrigger>
         </TabsList>
 
         <TabsContent value="sets" className="space-y-3">
