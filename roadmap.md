@@ -30,9 +30,10 @@
 
 ## Ausbau „alles davon“ (Reihenfolge: Empfehlung)
 - [x] Kundenblick im CRM: offene Aufträge, Lieferstatus, Forderungen, Zahlungsverhalten, Hinweise (90 Tage / überfällig)
-- [ ] Bestellvorschläge aus Mindestbestand, offenen Aufträgen und Lieferzeit mit Freigabe
+- [x] Bestellvorschläge: bereits vorhanden unter Disposition (Mindestbestand, offener Bedarf, Lieferzeit, Bestellung per Klick)
 - [ ] Angebot aus Vorlage/früherem Auftrag, automatische Preise mit Kundenrabatt, Posteingang → Einkauf
 - [ ] Werkstattkapazität und Nachkalkulation
 - [ ] Mobil: Barcode/QR-Scan mit Kamera für Wareneingang, Entnahme, Inventur; Fertigmeldung
-- [ ] Geschäftsführungs-Kennzahlen (Wochenwerte)
-- [ ] Teilrechnungen und Bankabgleich per Kontoauszug-Upload (CSV/CAMT)
+- [x] Geschäftsführungs-Kennzahlen (/kennzahlen): Umsatz, Auftragseingang, Liefertreue, Forderungen; drei Regeltests
+- [x] Bankabgleich per Kontoauszug-Upload (CSV/CAMT) mit Zuordnung und Bestätigung; drei Regeltests
+- [ ] Teilrechnungen
