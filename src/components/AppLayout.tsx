@@ -172,15 +172,15 @@ const processNavGroups: ProcessNavGroup[] = [
       { href: '/crm/firmen/dokumente', label: 'Dokumente', icon: FileText },
       { href: '/crm/firmen/historie', label: 'Firmenhistorie', icon: Activity },
     ] },
-    { href: '/crm/contacts', label: 'Ansprechpartner', icon: Users, access: 'crm', children: [
+    { href: '/crm/ansprechpartner', label: 'Ansprechpartner', icon: Users, access: 'crm', children: [
       { href: '/crm/contacts?action=new', label: 'Kontakt anlegen', icon: Plus },
-      { href: '/crm/contacts?focus=owner', label: 'Intern zuweisen', icon: Users },
-      { href: '/crm/contacts', label: 'Kontaktdaten pflegen', icon: Pencil },
-      { href: '/crm/contacts?focus=responsibility', label: 'Verantwortlichkeiten', icon: Briefcase },
-      { href: '/crm/contacts?focus=email', label: 'E-Mail-Adressen', icon: Mail },
-      { href: '/crm/contacts?focus=phone', label: 'Telefonverzeichnis', icon: Phone },
-      { href: '/crm/activities', label: 'Kontaktverlauf', icon: Activity },
-      { href: '/crm/contacts?status=inactive', label: 'Inaktive Kontakte', icon: EyeOff },
+      { href: '/crm/ansprechpartner/zuweisen', label: 'Intern zuweisen', icon: Users },
+      { href: '/crm/ansprechpartner/pflegen', label: 'Kontaktdaten pflegen', icon: Pencil },
+      { href: '/crm/ansprechpartner/verantwortlichkeiten', label: 'Verantwortlichkeiten', icon: Briefcase },
+      { href: '/crm/ansprechpartner/email', label: 'E-Mail-Adressen', icon: Mail },
+      { href: '/crm/ansprechpartner/telefon', label: 'Telefonverzeichnis', icon: Phone },
+      { href: '/crm/ansprechpartner/historie', label: 'Kontaktverlauf', icon: Activity },
+      { href: '/crm/ansprechpartner/inaktiv', label: 'Inaktive Kontakte', icon: EyeOff },
     ] },
     { href: '/crm/activities', label: 'Kommunikation & Aufgaben', icon: Activity, access: 'crm', children: [
       { href: '/crm/activities?action=new&type=task', label: 'Aufgabe anlegen', icon: ClipboardList },
