@@ -22,3 +22,6 @@
 
 - Price calculations take factors only from admin-maintained calc_settings via a trigger, so staff cannot override factors; unclear values stay flagged and block finalizing; only finalized calculations hand a per-piece price to an offer, added as unsaved offer item so the offer page keeps computing totals.
 - Scan goods receipts book onto a per-warehouse I-PUNKT location and open goods_inspections records plus a QS/QM case (Purchasing dialog and scan share one RPC; staff cannot insert receipt items elsewhere); release/defect, put-away and supplier returns run only via role-checked RPCs, and over-deliveries need an explicit accept/reject decision, so unchecked stock never lands on normal locations.
+- Article images (drawing + real/rendered) live in the private article-images bucket with paths on articles, written only via the role-checked set_article_images RPC, so every module reuses one shared ArticleImages viewer.
+- Offers may leave draft status only with a linked case (offer_requires_case trigger), so every sent offer traces back to the master list.
+- Customer-request MTIQ suggestions go through mtiq-text-intake as reviewable drafts only, never creating cases directly.
