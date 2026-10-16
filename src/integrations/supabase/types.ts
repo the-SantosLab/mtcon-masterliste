@@ -8056,6 +8056,7 @@ export type Database = {
           lz_consumption: number | null
           lz_quarter_avg: number | null
           note: string | null
+          offer_id: string | null
           rows: Json
           status: string
           supplier_offer: string | null
@@ -8081,6 +8082,7 @@ export type Database = {
           lz_consumption?: number | null
           lz_quarter_avg?: number | null
           note?: string | null
+          offer_id?: string | null
           rows?: Json
           status?: string
           supplier_offer?: string | null
@@ -8106,6 +8108,7 @@ export type Database = {
           lz_consumption?: number | null
           lz_quarter_avg?: number | null
           note?: string | null
+          offer_id?: string | null
           rows?: Json
           status?: string
           supplier_offer?: string | null
@@ -8122,6 +8125,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_calculations_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
             referencedColumns: ["id"]
           },
         ]

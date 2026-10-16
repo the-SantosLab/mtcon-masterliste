@@ -20,4 +20,4 @@
 - Bank reconciliation payments carry reference BANK|<tx key>; a partial unique index on invoice_payments.reference enforces that each bank line is booked once.
 - Offers created from a company without a deal auto-create a deal first, because offers.deal_id is required and all offer views key off the deal.
 
-- Price calculations take factors only from admin-maintained calc_settings via a trigger, so staff cannot override factors; unclear values stay flagged and block finalizing.
+- Price calculations take factors only from admin-maintained calc_settings via a trigger, so staff cannot override factors; unclear values stay flagged and block finalizing; only finalized calculations hand a per-piece price to an offer, added as unsaved offer item so the offer page keeps computing totals.
