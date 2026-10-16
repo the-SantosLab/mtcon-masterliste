@@ -3766,6 +3766,186 @@ export type Database = {
         }
         Relationships: []
       }
+      drawing_categories: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawing_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "drawing_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawing_files: {
+        Row: {
+          drawing_id: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          size_bytes: number | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          drawing_id: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          drawing_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawing_files_drawing_id_fkey"
+            columns: ["drawing_id"]
+            isOneToOne: false
+            referencedRelation: "drawings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawing_parameters: {
+        Row: {
+          created_at: string
+          drawing_id: string
+          id: string
+          name: string
+          sort_order: number
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          drawing_id: string
+          id?: string
+          name: string
+          sort_order?: number
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          drawing_id?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawing_parameters_drawing_id_fkey"
+            columns: ["drawing_id"]
+            isOneToOne: false
+            referencedRelation: "drawings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawing_set_items: {
+        Row: {
+          created_at: string
+          drawing_id: string
+          id: string
+          pinned_version: number | null
+          quantity: number
+          set_id: string
+        }
+        Insert: {
+          created_at?: string
+          drawing_id: string
+          id?: string
+          pinned_version?: number | null
+          quantity?: number
+          set_id: string
+        }
+        Update: {
+          created_at?: string
+          drawing_id?: string
+          id?: string
+          pinned_version?: number | null
+          quantity?: number
+          set_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawing_set_items_drawing_id_fkey"
+            columns: ["drawing_id"]
+            isOneToOne: false
+            referencedRelation: "drawings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drawing_set_items_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "drawing_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawing_sets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          set_no: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          set_no: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          set_no?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drawing_versions: {
         Row: {
           change_note: string | null
@@ -3818,38 +3998,62 @@ export type Database = {
       }
       drawings: {
         Row: {
+          article_art_nr: string | null
           case_id: string | null
+          category_id: string | null
           created_at: string
           created_by: string | null
           current_version: number
           current_version_id: string | null
           drawing_no: string
           id: string
+          manufacturer: string | null
+          note: string | null
+          part_name: string | null
+          price: number | null
+          price_note: string | null
           project_id: string | null
+          subcategory_id: string | null
           title: string | null
           updated_at: string
         }
         Insert: {
+          article_art_nr?: string | null
           case_id?: string | null
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           current_version?: number
           current_version_id?: string | null
           drawing_no: string
           id?: string
+          manufacturer?: string | null
+          note?: string | null
+          part_name?: string | null
+          price?: number | null
+          price_note?: string | null
           project_id?: string | null
+          subcategory_id?: string | null
           title?: string | null
           updated_at?: string
         }
         Update: {
+          article_art_nr?: string | null
           case_id?: string | null
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           current_version?: number
           current_version_id?: string | null
           drawing_no?: string
           id?: string
+          manufacturer?: string | null
+          note?: string | null
+          part_name?: string | null
+          price?: number | null
+          price_note?: string | null
           project_id?: string | null
+          subcategory_id?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -3862,10 +4066,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "drawings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "drawing_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "drawings_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drawings_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "drawing_categories"
             referencedColumns: ["id"]
           },
         ]
