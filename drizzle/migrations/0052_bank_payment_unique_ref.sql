@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS invoice_payments_bank_ref_unique ON public.invoice_payments (reference) WHERE reference LIKE 'BANK|%';
