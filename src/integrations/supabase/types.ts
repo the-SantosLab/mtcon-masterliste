@@ -11055,6 +11055,16 @@ export type Database = {
       }
       require_subcontract_writer: { Args: never; Returns: undefined }
       restore_deleted_case: { Args: { p_deleted_id: string }; Returns: string }
+      scan_goods_receipt: {
+        Args: {
+          _delivery_note_no?: string
+          _lot_no?: string
+          _po_item_id: string
+          _qty: number
+          _warehouse_id: string
+        }
+        Returns: string
+      }
       set_own_active_session_token: {
         Args: { _token: string }
         Returns: undefined

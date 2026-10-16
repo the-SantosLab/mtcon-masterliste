@@ -233,7 +233,7 @@
 .erp-shell::before {
   content: '';
   position: absolute;
-  inset: -60px -60px auto -60px;
+  inset: -60px 0 auto 0;
   height: 380px;
   background:
     radial-gradient(ellipse 70% 60% at 10% 0%, hsl(210 100% 60% / 0.08), transparent 60%),
