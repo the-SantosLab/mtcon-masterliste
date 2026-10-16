@@ -216,7 +216,7 @@ export default function AdminDisposition() {
                   const qty = overrideQty[r.art_nr] ?? r.suggested_qty;
                   const canSelect = isShort && !!r.primary_lief_nr;
                   return (
-                    <tr key={r.art_nr} className={cn(isShort && 'bg-amber-500/5')}>
+                    <tr key={r.art_nr} className={cn(isShort && 'bg-status-overdue/5')}>
                       <td className="px-2 py-1.5 align-top">
                         <Checkbox
                           checked={selected.has(r.art_nr)}
@@ -242,7 +242,7 @@ export default function AdminDisposition() {
                       </td>
                       <td className="px-2 py-1.5 text-right tabular-nums">{fmt(r.reorder_point)}</td>
                       <td className={cn('px-2 py-1.5 text-right tabular-nums',
-                        isShort ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-muted-foreground')}>
+                        isShort ? 'text-status-overdue dark:text-status-overdue font-semibold' : 'text-muted-foreground')}>
                         {fmt(r.shortage)}
                       </td>
                       <td className="px-2 py-1.5 text-right">
@@ -312,12 +312,12 @@ function SupplierCell({
     <div className="space-y-0.5">
       <div className="flex items-center gap-1.5">
         <span className="text-[11px] text-foreground truncate max-w-[160px]">{name || code}</span>
-        {cheaper && <Badge variant="secondary" className="h-4 text-[9px] px-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">günstiger</Badge>}
+        {cheaper && <Badge variant="secondary" className="h-4 text-[9px] px-1 bg-status-done/15 text-status-done dark:text-status-done">günstiger</Badge>}
       </div>
       <div className="text-[10px] text-muted-foreground tabular-nums">
         {fmtEUR(price)}{lz != null && ` · ${lz} T`}
         {cheaper && savings != null && savings > 0 && (
-          <span className="text-emerald-600 dark:text-emerald-400 ml-1">−{fmtEUR(savings)}</span>
+          <span className="text-status-done dark:text-status-done ml-1">−{fmtEUR(savings)}</span>
         )}
       </div>
     </div>

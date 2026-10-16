@@ -53,9 +53,9 @@ type Warehouse = { id: string; code: string; name: string };
 
 const STATUS: Record<string, string> = { draft: 'Entwurf', shipped: 'Versendet', cancelled: 'Storniert' };
 const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-  shipped: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  cancelled: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  draft: 'bg-status-open/15 text-status-open border-status-open/30',
+  shipped: 'bg-status-done/15 text-status-done border-status-done/30',
+  cancelled: 'bg-status-rejected/15 text-status-rejected border-status-rejected/30',
 };
 
 export default function AdminDeliveries() {
@@ -283,7 +283,7 @@ export default function AdminDeliveries() {
                   <div className="col-span-2"><Label className="text-xs">Lieferadresse</Label><Textarea rows={2} value={sel.ship_to || ''} onChange={e => setSel({ ...sel, ship_to: e.target.value })} /></div>
                   <div className="col-span-2"><Label className="text-xs">Notizen</Label><Textarea rows={2} value={sel.notes || ''} onChange={e => setSel({ ...sel, notes: e.target.value })} /></div>
                   {sel.tracking_pushed_at && (
-                    <div className="col-span-2 text-[11px] text-emerald-400">
+                    <div className="col-span-2 text-[11px] text-status-done">
                       Tracking an Vertrieb gepusht am {format(new Date(sel.tracking_pushed_at), 'dd.MM.yyyy HH:mm')}
                     </div>
                   )}

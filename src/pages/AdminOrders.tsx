@@ -75,11 +75,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-violet-500/15 text-violet-300 border-violet-500/30",
-  active: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  in_progress: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  completed: "bg-slate-500/15 text-slate-300 border-slate-500/30",
-  cancelled: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+  draft: "bg-status-working/15 text-status-working border-status-working/30",
+  active: "bg-status-done/15 text-status-done border-status-done/30",
+  in_progress: "bg-status-overdue/15 text-status-overdue border-status-overdue/30",
+  completed: "bg-status-open/15 text-status-open border-status-open/30",
+  cancelled: "bg-status-rejected/15 text-status-rejected border-status-rejected/30",
 };
 
 export default function AdminOrders() {
@@ -319,10 +319,10 @@ export default function AdminOrders() {
           {selected && (
             <div className="space-y-4">
               {selected.status === "draft" && (
-                <div className="p-3 rounded-md bg-violet-500/10 border border-violet-500/30 text-sm flex items-start gap-2">
-                  <Sparkles className="h-4 w-4 mt-0.5 text-violet-300" />
+                <div className="p-3 rounded-md bg-status-working/10 border border-status-working/30 text-sm flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 mt-0.5 text-status-working" />
                   <div className="flex-1">
-                    <div className="font-medium text-violet-200">KI-Entwurf aus E-Mail</div>
+                    <div className="font-medium text-status-working">KI-Entwurf aus E-Mail</div>
                     <div className="text-xs text-muted-foreground mt-1">
                       Bitte Felder und Positionen prüfen, dann „Als aktiv übernehmen". Korrekturen werden
                       zur Verbesserung der Extraktion gespeichert.
