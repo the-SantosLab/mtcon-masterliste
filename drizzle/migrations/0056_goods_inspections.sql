@@ -223,9 +223,9 @@ BEGIN
   UPDATE public.goods_inspections SET status = CASE WHEN _ok THEN 'released' ELSE 'defect' END,
     note = nullif(trim(_note),''), decided_by = auth.uid(), decided_at = now() WHERE id = _id;
   IF r.case_id IS NOT NULL THEN
-    UPDATE public.cases SET status = 'erledigt', closed_at = now(), closed_by = auth.uid(),
+    UPDATE public.cases SET status = 'abgeschlossen', closed_at = now(), closed_by = auth.uid(),
       closure_summary = CASE WHEN _ok THEN 'Freigegeben' ELSE 'Fehlerhaft: ' || _note END
-     WHERE id = r.case_id AND status::text <> 'erledigt';
+     WHERE id = r.case_id AND status::text <> 'abgeschlossen';
   END IF;
   PERFORM public._gi_notify_lager(
     CASE WHEN _ok THEN 'Einlagern: ' ELSE 'Fehlerhafte Lieferung: ' END || r.art_nr,
