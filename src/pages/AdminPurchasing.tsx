@@ -730,6 +730,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
   const [deliveryNo, setDeliveryNo] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [overAsk, setOverAsk] = useState<string[] | null>(null);
 
   useEffect(() => {
     if (!po) return;
@@ -878,7 +879,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                   <th className="text-left px-2 py-1.5">Bezeichnung</th>
                   <th className="text-right px-2 py-1.5">Offen</th>
                   <th className="text-right px-2 py-1.5 w-24">Buchen</th>
-                  <th className="text-left px-2 py-1.5 w-44">Lagerplatz</th>
+                  <th className="text-left px-2 py-1.5 w-44">Einlagerziel</th>
                   <th className="text-left px-2 py-1.5 w-40">Charge</th>
                   <th className="text-left px-2 py-1.5 w-32">Ext. Charge</th>
                   <th className="text-left px-2 py-1.5 w-36">MHD</th>
@@ -895,7 +896,7 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
                       <td className="px-2 py-1.5">{it.description || it.articles?.bezeich_1 || it.articles?.matchcode}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums font-medium">{open}</td>
                       <td className="px-2 py-1">
-                        <Input type="number" step="0.001" min="0" max={open}
+                        <Input type="number" step="0.001" min="0"
                           disabled={open <= 0}
                           value={qtys[it.id] ?? ''}
                           onChange={e => setQtys(q => ({ ...q, [it.id]: e.target.value }))}
@@ -977,10 +978,23 @@ function GoodsReceiptDialog({ po, warehouses, onClose, onSaved }: {
               </tbody>
             </table>
           </div>
+          <p className="text-[11px] text-muted-foreground">Die Ware wird auf den i-Punkt gebucht und als Prüfvorgang an QS/QM übergeben. Der Lagerplatz ist nur das Einlagerziel nach der Freigabe.</p>
+          {overAsk && (
+            <div className="rounded border border-border bg-muted/30 p-3 space-y-2">
+              <p className="text-sm font-medium">Überlieferung – akzeptieren oder abweisen?</p>
+              <ul className="text-xs text-muted-foreground">{overAsk.map(l => <li key={l}>{l}</li>)}</ul>
+              <p className="text-[11px] text-muted-foreground">Beim Abweisen wird nur die offene Menge gebucht.</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setOverAsk(null)}>Zurück</Button>
+                <Button size="sm" variant="outline" onClick={() => save('rejected')} disabled={saving}>Abweisen</Button>
+                <Button size="sm" onClick={() => save('accepted')} disabled={saving}>Akzeptieren</Button>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Abbrechen</Button>
-          <Button onClick={save} disabled={saving}>Wareneingang buchen</Button>
+          <Button onClick={() => save()} disabled={saving || !!overAsk}>Wareneingang buchen</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
