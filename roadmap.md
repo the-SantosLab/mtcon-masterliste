@@ -1,5 +1,5 @@
 # Roadmap
-- [x] „Mein Tag“ im bestehenden Dashboard: persönliche fällige CRM-/Vorgangsaufgaben, zugewiesene ERP-Liefertermine und offene Übergaben aktiver Abteilungen; bestehende Zugänge, paginierte Abfragen und direkte Bearbeitungslinks; 21 Regeltests bestanden, echte persönliche Aufgaben und CRM-/Vorgangslinks angemeldet geprüft ohne Datenänderungen
+- [x] „Mein Tag“ auf Wunsch wieder aus dem Dashboard entfernt; Zähl- und Filterlogik (myDay) bleibt getestet ohne Oberfläche erhalten
 - [x] Vorgangsakte: rückrollbare Datenbanktests für Angebot → Auftrag und alle vier Übergaben, Rollen, Empfänger und Duplikate; zehn Regeltests und Browser-Zwischenstände mit isolierten Antworten geprüft; keine Testdaten verblieben
 - [x] Vorgangsakte: gemeinsamer Browser-Datenbankdurchlauf mit separaten Admin-/Staff-/Viewer-Testkonten abgeschlossen; Angebot → Einkauf → Werkstatt → Versand → Buchhaltung, Teilstatus, Empfänger und Duplikate geprüft; Viewer-Werkstattlücke geschlossen und erneut geprüft; alle Testkonten/-belege/-Benachrichtigungen entfernt, Prüfsummen echter Aufträge/Bestände/Rechnungen unverändert
 - [x] Kundenakquise: eigene Übersicht und acht richtig zugeordnete Unterseiten mit echten CRM-Daten
