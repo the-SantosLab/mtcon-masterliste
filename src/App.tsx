@@ -118,6 +118,7 @@ const CrmOutbound = lazyRetry(() => import("./pages/crm/CrmOutbound"));
 const CompanyWorkspace = lazyRetry(() => import("./components/crm/CompanyWorkspace"));
 const LeadWorkspace = lazyRetry(() => import("./components/crm/LeadWorkspace"));
 const ContactWorkspace = lazyRetry(() => import("./components/crm/ContactWorkspace"));
+const ActivityWorkspace = lazyRetry(() => import("./components/crm/ActivityWorkspace"));
 const CrmAcquisitionPage = lazyRetry(() => import("./pages/crm/CrmAcquisitionPage"));
 const CrmAcquisitionCampaigns = lazyRetry(() => import("./pages/crm/CrmAcquisitionCampaigns"));
 const CrmSequenceDetail = lazyRetry(() => import("./pages/crm/CrmSequenceDetail"));
@@ -332,6 +333,14 @@ function AuthenticatedApp() {
           <Route path="/crm/ansprechpartner/telefon" element={<CrmProtectedRoute><ContactWorkspace page="phone" /></CrmProtectedRoute>} />
           <Route path="/crm/ansprechpartner/historie" element={<CrmProtectedRoute><ContactWorkspace page="history" /></CrmProtectedRoute>} />
           <Route path="/crm/ansprechpartner/inaktiv" element={<CrmProtectedRoute><ContactWorkspace page="inactive" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation" element={<CrmProtectedRoute><ActivityWorkspace /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/aufgaben" element={<CrmProtectedRoute><ActivityWorkspace page="tasks" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/wiedervorlagen" element={<CrmProtectedRoute><ActivityWorkspace page="followups" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/termine" element={<CrmProtectedRoute><ActivityWorkspace page="meetings" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/telefonate" element={<CrmProtectedRoute><ActivityWorkspace page="calls" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/emails" element={<CrmProtectedRoute><ActivityWorkspace page="emails" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/besuchsberichte" element={<CrmProtectedRoute><ActivityWorkspace page="visits" /></CrmProtectedRoute>} />
+          <Route path="/crm/kommunikation/erledigt" element={<CrmProtectedRoute><ActivityWorkspace page="done" /></CrmProtectedRoute>} />
           <Route path="/crm/offers" element={<CrmProtectedRoute><CrmOffers /></CrmProtectedRoute>} />
           <Route path="/crm/offers/:id" element={<CrmProtectedRoute><CrmOfferDetail /></CrmProtectedRoute>} />
           <Route path="/crm/activities" element={<CrmProtectedRoute><CrmActivities /></CrmProtectedRoute>} />
