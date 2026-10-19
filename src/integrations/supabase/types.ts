@@ -4610,6 +4610,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "goods_inspections_case_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "goods_inspections_gr_id_fkey"
             columns: ["gr_id"]
             isOneToOne: false
@@ -4621,6 +4628,13 @@ export type Database = {
             columns: ["gr_item_id"]
             isOneToOne: false
             referencedRelation: "goods_receipt_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_inspections_warehouse_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
