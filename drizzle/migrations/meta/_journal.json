@@ -428,6 +428,13 @@
       "when": 1792171094666,
       "tag": "0060_article_images_offer_case",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1792404288159,
+      "tag": "0061_goods_inspections_fks",
+      "breakpoints": true
     }
   ]
 }
