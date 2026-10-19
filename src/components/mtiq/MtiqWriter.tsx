@@ -102,6 +102,9 @@ export function MtiqWriter() {
 
     const onFocus = (e: FocusEvent) => {
       const el = e.target as Element | null;
+      // Ignore fields inside the MTIQ panel itself (e.g. the editable suggestion),
+      // otherwise "Übernehmen" would write into the suggestion instead of the original field.
+      if (el && (el as HTMLElement).closest?.('[data-mtiq-writer]')) return;
       if (!isEditableTarget(el)) return;
       // skip very small inputs / search bars by name
       const name = (el as HTMLElement).getAttribute('name') || '';
@@ -257,6 +260,7 @@ export function MtiqWriter() {
       {open && popoverPos && target && (
         <div
           ref={popoverRef}
+          data-mtiq-writer
           style={{ position: 'fixed', top: popoverPos.top, left: popoverPos.left, width: 360, zIndex: 9999 }}
           className="rounded-xl border border-border bg-popover/95 backdrop-blur-xl shadow-2xl text-popover-foreground"
           onMouseDown={(e) => e.stopPropagation()}
