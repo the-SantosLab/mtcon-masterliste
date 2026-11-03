@@ -8,7 +8,7 @@ Basis-URL: `https://<projekt>.supabase.co/functions/v1/api-dashboard`
 - Alle **schreibenden** Aufrufe zusätzlich: `x-actor-id: <users_profile.id>`
   (muss ein aktiver Nutzer sein; wird als Ersteller/Bearbeiter und im Aktivitätsprotokoll gespeichert)
 
-Ein Aufruf ohne `resource` liefert das Verzeichnis aller Ressourcen und Methoden.
+Ein Aufruf ohne `resource` liefert das Verzeichnis aller Ressourcen und Methoden
 
 ## Ressourcen
 
