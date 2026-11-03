@@ -186,7 +186,7 @@ function SettingsPanel({ settings, isAdmin, onSaved }: { settings: any[]; isAdmi
           {isAdmin ? <>
             <div className="flex gap-2"><Input className="h-8" inputMode="decimal" placeholder={x.unit ?? ''} value={e.value} onChange={(ev) => setEdit({ ...edit, [x.key]: { ...e, value: ev.target.value } })} />
               <select className="h-8 rounded-md border border-input bg-background px-2 text-xs" value={e.status} onChange={(ev) => setEdit({ ...edit, [x.key]: { ...e, status: ev.target.value } })}>
-                <option value="unclear">ungeklärt</option><option value="confirmed">bestätigt</option></select></div>
+                <option value="unclear">ungeklärt</option><option value="confirmed">Bestätigt</option></select></div>
             <Input className="h-8 text-xs" placeholder="Notiz / Quelle" value={e.note} onChange={(ev) => setEdit({ ...edit, [x.key]: { ...e, note: ev.target.value } })} />
             <Button size="sm" variant="outline" onClick={() => save(x.key)}>Speichern</Button>
           </> : <p className="text-xs text-muted-foreground">{x.value == null ? '–' : fmt(x.value, 3)} {x.unit ?? ''}{x.note ? ` · ${x.note}` : ''}</p>}
